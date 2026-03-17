@@ -21,12 +21,13 @@ import feign.RequestTemplate;
 import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.JsonEncoder;
 import java.lang.reflect.Type;
 
 /**
  * @author changjin wei(魏昌进)
  */
-public class Fastjson2Encoder implements Encoder {
+public class Fastjson2Encoder implements Encoder, JsonEncoder {
 
   private final JSONWriter.Feature[] features;
 

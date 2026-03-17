@@ -17,30 +17,39 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
-import feign.RequestTemplate;
-import feign.codec.Encoder;
+import feign.Experimental;
+import feign.codec.Codec;
+import feign.codec.JsonCodec;
+import feign.codec.JsonDecoder;
 import feign.codec.JsonEncoder;
-import java.lang.reflect.Type;
-import java.util.Collections;
 
-public class GsonEncoder implements Encoder, JsonEncoder {
+@Experimental
+public class GsonCodec implements Codec, JsonCodec {
 
-  private final Gson gson;
+  private final GsonEncoder encoder;
+  private final GsonDecoder decoder;
 
-  public GsonEncoder(Iterable<TypeAdapter<?>> adapters) {
-    this(GsonFactory.create(adapters));
+  public GsonCodec() {
+    this(new Gson());
   }
 
-  public GsonEncoder() {
-    this(Collections.<TypeAdapter<?>>emptyList());
+  public GsonCodec(Iterable<TypeAdapter<?>> adapters) {
+    this.encoder = new GsonEncoder(adapters);
+    this.decoder = new GsonDecoder(adapters);
   }
 
-  public GsonEncoder(Gson gson) {
-    this.gson = gson;
+  public GsonCodec(Gson gson) {
+    this.encoder = new GsonEncoder(gson);
+    this.decoder = new GsonDecoder(gson);
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
-    template.body(gson.toJson(object, bodyType));
+  public JsonEncoder encoder() {
+    return encoder;
+  }
+
+  @Override
+  public JsonDecoder decoder() {
+    return decoder;
   }
 }

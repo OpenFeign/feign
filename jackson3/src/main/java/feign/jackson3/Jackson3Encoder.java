@@ -20,6 +20,7 @@ import feign.RequestTemplate;
 import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.JsonEncoder;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import tools.jackson.core.JacksonException;
@@ -28,7 +29,7 @@ import tools.jackson.databind.JavaType;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-public class Jackson3Encoder implements Encoder {
+public class Jackson3Encoder implements Encoder, JsonEncoder {
 
   private final JsonMapper mapper;
 

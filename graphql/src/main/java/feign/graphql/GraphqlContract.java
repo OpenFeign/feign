@@ -18,6 +18,7 @@ package feign.graphql;
 import feign.DefaultContract;
 import feign.Experimental;
 import feign.Request.HttpMethod;
+import feign.RequestTemplate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -50,6 +51,13 @@ public class GraphqlContract extends DefaultContract {
 
   Map<String, QueryMetadata> queryMetadata() {
     return metadata;
+  }
+
+  QueryMetadata lookupMetadata(RequestTemplate template) {
+    if (template.methodMetadata() == null) {
+      return null;
+    }
+    return metadata.get(template.methodMetadata().configKey());
   }
 
   static String extractOperationField(String query) {

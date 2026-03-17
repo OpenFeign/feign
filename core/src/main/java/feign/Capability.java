@@ -144,4 +144,12 @@ public interface Capability {
   default MethodInfoResolver enrich(MethodInfoResolver methodInfoResolver) {
     return methodInfoResolver;
   }
+
+  default RequestInterceptors enrich(RequestInterceptors requestInterceptors) {
+    return requestInterceptors;
+  }
+
+  default ResponseInterceptors enrich(ResponseInterceptors responseInterceptors) {
+    return responseInterceptors;
+  }
 }
