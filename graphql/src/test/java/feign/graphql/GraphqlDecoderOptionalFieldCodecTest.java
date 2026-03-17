@@ -34,7 +34,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import tools.jackson.databind.json.JsonMapper;
 
-// Gson, Moshi, and Fastjson2 don't support Optional<T> fields in records
 class GraphqlDecoderOptionalFieldCodecTest {
 
   public record Item(String name, Optional<String> step) {}
