@@ -22,6 +22,7 @@ import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +47,9 @@ public class GraphqlDecoder implements Decoder {
     }
 
     var result = doDecode(response, targetType);
+    if (result == null && isCollectionOrArrayType(targetType)) {
+      result = Util.emptyValueOf(targetType);
+    }
     return optional ? Optional.ofNullable(result) : result;
   }
 
@@ -55,7 +59,7 @@ public class GraphqlDecoder implements Decoder {
       return Util.emptyValueOf(type);
     }
     if (response.body() == null) {
-      return null;
+      return Util.emptyValueOf(type);
     }
 
     var root = (Map<String, Object>) jsonDecoder.decode(response, Map.class);
@@ -94,7 +98,74 @@ public class GraphqlDecoder implements Decoder {
       operationData = list.get(0);
     }
 
-    return jsonDecoder.convert(operationData, type);
+    return convertWithOptionalSupport(operationData, type);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object convertWithOptionalSupport(Object data, Type type) throws IOException {
+    if (data == null) {
+      return null;
+    }
+
+    Class<?> rawClass = rawClass(type);
+    if (rawClass == null || !rawClass.isRecord() || !(data instanceof Map)) {
+      return jsonDecoder.convert(data, type);
+    }
+
+    if (!hasOptionalOrNestedRecordComponents(rawClass)) {
+      return jsonDecoder.convert(data, type);
+    }
+
+    Map<String, Object> map = (Map<String, Object>) data;
+    RecordComponent[] components = rawClass.getRecordComponents();
+    Object[] args = new Object[components.length];
+    Class<?>[] paramTypes = new Class<?>[components.length];
+
+    for (int i = 0; i < components.length; i++) {
+      paramTypes[i] = components[i].getType();
+      Object value = map.get(components[i].getName());
+
+      if (components[i].getType() == Optional.class) {
+        if (value == null) {
+          args[i] = Optional.empty();
+        } else {
+          Type genericType = components[i].getGenericType();
+          if (genericType instanceof ParameterizedType pt) {
+            Type innerType = pt.getActualTypeArguments()[0];
+            args[i] = Optional.of(convertWithOptionalSupport(value, innerType));
+          } else {
+            args[i] = Optional.of(value);
+          }
+        }
+      } else if (value != null) {
+        args[i] = convertWithOptionalSupport(value, components[i].getGenericType());
+      }
+    }
+
+    try {
+      return rawClass.getDeclaredConstructor(paramTypes).newInstance(args);
+    } catch (ReflectiveOperationException e) {
+      return jsonDecoder.convert(data, type);
+    }
+  }
+
+  private boolean hasOptionalOrNestedRecordComponents(Class<?> recordClass) {
+    for (RecordComponent c : recordClass.getRecordComponents()) {
+      if (c.getType() == Optional.class || c.getType().isRecord()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private Class<?> rawClass(Type type) {
+    if (type instanceof Class<?> cls) {
+      return cls;
+    }
+    if (type instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> cls) {
+      return cls;
+    }
+    return null;
   }
 
   @SuppressWarnings("unchecked")
