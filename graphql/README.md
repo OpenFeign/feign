@@ -57,28 +57,28 @@ The annotation processor generates a Java record for `User` at compile time:
 public record User(String id, String name, String email) {}
 ```
 
-Build the client using `GraphqlCapability`, which wires the contract, encoder, decoder, and request interceptor automatically. It takes any Feign `Encoder` and any `JsonDecoder` — all existing Feign decoders implement it:
+Build the client using `GraphqlCapability`, which wires the contract, encoder, decoder, and request interceptor automatically. It takes any `JsonCodec`:
 
 ```java
 // Using Jackson
 UserApi api = Feign.builder()
-    .addCapability(new GraphqlCapability(new JacksonEncoder(), new JacksonDecoder()))
+    .addCapability(new GraphqlCapability(new JacksonCodec()))
     .target(UserApi.class, "https://api.example.com/graphql");
 
 User user = api.getUser("123");
 ```
 
-Any JSON encoder/decoder pair works the same way:
+Any JSON codec works the same way:
 
 ```java
 // Gson
-new GraphqlCapability(new GsonEncoder(), new GsonDecoder())
+new GraphqlCapability(new GsonCodec())
 
 // Jackson 3
-new GraphqlCapability(new Jackson3Encoder(), new Jackson3Decoder())
+new GraphqlCapability(new Jackson3Codec())
 
 // Fastjson2
-new GraphqlCapability(new Fastjson2Encoder(), new Fastjson2Decoder())
+new GraphqlCapability(new Fastjson2Codec())
 ```
 
 ## Mutations with Variables
