@@ -43,6 +43,14 @@ class GraphqlDecoderTest {
     public String name;
   }
 
+  public record UserRecord(String id, String name, Optional<String> email) {}
+
+  public record Address(String city, Optional<String> zip) {}
+
+  public record UserWithAddress(String id, Optional<Address> address) {}
+
+  public record DeeplyNested(String value, Optional<UserWithAddress> nested) {}
+
   @Test
   void decodesDataField() throws Exception {
     var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
@@ -216,6 +224,96 @@ class GraphqlDecoderTest {
 
     @SuppressWarnings("unchecked")
     var result = (Optional<User>) decoder.decode(response, optionalOf(User.class));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void decodesRecordWithOptionalFieldPresent() throws Exception {
+    var json =
+        "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\",\"email\":\"alice@test.com\"}}}";
+    var response = buildResponse(json);
+
+    var result = (UserRecord) decoder.decode(response, UserRecord.class);
+
+    assertThat(result.id()).isEqualTo("1");
+    assertThat(result.email()).isPresent();
+    assertThat(result.email().get()).isEqualTo("alice@test.com");
+  }
+
+  @Test
+  void decodesRecordWithOptionalFieldNull() throws Exception {
+    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\",\"email\":null}}}";
+    var response = buildResponse(json);
+
+    var result = (UserRecord) decoder.decode(response, UserRecord.class);
+
+    assertThat(result.id()).isEqualTo("1");
+    assertThat(result.email()).isEmpty();
+  }
+
+  @Test
+  void decodesRecordWithOptionalFieldMissing() throws Exception {
+    var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
+    var response = buildResponse(json);
+
+    var result = (UserRecord) decoder.decode(response, UserRecord.class);
+
+    assertThat(result.id()).isEqualTo("1");
+    assertThat(result.email()).isEmpty();
+  }
+
+  @Test
+  void decodesNestedRecordWithOptionalFields() throws Exception {
+    var json =
+        "{\"data\":{\"getUser\":{\"id\":\"1\",\"address\":{\"city\":\"NYC\",\"zip\":null}}}}";
+    var response = buildResponse(json);
+
+    var result = (UserWithAddress) decoder.decode(response, UserWithAddress.class);
+
+    assertThat(result.id()).isEqualTo("1");
+    assertThat(result.address()).isPresent();
+    assertThat(result.address().get().city()).isEqualTo("NYC");
+    assertThat(result.address().get().zip()).isEmpty();
+  }
+
+  @Test
+  void decodesDeeplyNestedRecordWithOptionalFields() throws Exception {
+    var json =
+        "{\"data\":{\"get\":{\"value\":\"top\",\"nested\":{\"id\":\"1\",\"address\":{\"city\":\"NYC\",\"zip\":null}}}}}";
+    var response = buildResponse(json);
+
+    var result = (DeeplyNested) decoder.decode(response, DeeplyNested.class);
+
+    assertThat(result.value()).isEqualTo("top");
+    assertThat(result.nested()).isPresent();
+    assertThat(result.nested().get().address()).isPresent();
+    assertThat(result.nested().get().address().get().zip()).isEmpty();
+  }
+
+  @Test
+  void returnsEmptyListForNullBody() throws Exception {
+    var response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.emptyMap())
+            .request(buildRequest())
+            .build();
+
+    @SuppressWarnings("unchecked")
+    var result = (List<User>) decoder.decode(response, parameterizedType(List.class, User.class));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void returnsEmptyListForNullOperationDataWithListType() throws Exception {
+    var json = "{\"data\":{\"listUsers\":null}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var result = (List<User>) decoder.decode(response, parameterizedType(List.class, User.class));
 
     assertThat(result).isEmpty();
   }
