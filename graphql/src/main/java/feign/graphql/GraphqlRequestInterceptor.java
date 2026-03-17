@@ -20,17 +20,16 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 @Experimental
 public class GraphqlRequestInterceptor implements RequestInterceptor {
 
   private final Encoder delegate;
-  private final Map<String, GraphqlContract.QueryMetadata> queryMetadata;
+  private final GraphqlContract contract;
 
   public GraphqlRequestInterceptor(Encoder delegate, GraphqlContract contract) {
     this.delegate = delegate;
-    this.queryMetadata = contract.queryMetadata();
+    this.contract = contract;
   }
 
   @Override
@@ -39,7 +38,7 @@ public class GraphqlRequestInterceptor implements RequestInterceptor {
       return;
     }
 
-    var meta = lookupMetadata(template);
+    var meta = contract.lookupMetadata(template);
     if (meta == null) {
       return;
     }
@@ -48,12 +47,5 @@ public class GraphqlRequestInterceptor implements RequestInterceptor {
     graphqlBody.put("query", meta.query);
 
     delegate.encode(graphqlBody, Encoder.MAP_STRING_WILDCARD, template);
-  }
-
-  private GraphqlContract.QueryMetadata lookupMetadata(RequestTemplate template) {
-    if (template.methodMetadata() == null) {
-      return null;
-    }
-    return queryMetadata.get(template.methodMetadata().configKey());
   }
 }

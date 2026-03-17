@@ -24,10 +24,10 @@ public final class ResponseInterceptors {
   private final List<ResponseInterceptor> interceptors;
 
   public ResponseInterceptors(List<ResponseInterceptor> interceptors) {
-    this.interceptors = Collections.unmodifiableList(new ArrayList<>(interceptors));
+    this.interceptors = new ArrayList<>(interceptors);
   }
 
   public List<ResponseInterceptor> interceptors() {
-    return interceptors;
+    return Collections.unmodifiableList(interceptors);
   }
 }

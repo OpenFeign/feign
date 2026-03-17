@@ -287,7 +287,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                   new RequestInterceptors(Arrays.asList(requestArray)),
                   RequestInterceptors.class,
                   capabilities);
-      clone.requestInterceptors = new ArrayList<>(requestInterceptors.interceptors());
+      clone.requestInterceptors = requestInterceptors.interceptors();
 
       // enrich each response interceptor, then enrich the list as a whole
       ResponseInterceptor[] responseArray =
@@ -303,7 +303,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                   new ResponseInterceptors(Arrays.asList(responseArray)),
                   ResponseInterceptors.class,
                   capabilities);
-      clone.responseInterceptors = new ArrayList<>(responseInterceptors.interceptors());
+      clone.responseInterceptors = responseInterceptors.interceptors();
 
       return clone;
     } catch (CloneNotSupportedException e) {
