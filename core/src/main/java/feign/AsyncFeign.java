@@ -55,23 +55,20 @@ public final class AsyncFeign<C> {
     return builder();
   }
 
-  private static class LazyInitializedExecutorService {
-
-    private static final ExecutorService instance =
-        Executors.newCachedThreadPool(
-            r -> {
-              final Thread result = new Thread(r);
-              result.setDaemon(true);
-              return result;
-            });
+  private static ExecutorService newDefaultExecutorService() {
+    return Executors.newCachedThreadPool(
+        r -> {
+          final Thread result = new Thread(r);
+          result.setDaemon(true);
+          return result;
+        });
   }
 
   public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>, AsyncFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
-        new DefaultAsyncClient<>(
-            new DefaultClient(null, null), LazyInitializedExecutorService.instance);
+        new DefaultAsyncClient<>(new DefaultClient(null, null), newDefaultExecutorService());
     private MethodInfoResolver methodInfoResolver = MethodInfo::new;
 
     @Deprecated
