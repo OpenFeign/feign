@@ -32,6 +32,8 @@ public @interface GraphqlSchema {
 
   boolean useOptional() default true;
 
+  boolean useAliasForFieldNames() default true;
+
   Class<?>[] uses() default {};
 
   Class<?>[] typeAnnotations() default {};

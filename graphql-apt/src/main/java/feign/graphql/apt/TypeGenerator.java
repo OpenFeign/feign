@@ -139,11 +139,12 @@ public class TypeGenerator {
       if (!(selection instanceof Field field)) {
         continue;
       }
-      var fieldName = field.getName();
-      var schemaDef = GraphqlTypeMapper.findFieldDefinition(parentType, fieldName);
+      var schemaFieldName = field.getName();
+      var schemaDef = GraphqlTypeMapper.findFieldDefinition(parentType, schemaFieldName);
       if (schemaDef == null) {
         continue;
       }
+      var fieldName = responseKey(field);
 
       var fieldType = schemaDef.getType();
       var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
@@ -243,13 +244,20 @@ public class TypeGenerator {
     }
   }
 
+  private String responseKey(Field field) {
+    if (annotationConfig.useAliasForFieldNames() && field.getAlias() != null) {
+      return field.getAlias();
+    }
+    return field.getName();
+  }
+
   private String canonicalize(SelectionSet selectionSet) {
     var entries = new ArrayList<String>();
     for (var selection : selectionSet.getSelections()) {
       if (!(selection instanceof Field field)) {
         continue;
       }
-      var name = field.getName();
+      var name = responseKey(field);
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
         entries.add(name + "{" + canonicalize(field.getSelectionSet()) + "}");
       } else {
@@ -266,7 +274,7 @@ public class TypeGenerator {
       if (!(selection instanceof Field field)) {
         continue;
       }
-      var name = field.getName();
+      var name = responseKey(field);
       if (field.getSelectionSet() != null && !field.getSelectionSet().getSelections().isEmpty()) {
         entries.add(name + " { " + describeFields(field.getSelectionSet()) + " }");
       } else {

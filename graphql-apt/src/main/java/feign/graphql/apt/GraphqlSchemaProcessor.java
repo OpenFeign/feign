@@ -418,6 +418,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
             fqns,
             rawAnnotations,
             annotation.useOptional(),
+            annotation.useAliasForFieldNames(),
             classFieldAnnotations,
             nonNullFqns,
             nonNullRaw);
@@ -434,6 +435,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         mergedImports,
         config.annotations(),
         config.useOptional(),
+        config.useAliasForFieldNames(),
         config.fieldAnnotations(),
         config.nonNullAnnotations());
   }
@@ -451,10 +453,17 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       ExecutableElement method, GraphqlQuery annotation, TypeAnnotationConfig classConfig) {
     var methodFqns = extractClassFqns(annotation::typeAnnotations);
     var methodRaw = annotation.rawTypeAnnotations();
-    var methodToggle = annotation.useOptional();
+    var methodOptionalToggle = annotation.useOptional();
+    var methodAliasToggle = annotation.useAliasForFieldNames();
 
     var useOptional =
-        methodToggle == Toggle.INHERIT ? classConfig.useOptional() : methodToggle == Toggle.TRUE;
+        methodOptionalToggle == Toggle.INHERIT
+            ? classConfig.useOptional()
+            : methodOptionalToggle == Toggle.TRUE;
+    var useAliasForFieldNames =
+        methodAliasToggle == Toggle.INHERIT
+            ? classConfig.useAliasForFieldNames()
+            : methodAliasToggle == Toggle.TRUE;
 
     var methodFieldAnnotations = extractFieldAnnotations(method);
     var fieldAnnotations =
@@ -469,6 +478,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     boolean hasMethodAnnotations = !methodFqns.isEmpty() || methodRaw.length > 0;
     if (!hasMethodAnnotations && !hasMethodNonNull) {
       if (useOptional == classConfig.useOptional()
+          && useAliasForFieldNames == classConfig.useAliasForFieldNames()
           && fieldAnnotations.equals(classConfig.fieldAnnotations())) {
         return classConfig;
       }
@@ -480,6 +490,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
           mergedImports,
           classConfig.annotations(),
           useOptional,
+          useAliasForFieldNames,
           fieldAnnotations,
           classConfig.nonNullAnnotations());
     }
@@ -488,13 +499,24 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var nonNullRaw = hasMethodNonNull ? methodNonNullRaw : new String[0];
     var config =
         TypeAnnotationConfig.resolve(
-            methodFqns, methodRaw, useOptional, fieldAnnotations, nonNullFqns, nonNullRaw);
+            methodFqns,
+            methodRaw,
+            useOptional,
+            useAliasForFieldNames,
+            fieldAnnotations,
+            nonNullFqns,
+            nonNullRaw);
 
     if (resolvedNonNull != null && !resolvedNonNull.isEmpty()) {
       var mergedImports = new TreeSet<>(config.imports());
       mergedImports.addAll(classConfig.imports());
       return new TypeAnnotationConfig(
-          mergedImports, config.annotations(), useOptional, fieldAnnotations, resolvedNonNull);
+          mergedImports,
+          config.annotations(),
+          useOptional,
+          useAliasForFieldNames,
+          fieldAnnotations,
+          resolvedNonNull);
     }
 
     return config;
