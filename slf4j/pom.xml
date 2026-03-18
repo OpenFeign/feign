@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.11</version>
+    <version>13.12-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-slf4j</artifactId>
