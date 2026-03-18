@@ -27,27 +27,39 @@ record TypeAnnotationConfig(
     Set<String> imports,
     List<String> annotations,
     boolean useOptional,
+    boolean useAliasForFieldNames,
     Map<String, FieldAnnotations> fieldAnnotations,
     List<String> nonNullAnnotations) {
 
   static final TypeAnnotationConfig EMPTY =
-      new TypeAnnotationConfig(Set.of(), List.of(), false, Map.of(), List.of());
+      new TypeAnnotationConfig(Set.of(), List.of(), false, true, Map.of(), List.of());
 
   static TypeAnnotationConfig resolve(
-      List<String> typeAnnotationFqns, String[] rawTypeAnnotations, boolean useOptional) {
+      List<String> typeAnnotationFqns,
+      String[] rawTypeAnnotations,
+      boolean useOptional,
+      boolean useAliasForFieldNames) {
     return resolve(
-        typeAnnotationFqns, rawTypeAnnotations, useOptional, Map.of(), List.of(), new String[0]);
+        typeAnnotationFqns,
+        rawTypeAnnotations,
+        useOptional,
+        useAliasForFieldNames,
+        Map.of(),
+        List.of(),
+        new String[0]);
   }
 
   static TypeAnnotationConfig resolve(
       List<String> typeAnnotationFqns,
       String[] rawTypeAnnotations,
       boolean useOptional,
+      boolean useAliasForFieldNames,
       Map<String, FieldAnnotations> fieldAnnotations) {
     return resolve(
         typeAnnotationFqns,
         rawTypeAnnotations,
         useOptional,
+        useAliasForFieldNames,
         fieldAnnotations,
         List.of(),
         new String[0]);
@@ -57,6 +69,7 @@ record TypeAnnotationConfig(
       List<String> typeAnnotationFqns,
       String[] rawTypeAnnotations,
       boolean useOptional,
+      boolean useAliasForFieldNames,
       Map<String, FieldAnnotations> fieldAnnotations,
       List<String> nonNullFqns,
       String[] nonNullRawAnnotations) {
@@ -71,7 +84,12 @@ record TypeAnnotationConfig(
     var nonNullResolved = resolveAnnotationList(nonNullFqns, nonNullRawAnnotations, imports);
 
     return new TypeAnnotationConfig(
-        imports, annotations, useOptional, fieldAnnotations, nonNullResolved);
+        imports,
+        annotations,
+        useOptional,
+        useAliasForFieldNames,
+        fieldAnnotations,
+        nonNullResolved);
   }
 
   static List<String> resolveAnnotationList(

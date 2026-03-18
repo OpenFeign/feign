@@ -1790,4 +1790,127 @@ class GraphqlSchemaProcessorTest {
     contents.contains("@Deprecated String id");
     contents.contains("String email");
   }
+
+  @Test
+  void useAliasForFieldNamesGeneratesAliasedInnerRecords() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.AliasApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useAliasForFieldNames = true)
+            interface AliasApi {
+              @GraphqlQuery(\"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      specification: specs { lengthMeters classification }
+                      currentLocation: location { planet sector }
+                    }
+                  }\""")
+              StarshipResult getStarship();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.StarshipResult").contentsAsUtf8String();
+    contents.contains("Optional<Specification> specification");
+    contents.contains("Optional<CurrentLocation> currentLocation");
+    contents.contains("public record Specification(");
+    contents.contains("public record CurrentLocation(");
+  }
+
+  @Test
+  void useAliasForFieldNamesDisabledUsesFieldName() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.NoAliasApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "test-schema.graphql", useAliasForFieldNames = false)
+            interface NoAliasApi {
+              @GraphqlQuery(\"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      specification: specs { lengthMeters classification }
+                      currentLocation: location { planet sector }
+                    }
+                  }\""")
+              StarshipResult getStarship();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.StarshipResult").contentsAsUtf8String();
+    contents.contains("Optional<Specs> specs");
+    contents.contains("Optional<Location> location");
+    contents.contains("public record Specs(");
+    contents.contains("public record Location(");
+  }
+
+  @Test
+  void useAliasForFieldNamesMethodOverridesClassLevel() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.AliasOverrideApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema(value = "test-schema.graphql", useAliasForFieldNames = false)
+            interface AliasOverrideApi {
+              @GraphqlQuery(value = \"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      specification: specs { lengthMeters classification }
+                    }
+                  }\""", useAliasForFieldNames = Toggle.TRUE)
+              AliasedResult getAliased();
+
+              @GraphqlQuery(\"""
+                  {
+                    starship(id: "1") {
+                      id name
+                      specification: specs { lengthMeters classification }
+                    }
+                  }\""")
+              PlainResult getPlain();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var aliased =
+        assertThat(compilation).generatedSourceFile("test.AliasedResult").contentsAsUtf8String();
+    aliased.contains("Optional<Specification> specification");
+    aliased.contains("public record Specification(");
+
+    var plain =
+        assertThat(compilation).generatedSourceFile("test.PlainResult").contentsAsUtf8String();
+    plain.contains("Optional<Specs> specs");
+    plain.contains("public record Specs(");
+  }
 }

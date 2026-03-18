@@ -30,6 +30,8 @@ public @interface GraphqlQuery {
 
   Toggle useOptional() default Toggle.INHERIT;
 
+  Toggle useAliasForFieldNames() default Toggle.INHERIT;
+
   Class<?>[] typeAnnotations() default {};
 
   String[] rawTypeAnnotations() default {};
