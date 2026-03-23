@@ -1,3 +1,8 @@
+### Version 13.12
+
+* `UrlencodedFormContentProcessor` now honors `CollectionFormat` from `@RequestLine`/`RequestTemplate` for array and
+  collection values in `application/x-www-form-urlencoded` bodies.
+
 ### Version 11.9
 
 * `OkHttpClient` now implements `AsyncClient`

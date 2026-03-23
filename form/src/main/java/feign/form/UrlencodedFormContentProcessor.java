@@ -17,14 +17,19 @@ package feign.form;
 
 import static feign.form.ContentType.URLENCODED;
 
+import feign.CollectionFormat;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -55,7 +60,7 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
       if (bodyData.length() > 0) {
         bodyData.append(QUERY_DELIMITER);
       }
-      bodyData.append(createKeyValuePair(entry, charset));
+      bodyData.append(createKeyValuePair(template.collectionFormat(), entry, charset));
     }
 
     val contentTypeValue =
@@ -77,16 +82,19 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
     return URLENCODED;
   }
 
-  private String createKeyValuePair(Entry<String, Object> entry, Charset charset) {
+  private CharSequence createKeyValuePair(
+      CollectionFormat collectionFormat, Entry<String, Object> entry, Charset charset) {
     String encodedKey = encode(entry.getKey(), charset);
     Object value = entry.getValue();
 
     if (value == null) {
       return encodedKey;
     } else if (value.getClass().isArray()) {
-      return createKeyValuePairFromArray(encodedKey, value, charset);
+      return createKeyValuePair(
+          collectionFormat, encodedKey, Arrays.stream((Object[]) value), charset);
     } else if (value instanceof Collection) {
-      return createKeyValuePairFromCollection(encodedKey, value, charset);
+      return createKeyValuePair(
+          collectionFormat, encodedKey, ((Collection<?>) value).stream(), charset);
     }
     return new StringBuilder()
         .append(encodedKey)
@@ -95,28 +103,10 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
         .toString();
   }
 
-  private String createKeyValuePairFromCollection(String key, Object values, Charset charset) {
-    val collection = (Collection<?>) values;
-    val array = collection.toArray(new Object[0]);
-    return createKeyValuePairFromArray(key, array, charset);
-  }
-
-  private String createKeyValuePairFromArray(String key, Object values, Charset charset) {
-    val result = new StringBuilder();
-    val array = (Object[]) values;
-
-    for (int index = 0; index < array.length; index++) {
-      val value = array[index];
-      if (value == null) {
-        continue;
-      }
-
-      if (index > 0) {
-        result.append(QUERY_DELIMITER);
-      }
-
-      result.append(key).append(EQUAL_SIGN).append(encode(value, charset));
-    }
-    return result.toString();
+  private CharSequence createKeyValuePair(
+      CollectionFormat collectionFormat, String key, Stream<?> values, Charset charset) {
+    val stringValues =
+        values.filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
+    return collectionFormat.join(key, stringValues, charset);
   }
 }
