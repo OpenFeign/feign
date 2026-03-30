@@ -171,7 +171,7 @@
 
     <junit5.version>6.0.3</junit5.version>
     <jackson.version>2.21.2</jackson.version>
-    <jackson3.version>3.1.0</jackson3.version>
+    <jackson3.version>3.1.1</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
     <fastjson2.version>2.0.61.android8</fastjson2.version>
