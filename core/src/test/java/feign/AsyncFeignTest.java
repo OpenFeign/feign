@@ -1377,4 +1377,23 @@ public class AsyncFeignTest {
   void afterEachTest() throws IOException {
     server.close();
   }
+
+  /**
+   * Verifies that {@link AsyncFeign} has no static singleton {@link ExecutorService}.
+   * A static executor retains a strong reference to the thread's ContextClassLoader,
+   * causing ClassLoader leaks on servlet container redeployment (Metaspace OOM).
+   *
+   * @see <a href="https://github.com/OpenFeign/feign/issues/3178">Issue #3178</a>
+   */
+  @Test
+  void asyncFeignHasNoStaticExecutorService() throws Exception {
+    boolean hasStaticExecutor =
+        java.util.Arrays.stream(AsyncFeign.class.getDeclaredClasses())
+            .flatMap(c -> java.util.Arrays.stream(c.getDeclaredFields()))
+            .anyMatch(
+                f ->
+                    java.lang.reflect.Modifier.isStatic(f.getModifiers())
+                        && ExecutorService.class.isAssignableFrom(f.getType()));
+    assertThat(hasStaticExecutor).isFalse();
+  }
 }
