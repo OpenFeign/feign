@@ -419,6 +419,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
             rawAnnotations,
             annotation.useOptional(),
             annotation.useAliasForFieldNames(),
+            annotation.generateDeprecated(),
             classFieldAnnotations,
             nonNullFqns,
             nonNullRaw);
@@ -436,6 +437,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         config.annotations(),
         config.useOptional(),
         config.useAliasForFieldNames(),
+        config.generateDeprecated(),
         config.fieldAnnotations(),
         config.nonNullAnnotations());
   }
@@ -455,6 +457,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     var methodRaw = annotation.rawTypeAnnotations();
     var methodOptionalToggle = annotation.useOptional();
     var methodAliasToggle = annotation.useAliasForFieldNames();
+    var methodDeprecatedToggle = annotation.generateDeprecated();
 
     var useOptional =
         methodOptionalToggle == Toggle.INHERIT
@@ -464,6 +467,10 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
         methodAliasToggle == Toggle.INHERIT
             ? classConfig.useAliasForFieldNames()
             : methodAliasToggle == Toggle.TRUE;
+    var generateDeprecated =
+        methodDeprecatedToggle == Toggle.INHERIT
+            ? classConfig.generateDeprecated()
+            : methodDeprecatedToggle == Toggle.TRUE;
 
     var methodFieldAnnotations = extractFieldAnnotations(method);
     var fieldAnnotations =
@@ -479,6 +486,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     if (!hasMethodAnnotations && !hasMethodNonNull) {
       if (useOptional == classConfig.useOptional()
           && useAliasForFieldNames == classConfig.useAliasForFieldNames()
+          && generateDeprecated == classConfig.generateDeprecated()
           && fieldAnnotations.equals(classConfig.fieldAnnotations())) {
         return classConfig;
       }
@@ -491,6 +499,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
           classConfig.annotations(),
           useOptional,
           useAliasForFieldNames,
+          generateDeprecated,
           fieldAnnotations,
           classConfig.nonNullAnnotations());
     }
@@ -503,6 +512,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
             methodRaw,
             useOptional,
             useAliasForFieldNames,
+            generateDeprecated,
             fieldAnnotations,
             nonNullFqns,
             nonNullRaw);
@@ -515,6 +525,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
           config.annotations(),
           useOptional,
           useAliasForFieldNames,
+          generateDeprecated,
           fieldAnnotations,
           resolvedNonNull);
     }

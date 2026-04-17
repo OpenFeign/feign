@@ -1913,4 +1913,256 @@ class GraphqlSchemaProcessorTest {
     plain.contains("Optional<Specs> specs");
     plain.contains("public record Specs(");
   }
+
+  @Test
+  void deprecatedFieldsIncludedByDefault() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.DefaultDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("deprecated-test-schema.graphql")
+            interface DefaultDeprecatedApi {
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id name email emails status } }
+                  \""")
+              UserResult getUser();
+
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id name }
+                  }\""")
+              CreateUserResult createUser(CreateUserInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    var userResult =
+        assertThat(compilation).generatedSourceFile("test.UserResult").contentsAsUtf8String();
+    userResult.contains("@Deprecated Optional<String> email,");
+
+    var createInput =
+        assertThat(compilation).generatedSourceFile("test.CreateUserInput").contentsAsUtf8String();
+    createInput.contains("@Deprecated Optional<String> email");
+
+    var status =
+        assertThat(compilation).generatedSourceFile("test.UserStatus").contentsAsUtf8String();
+    status.contains("@Deprecated\n  BANNED");
+  }
+
+  @Test
+  void deprecatedFieldsSkippedWhenDisabledAtClassLevel() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.ClassDisabledDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = false)
+            interface ClassDisabledDeprecatedApi {
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id name email emails status } }
+                  \""")
+              UserResult getUser();
+
+              @GraphqlQuery(\"""
+                  mutation createUser($input: CreateUserInput!) {
+                    createUser(input: $input) { id name }
+                  }\""")
+              CreateUserResult createUser(CreateUserInput input);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.UserResult")
+        .contentsAsUtf8String()
+        .doesNotContain(" email,");
+    assertThat(compilation)
+        .generatedSourceFile("test.CreateUserInput")
+        .contentsAsUtf8String()
+        .doesNotContain(" email,");
+    assertThat(compilation)
+        .generatedSourceFile("test.UserStatus")
+        .contentsAsUtf8String()
+        .doesNotContain("BANNED");
+  }
+
+  @Test
+  void methodLevelToggleCanReEnableDeprecated() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MethodOverrideDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = false)
+            interface MethodOverrideDeprecatedApi {
+              @GraphqlQuery(value = \"""
+                  { user(id: "1") { id name email emails status } }
+                  \""", generateDeprecated = Toggle.TRUE)
+              WithDeprecatedResult getUserWithDeprecated();
+
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id name email emails status } }
+                  \""")
+              WithoutDeprecatedResult getUserFiltered();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.WithDeprecatedResult")
+        .contentsAsUtf8String()
+        .contains(" email,");
+    assertThat(compilation)
+        .generatedSourceFile("test.WithoutDeprecatedResult")
+        .contentsAsUtf8String()
+        .doesNotContain(" email,");
+  }
+
+  @Test
+  void deprecatedEnumValuesSkippedWhenDisabled() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.EnumDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = false)
+            interface EnumDeprecatedApi {
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id status } }
+                  \""")
+              UserResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    var status =
+        assertThat(compilation).generatedSourceFile("test.UserStatus").contentsAsUtf8String();
+    status.contains("ACTIVE");
+    status.contains("INACTIVE");
+    status.doesNotContain("BANNED");
+  }
+
+  @Test
+  void methodToggleReEnabledDeprecatedStillCarriesAnnotation() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.ReEnabledDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = false)
+            interface ReEnabledDeprecatedApi {
+              @GraphqlQuery(value = \"""
+                  { user(id: "1") { id name email status } }
+                  \""", generateDeprecated = Toggle.TRUE)
+              ReEnabledResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.ReEnabledResult")
+        .contentsAsUtf8String()
+        .contains("@Deprecated Optional<String> email,");
+    assertThat(compilation)
+        .generatedSourceFile("test.UserStatus")
+        .contentsAsUtf8String()
+        .contains("@Deprecated\n  BANNED");
+  }
+
+  @Test
+  void deprecatedEnumValuesKeptByDefault() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.EnumDefaultApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("deprecated-test-schema.graphql")
+            interface EnumDefaultApi {
+              @GraphqlQuery(\"""
+                  { user(id: "1") { id status } }
+                  \""")
+              UserResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    var status =
+        assertThat(compilation).generatedSourceFile("test.UserStatus").contentsAsUtf8String();
+    status.contains("ACTIVE");
+    status.contains("INACTIVE");
+    status.contains("BANNED");
+  }
+
+  @Test
+  void methodLevelToggleCanDisableDeprecated() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MethodDisableDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema("deprecated-test-schema.graphql")
+            interface MethodDisableDeprecatedApi {
+              @GraphqlQuery(value = \"""
+                  { user(id: "1") { id name email emails status } }
+                  \""", generateDeprecated = Toggle.FALSE)
+              FilteredUserResult getUserFiltered();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+    assertThat(compilation)
+        .generatedSourceFile("test.FilteredUserResult")
+        .contentsAsUtf8String()
+        .doesNotContain(" email,");
+    assertThat(compilation)
+        .generatedSourceFile("test.UserStatus")
+        .contentsAsUtf8String()
+        .doesNotContain("BANNED");
+  }
 }

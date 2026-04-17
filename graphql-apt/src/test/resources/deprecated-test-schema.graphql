@@ -1,0 +1,27 @@
+type Query {
+  user(id: ID!): User
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String @deprecated(reason: "use emails instead")
+  emails: [String]
+  status: UserStatus
+}
+
+input CreateUserInput {
+  name: String!
+  email: String @deprecated(reason: "use emails instead")
+  emails: [String]
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED @deprecated(reason: "no longer used")
+}
