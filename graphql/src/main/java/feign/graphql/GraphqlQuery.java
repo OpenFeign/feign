@@ -32,6 +32,8 @@ public @interface GraphqlQuery {
 
   Toggle useAliasForFieldNames() default Toggle.INHERIT;
 
+  Toggle generateDeprecated() default Toggle.INHERIT;
+
   Class<?>[] typeAnnotations() default {};
 
   String[] rawTypeAnnotations() default {};

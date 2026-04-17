@@ -20,6 +20,7 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import graphql.language.DirectivesContainer;
 import graphql.language.EnumTypeDefinition;
 import graphql.language.Field;
 import graphql.language.InputObjectTypeDefinition;
@@ -144,6 +145,10 @@ public class TypeGenerator {
       if (schemaDef == null) {
         continue;
       }
+      var deprecated = isDeprecated(schemaDef);
+      if (!annotationConfig.generateDeprecated() && deprecated) {
+        continue;
+      }
       var fieldName = responseKey(field);
 
       var fieldType = schemaDef.getType();
@@ -165,11 +170,11 @@ public class TypeGenerator {
         var nestedType =
             wrapType(fieldType, ClassName.get("", nestedClassName), annotationConfig.useOptional());
         var fieldNonNull = fieldType instanceof NonNullType;
-        fields.add(toRecordField(fieldName, nestedType, fieldNonNull));
+        fields.add(toRecordField(fieldName, nestedType, fieldNonNull, deprecated));
       } else {
         var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
         var fieldNonNull = fieldType instanceof NonNullType;
-        fields.add(toRecordField(fieldName, javaType, fieldNonNull));
+        fields.add(toRecordField(fieldName, javaType, fieldNonNull, deprecated));
         enqueueIfNonScalar(rawTypeName);
       }
     }
@@ -301,11 +306,15 @@ public class TypeGenerator {
     var fields = new ArrayList<RecordField>();
 
     for (var valueDef : inputDef.getInputValueDefinitions()) {
+      var deprecated = isDeprecated(valueDef);
+      if (!annotationConfig.generateDeprecated() && deprecated) {
+        continue;
+      }
       var fieldName = valueDef.getName();
       var fieldType = valueDef.getType();
       var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
       var fieldNonNull = fieldType instanceof NonNullType;
-      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull, deprecated));
 
       var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldType);
       enqueueIfNonScalar(rawTypeName);
@@ -350,7 +359,17 @@ public class TypeGenerator {
     var enumBuilder = TypeSpec.enumBuilder(className).addModifiers(Modifier.PUBLIC);
 
     for (var value : enumDef.getEnumValueDefinitions()) {
-      enumBuilder.addEnumConstant(value.getName());
+      var deprecated = isDeprecated(value);
+      if (!annotationConfig.generateDeprecated() && deprecated) {
+        continue;
+      }
+      if (deprecated) {
+        enumBuilder.addEnumConstant(
+            value.getName(),
+            TypeSpec.anonymousClassBuilder("").addAnnotation(Deprecated.class).build());
+      } else {
+        enumBuilder.addEnumConstant(value.getName());
+      }
     }
 
     writeType(enumBuilder.build(), element);
@@ -366,11 +385,15 @@ public class TypeGenerator {
     var fields = new ArrayList<RecordField>();
 
     for (var fieldDef : objectDef.getFieldDefinitions()) {
+      var deprecated = isDeprecated(fieldDef);
+      if (!annotationConfig.generateDeprecated() && deprecated) {
+        continue;
+      }
       var fieldName = fieldDef.getName();
       var fieldType = fieldDef.getType();
       var javaType = typeMapper.map(fieldType, annotationConfig.useOptional());
       var fieldNonNull = fieldType instanceof NonNullType;
-      fields.add(toRecordField(fieldName, javaType, fieldNonNull));
+      fields.add(toRecordField(fieldName, javaType, fieldNonNull, deprecated));
 
       var rawTypeName = GraphqlTypeMapper.unwrapTypeName(fieldDef.getType());
       enqueueIfNonScalar(rawTypeName);
@@ -384,6 +407,15 @@ public class TypeGenerator {
     if (!typeMapper.isScalar(typeName) && !generatedTypes.contains(typeName)) {
       pendingTypes.add(typeName);
     }
+  }
+
+  private static boolean isDeprecated(DirectivesContainer<?> node) {
+    for (var directive : node.getDirectives()) {
+      if ("deprecated".equals(directive.getName())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private TypeName wrapType(Type<?> schemaType, TypeName innerType, boolean useOptional) {
@@ -434,11 +466,14 @@ public class TypeGenerator {
 
     var typeStr = fa != null && fa.typeOverride() != null ? fa.typeOverride() : f.typeString;
 
-    if (!hasNonNull && (fa == null || fa.annotations().isEmpty())) {
+    if (!hasNonNull && !f.deprecated && (fa == null || fa.annotations().isEmpty())) {
       return typeStr + " " + f.name;
     }
 
     var fieldAnns = new ArrayList<String>();
+    if (f.deprecated) {
+      fieldAnns.add("@Deprecated");
+    }
     if (hasNonNull) {
       fieldAnns.addAll(annotationConfig.nonNullAnnotations());
     }
@@ -448,9 +483,10 @@ public class TypeGenerator {
     return String.join(" ", fieldAnns) + " " + typeStr + " " + f.name;
   }
 
-  private RecordField toRecordField(String name, TypeName typeName, boolean nonNull) {
+  private RecordField toRecordField(
+      String name, TypeName typeName, boolean nonNull, boolean deprecated) {
     var typeString = typeNameToString(typeName);
-    return new RecordField(typeString, name, typeName, nonNull);
+    return new RecordField(typeString, name, typeName, nonNull, deprecated);
   }
 
   private String typeNameToString(TypeName typeName) {
@@ -544,5 +580,6 @@ public class TypeGenerator {
       List<RecordField> fields,
       List<ResultTypeDefinition> innerTypes) {}
 
-  record RecordField(String typeString, String name, TypeName typeName, boolean nonNull) {}
+  record RecordField(
+      String typeString, String name, TypeName typeName, boolean nonNull, boolean deprecated) {}
 }
