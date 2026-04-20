@@ -218,7 +218,7 @@
     <graphql-java.version>25.0</graphql-java.version>
     <handlebars.version>4.5.0</handlebars.version>
     <httpclient4.version>4.5.14</httpclient4.version>
-    <httpclient5.version>5.6</httpclient5.version>
+    <httpclient5.version>5.6.1</httpclient5.version>
     <javapoet.version>1.13.0</javapoet.version>
     <hystrix-core.version>1.5.18</hystrix-core.version>
     <jakarta.ws.rs-api-3.version>3.1.0</jakarta.ws.rs-api-3.version>
