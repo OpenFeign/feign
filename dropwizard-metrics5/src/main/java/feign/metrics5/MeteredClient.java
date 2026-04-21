@@ -24,6 +24,7 @@ import feign.Response;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer;
 import java.io.IOException;
+import java.util.Map;
 
 /** Warp feign {@link Client} with metrics. */
 public class MeteredClient extends BaseMeteredClient implements Client {
@@ -33,7 +34,15 @@ public class MeteredClient extends BaseMeteredClient implements Client {
   public MeteredClient(
       Client client, MetricRegistry metricRegistry, MetricSuppliers metricSuppliers) {
     super(metricRegistry, new FeignMetricName(Client.class), metricSuppliers);
+    this.client = client;
+  }
 
+  public MeteredClient(
+      Client client,
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    super(metricRegistry, new FeignMetricName(Client.class, customTags), metricSuppliers);
     this.client = client;
   }
 

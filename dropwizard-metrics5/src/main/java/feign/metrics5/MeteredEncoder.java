@@ -21,6 +21,7 @@ import feign.codec.Encoder;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 /** Warp feign {@link Encoder} with metrics. */
 public class MeteredEncoder implements Encoder {
@@ -36,6 +37,17 @@ public class MeteredEncoder implements Encoder {
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Encoder.class);
+  }
+
+  public MeteredEncoder(
+      Encoder encoder,
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    this.encoder = encoder;
+    this.metricRegistry = metricRegistry;
+    this.metricSuppliers = metricSuppliers;
+    this.metricName = new FeignMetricName(Encoder.class, customTags);
   }
 
   @Override

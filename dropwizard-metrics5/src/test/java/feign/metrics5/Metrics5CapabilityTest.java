@@ -15,9 +15,16 @@
  */
 package feign.metrics5;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import feign.Capability;
+import feign.Feign;
 import feign.Util;
 import feign.micrometer.AbstractMetricsTestBase;
+import feign.micrometer.AbstractMetricsTestBase.SimpleSource;
+import feign.mock.HttpMethod;
+import feign.mock.MockClient;
+import feign.mock.MockTarget;
 import io.dropwizard.metrics5.Metered;
 import io.dropwizard.metrics5.Metric;
 import io.dropwizard.metrics5.MetricName;
@@ -25,6 +32,7 @@ import io.dropwizard.metrics5.MetricRegistry;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.junit.jupiter.api.Test;
 
 public class Metrics5CapabilityTest
     extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
@@ -119,5 +127,24 @@ public class Metrics5CapabilityTest
   @Override
   protected long getMetricCounter(Metric metric) {
     return ((Metered) metric).getCount();
+  }
+
+  @Test
+  void customTagsAreAppliedToMetrics() {
+    SimpleSource source =
+        Feign.builder()
+            .client(new MockClient().ok(HttpMethod.GET, "/get", "1234567890abcde"))
+            .addCapability(
+                new Metrics5Capability(
+                    metricsRegistry, new MetricSuppliers(), Map.of("env", "prod")))
+            .target(new MockTarget<>(SimpleSource.class));
+
+    source.get("0x3456789");
+
+    boolean hasCustomTag =
+        metricsRegistry.getMetrics().keySet().stream()
+            .anyMatch(name -> "prod".equals(name.getTags().get("env")));
+
+    assertTrue(hasCustomTag);
   }
 }
