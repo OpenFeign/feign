@@ -203,7 +203,7 @@
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
     <rewrite-maven-plugin.version>6.37.0</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.34.0</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.32.1</rewrite-migrate-java.version>
+    <rewrite-migrate-java.version>3.33.0</rewrite-migrate-java.version>
     <japicmp-maven-plugin.version>0.25.6</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
