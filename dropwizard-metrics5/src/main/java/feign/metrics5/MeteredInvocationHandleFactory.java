@@ -57,6 +57,17 @@ public class MeteredInvocationHandleFactory implements InvocationHandlerFactory 
     this.metricName = new FeignMetricName(Feign.class);
   }
 
+  public MeteredInvocationHandleFactory(
+      InvocationHandlerFactory invocationHandler,
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    this.invocationHandler = invocationHandler;
+    this.metricRegistry = metricRegistry;
+    this.metricSuppliers = metricSuppliers;
+    this.metricName = new FeignMetricName(Feign.class, customTags);
+  }
+
   @Override
   public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
     final Class clientClass = target.type();

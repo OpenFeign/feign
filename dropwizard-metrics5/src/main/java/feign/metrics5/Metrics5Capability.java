@@ -23,11 +23,14 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.SharedMetricRegistries;
+import java.util.Collections;
+import java.util.Map;
 
 public class Metrics5Capability implements Capability {
 
   private final MetricRegistry metricRegistry;
   private final MetricSuppliers metricSuppliers;
+  private final Map<String, String> customTags;
 
   public Metrics5Capability() {
     this(SharedMetricRegistries.getOrCreate("feign"), new MetricSuppliers());
@@ -40,31 +43,41 @@ public class Metrics5Capability implements Capability {
   public Metrics5Capability(MetricRegistry metricRegistry, MetricSuppliers metricSuppliers) {
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
+    this.customTags = Collections.emptyMap();
+  }
+
+  public Metrics5Capability(
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    this.metricRegistry = metricRegistry;
+    this.metricSuppliers = metricSuppliers;
+    this.customTags = customTags;
   }
 
   @Override
   public Client enrich(Client client) {
-    return new MeteredClient(client, metricRegistry, metricSuppliers);
+    return new MeteredClient(client, metricRegistry, metricSuppliers, customTags);
   }
 
   @Override
   public AsyncClient<Object> enrich(AsyncClient<Object> client) {
-    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers);
+    return new MeteredAsyncClient(client, metricRegistry, metricSuppliers, customTags);
   }
 
   @Override
   public Encoder enrich(Encoder encoder) {
-    return new MeteredEncoder(encoder, metricRegistry, metricSuppliers);
+    return new MeteredEncoder(encoder, metricRegistry, metricSuppliers, customTags);
   }
 
   @Override
   public Decoder enrich(Decoder decoder) {
-    return new MeteredDecoder(decoder, metricRegistry, metricSuppliers);
+    return new MeteredDecoder(decoder, metricRegistry, metricSuppliers, customTags);
   }
 
   @Override
   public InvocationHandlerFactory enrich(InvocationHandlerFactory invocationHandlerFactory) {
     return new MeteredInvocationHandleFactory(
-        invocationHandlerFactory, metricRegistry, metricSuppliers);
+        invocationHandlerFactory, metricRegistry, metricSuppliers, customTags);
   }
 }
