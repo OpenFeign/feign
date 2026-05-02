@@ -81,8 +81,40 @@ public final class ApacheHttpClient implements Client {
     } catch (URISyntaxException e) {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
-    HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse, request);
+    try {
+      HttpResponse httpResponse = client.execute(httpUriRequest);
+      return toFeignResponse(httpResponse, request);
+    } catch (IOException e) {
+      Throwable cause = e.getCause();
+      if (cause != null
+          && !(cause instanceof IOException)
+          && !(cause instanceof RuntimeException)
+          && !(cause instanceof Error)) {
+        return createSyntheticErrorResponse(request, cause);
+      }
+      throw e;
+    }
+  }
+
+  private Response createSyntheticErrorResponse(Request request, Throwable cause) {
+    // Determine status code based on exception type
+    int status = 500; // Default to Internal Server Error
+    String reason = cause.getClass().getSimpleName();
+
+    // For ProtocolException during redirects (e.g., missing Location header), use 3xx
+    if (cause.getClass().getSimpleName().equals("ProtocolException")
+        && cause.getMessage() != null
+        && cause.getMessage().contains("redirect")) {
+      status = 300; // Multiple Choices (generic redirect error)
+    }
+
+    return Response.builder()
+        .status(status)
+        .reason(reason)
+        .request(request)
+        .headers(new java.util.HashMap<>())
+        .body(cause.getMessage() != null ? cause.getMessage().getBytes() : new byte[0])
+        .build();
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
