@@ -22,6 +22,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.interceptor.MethodInterceptor;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -188,6 +189,16 @@ public final class AsyncFeign<C> {
     }
 
     @Override
+    public AsyncBuilder<C> methodInterceptor(MethodInterceptor methodInterceptor) {
+      return super.methodInterceptor(methodInterceptor);
+    }
+
+    @Override
+    public AsyncBuilder<C> methodInterceptors(Iterable<MethodInterceptor> methodInterceptors) {
+      return super.methodInterceptors(methodInterceptors);
+    }
+
+    @Override
     public AsyncBuilder<C> invocationHandlerFactory(
         InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
@@ -215,6 +226,7 @@ public final class AsyncFeign<C> {
               client,
               retryer,
               requestInterceptors,
+              methodInterceptors,
               responseHandler,
               logger,
               logLevel,
