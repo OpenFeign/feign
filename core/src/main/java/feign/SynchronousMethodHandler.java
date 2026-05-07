@@ -24,7 +24,6 @@ import feign.Request.Options;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -58,11 +57,11 @@ final class SynchronousMethodHandler implements MethodHandler {
             argv);
 
     MethodInterceptor.Chain endOfChain = inv -> runWithRetry(inv, options);
-    MethodInterceptor.Chain chain = endOfChain;
-    List<MethodInterceptor> methodInterceptors = methodHandlerConfiguration.getMethodInterceptors();
-    for (int i = methodInterceptors.size() - 1; i >= 0; i--) {
-      chain = methodInterceptors.get(i).apply(chain);
-    }
+    MethodInterceptor.Chain chain =
+        methodHandlerConfiguration.getMethodInterceptors().stream()
+            .reduce(MethodInterceptor::andThen)
+            .map(interceptor -> interceptor.apply(endOfChain))
+            .orElse(endOfChain);
     return chain.next(invocation);
   }
 
@@ -173,29 +172,6 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final ExceptionPropagationPolicy propagationPolicy;
     private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
-
-    Factory(
-        Client client,
-        Retryer retryer,
-        List<RequestInterceptor> requestInterceptors,
-        ResponseHandler responseHandler,
-        Logger logger,
-        Logger.Level logLevel,
-        ExceptionPropagationPolicy propagationPolicy,
-        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
-        Options options) {
-      this(
-          client,
-          retryer,
-          requestInterceptors,
-          Collections.emptyList(),
-          responseHandler,
-          logger,
-          logLevel,
-          propagationPolicy,
-          requestTemplateFactoryResolver,
-          options);
-    }
 
     Factory(
         Client client,

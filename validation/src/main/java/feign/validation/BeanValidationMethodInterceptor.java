@@ -16,12 +16,15 @@
 package feign.validation;
 
 import feign.Experimental;
-import feign.MethodMetadata;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
@@ -50,6 +53,8 @@ public final class BeanValidationMethodInterceptor implements MethodInterceptor 
 
   private final Validator validator;
   private final Class<?>[] groups;
+  private final ConcurrentMap<Method, Annotation[][]> parameterAnnotationsCache =
+      new ConcurrentHashMap<>();
 
   public BeanValidationMethodInterceptor(Validator validator, Class<?>... groups) {
     this.validator = validator;
@@ -66,27 +71,39 @@ public final class BeanValidationMethodInterceptor implements MethodInterceptor 
 
   @Override
   public Object intercept(Invocation invocation, Chain chain) throws Throwable {
-    Object[] arguments = invocation.arguments();
-    if (arguments != null && arguments.length > 0) {
-      Set<ConstraintViolation<Object>> violations = new LinkedHashSet<>();
-      MethodMetadata metadata = invocation.methodMetadata();
-      Annotation[][] parameterAnnotations = invocation.method().getParameterAnnotations();
-      Integer bodyIndex = metadata.bodyIndex();
-      for (int i = 0; i < arguments.length; i++) {
-        Object argument = arguments[i];
-        if (argument == null) {
-          continue;
-        }
-        boolean isBody = bodyIndex != null && bodyIndex == i;
-        if (isBody || hasValidAnnotation(parameterAnnotations[i])) {
-          violations.addAll(validator.validate(argument, groups));
-        }
-      }
-      if (!violations.isEmpty()) {
-        throw new ConstraintViolationException(violations);
-      }
+    Set<ConstraintViolation<Object>> violations = collectViolations(invocation);
+    if (!violations.isEmpty()) {
+      throw new ConstraintViolationException(violations);
     }
     return chain.next(invocation);
+  }
+
+  private Set<ConstraintViolation<Object>> collectViolations(Invocation invocation) {
+    Object[] arguments = invocation.arguments();
+    if (arguments == null || arguments.length == 0) {
+      return Collections.emptySet();
+    }
+    Set<ConstraintViolation<Object>> violations = new LinkedHashSet<>();
+    Object body = invocation.body();
+    if (body != null) {
+      violations.addAll(validator.validate(body, groups));
+    }
+    Integer bodyIndex = invocation.methodMetadata().bodyIndex();
+    Annotation[][] parameterAnnotations =
+        parameterAnnotationsCache.computeIfAbsent(
+            invocation.method(), Method::getParameterAnnotations);
+    for (int i = 0; i < arguments.length; i++) {
+      if (arguments[i] == null) {
+        continue;
+      }
+      if (bodyIndex != null && bodyIndex == i) {
+        continue;
+      }
+      if (hasValidAnnotation(parameterAnnotations[i])) {
+        violations.addAll(validator.validate(arguments[i], groups));
+      }
+    }
+    return violations;
   }
 
   private static boolean hasValidAnnotation(Annotation[] annotations) {

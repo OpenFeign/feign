@@ -24,7 +24,6 @@ import feign.Request.Options;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -79,11 +78,11 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
             throw e.getCause();
           }
         };
-    MethodInterceptor.Chain chain = endOfChain;
-    List<MethodInterceptor> methodInterceptors = methodHandlerConfiguration.getMethodInterceptors();
-    for (int i = methodInterceptors.size() - 1; i >= 0; i--) {
-      chain = methodInterceptors.get(i).apply(chain);
-    }
+    MethodInterceptor.Chain chain =
+        methodHandlerConfiguration.getMethodInterceptors().stream()
+            .reduce(MethodInterceptor::andThen)
+            .map(interceptor -> interceptor.apply(endOfChain))
+            .orElse(endOfChain);
     return chain.next(invocation);
   }
 
@@ -268,31 +267,6 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     private final MethodInfoResolver methodInfoResolver;
     private final RequestTemplateFactoryResolver requestTemplateFactoryResolver;
     private final Options options;
-
-    Factory(
-        AsyncClient<C> client,
-        Retryer retryer,
-        List<RequestInterceptor> requestInterceptors,
-        AsyncResponseHandler responseHandler,
-        Logger logger,
-        Logger.Level logLevel,
-        ExceptionPropagationPolicy propagationPolicy,
-        MethodInfoResolver methodInfoResolver,
-        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
-        Options options) {
-      this(
-          client,
-          retryer,
-          requestInterceptors,
-          Collections.emptyList(),
-          responseHandler,
-          logger,
-          logLevel,
-          propagationPolicy,
-          methodInfoResolver,
-          requestTemplateFactoryResolver,
-          options);
-    }
 
     Factory(
         AsyncClient<C> client,

@@ -74,6 +74,18 @@ public final class Invocation {
   }
 
   /**
+   * Returns the typed argument that will be serialized as the request body, or {@code null} if the
+   * method has no body parameter or it was passed as {@code null}.
+   */
+  public Object body() {
+    Integer bodyIndex = methodMetadata.bodyIndex();
+    if (bodyIndex == null || arguments == null || bodyIndex >= arguments.length) {
+      return null;
+    }
+    return arguments[bodyIndex];
+  }
+
+  /**
    * The HTTP {@link Response} captured after the framework's terminal chain step. Returns {@code
    * null} when the chain has not yet executed the HTTP call, or when the call failed before a
    * response was received.

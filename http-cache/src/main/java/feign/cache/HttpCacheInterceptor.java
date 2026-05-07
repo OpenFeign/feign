@@ -19,12 +19,14 @@ import feign.Experimental;
 import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * A {@link MethodInterceptor} that adds conditional revalidation headers ({@code If-None-Match} /
@@ -42,6 +44,8 @@ import java.util.function.Function;
  */
 @Experimental
 public final class HttpCacheInterceptor implements MethodInterceptor {
+
+  private static final Pattern NO_STORE = Pattern.compile("(?i)\\bno-store\\b");
 
   private final HttpCacheStore store;
   private final Function<Invocation, String> keyFn;
@@ -78,27 +82,10 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
     }
     String key = keyFn.apply(invocation);
     CachedEntry hit = store.get(key);
-    if (hit != null) {
-      if (hit.etag() != null) {
-        template.header("If-None-Match", hit.etag());
-      }
-      if (hit.lastModified() != null) {
-        template.header("If-Modified-Since", hit.lastModified());
-      }
-    }
+    addConditionalHeaders(template, hit);
     try {
       Object result = chain.next(invocation);
-      Response response = invocation.response();
-      if (response != null
-          && response.status() >= 200
-          && response.status() < 300
-          && !hasNoStore(response)) {
-        String etag = firstHeader(response.headers(), "ETag");
-        String lastMod = firstHeader(response.headers(), "Last-Modified");
-        if (etag != null || lastMod != null) {
-          store.put(key, new CachedEntry(result, etag, lastMod, Instant.now()));
-        }
-      }
+      maybeStore(key, result, invocation.response());
       return result;
     } catch (FeignException e) {
       if (e.status() == 304 && hit != null) {
@@ -106,6 +93,38 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
       }
       throw e;
     }
+  }
+
+  private static void addConditionalHeaders(RequestTemplate template, CachedEntry hit) {
+    if (hit == null) {
+      return;
+    }
+    if (hit.etag() != null) {
+      template.header("If-None-Match", hit.etag());
+    }
+    if (hit.lastModified() != null) {
+      template.header("If-Modified-Since", hit.lastModified());
+    }
+  }
+
+  private void maybeStore(String key, Object result, Response response) {
+    if (response == null) {
+      return;
+    }
+    int status = response.status();
+    if (status < 200 || status >= 300) {
+      return;
+    }
+    Map<String, Collection<String>> headers = response.headers();
+    if (containsNoStore(headers)) {
+      return;
+    }
+    String etag = firstHeader(headers, "ETag");
+    String lastMod = firstHeader(headers, "Last-Modified");
+    if (etag == null && lastMod == null) {
+      return;
+    }
+    store.put(key, new CachedEntry(result, etag, lastMod, Instant.now()));
   }
 
   private static String defaultKey(Invocation invocation) {
@@ -118,13 +137,9 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
     return "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method);
   }
 
-  private static boolean hasNoStore(Response response) {
-    Collection<String> values = response.headers().get("Cache-Control");
-    if (values == null) {
-      return false;
-    }
-    for (String value : values) {
-      if (value != null && value.toLowerCase().contains("no-store")) {
+  private static boolean containsNoStore(Map<String, Collection<String>> headers) {
+    for (String value : Util.valuesOrEmpty(headers, "Cache-Control")) {
+      if (value != null && NO_STORE.matcher(value).find()) {
         return true;
       }
     }
