@@ -42,6 +42,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   protected List<RequestInterceptor> requestInterceptors = new ArrayList<>();
   protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
+  protected List<MethodInterceptor> methodInterceptors = new ArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
   protected Contract contract = new DefaultContract();
   protected Retryer retryer = new DefaultRetryer();
@@ -219,6 +220,27 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     return thisB;
   }
 
+  /**
+   * Adds a single {@link MethodInterceptor} to the builder. Method interceptors run after contract
+   * resolution and wrap the entire HTTP exchange (request interceptors, HTTP execution, response
+   * interceptors, decoding). They have access to raw method arguments via {@link Invocation}.
+   */
+  @Experimental
+  public B methodInterceptor(MethodInterceptor methodInterceptor) {
+    this.methodInterceptors.add(methodInterceptor);
+    return thisB;
+  }
+
+  /** Sets the full set of method interceptors, overwriting any previously configured. */
+  @Experimental
+  public B methodInterceptors(Iterable<MethodInterceptor> methodInterceptors) {
+    this.methodInterceptors.clear();
+    for (MethodInterceptor methodInterceptor : methodInterceptors) {
+      this.methodInterceptors.add(methodInterceptor);
+    }
+    return thisB;
+  }
+
   /** Allows you to override how reflective dispatch works inside of Feign. */
   public B invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
     this.invocationHandlerFactory = invocationHandlerFactory;
@@ -305,6 +327,21 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
                   capabilities);
       clone.responseInterceptors = responseInterceptors.interceptors();
 
+      // enrich each method interceptor, then enrich the list as a whole
+      MethodInterceptor[] methodArray = clone.methodInterceptors.toArray(new MethodInterceptor[0]);
+      for (int i = 0; i < methodArray.length; i++) {
+        methodArray[i] =
+            (MethodInterceptor)
+                Capability.enrich(methodArray[i], MethodInterceptor.class, capabilities);
+      }
+      MethodInterceptors methodInterceptors =
+          (MethodInterceptors)
+              Capability.enrich(
+                  new MethodInterceptors(Arrays.asList(methodArray)),
+                  MethodInterceptors.class,
+                  capabilities);
+      clone.methodInterceptors = methodInterceptors.interceptors();
+
       return clone;
     } catch (CloneNotSupportedException e) {
       throw new AssertionError(e);
@@ -322,6 +359,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
         // interceptor lists are enriched per-element then as a whole via custom types
         .filter(field -> !Objects.equals(field.getName(), "requestInterceptors"))
         .filter(field -> !Objects.equals(field.getName(), "responseInterceptors"))
+        .filter(field -> !Objects.equals(field.getName(), "methodInterceptors"))
         // skip primitive types
         .filter(field -> !field.getType().isPrimitive())
         // skip enumerations

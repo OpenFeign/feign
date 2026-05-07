@@ -17,6 +17,7 @@ package feign;
 
 import static feign.Util.checkNotNull;
 
+import java.util.Collections;
 import java.util.List;
 
 public class MethodHandlerConfiguration {
@@ -28,6 +29,8 @@ public class MethodHandlerConfiguration {
   private final Retryer retryer;
 
   private final List<RequestInterceptor> requestInterceptors;
+
+  private final List<MethodInterceptor> methodInterceptors;
 
   private final Logger logger;
 
@@ -53,6 +56,10 @@ public class MethodHandlerConfiguration {
 
   public List<RequestInterceptor> getRequestInterceptors() {
     return requestInterceptors;
+  }
+
+  public List<MethodInterceptor> getMethodInterceptors() {
+    return methodInterceptors;
   }
 
   public Logger getLogger() {
@@ -85,10 +92,35 @@ public class MethodHandlerConfiguration {
       RequestTemplate.Factory buildTemplateFromArgs,
       Request.Options options,
       ExceptionPropagationPolicy propagationPolicy) {
+    this(
+        metadata,
+        target,
+        retryer,
+        requestInterceptors,
+        Collections.emptyList(),
+        logger,
+        logLevel,
+        buildTemplateFromArgs,
+        options,
+        propagationPolicy);
+  }
+
+  public MethodHandlerConfiguration(
+      MethodMetadata metadata,
+      Target<?> target,
+      Retryer retryer,
+      List<RequestInterceptor> requestInterceptors,
+      List<MethodInterceptor> methodInterceptors,
+      Logger logger,
+      Logger.Level logLevel,
+      RequestTemplate.Factory buildTemplateFromArgs,
+      Request.Options options,
+      ExceptionPropagationPolicy propagationPolicy) {
     this.target = checkNotNull(target, "target");
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
     this.requestInterceptors =
         checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
+    this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors for %s", target);
     this.logger = checkNotNull(logger, "logger for %s", target);
     this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);

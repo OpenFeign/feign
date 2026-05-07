@@ -85,6 +85,7 @@
   <modules>
     <module>core</module>
     <module>gson</module>
+    <module>http-cache</module>
     <module>httpclient</module>
     <module>hc5</module>
     <module>hystrix</module>
@@ -129,6 +130,8 @@
     <module>fastjson2</module>
     <module>form</module>
     <module>form-spring</module>
+    <module>validation</module>
+    <module>validation-jakarta</module>
     <module>vertx</module>
   </modules>
 
@@ -231,6 +234,12 @@
     <jaxb-impl-2.version>2.3.9</jaxb-impl-2.version>
     <jaxb-impl-4.version>4.0.3</jaxb-impl-4.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
+    <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
+    <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+    <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
+    <hibernate-validator-8.version>8.0.1.Final</hibernate-validator-8.version>
+    <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
+    <expressly.version>5.0.0</expressly.version>
     <jersey-client.version>1.19.4</jersey-client.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <lombok.version>1.18.46</lombok.version>
@@ -268,6 +277,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-gson</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-http-cache</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -399,6 +414,18 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-kotlin</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-validation</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-validation-jakarta</artifactId>
         <version>${project.version}</version>
       </dependency>
 

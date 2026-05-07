@@ -22,6 +22,7 @@ import static feign.Util.checkNotNull;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -56,23 +57,39 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = methodHandlerConfiguration.getBuildTemplateFromArgs().create(argv);
     Options options = findOptions(argv);
-    Retryer retryer = this.methodHandlerConfiguration.getRetryer().clone();
-    try {
-      if (methodInfo.isAsyncReturnType()) {
-        return executeAndDecode(template, options, retryer);
-      } else {
-        return executeAndDecode(template, options, retryer).join();
-      }
-    } catch (CompletionException e) {
-      throw e.getCause();
+    Invocation invocation =
+        new Invocation(
+            methodHandlerConfiguration.getTarget(),
+            methodHandlerConfiguration.getMetadata(),
+            template,
+            argv);
+
+    MethodInterceptor.Chain endOfChain =
+        inv -> {
+          Retryer retryer = this.methodHandlerConfiguration.getRetryer().clone();
+          try {
+            if (methodInfo.isAsyncReturnType()) {
+              return executeAndDecode(inv, options, retryer);
+            } else {
+              return executeAndDecode(inv, options, retryer).join();
+            }
+          } catch (CompletionException e) {
+            throw e.getCause();
+          }
+        };
+    MethodInterceptor.Chain chain = endOfChain;
+    List<MethodInterceptor> methodInterceptors = methodHandlerConfiguration.getMethodInterceptors();
+    for (int i = methodInterceptors.size() - 1; i >= 0; i--) {
+      chain = methodInterceptors.get(i).apply(chain);
     }
+    return chain.next(invocation);
   }
 
   private CompletableFuture<Object> executeAndDecode(
-      RequestTemplate template, Options options, Retryer retryer) {
+      Invocation invocation, Options options, Retryer retryer) {
     CancellableFuture<Object> resultFuture = new CancellableFuture<>();
 
-    executeAndDecode(template, options)
+    executeAndDecode(invocation, options)
         .whenComplete(
             (response, throwable) -> {
               if (throwable != null) {
@@ -85,7 +102,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
                             methodHandlerConfiguration.getLogLevel());
                   }
 
-                  resultFuture.setInner(executeAndDecode(template, options, retryer));
+                  resultFuture.setInner(executeAndDecode(invocation, options, retryer));
                 }
               } else {
                 resultFuture.complete(response);
@@ -154,7 +171,8 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     }
   }
 
-  private CompletableFuture<Object> executeAndDecode(RequestTemplate template, Options options) {
+  private CompletableFuture<Object> executeAndDecode(Invocation invocation, Options options) {
+    RequestTemplate template = invocation.requestTemplate();
     Request request = targetRequest(template);
 
     if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
@@ -170,9 +188,12 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     return client
         .execute(request, options, Optional.ofNullable(requestContext))
         .thenApply(
-            response ->
-                // TODO: remove in Feign 12
-                ensureRequestIsSet(response, template, request))
+            response -> {
+              // TODO: remove in Feign 12
+              Response withRequest = ensureRequestIsSet(response, template, request);
+              invocation.response(withRequest);
+              return withRequest;
+            })
         .exceptionally(
             throwable -> {
               CompletionException completionException =
@@ -237,6 +258,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
     private final AsyncClient<C> client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
+    private final List<MethodInterceptor> methodInterceptors;
     private final AsyncResponseHandler responseHandler;
     private final Logger logger;
     private final Logger.Level logLevel;
@@ -256,9 +278,36 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         MethodInfoResolver methodInfoResolver,
         RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         Options options) {
+      this(
+          client,
+          retryer,
+          requestInterceptors,
+          Collections.emptyList(),
+          responseHandler,
+          logger,
+          logLevel,
+          propagationPolicy,
+          methodInfoResolver,
+          requestTemplateFactoryResolver,
+          options);
+    }
+
+    Factory(
+        AsyncClient<C> client,
+        Retryer retryer,
+        List<RequestInterceptor> requestInterceptors,
+        List<MethodInterceptor> methodInterceptors,
+        AsyncResponseHandler responseHandler,
+        Logger logger,
+        Logger.Level logLevel,
+        ExceptionPropagationPolicy propagationPolicy,
+        MethodInfoResolver methodInfoResolver,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
+        Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors");
       this.responseHandler = responseHandler;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
@@ -280,6 +329,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
               target,
               retryer,
               requestInterceptors,
+              methodInterceptors,
               logger,
               logLevel,
               buildTemplateFromArgs,

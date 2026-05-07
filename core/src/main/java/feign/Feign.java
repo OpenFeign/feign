@@ -170,6 +170,16 @@ public abstract class Feign {
     }
 
     @Override
+    public Builder methodInterceptor(MethodInterceptor methodInterceptor) {
+      return super.methodInterceptor(methodInterceptor);
+    }
+
+    @Override
+    public Builder methodInterceptors(Iterable<MethodInterceptor> methodInterceptors) {
+      return super.methodInterceptors(methodInterceptors);
+    }
+
+    @Override
     public Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
     }
@@ -219,6 +229,7 @@ public abstract class Feign {
               client,
               retryer,
               requestInterceptors,
+              methodInterceptors,
               responseHandler,
               logger,
               logLevel,

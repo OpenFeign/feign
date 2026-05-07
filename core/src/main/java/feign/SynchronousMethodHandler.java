@@ -22,6 +22,7 @@ import static feign.Util.checkNotNull;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -47,10 +48,27 @@ final class SynchronousMethodHandler implements MethodHandler {
   public Object invoke(Object[] argv) throws Throwable {
     RequestTemplate template = methodHandlerConfiguration.getBuildTemplateFromArgs().create(argv);
     Options options = findOptions(argv);
+    Invocation invocation =
+        new Invocation(
+            methodHandlerConfiguration.getTarget(),
+            methodHandlerConfiguration.getMetadata(),
+            template,
+            argv);
+
+    MethodInterceptor.Chain endOfChain = inv -> runWithRetry(inv, options);
+    MethodInterceptor.Chain chain = endOfChain;
+    List<MethodInterceptor> methodInterceptors = methodHandlerConfiguration.getMethodInterceptors();
+    for (int i = methodInterceptors.size() - 1; i >= 0; i--) {
+      chain = methodInterceptors.get(i).apply(chain);
+    }
+    return chain.next(invocation);
+  }
+
+  private Object runWithRetry(Invocation invocation, Options options) throws Throwable {
     Retryer retryer = this.methodHandlerConfiguration.getRetryer().clone();
     while (true) {
       try {
-        return executeAndDecode(template, options);
+        return executeAndDecode(invocation, options);
       } catch (RetryableException e) {
         try {
           retryer.continueOrPropagate(e);
@@ -74,7 +92,8 @@ final class SynchronousMethodHandler implements MethodHandler {
     }
   }
 
-  Object executeAndDecode(RequestTemplate template, Options options) throws Throwable {
+  Object executeAndDecode(Invocation invocation, Options options) throws Throwable {
+    RequestTemplate template = invocation.requestTemplate();
     Request request = targetRequest(template);
 
     if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
@@ -104,6 +123,8 @@ final class SynchronousMethodHandler implements MethodHandler {
       }
       throw errorExecuting(request, e);
     }
+
+    invocation.response(response);
 
     long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
     return responseHandler.handleResponse(
@@ -143,6 +164,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     private final Client client;
     private final Retryer retryer;
     private final List<RequestInterceptor> requestInterceptors;
+    private final List<MethodInterceptor> methodInterceptors;
     private final ResponseHandler responseHandler;
     private final Logger logger;
     private final Logger.Level logLevel;
@@ -160,9 +182,34 @@ final class SynchronousMethodHandler implements MethodHandler {
         ExceptionPropagationPolicy propagationPolicy,
         RequestTemplateFactoryResolver requestTemplateFactoryResolver,
         Options options) {
+      this(
+          client,
+          retryer,
+          requestInterceptors,
+          Collections.emptyList(),
+          responseHandler,
+          logger,
+          logLevel,
+          propagationPolicy,
+          requestTemplateFactoryResolver,
+          options);
+    }
+
+    Factory(
+        Client client,
+        Retryer retryer,
+        List<RequestInterceptor> requestInterceptors,
+        List<MethodInterceptor> methodInterceptors,
+        ResponseHandler responseHandler,
+        Logger logger,
+        Logger.Level logLevel,
+        ExceptionPropagationPolicy propagationPolicy,
+        RequestTemplateFactoryResolver requestTemplateFactoryResolver,
+        Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
       this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
+      this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors");
       this.responseHandler = checkNotNull(responseHandler, "responseHandler");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");
@@ -182,6 +229,7 @@ final class SynchronousMethodHandler implements MethodHandler {
               target,
               retryer,
               requestInterceptors,
+              methodInterceptors,
               logger,
               logLevel,
               buildTemplateFromArgs,

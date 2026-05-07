@@ -42,6 +42,8 @@ Feign is a declarative HTTP client library with a modular design:
 - `spring/` - Spring MVC annotation support
 - `hystrix/` - Circuit breaker integration
 - `micrometer/`, `dropwizard-metrics4/5/` - Metrics integration
+- `validation/`, `validation-jakarta/` - JSR-303 / Jakarta Bean Validation via the `MethodInterceptor` extension point
+- `http-cache/` - Conditional revalidation (`ETag` / `Last-Modified` / `304 Not Modified`) via the `MethodInterceptor` extension point
 
 ### Key Design Patterns
 - **Builder Pattern**: `Feign.builder()` for configuring clients

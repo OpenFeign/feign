@@ -188,6 +188,16 @@ public final class AsyncFeign<C> {
     }
 
     @Override
+    public AsyncBuilder<C> methodInterceptor(MethodInterceptor methodInterceptor) {
+      return super.methodInterceptor(methodInterceptor);
+    }
+
+    @Override
+    public AsyncBuilder<C> methodInterceptors(Iterable<MethodInterceptor> methodInterceptors) {
+      return super.methodInterceptors(methodInterceptors);
+    }
+
+    @Override
     public AsyncBuilder<C> invocationHandlerFactory(
         InvocationHandlerFactory invocationHandlerFactory) {
       return super.invocationHandlerFactory(invocationHandlerFactory);
@@ -215,6 +225,7 @@ public final class AsyncFeign<C> {
               client,
               retryer,
               requestInterceptors,
+              methodInterceptors,
               responseHandler,
               logger,
               logLevel,
