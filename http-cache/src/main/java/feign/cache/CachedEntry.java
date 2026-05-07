@@ -20,33 +20,4 @@ import java.time.Instant;
 
 /** Immutable cache record produced from a successful response with revalidation headers. */
 @Experimental
-public final class CachedEntry {
-
-  private final Object value;
-  private final String etag;
-  private final String lastModified;
-  private final Instant storedAt;
-
-  public CachedEntry(Object value, String etag, String lastModified, Instant storedAt) {
-    this.value = value;
-    this.etag = etag;
-    this.lastModified = lastModified;
-    this.storedAt = storedAt;
-  }
-
-  public Object value() {
-    return value;
-  }
-
-  public String etag() {
-    return etag;
-  }
-
-  public String lastModified() {
-    return lastModified;
-  }
-
-  public Instant storedAt() {
-    return storedAt;
-  }
-}
+public record CachedEntry(Object value, String etag, String lastModified, Instant storedAt) {}
