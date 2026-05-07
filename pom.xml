@@ -85,6 +85,7 @@
   <modules>
     <module>core</module>
     <module>gson</module>
+    <module>http-cache</module>
     <module>httpclient</module>
     <module>hc5</module>
     <module>hystrix</module>
@@ -129,6 +130,8 @@
     <module>fastjson2</module>
     <module>form</module>
     <module>form-spring</module>
+    <module>validation</module>
+    <module>validation-jakarta</module>
     <module>vertx</module>
   </modules>
 
@@ -163,15 +166,15 @@
     <okhttp3.version>5.3.2</okhttp3.version>
     <guava.version>33.6.0-jre</guava.version>
     <googlehttpclient.version>2.1.0</googlehttpclient.version>
-    <gson.version>2.13.2</gson.version>
+    <gson.version>2.14.0</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.17</slf4j.version>
     <json.version>20251224</json.version>
-    <springboot.version>4.0.5</springboot.version>
+    <springboot.version>4.0.6</springboot.version>
 
     <junit5.version>6.0.3</junit5.version>
-    <jackson.version>2.21.2</jackson.version>
-    <jackson3.version>3.1.2</jackson3.version>
+    <jackson.version>2.21.3</jackson.version>
+    <jackson3.version>3.1.3</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
     <fastjson2.version>2.0.61.android8</fastjson2.version>
@@ -201,22 +204,22 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.36.0</rewrite-maven-plugin.version>
-    <rewrite-testing-frameworks.version>3.34.0</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.32.1</rewrite-migrate-java.version>
+    <rewrite-maven-plugin.version>6.39.0</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.35.2</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.34.0</rewrite-migrate-java.version>
     <japicmp-maven-plugin.version>0.25.6</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
     <!-- Third-party dependency versions -->
     <archaius-core.version>0.7.12</archaius-core.version>
     <auto-service-annotations.version>1.1.1</auto-service-annotations.version>
-    <commons-codec.version>1.21.0</commons-codec.version>
+    <commons-codec.version>1.22.0</commons-codec.version>
     <commons-exec.version>1.6.0</commons-exec.version>
     <commons-fileupload.version>1.6.0</commons-fileupload.version>
     <commons-text.version>1.15.0</commons-text.version>
     <compile-testing.version>0.23.0</compile-testing.version>
-    <graphql-java.version>25.0</graphql-java.version>
-    <handlebars.version>4.5.0</handlebars.version>
+    <graphql-java.version>26.0</graphql-java.version>
+    <handlebars.version>4.5.1</handlebars.version>
     <httpclient4.version>4.5.14</httpclient4.version>
     <httpclient5.version>5.6.1</httpclient5.version>
     <javapoet.version>1.13.0</javapoet.version>
@@ -231,9 +234,15 @@
     <jaxb-impl-2.version>2.3.9</jaxb-impl-2.version>
     <jaxb-impl-4.version>4.0.3</jaxb-impl-4.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
+    <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
+    <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+    <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
+    <hibernate-validator-8.version>8.0.1.Final</hibernate-validator-8.version>
+    <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
+    <expressly.version>5.0.0</expressly.version>
     <jersey-client.version>1.19.4</jersey-client.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
-    <lombok.version>1.18.44</lombok.version>
+    <lombok.version>1.18.46</lombok.version>
     <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
     <metrics-core-4.version>4.2.38</metrics-core-4.version>
     <metrics-core-5.version>5.0.6</metrics-core-5.version>
@@ -245,7 +254,7 @@
     <spring-cloud-starter-openfeign.version>5.0.1</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.7</spring-context.version>
     <spring-web.version>7.0.7</spring-web.version>
-    <undertow-core.version>2.3.24.Final</undertow-core.version>
+    <undertow-core.version>2.4.0.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>
 
@@ -268,6 +277,12 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-gson</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-http-cache</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -399,6 +414,18 @@
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-kotlin</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-validation</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-validation-jakarta</artifactId>
         <version>${project.version}</version>
       </dependency>
 
