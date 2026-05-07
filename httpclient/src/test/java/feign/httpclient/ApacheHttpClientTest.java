@@ -23,6 +23,7 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Request.Options;
+import feign.Retryer;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
 import java.nio.charset.StandardCharsets;
@@ -87,6 +88,23 @@ public class ApacheHttpClientTest extends AbstractClientTest {
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
     assertThat(feignException.status()).isEqualTo(302);
     assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
+  }
+
+  @Test
+  void errorDecoderInvokedWhenClientThrowsCheckedExceptionDuringExecution() {
+    JaxRsTestInterface api =
+        Feign.builder()
+            .contract(new JAXRSContract())
+            .retryer(Retryer.NEVER_RETRY)
+            .client(new ApacheHttpClient(HttpClientBuilder.create().build()))
+            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse().setResponseCode(303));
+
+    FeignException exception = assertThrows(FeignException.class, () -> api.withoutBody("foo"));
+    assertThat(exception.status()).isEqualTo(300);
+    assertThat(exception.getMessage())
+        .contains("Received redirect response HTTP/1.1 303 Redirection but no location header");
   }
 
   private JaxRsTestInterface buildTestInterface() {
