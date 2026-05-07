@@ -21,6 +21,8 @@ import static feign.Util.checkNotNull;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Request.Options;
+import feign.interceptor.Invocation;
+import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;

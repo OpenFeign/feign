@@ -17,10 +17,10 @@ package feign.cache;
 
 import feign.Experimental;
 import feign.FeignException;
-import feign.Invocation;
-import feign.MethodInterceptor;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.interceptor.Invocation;
+import feign.interceptor.MethodInterceptor;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;

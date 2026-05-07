@@ -13,7 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign;
+package feign.interceptor;
+
+import feign.Contract;
+import feign.Experimental;
+import feign.MethodMetadata;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.ResponseInterceptor;
 
 /**
  * An around-style interceptor invoked once per method call, after the {@link Contract} has resolved

@@ -17,6 +17,7 @@ package feign;
 
 import static feign.Util.checkNotNull;
 
+import feign.interceptor.MethodInterceptor;
 import java.util.Collections;
 import java.util.List;
 

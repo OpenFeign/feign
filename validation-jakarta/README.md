@@ -6,7 +6,7 @@ interface using Jakarta Bean Validation (`jakarta.validation`) **before** the HT
 request is dispatched. Constraint violations surface as
 `jakarta.validation.ConstraintViolationException`.
 
-Marked `@Experimental` while the underlying `feign.MethodInterceptor` API stabilises.
+Marked `@Experimental` while the underlying `feign.interceptor.MethodInterceptor` API stabilises.
 
 For the legacy `javax.validation` namespace, use the sibling `feign-validation` module.
 

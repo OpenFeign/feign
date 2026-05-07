@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign;
+package feign.interceptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import feign.Feign;
+import feign.Param;
+import feign.RequestInterceptor;
+import feign.RequestLine;
+import feign.RequestTemplate;
+import feign.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;

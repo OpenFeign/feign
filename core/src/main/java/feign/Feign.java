@@ -21,6 +21,7 @@ import feign.Target.HardCodedTarget;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;

@@ -27,6 +27,8 @@ import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.interceptor.MethodInterceptor;
+import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

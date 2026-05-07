@@ -16,9 +16,9 @@
 package feign.validation;
 
 import feign.Experimental;
-import feign.Invocation;
-import feign.MethodInterceptor;
 import feign.MethodMetadata;
+import feign.interceptor.Invocation;
+import feign.interceptor.MethodInterceptor;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
 import java.util.Set;

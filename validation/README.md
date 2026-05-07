@@ -6,7 +6,7 @@ interface using JSR-303 / Bean Validation 2.0 (`javax.validation`) **before** th
 request is dispatched. Constraint violations surface as
 `javax.validation.ConstraintViolationException`.
 
-Marked `@Experimental` while the underlying `feign.MethodInterceptor` API stabilises.
+Marked `@Experimental` while the underlying `feign.interceptor.MethodInterceptor` API stabilises.
 
 For the Jakarta namespace, see the sibling module `feign-validation-jakarta`.
 

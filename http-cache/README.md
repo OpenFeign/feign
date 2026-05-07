@@ -6,7 +6,7 @@ A `MethodInterceptor` that performs conditional HTTP revalidation using `ETag` a
 its validators. Subsequent calls send `If-None-Match` / `If-Modified-Since` headers,
 and a `304 Not Modified` response short-circuits to the cached value.
 
-Marked `@Experimental` while the underlying `feign.MethodInterceptor` API stabilises.
+Marked `@Experimental` while the underlying `feign.interceptor.MethodInterceptor` API stabilises.
 
 ```xml
 <dependency>

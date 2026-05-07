@@ -13,10 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign;
+package feign.interceptor;
 
 import static feign.Util.checkNotNull;
 
+import feign.Experimental;
+import feign.MethodMetadata;
+import feign.RequestTemplate;
+import feign.Response;
+import feign.Target;
 import java.lang.reflect.Method;
 
 /**
@@ -77,8 +82,12 @@ public final class Invocation {
     return response;
   }
 
-  /** Package-private setter used by the framework's terminal chain step. */
-  void response(Response response) {
+  /**
+   * Framework-internal setter populated by the terminal chain step after the HTTP client returns.
+   * Calling this from interceptor code is unsupported and may break in future versions.
+   */
+  @Experimental
+  public void response(Response response) {
     this.response = response;
   }
 }
