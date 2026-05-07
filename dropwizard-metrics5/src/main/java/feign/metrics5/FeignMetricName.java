@@ -22,13 +22,22 @@ import io.dropwizard.metrics5.MetricRegistry;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Map;
 
 final class FeignMetricName {
 
   private final Class<?> meteredComponent;
+  private final Map<String, String> customTags;
 
   public FeignMetricName(Class<?> meteredComponent) {
     this.meteredComponent = meteredComponent;
+    this.customTags = Collections.emptyMap();
+  }
+
+  public FeignMetricName(Class<?> meteredComponent, Map<String, String> customTags) {
+    this.meteredComponent = meteredComponent;
+    this.customTags = customTags;
   }
 
   public MetricName metricName(MethodMetadata methodMetadata, Target<?> target, String suffix) {
@@ -40,10 +49,16 @@ final class FeignMetricName {
   }
 
   public MetricName metricName(Class<?> targetType, Method method, String url) {
-    return MetricRegistry.name(meteredComponent)
-        .tagged("client", targetType.getName())
-        .tagged("method", method.getName())
-        .tagged("host", extractHost(url));
+    MetricName name =
+        MetricRegistry.name(meteredComponent)
+            .tagged("client", targetType.getName())
+            .tagged("method", method.getName())
+            .tagged("host", extractHost(url));
+
+    for (Map.Entry<String, String> entry : customTags.entrySet()) {
+      name = name.tagged(entry.getKey(), entry.getValue());
+    }
+    return name;
   }
 
   private String extractHost(final String targetUrl) {

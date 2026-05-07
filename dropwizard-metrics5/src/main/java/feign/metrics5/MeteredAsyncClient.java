@@ -23,6 +23,7 @@ import feign.RequestTemplate;
 import feign.Response;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -36,6 +37,15 @@ public class MeteredAsyncClient extends BaseMeteredClient implements AsyncClient
       MetricRegistry metricRegistry,
       MetricSuppliers metricSuppliers) {
     super(metricRegistry, new FeignMetricName(AsyncClient.class), metricSuppliers);
+    this.asyncClient = asyncClient;
+  }
+
+  public MeteredAsyncClient(
+      AsyncClient<Object> asyncClient,
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    super(metricRegistry, new FeignMetricName(AsyncClient.class, customTags), metricSuppliers);
     this.asyncClient = asyncClient;
   }
 

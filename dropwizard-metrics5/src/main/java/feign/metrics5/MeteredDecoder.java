@@ -25,6 +25,7 @@ import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 /** Warp feign {@link Decoder} with metrics. */
 public class MeteredDecoder implements Decoder {
@@ -40,6 +41,17 @@ public class MeteredDecoder implements Decoder {
     this.metricRegistry = metricRegistry;
     this.metricSuppliers = metricSuppliers;
     this.metricName = new FeignMetricName(Decoder.class);
+  }
+
+  public MeteredDecoder(
+      Decoder decoder,
+      MetricRegistry metricRegistry,
+      MetricSuppliers metricSuppliers,
+      Map<String, String> customTags) {
+    this.decoder = decoder;
+    this.metricRegistry = metricRegistry;
+    this.metricSuppliers = metricSuppliers;
+    this.metricName = new FeignMetricName(Decoder.class, customTags);
   }
 
   @Override
