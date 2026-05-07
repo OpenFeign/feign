@@ -48,6 +48,13 @@ left side
 *** Dropwizard Metrics 4
 *** Dropwizard Metrics 5
 *** Micrometer
+** interceptors
+*** RequestInterceptor
+*** ResponseInterceptor
+*** MethodInterceptor
+**** Bean Validation (JSR-303)
+**** Bean Validation (Jakarta)
+**** HTTP Cache (ETag / Last-Modified)
 ** extras
 *** Hystrix
 *** SLF4J
