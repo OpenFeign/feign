@@ -235,7 +235,7 @@
     <jaxb-impl-4.version>4.0.3</jaxb-impl-4.version>
     <jaxws-api.version>2.3.1</jaxws-api.version>
     <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
-    <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+    <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
     <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
     <hibernate-validator-8.version>8.0.1.Final</hibernate-validator-8.version>
     <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
