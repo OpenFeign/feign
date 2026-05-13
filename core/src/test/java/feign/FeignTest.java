@@ -50,6 +50,7 @@ import feign.querymap.BeanQueryMapEncoder;
 import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.ProtocolException;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -709,6 +710,39 @@ public class FeignTest {
   }
 
   @Test
+  void doesNotUnwrapUndeclaredCheckedCauseWhenPropagationPolicyIsUnwrap() {
+    TestInterface api =
+        Feign.builder()
+            .exceptionPropagationPolicy(UNWRAP)
+            .retryer(new DefaultRetryer(1, 1, 1))
+            .client(
+                (_, _) -> {
+                  throw new ProtocolException("missing Location header for redirect");
+                })
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    RetryableException exception = assertThrows(RetryableException.class, () -> api.post());
+    assertThat(exception.getMessage()).contains("missing Location header for redirect");
+  }
+
+  @Test
+  void unwrapDeclaredCheckedCauseWhenPropagationPolicyIsUnwrap() {
+    TestInterface api =
+        Feign.builder()
+            .exceptionPropagationPolicy(UNWRAP)
+            .retryer(new DefaultRetryer(1, 1, 1))
+            .client(
+                (_, _) -> {
+                  throw new ProtocolException("missing Location header for redirect");
+                })
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    ProtocolException exception =
+        assertThrows(ProtocolException.class, () -> api.postThrowsProtocolException());
+    assertThat(exception.getMessage()).contains("missing Location header for redirect");
+  }
+
+  @Test
   void whenReturnTypeIsResponseNoErrorHandling() {
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     headers.put("Location", Collections.singletonList("http://bar.com"));
@@ -1233,6 +1267,9 @@ public class FeignTest {
 
     @RequestLine("POST /")
     String post() throws TestInterfaceException;
+
+    @RequestLine("POST /")
+    String postThrowsProtocolException() throws ProtocolException;
 
     @RequestLine("POST /")
     @Body(

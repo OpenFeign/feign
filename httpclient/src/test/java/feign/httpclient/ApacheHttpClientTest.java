@@ -23,6 +23,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Request.Options;
+import feign.RetryableException;
+import feign.Retryer;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
 import java.nio.charset.StandardCharsets;
@@ -87,6 +89,21 @@ public class ApacheHttpClientTest extends AbstractClientTest {
         assertThrows(FeignException.class, () -> testInterface.withOptions(options));
     assertThat(feignException.status()).isEqualTo(302);
     assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
+  }
+
+  @Test
+  void redirectWithoutLocationHeader() {
+    JaxRsTestInterface api =
+        Feign.builder()
+            .contract(new JAXRSContract())
+            .retryer(Retryer.NEVER_RETRY)
+            .client(new ApacheHttpClient(HttpClientBuilder.create().build()))
+            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse().setResponseCode(303));
+    RetryableException exception =
+        assertThrows(RetryableException.class, () -> api.withoutBody("foo"));
+    assertThat(exception.getMessage()).contains("org.apache.http.client.ClientProtocolException");
   }
 
   private JaxRsTestInterface buildTestInterface() {
