@@ -36,7 +36,7 @@
 
   <properties>
     <vertx.version>5.0.4</vertx.version>
-    <slf4j-log4j12.version>2.0.17</slf4j-log4j12.version>
+    <slf4j-log4j12.version>2.0.18</slf4j-log4j12.version>
     <wiremock.version>3.0.1</wiremock.version>
   </properties>
 
