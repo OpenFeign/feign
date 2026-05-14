@@ -23,6 +23,8 @@ import feign.Feign;
 import feign.Feign.Builder;
 import feign.FeignException;
 import feign.Request.Options;
+import feign.RetryableException;
+import feign.Retryer;
 import feign.client.AbstractClientTest;
 import feign.jaxrs.JAXRSContract;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +34,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.apache.http.ProtocolException;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +45,25 @@ public class ApacheHttpClientTest extends AbstractClientTest {
   @Override
   public Builder newBuilder() {
     return Feign.builder().client(new ApacheHttpClient());
+  }
+
+  @Test
+  void redirectWithoutLocationHeaderKeepsRetryableExceptionWhenPropagationPolicyIsUnwrap() {
+    JaxRsTestInterface api =
+        Feign.builder()
+            .contract(new JAXRSContract())
+            .exceptionPropagationPolicy(feign.ExceptionPropagationPolicy.UNWRAP)
+            .retryer(Retryer.NEVER_RETRY)
+            .client(new ApacheHttpClient(HttpClientBuilder.create().build()))
+            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse().setResponseCode(303));
+
+    RetryableException exception =
+        assertThrows(RetryableException.class, () -> api.withoutBody("foo"));
+
+    assertThat(exception.getCause()).isInstanceOf(ClientProtocolException.class);
+    assertThat(exception.getCause()).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test
