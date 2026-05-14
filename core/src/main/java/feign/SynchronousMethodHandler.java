@@ -76,10 +76,17 @@ final class SynchronousMethodHandler implements MethodHandler {
         } catch (RetryableException th) {
           Throwable cause = th.getCause();
           if (methodHandlerConfiguration.getPropagationPolicy() == UNWRAP && cause != null) {
-            throw cause;
-          } else {
-            throw th;
+            if (cause instanceof RuntimeException || cause instanceof Error) {
+              throw cause;
+            }
+            for (Class<?> exceptionType :
+                methodHandlerConfiguration.getMetadata().method().getExceptionTypes()) {
+              if (exceptionType.isAssignableFrom(cause.getClass())) {
+                throw cause;
+              }
+            }
           }
+          throw th;
         }
         if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
           methodHandlerConfiguration
