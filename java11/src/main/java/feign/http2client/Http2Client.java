@@ -26,6 +26,9 @@ import feign.Response;
 import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.UncheckedIOException;
 import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -215,13 +218,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
   private Builder newRequestBuilder(Request request, Options options) throws URISyntaxException {
     URI uri = new URI(request.url());
 
-    final BodyPublisher body;
-    final byte[] data = request.body();
-    if (data == null) {
-      body = BodyPublishers.noBody();
-    } else {
-      body = BodyPublishers.ofByteArray(data);
-    }
+    final BodyPublisher body =
+        request.body().map(this::createBodyPublisher).orElseGet(BodyPublishers::noBody);
 
     final Builder requestBuilder =
         HttpRequest.newBuilder()
@@ -235,6 +233,30 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
 
     return requestBuilder.method(request.httpMethod().toString(), body);
+  }
+
+  private BodyPublisher createBodyPublisher(Request.Body body) {
+    BodyPublisher publisher =
+        BodyPublishers.ofInputStream(
+            () -> {
+              PipedInputStream inputStream = new PipedInputStream();
+              try {
+                PipedOutputStream outputStream = new PipedOutputStream(inputStream);
+                CompletableFuture.runAsync(
+                    () -> {
+                      try (outputStream) {
+                        body.writeTo(outputStream);
+                      } catch (IOException ignored) {
+                      }
+                    });
+                return inputStream;
+              } catch (IOException e) {
+                throw new UncheckedIOException(e);
+              }
+            });
+    return body.contentLength() > 0
+        ? BodyPublishers.fromPublisher(publisher, body.contentLength())
+        : publisher;
   }
 
   /**

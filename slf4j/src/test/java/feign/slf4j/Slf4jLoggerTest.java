@@ -21,7 +21,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,7 @@ public class Slf4jLoggerTest {
       Response.builder()
           .status(200)
           .reason("OK")
-          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+          .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
           .headers(Collections.<String, Collection<String>>emptyMap())
           .body(new byte[0])
           .build();

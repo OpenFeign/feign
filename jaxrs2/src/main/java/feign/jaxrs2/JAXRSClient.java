@@ -19,7 +19,6 @@ import feign.Client;
 import feign.Request.Options;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Variant;
+import javax.ws.rs.core.StreamingOutput;
 
 /**
  * This module directs Feign's http requests to javax.ws.rs.client.Client . Ex:
@@ -77,15 +76,11 @@ public class JAXRSClient implements Client {
         .build();
   }
 
-  private Entity<byte[]> createRequestEntity(feign.Request request) {
-    if (request.body() == null) {
-      return null;
-    }
-
-    return Entity.entity(
-        request.body(),
-        new Variant(
-            mediaType(request.headers()), locale(request.headers()), encoding(request.charset())));
+  private Entity<StreamingOutput> createRequestEntity(feign.Request request) {
+    return request
+        .body()
+        .map(body -> Entity.entity((StreamingOutput) body::writeTo, mediaType(request.headers())))
+        .orElse(null);
   }
 
   private Integer integerHeader(Response response, String header) {
@@ -102,22 +97,16 @@ public class JAXRSClient implements Client {
     }
   }
 
-  private String encoding(Charset charset) {
-    if (charset == null) return null;
-
-    return charset.name();
-  }
-
   private String locale(Map<String, Collection<String>> headers) {
     if (!headers.containsKey(HttpHeaders.CONTENT_LANGUAGE)) return null;
 
     return headers.get(HttpHeaders.CONTENT_LANGUAGE).iterator().next();
   }
 
-  private MediaType mediaType(Map<String, Collection<String>> headers) {
-    if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) return null;
+  private String mediaType(Map<String, Collection<String>> headers) {
+    if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) return MediaType.APPLICATION_OCTET_STREAM;
 
-    return MediaType.valueOf(headers.get(HttpHeaders.CONTENT_TYPE).iterator().next());
+    return headers.get(HttpHeaders.CONTENT_TYPE).iterator().next();
   }
 
   private MultivaluedMap<String, Object> toMultivaluedMap(Map<String, Collection<String>> headers) {

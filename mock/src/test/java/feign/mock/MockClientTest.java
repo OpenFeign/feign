@@ -15,10 +15,10 @@
  */
 package feign.mock;
 
-import static feign.Util.UTF_8;
 import static feign.Util.toByteArray;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Body;
 import feign.Feign;
@@ -36,7 +36,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -97,16 +99,6 @@ class MockClientTest {
   void setup() throws IOException {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] data = toByteArray(input);
-      RequestKey postContributorKey =
-          RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
-              .charset(UTF_8)
-              .headers(
-                  RequestHeaders.builder()
-                      .add("Content-Length", "55")
-                      .add("Content-Type", "application/json")
-                      .build())
-              .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
-              .build();
       mockClient = new MockClient();
       github =
           Feign.builder()
@@ -119,7 +111,10 @@ class MockClientTest {
                           HttpMethod.GET,
                           "/repos/netflix/feign/contributors?client_id=7 7",
                           new ByteArrayInputStream(data))
-                      .ok(postContributorKey, "{\"login\":\"velo\",\"contributions\":0}")
+                      .ok(
+                          HttpMethod.POST,
+                          "/repos/netflix/feign/contributors",
+                          "{\"login\":\"velo\",\"contributions\":0}")
                       .noContent(HttpMethod.PATCH, "/repos/velo/feign-mock/contributors")
                       .add(
                           HttpMethod.GET,
@@ -180,16 +175,6 @@ class MockClientTest {
 
   @Test
   void verifyInvocation() {
-    RequestKey testRequestKey =
-        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
-            .headers(
-                RequestHeaders.builder()
-                    .add("Content-Length", "55")
-                    .add("Content-Type", "application/json")
-                    .build())
-            .body("{\"login\":\"velo_at_github\",\"type\":\"preposterous hacker\"}")
-            .build();
-
     Contributor contribution =
         github.create("netflix", "feign", "velo_at_github", "preposterous hacker");
     // making sure it received a proper response
@@ -200,14 +185,12 @@ class MockClientTest {
     List<Request> results =
         mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
     assertThat(results).hasSize(1);
-    results = mockClient.verifyTimes(testRequestKey, 1);
-    assertThat(results).hasSize(1);
 
-    assertThat(mockClient.verifyOne(testRequestKey).body()).isNotNull();
-    byte[] body = mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
-    assertThat(body).isNotNull();
+    Optional<Request.Body> body =
+        mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
+    assertThat(body).isPresent();
 
-    String message = new String(body);
+    String message = assertDoesNotThrow(() -> body.get().writeToString(StandardCharsets.UTF_8));
     assertThat(message).contains("velo_at_github");
     assertThat(message).contains("preposterous hacker");
 
@@ -222,7 +205,6 @@ class MockClientTest {
 
     testRequestKey =
         RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
-            .charset(UTF_8)
             .headers(
                 RequestHeaders.builder()
                     .add("Content-Length", "55")
@@ -243,7 +225,6 @@ class MockClientTest {
 
     testRequestKey =
         RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
-            .charset(UTF_8)
             .headers(
                 RequestHeaders.builder()
                     .add("Content-Length", "55")

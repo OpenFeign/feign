@@ -19,21 +19,25 @@ import static feign.Util.checkNotNull;
 import static feign.Util.getThreadIdentifier;
 import static feign.Util.valuesOrEmpty;
 
-import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
-public final class Request implements Serializable {
+public final class Request {
 
   public enum HttpMethod {
     GET,
@@ -81,64 +85,6 @@ public final class Request implements Serializable {
     public String toString() {
       return protocolVersion;
     }
-  }
-
-  /**
-   * No parameters can be null except {@code body} and {@code charset}. All parameters must be
-   * effectively immutable, via safe copies, not mutating or otherwise.
-   *
-   * @deprecated {@link #create(HttpMethod, String, Map, byte[], Charset)}
-   */
-  @Deprecated
-  public static Request create(
-      String method,
-      String url,
-      Map<String, Collection<String>> headers,
-      byte[] body,
-      Charset charset) {
-    checkNotNull(method, "httpMethod of %s", method);
-    final HttpMethod httpMethod = HttpMethod.valueOf(method.toUpperCase());
-    return create(httpMethod, url, headers, body, charset, null);
-  }
-
-  /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
-   *
-   * @param httpMethod for the request.
-   * @param url for the request.
-   * @param headers to include.
-   * @param body of the request, can be {@literal null}
-   * @param charset of the request, can be {@literal null}
-   * @return a Request
-   */
-  @Deprecated
-  public static Request create(
-      HttpMethod httpMethod,
-      String url,
-      Map<String, Collection<String>> headers,
-      byte[] body,
-      Charset charset) {
-    return create(httpMethod, url, headers, Body.create(body, charset), null);
-  }
-
-  /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
-   *
-   * @param httpMethod for the request.
-   * @param url for the request.
-   * @param headers to include.
-   * @param body of the request, can be {@literal null}
-   * @param charset of the request, can be {@literal null}
-   * @return a Request
-   */
-  public static Request create(
-      HttpMethod httpMethod,
-      String url,
-      Map<String, Collection<String>> headers,
-      byte[] body,
-      Charset charset,
-      RequestTemplate requestTemplate) {
-    return create(httpMethod, url, headers, Body.create(body, charset), requestTemplate);
   }
 
   /**
@@ -190,17 +136,6 @@ public final class Request implements Serializable {
   }
 
   /**
-   * Http Method for this request.
-   *
-   * @return the HttpMethod string
-   * @deprecated @see {@link #httpMethod()}
-   */
-  @Deprecated
-  public String method() {
-    return httpMethod.name();
-  }
-
-  /**
    * Http Method for the request.
    *
    * @return the HttpMethod.
@@ -248,35 +183,12 @@ public final class Request implements Serializable {
   }
 
   /**
-   * Charset of the request.
+   * Returns the body of the request, if any.
    *
-   * @return the current character set for the request, may be {@literal null} for binary data.
+   * @return the body of the request, if any
    */
-  public Charset charset() {
-    return body.encoding;
-  }
-
-  /**
-   * If present, this is the replayable body to send to the server. In some cases, this may be
-   * interpretable as text.
-   *
-   * @see #charset()
-   */
-  public byte[] body() {
-    return body.data;
-  }
-
-  public boolean isBinary() {
-    return body.isBinary();
-  }
-
-  /**
-   * Request Length.
-   *
-   * @return size of the request body.
-   */
-  public int length() {
-    return this.body.length();
+  public Optional<Body> body() {
+    return Optional.ofNullable(body);
   }
 
   /**
@@ -309,7 +221,7 @@ public final class Request implements Serializable {
       }
     }
     if (body != null) {
-      builder.append('\n').append(body.asString());
+      builder.append('\n').append(body);
     }
     return builder.toString();
   }
@@ -513,78 +425,133 @@ public final class Request implements Serializable {
    * <p>Considered experimental, will most likely be made internal going forward.
    */
   @Experimental
-  public static class Body implements Serializable {
-
-    private transient Charset encoding;
-
-    private byte[] data;
-
-    private Body() {
-      super();
-    }
-
-    private Body(byte[] data) {
-      this.data = data;
-    }
-
-    private Body(byte[] data, Charset encoding) {
-      this.data = data;
-      this.encoding = encoding;
-    }
-
-    public Optional<Charset> getEncoding() {
-      return Optional.ofNullable(this.encoding);
-    }
-
-    public int length() {
-      /* calculate the content length based on the data provided */
-      return data != null ? data.length : 0;
-    }
-
-    public byte[] asBytes() {
-      return data;
-    }
-
-    public String asString() {
-      return !isBinary() ? new String(data, encoding) : "Binary data";
-    }
-
-    public boolean isBinary() {
-      return encoding == null || data == null;
-    }
-
-    public static Body create(String data) {
-      return new Body(data.getBytes());
-    }
-
-    public static Body create(String data, Charset charset) {
-      return new Body(data.getBytes(charset), charset);
-    }
-
-    public static Body create(byte[] data) {
-      return new Body(data);
-    }
-
-    public static Body create(byte[] data, Charset charset) {
-      return new Body(data, charset);
+  public interface Body {
+    /**
+     * Creates a new {@link Body} instance from the provided string content. It's assumed that the
+     * content was constructed using {@link StandardCharsets#UTF_8} encoding.
+     *
+     * @param content the string content to be used as the body of the request
+     * @return a new {@link Body} instance containing the provided string content
+     */
+    static Body of(String content) {
+      return of(content, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates a new Request Body with charset encoded data.
+     * Creates a new {@link Body} instance from the provided byte array.
      *
-     * @param data to be encoded.
-     * @param charset to encode the data with. if {@literal null}, then data will be considered
-     *     binary and will not be encoded.
-     * @return a new Request.Body instance with the encoded data.
-     * @deprecated please use {@link Request.Body#create(byte[], Charset)}
+     * @param content the byte array representing the body content
+     * @return a new {@link Body} instance
      */
-    @Deprecated
-    public static Body encoded(byte[] data, Charset charset) {
-      return create(data, charset);
+    static Body of(byte[] content) {
+      return of(content, StandardCharsets.UTF_8);
     }
 
-    public static Body empty() {
-      return new Body();
+    /**
+     * Creates a new {@link Body} instance from the provided string content, using the specified
+     * charset.
+     *
+     * @param content the string content to be used as the body content
+     * @param charset the content charset
+     * @return a new {@link Body} instance containing the provided content
+     */
+    static Body of(String content, Charset charset) {
+      Objects.requireNonNull(content, "content is required");
+      Objects.requireNonNull(charset, "charset is required");
+
+      return of(content.getBytes(charset), charset);
+    }
+
+    /**
+     * Creates a new {@link Body} instance from the provided byte array, using the specified
+     * charset.
+     *
+     * @param content the byte array representing the body content
+     * @param charset the content charset
+     * @return a new {@link Body} instance
+     */
+    static Body of(byte[] content, Charset charset) {
+      return new Request.BodyImpl(content, charset);
+    }
+
+    /**
+     * Writes the body content to the provided {@link OutputStream}.
+     *
+     * @param outputStream the output stream to which the body content should be written
+     * @throws IOException if an I/O error occurs while writing the body content
+     */
+    void writeTo(OutputStream outputStream) throws IOException;
+
+    /**
+     * Writes the body content to a string using the specified charset for decoding.
+     *
+     * @param charset the charset to be used for decoding the body content
+     * @return a string representation of the body content
+     * @throws IOException if an I/O error occurs while writing the body content to a string
+     */
+    default String writeToString(Charset charset) throws IOException {
+      Objects.requireNonNull(charset, "charset is required");
+      return new String(writeToByteArray(), charset);
+    }
+
+    /**
+     * Writes the body content to a byte array.
+     *
+     * @return a byte array containing the body content
+     * @throws IOException if an I/O error occurs while writing the body content to a byte array
+     */
+    default byte[] writeToByteArray() throws IOException {
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        writeTo(outputStream);
+        return outputStream.toByteArray();
+      }
+    }
+
+    /**
+     * Indicates whether the body can be written multiple times. This is important for clients that
+     * may need to retry requests, as non-repeatable bodies (e.g., streaming data) cannot be
+     * re-sent.
+     *
+     * @return {@code true} if the body can be written multiple times, {@code false} otherwise
+     */
+    boolean isRepeatable();
+
+    /**
+     * Returns the content length of the body, or {@code -1} if unknown. This can be used by clients
+     * to set the {@code Content-Length} header.
+     *
+     * @return the content length, or {@code -1} if unknown
+     */
+    long contentLength();
+  }
+
+  private static class BodyImpl implements Body {
+    private final byte[] content;
+    private final Charset charset;
+
+    private BodyImpl(byte[] content, Charset charset) {
+      this.content = Objects.requireNonNull(content, "content must not be null");
+      this.charset = Objects.requireNonNull(charset, "charset must not be null");
+    }
+
+    @Override
+    public void writeTo(OutputStream outputStream) throws IOException {
+      Objects.requireNonNull(outputStream, "outputStream is required").write(content);
+    }
+
+    @Override
+    public boolean isRepeatable() {
+      return true;
+    }
+
+    @Override
+    public long contentLength() {
+      return content.length;
+    }
+
+    @Override
+    public String toString() {
+      return new String(content, charset);
     }
   }
 }

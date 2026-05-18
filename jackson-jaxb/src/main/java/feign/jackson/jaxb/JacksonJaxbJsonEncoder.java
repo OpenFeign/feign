@@ -20,13 +20,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 
 public final class JacksonJaxbJsonEncoder implements Encoder {
   private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
@@ -46,7 +46,7 @@ public final class JacksonJaxbJsonEncoder implements Encoder {
     try {
       jacksonJaxbJsonProvider.writeTo(
           object, bodyType.getClass(), null, null, APPLICATION_JSON_TYPE, null, outputStream);
-      template.body(outputStream.toByteArray(), Charset.defaultCharset());
+      template.body(Request.Body.of(outputStream.toByteArray()));
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }

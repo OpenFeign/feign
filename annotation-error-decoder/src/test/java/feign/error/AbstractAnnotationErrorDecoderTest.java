@@ -45,9 +45,7 @@ public abstract class AbstractAnnotationErrorDecoderTest<T> {
         .status(status)
         .body(body, StandardCharsets.UTF_8)
         .headers(headers)
-        .request(
-            Request.create(
-                Request.HttpMethod.GET, "http://test", headers, Request.Body.empty(), null))
+        .request(Request.create(Request.HttpMethod.GET, "http://test", headers, null, null))
         .build();
   }
 }
