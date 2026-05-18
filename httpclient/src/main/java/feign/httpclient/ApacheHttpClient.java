@@ -272,42 +272,4 @@ public final class ApacheHttpClient implements Client {
       }
     };
   }
-
-  private static final class FeignBodyEntity extends AbstractHttpEntity {
-
-    private final Request.Body body;
-    private final long contentLength;
-
-    private FeignBodyEntity(Request.Body body, ContentType contentType, long contentLength) {
-      this.body = body;
-      this.contentLength = contentLength;
-      setContentType(contentType.toString());
-      setChunked(contentLength < 0);
-    }
-
-    @Override
-    public long getContentLength() {
-      return contentLength;
-    }
-
-    @Override
-    public InputStream getContent() {
-      throw new UnsupportedOperationException("Streaming request body does not expose InputStream");
-    }
-
-    @Override
-    public void writeTo(OutputStream outStream) throws IOException {
-      body.writeTo(outStream);
-    }
-
-    @Override
-    public boolean isRepeatable() {
-      return body.isRepeatable();
-    }
-
-    @Override
-    public boolean isStreaming() {
-      return !isRepeatable();
-    }
-  }
 }

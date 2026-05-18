@@ -91,11 +91,11 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
   static RequestBody toRequestBody(feign.Request request, MediaType mediaType) {
     return request
         .body()
-        .map(feignBody -> toRequestBody(feignBody, mediaType))
+        .map(body -> toRequestBody(body, mediaType))
         .orElseGet(() -> RequestBody.create(new byte[0], mediaType));
   }
 
-  static RequestBody toRequestBody(feign.Request.Body feignBody, MediaType mediaType) {
+  static RequestBody toRequestBody(feign.Request.Body body, MediaType mediaType) {
     return new RequestBody() {
       @Override
       public MediaType contentType() {
@@ -104,17 +104,17 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
 
       @Override
       public long contentLength() {
-        return feignBody.contentLength();
+        return body.contentLength();
       }
 
       @Override
       public boolean isOneShot() {
-        return !feignBody.isRepeatable();
+        return !body.isRepeatable();
       }
 
       @Override
       public void writeTo(BufferedSink sink) throws IOException {
-        feignBody.writeTo(sink.outputStream());
+        body.writeTo(sink.outputStream());
       }
     };
   }
