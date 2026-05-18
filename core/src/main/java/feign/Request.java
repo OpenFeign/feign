@@ -427,22 +427,24 @@ public final class Request {
   @Experimental
   public interface Body {
     /**
-     * Creates a new {@link Body} instance from the provided string content. It's assumed that the
-     * content was constructed using {@link StandardCharsets#UTF_8} charset.
+     * Creates a new {@link Body} instance from the provided string content.
      *
      * @param content the string content to be used as the body of the request
      * @return a new {@link Body} instance containing the provided string content
+     * @apiNote It's assumed that the content was constructed using {@link StandardCharsets#UTF_8}
+     *     charset.
      */
     static Body of(String content) {
       return of(content, StandardCharsets.UTF_8);
     }
 
     /**
-     * Creates a new {@link Body} instance from the provided byte array. It's assumed that the byte
-     * array can be converted to a string using {@link StandardCharsets#UTF_8} charset.
+     * Creates a new {@link Body} instance from the provided byte array.
      *
      * @param content the byte array representing the body content
      * @return a new {@link Body} instance
+     * @apiNote It's assumed that the byte array can be converted to a string using {@link
+     *     StandardCharsets#UTF_8} charset.
      */
     static Body of(byte[] content) {
       return of(content, StandardCharsets.UTF_8);
