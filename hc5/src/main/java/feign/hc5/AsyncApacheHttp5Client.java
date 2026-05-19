@@ -15,23 +15,11 @@
  */
 package feign.hc5;
 
-import static feign.Util.enumForName;
-
 import feign.AsyncClient;
 import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 import feign.Util;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.async.methods.SimpleResponseConsumer;
 import org.apache.hc.client5.http.config.Configurable;
@@ -54,6 +42,22 @@ import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.URLEncodedUtils;
 import org.apache.hc.core5.util.Timeout;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+
+import static feign.Util.enumForName;
+
 /**
  * This module directs Feign's http requests to Apache's
  * <a href="https://hc.apache.org/httpcomponents-client-5.0.x/index.html">HttpClient 5</a>. Ex.
@@ -70,12 +74,19 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private final CloseableHttpAsyncClient client;
 
+  private final Executor executor;
+
   public AsyncApacheHttp5Client() {
     this(createStartedClient());
   }
 
   public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
-    this.client = client;
+    this(client, ForkJoinPool.commonPool());
+  }
+
+  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client, Executor executor) {
+    this.client = Objects.requireNonNull(client, "client must not be null");
+    this.executor = Objects.requireNonNull(executor, "executor must not be null");
   }
 
   private static CloseableHttpAsyncClient createStartedClient() {
@@ -126,7 +137,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
 
-    CompletableFuture.runAsync(
+    executor.execute(
         () -> {
           try {
             requestProducer.blockWaiting().execute();

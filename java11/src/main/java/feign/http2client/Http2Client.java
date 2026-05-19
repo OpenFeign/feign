@@ -54,6 +54,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -68,6 +70,8 @@ import static feign.Util.enumForName;
 public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
+
+  private final Executor executor;
 
   private final Map<Integer, SoftReference<HttpClient>> clients = new ConcurrentHashMap<>();
 
@@ -91,12 +95,21 @@ public class Http2Client implements Client, AsyncClient<Object> {
             .build());
   }
 
-  public Http2Client(Options options) {
-    this(newClientBuilder(options).version(Version.HTTP_2).build());
+  public Http2Client(HttpClient client) {
+    this(client, ForkJoinPool.commonPool());
   }
 
-  public Http2Client(HttpClient client) {
+  public Http2Client(Options options) {
+    this(options, ForkJoinPool.commonPool());
+  }
+
+  public Http2Client(Options options, Executor executor) {
+    this(newClientBuilder(options).version(Version.HTTP_2).build(), executor);
+  }
+
+  public Http2Client(HttpClient client, Executor executor) {
     this.client = Util.checkNotNull(client, "HttpClient must not be null");
+    this.executor = Util.checkNotNull(executor, "Executor must not be null");
   }
 
   @Override
@@ -247,7 +260,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
               PropagatingPipedInputStream inputStream = new PropagatingPipedInputStream();
               try {
                 PipedOutputStream outputStream = new PipedOutputStream(inputStream);
-                CompletableFuture.runAsync(
+                executor.execute(
                     () -> {
                       try (outputStream) {
                         body.writeTo(outputStream);
