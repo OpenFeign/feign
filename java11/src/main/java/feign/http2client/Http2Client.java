@@ -15,6 +15,11 @@
  */
 package feign.http2client;
 
+import static feign.Util.CONTENT_ENCODING;
+import static feign.Util.ENCODING_DEFLATE;
+import static feign.Util.ENCODING_GZIP;
+import static feign.Util.enumForName;
+
 import feign.AsyncClient;
 import feign.Client;
 import feign.Request;
@@ -22,7 +27,6 @@ import feign.Request.Options;
 import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -61,11 +65,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
-
-import static feign.Util.CONTENT_ENCODING;
-import static feign.Util.ENCODING_DEFLATE;
-import static feign.Util.ENCODING_GZIP;
-import static feign.Util.enumForName;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
