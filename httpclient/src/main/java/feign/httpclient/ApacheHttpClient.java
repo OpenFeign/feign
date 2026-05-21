@@ -81,8 +81,12 @@ public final class ApacheHttpClient implements Client {
     } catch (URISyntaxException e) {
       throw new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e);
     }
-    HttpResponse httpResponse = client.execute(httpUriRequest);
-    return toFeignResponse(httpResponse, request);
+    try {
+      HttpResponse httpResponse = client.execute(httpUriRequest);
+      return toFeignResponse(httpResponse, request);
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
   }
 
   HttpUriRequest toHttpUriRequest(Request request, Request.Options options)
