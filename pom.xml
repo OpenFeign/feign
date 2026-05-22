@@ -207,7 +207,7 @@
     <rewrite-maven-plugin.version>6.39.0</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.35.3</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.34.1</rewrite-migrate-java.version>
-    <japicmp-maven-plugin.version>0.25.7</japicmp-maven-plugin.version>
+    <japicmp-maven-plugin.version>0.26.0</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
     <!-- Third-party dependency versions -->
