@@ -38,6 +38,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -62,7 +63,7 @@ public final class RequestTemplate implements Serializable {
   private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
-  private Request.Body body = Request.Body.empty();
+  private Request.Body body;
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
   private MethodMetadata methodMetadata;
@@ -253,7 +254,7 @@ public final class RequestTemplate implements Serializable {
     }
 
     if (this.bodyTemplate != null) {
-      resolved.body(this.bodyTemplate.expand(variables));
+      resolved.body(Request.Body.of(this.bodyTemplate.expand(variables)));
     }
 
     /* mark the new template resolved */
@@ -865,22 +866,14 @@ public final class RequestTemplate implements Serializable {
    * Sets the Body and Charset for this request.
    *
    * @param data to send, can be null.
-   * @param charset of the encoded data.
+   * @param ignoredCharset of the encoded data.
    * @return a RequestTemplate for chaining.
+   * @deprecated this method is kept to maintain compatibility with {@code
+   *     spring-cloud-openfeign-core}. Please use {@link #body(Request.Body)} instead.
    */
-  public RequestTemplate body(byte[] data, Charset charset) {
-    this.body(Request.Body.create(data, charset));
-    return this;
-  }
-
-  /**
-   * Set the Body for this request. Charset is assumed to be UTF_8. Data must be encoded.
-   *
-   * @param bodyText to send.
-   * @return a RequestTemplate for chaining.
-   */
-  public RequestTemplate body(String bodyText) {
-    this.body(Request.Body.create(bodyText.getBytes(this.charset), this.charset));
+  @Deprecated
+  public RequestTemplate body(byte[] data, Charset ignoredCharset) {
+    this.body(Request.Body.of(data));
     return this;
   }
 
@@ -889,42 +882,18 @@ public final class RequestTemplate implements Serializable {
    *
    * @param body to send.
    * @return a RequestTemplate for chaining.
-   * @deprecated use {@link #body(byte[], Charset)} instead.
    */
-  @Deprecated
   public RequestTemplate body(Request.Body body) {
     this.body = body;
 
     /* body template must be cleared to prevent double processing */
     this.bodyTemplate = null;
 
-    header(CONTENT_LENGTH, Collections.emptyList());
-    if (body.length() > 0) {
-      header(CONTENT_LENGTH, String.valueOf(body.length()));
+    if (body.contentLength() >= 0) {
+      this.header(CONTENT_LENGTH, String.valueOf(body.contentLength()));
     }
 
     return this;
-  }
-
-  /**
-   * Charset of the Request Body, if known.
-   *
-   * @return the currently applied Charset.
-   */
-  public Charset requestCharset() {
-    if (this.body != null) {
-      return this.body.getEncoding().orElse(this.charset);
-    }
-    return this.charset;
-  }
-
-  /**
-   * The Request Body.
-   *
-   * @return the request body.
-   */
-  public byte[] body() {
-    return body.asBytes();
   }
 
   /**
@@ -933,9 +902,8 @@ public final class RequestTemplate implements Serializable {
    * @return the internal Request.Body.
    * @deprecated this abstraction is leaky and will be removed in later releases.
    */
-  @Deprecated
-  public Request.Body requestBody() {
-    return this.body;
+  public Optional<Request.Body> requestBody() {
+    return Optional.ofNullable(this.body);
   }
 
   /**

@@ -24,7 +24,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestLine;
 import feign.Response;
-import feign.Util;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -138,8 +137,7 @@ class StreamDecoderTest {
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body("", UTF_8)
             .build();
 

@@ -26,7 +26,6 @@ import feign.Request;
 import feign.Response;
 import feign.codec.DecodeException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Collections;
 import org.json.JSONArray;
@@ -54,8 +53,7 @@ class JsonDecoderTest {
             Request.HttpMethod.GET,
             "/qwerty",
             Collections.emptyMap(),
-            "xyz".getBytes(StandardCharsets.UTF_8),
-            StandardCharsets.UTF_8,
+            Request.Body.of("xyz"),
             null);
   }
 

@@ -15,7 +15,10 @@
  */
 package feign.http2client;
 
-import static feign.Util.*;
+import static feign.Util.CONTENT_ENCODING;
+import static feign.Util.ENCODING_DEFLATE;
+import static feign.Util.ENCODING_GZIP;
+import static feign.Util.enumForName;
 
 import feign.AsyncClient;
 import feign.Client;
@@ -26,6 +29,9 @@ import feign.Response;
 import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.io.UncheckedIOException;
 import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,6 +58,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -60,6 +69,8 @@ import java.util.zip.InflaterInputStream;
 public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
+
+  private final Executor executor;
 
   private final Map<Integer, SoftReference<HttpClient>> clients = new ConcurrentHashMap<>();
 
@@ -83,12 +94,21 @@ public class Http2Client implements Client, AsyncClient<Object> {
             .build());
   }
 
-  public Http2Client(Options options) {
-    this(newClientBuilder(options).version(Version.HTTP_2).build());
+  public Http2Client(HttpClient client) {
+    this(client, ForkJoinPool.commonPool());
   }
 
-  public Http2Client(HttpClient client) {
+  public Http2Client(Options options) {
+    this(options, ForkJoinPool.commonPool());
+  }
+
+  public Http2Client(Options options, Executor executor) {
+    this(newClientBuilder(options).version(Version.HTTP_2).build(), executor);
+  }
+
+  public Http2Client(HttpClient client, Executor executor) {
     this.client = Util.checkNotNull(client, "HttpClient must not be null");
+    this.executor = Util.checkNotNull(executor, "Executor must not be null");
   }
 
   @Override
@@ -215,13 +235,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
   private Builder newRequestBuilder(Request request, Options options) throws URISyntaxException {
     URI uri = new URI(request.url());
 
-    final BodyPublisher body;
-    final byte[] data = request.body();
-    if (data == null) {
-      body = BodyPublishers.noBody();
-    } else {
-      body = BodyPublishers.ofByteArray(data);
-    }
+    final BodyPublisher body =
+        request.body().map(this::createBodyPublisher).orElseGet(BodyPublishers::noBody);
 
     final Builder requestBuilder =
         HttpRequest.newBuilder()
@@ -235,6 +250,31 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
 
     return requestBuilder.method(request.httpMethod().toString(), body);
+  }
+
+  private BodyPublisher createBodyPublisher(Request.Body body) {
+    BodyPublisher publisher =
+        BodyPublishers.ofInputStream(
+            () -> {
+              PropagatingPipedInputStream inputStream = new PropagatingPipedInputStream();
+              try {
+                PipedOutputStream outputStream = new PipedOutputStream(inputStream);
+                executor.execute(
+                    () -> {
+                      try (outputStream) {
+                        body.writeTo(outputStream);
+                      } catch (IOException e) {
+                        inputStream.setException(e);
+                      }
+                    });
+                return inputStream;
+              } catch (IOException e) {
+                throw new UncheckedIOException(e);
+              }
+            });
+    return body.contentLength() > 0
+        ? BodyPublishers.fromPublisher(publisher, body.contentLength())
+        : publisher;
   }
 
   /**
@@ -277,5 +317,36 @@ public class Http2Client implements Client, AsyncClient<Object> {
                     .map(value -> Arrays.asList(entry.getKey(), value))
                     .flatMap(List::stream))
         .toArray(String[]::new);
+  }
+
+  private static class PropagatingPipedInputStream extends PipedInputStream {
+    private final AtomicReference<IOException> exception = new AtomicReference<>();
+
+    @Override
+    public synchronized int read() throws IOException {
+      checkException();
+      int result = super.read();
+      checkException();
+      return result;
+    }
+
+    @Override
+    public synchronized int read(byte[] b, int off, int len) throws IOException {
+      checkException();
+      int result = super.read(b, off, len);
+      checkException();
+      return result;
+    }
+
+    public void setException(IOException e) {
+      exception.set(e);
+    }
+
+    private void checkException() throws IOException {
+      IOException e = exception.get();
+      if (e != null) {
+        throw new IOException("Body write failed", e);
+      }
+    }
   }
 }
