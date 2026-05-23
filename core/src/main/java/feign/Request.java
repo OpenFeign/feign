@@ -425,6 +425,7 @@ public final class Request {
    * <p>Considered experimental, will most likely be made internal going forward.
    */
   @Experimental
+  @FunctionalInterface
   public interface Body {
     /**
      * Creates a new {@link Body} instance from the provided string content.
@@ -513,19 +514,23 @@ public final class Request {
     /**
      * Indicates whether the body can be written multiple times. This is important for clients that
      * may need to retry requests, as non-repeatable bodies (e.g., streaming data) cannot be
-     * re-sent.
+     * re-sent. Defaults to {@code false}.
      *
      * @return {@code true} if the body can be written multiple times, {@code false} otherwise
      */
-    boolean isRepeatable();
+    default boolean isRepeatable() {
+      return false;
+    }
 
     /**
      * Returns the content length of the body, or {@code -1} if unknown. This can be used by clients
-     * to set the {@code Content-Length} header.
+     * to set the {@code Content-Length} header. Defaults to {@code -1}.
      *
      * @return the content length, or {@code -1} if unknown
      */
-    long contentLength();
+    default long contentLength() {
+      return -1;
+    }
   }
 
   private static class BodyImpl implements Body {
