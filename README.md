@@ -1190,6 +1190,9 @@ public class MyApp {
 }
 ```
 
+See the [micrometer module README](./micrometer/README.md) for the full list of
+metrics that are published, their tags and how to use `MicrometerObservationCapability`.
+
 #### Static and Default Methods
 Interfaces targeted by Feign may have static or default methods (if using Java 8+).
 These allows Feign clients to contain logic that is not expressly defined by the underlying API.
