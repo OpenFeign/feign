@@ -34,6 +34,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.IOException
 import java.lang.reflect.Type
+import java.util.concurrent.atomic.AtomicBoolean
 
 class CoroutineFeignTest {
     @Test
@@ -103,6 +104,31 @@ class CoroutineFeignTest {
 
         // Assert
         assertThat(firstOrder).isEqualTo(Unit)
+    }
+
+    @Test
+    fun `sut should dismiss 404 responses when dismiss404 is configured on CoroutineBuilder`(): Unit = runBlocking {
+        // Arrange: server returns 404; a custom decoder records whether it was invoked
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setResponseCode(404))
+
+        val decoderInvokedFor404 = AtomicBoolean(false)
+        val recordingDecoder = Decoder { response, _ ->
+            decoderInvokedFor404.set(response.status() == 404)
+            ""
+        }
+
+        val client = TestInterfaceAsyncBuilder()
+            .dismiss404()
+            .decoder(recordingDecoder)
+            .target("http://localhost:" + server.port)
+
+        // Act: must not throw FeignException; the decoder must be invoked for the 404
+        val result: String = client.findOrderThatReturningBasicType(orderId = 1)
+
+        // Assert
+        assertThat(decoderInvokedFor404.get()).isTrue()
+        assertThat(result).isEqualTo("")
     }
 
     @Test
