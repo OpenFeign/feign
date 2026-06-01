@@ -31,7 +31,6 @@
 
   <properties>
     <main.java.version>11</main.java.version>
-    <jackson.version>2.21.4</jackson.version>
   </properties>
 
   <dependencyManagement>
