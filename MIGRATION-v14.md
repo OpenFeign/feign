@@ -11,7 +11,8 @@ This guide covers the breaking changes introduced in #3360 and explains how to u
 `feign.Request.Body` has been redesigned from a `byte[]`-backed concrete class into a **streaming-ready interface**.
 Request bodies are no longer eagerly buffered in memory unless you explicitly use the `byte[]`/`String` factory methods.
 
-This is a **breaking change** affecting:
+For most users, regular Feign usage via interface annotations and `Feign.builder().target(...)` is unchanged.
+The **breaking changes** primarily affect code that interacts directly with request body internals, including:
 
 - Custom `Encoder` implementations
 - Custom `Client` implementations
@@ -51,19 +52,19 @@ boolean repeatable = body.isRepeatable();
 
 **Removed methods on `Request.Body`:**
 
-| Removed                         | Replacement                                               |
-|---------------------------------|-----------------------------------------------------------|
-| `Body.create(String)`           | `Body.of(String)`                                         |
-| `Body.create(String, Charset)`  | `Body.of(String, Charset)`                                |
-| `Body.create(byte[])`           | `Body.of(byte[])`                                         |
-| `Body.create(byte[], Charset)`  | `Body.of(byte[], Charset)`                                |
-| `Body.encoded(byte[], Charset)` | `Body.of(byte[], Charset)`                                |
-| `Body.empty()`                  | Pass `null` for no body                                   |
-| `body.asBytes()`                | `body.writeToByteArray()`                                 |
-| `body.asString()`               | `body.writeToString(charset)`                             |
-| `body.length()` → `int`         | `body.contentLength()` → `long` (returns `-1` if unknown) |
-| `body.getEncoding()`            | Read charset from `Content-Type` header                   |
-| `body.isBinary()`               | `!body.isRepeatable()` or check `contentLength()`         |
+| Removed                         | Replacement                                                                           |
+|---------------------------------|---------------------------------------------------------------------------------------|
+| `Body.create(String)`           | `Body.of(String)`                                                                     |
+| `Body.create(String, Charset)`  | `Body.of(String, Charset)`                                                            |
+| `Body.create(byte[])`           | `Body.of(byte[])`                                                                     |
+| `Body.create(byte[], Charset)`  | `Body.of(byte[], Charset)`                                                            |
+| `Body.encoded(byte[], Charset)` | `Body.of(byte[], Charset)`                                                            |
+| `Body.empty()`                  | Pass `null` for no body                                                               |
+| `body.asBytes()`                | `body.writeToByteArray()`                                                             |
+| `body.asString()`               | `body.writeToString(charset)`                                                         |
+| `body.length()` → `int`         | `body.contentLength()` → `long` (returns `-1` if unknown)                             |
+| `body.getEncoding()`            | Read charset from `Content-Type` header                                               |
+| `body.isBinary()`               | No direct replacement; `body.isRepeatable()` may be useful depending on your use case |
 
 ---
 
@@ -134,7 +135,8 @@ boolean binary = request.isBinary();
 **After:**
 
 ```java
-// isRepeatable() does not throw, so Optional.map is safe here.
+// There is no direct replacement for request.isBinary().
+// Depending on why you were checking it, request body repeatability may be useful:
 boolean repeatable = request.body()
     .map(Request.Body::isRepeatable)
     .orElse(false);
@@ -364,7 +366,7 @@ Request.Body streamingBody = outputStream -> {
             outputStream.write(buffer, 0, read);
         }
         // or, with Java 9+:
-        // in.transferTo(out);
+        // in.transferTo(outputStream);
     }
     // IOException propagates naturally — no try-catch needed here
 };
@@ -404,7 +406,7 @@ public class FileBody implements Request.Body {
         try {
             return Files.size(path);
         } catch (IOException e) {
-            return -1;
+            return super.contentLength(); // returns -1
         }
     }
 }

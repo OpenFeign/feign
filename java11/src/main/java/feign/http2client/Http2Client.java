@@ -319,6 +319,12 @@ public class Http2Client implements Client, AsyncClient<Object> {
         .toArray(String[]::new);
   }
 
+  /**
+   * A {@link PipedInputStream} that allows a writer thread to record an {@link IOException} via
+   * {@link #setException(IOException)} so subsequent reader calls throw an {@link IOException}
+   * wrapping the original cause; used to propagate write failures from the body-writer thread to
+   * the HTTP client reader.
+   */
   private static class PropagatingPipedInputStream extends PipedInputStream {
     private final AtomicReference<IOException> exception = new AtomicReference<>();
 
