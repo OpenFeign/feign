@@ -133,6 +133,7 @@
     <module>validation</module>
     <module>validation-jakarta</module>
     <module>vertx</module>
+    <module>feign-bom</module>
   </modules>
 
   <scm>
@@ -894,11 +895,22 @@
                 <license.skip>true</license.skip>
               </properties>
 
+              <!-- sundr only generates the BOM pom; the committed feign-bom module
+                   (wired into <modules>) is what actually gets published, via the same
+                   central-publishing path as every other module. -->
+              <goals>
+                <excludes>
+                  <exclude>install</exclude>
+                  <exclude>deploy</exclude>
+                </excludes>
+              </goals>
+
               <modules>
                 <includes>
                   <include>io.github.openfeign:*</include>
                 </includes>
                 <excludes>
+                  <exclude>*:feign-bom</exclude>
                   <exclude>*:feign-example-*</exclude>
                   <exclude>*:feign-benchmark</exclude>
                 </excludes>
