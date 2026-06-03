@@ -248,21 +248,6 @@ public class DefaultClient implements Client {
         && contentEncodingValues.contains(ENCODING_DEFLATE);
   }
 
-  @Deprecated
-  public static class Default extends DefaultClient {
-
-    public Default(SSLSocketFactory sslContextFactory, HostnameVerifier hostnameVerifier) {
-      super(sslContextFactory, hostnameVerifier);
-    }
-
-    public Default(
-        SSLSocketFactory sslContextFactory,
-        HostnameVerifier hostnameVerifier,
-        boolean disableRequestBuffering) {
-      super(sslContextFactory, hostnameVerifier, disableRequestBuffering);
-    }
-  }
-
   public static class Proxied extends DefaultClient {
 
     public static final String PROXY_AUTHORIZATION = "Proxy-Authorization";

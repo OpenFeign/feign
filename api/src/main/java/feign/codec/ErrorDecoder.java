@@ -76,50 +76,6 @@ public interface ErrorDecoder {
   public Exception decode(String methodKey, Response response);
 
   /**
-   * @deprecated use {@link DefaultErrorDecoder} instead.
-   */
-  @Deprecated
-  public class Default implements ErrorDecoder {
-    private final ErrorDecoder delegate;
-
-    public Default() {
-      ErrorDecoder temp = null;
-      try {
-        temp =
-            (ErrorDecoder)
-                Class.forName("feign.codec.DefaultErrorDecoder")
-                    .getDeclaredConstructor()
-                    .newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    public Default(Integer maxBodyBytesLength, Integer maxBodyCharsLength) {
-      ErrorDecoder temp = null;
-      try {
-        temp =
-            (ErrorDecoder)
-                Class.forName("feign.codec.DefaultErrorDecoder")
-                    .getConstructor(Integer.class, Integer.class)
-                    .newInstance(maxBodyBytesLength, maxBodyCharsLength);
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public Exception decode(String methodKey, Response response) {
-      if (delegate != null) {
-        return delegate.decode(methodKey, response);
-      }
-      return feign.FeignException.errorStatus(methodKey, response);
-    }
-  }
-
-  /**
    * Decodes a {@link feign.Util#RETRY_AFTER} header into an epoch millisecond, if possible.<br>
    * See <a href="https://tools.ietf.org/html/rfc2616#section-14.37">Retry-After format</a>
    */

@@ -80,32 +80,4 @@ public interface Encoder {
    * @throws EncodeException when encoding failed due to a checked exception.
    */
   void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
-
-  /**
-   * @deprecated use {@link DefaultEncoder} instead.
-   */
-  @Deprecated
-  class Default implements Encoder {
-    private final Encoder delegate;
-
-    public Default() {
-      Encoder temp = null;
-      try {
-        temp =
-            (Encoder)
-                Class.forName("feign.codec.DefaultEncoder").getDeclaredConstructor().newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template)
-        throws EncodeException {
-      if (delegate != null) {
-        delegate.encode(object, bodyType, template);
-      }
-    }
-  }
 }

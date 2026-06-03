@@ -36,35 +36,4 @@ public interface InvocationHandlerFactory {
       MethodHandler create(Target<?> target, MethodMetadata md, C requestContext);
     }
   }
-
-  /**
-   * @deprecated use {@link DefaultInvocationHandlerFactory} instead.
-   */
-  @Deprecated
-  static final class Default implements InvocationHandlerFactory {
-    private final InvocationHandlerFactory delegate;
-
-    public Default() {
-      InvocationHandlerFactory temp = null;
-      try {
-        temp =
-            (InvocationHandlerFactory)
-                Class.forName("feign.core.DefaultInvocationHandlerFactory")
-                    .getDeclaredConstructor()
-                    .newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public java.lang.reflect.InvocationHandler create(
-        Target target, Map<java.lang.reflect.Method, MethodHandler> dispatch) {
-      if (delegate != null) {
-        return delegate.create(target, dispatch);
-      }
-      return null;
-    }
-  }
 }

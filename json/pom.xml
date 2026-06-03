@@ -32,7 +32,12 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>feign-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>

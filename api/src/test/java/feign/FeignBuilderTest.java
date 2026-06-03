@@ -281,7 +281,8 @@ public class FeignBuilderTest {
     // noinspection rawtypes
     InvocationHandlerFactory factory =
         new InvocationHandlerFactory() {
-          private final InvocationHandlerFactory delegate = new Default();
+          private final InvocationHandlerFactory delegate =
+              new feign.core.DefaultInvocationHandlerFactory();
 
           @Override
           public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {

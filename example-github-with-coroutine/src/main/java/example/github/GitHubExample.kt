@@ -24,7 +24,7 @@ import feign.Response
 import feign.codec.Decoder
 import feign.codec.Encoder
 import feign.codec.ErrorDecoder
-import feign.codec.DefaultErrorDecoder
+import feign.core.codec.DefaultErrorDecoder
 import feign.gson.GsonEncoder
 import feign.kotlin.CoroutineFeign
 import java.io.IOException

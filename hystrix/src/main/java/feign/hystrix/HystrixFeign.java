@@ -46,7 +46,6 @@ public final class HystrixFeign {
 
   public static final class Builder extends Feign.Builder {
 
-    private Contract contract = new Contract.Default();
     private SetterFactory setterFactory = new SetterFactory.Default();
 
     /** Allows you to override hystrix properties such as thread pools and command keys. */

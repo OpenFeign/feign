@@ -83,33 +83,4 @@ public interface Decoder {
    * @throws FeignException when decoding succeeds, but conveys the operation failed.
    */
   Object decode(Response response, Type type) throws IOException, DecodeException, FeignException;
-
-  /**
-   * @deprecated use {@link DefaultDecoder} instead.
-   */
-  @Deprecated
-  public class Default implements Decoder {
-    private final Decoder delegate;
-
-    public Default() {
-      Decoder temp = null;
-      try {
-        temp =
-            (Decoder)
-                Class.forName("feign.codec.DefaultDecoder").getDeclaredConstructor().newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public Object decode(Response response, Type type)
-        throws IOException, DecodeException, FeignException {
-      if (delegate != null) {
-        return delegate.decode(response, type);
-      }
-      return null;
-    }
-  }
 }

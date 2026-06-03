@@ -32,34 +32,4 @@ public interface QueryMapEncoder {
    * @return the map represented by the object
    */
   Map<String, Object> encode(Object object);
-
-  /**
-   * @deprecated use {@link DefaultQueryMapEncoder} instead.
-   */
-  @Deprecated
-  class Default implements QueryMapEncoder {
-    private final QueryMapEncoder delegate;
-
-    public Default() {
-      QueryMapEncoder temp = null;
-      try {
-        temp =
-            (QueryMapEncoder)
-                Class.forName("feign.DefaultQueryMapEncoder")
-                    .getDeclaredConstructor()
-                    .newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public Map<String, Object> encode(Object object) {
-      if (delegate != null) {
-        return delegate.encode(object);
-      }
-      return java.util.Collections.emptyMap();
-    }
-  }
 }

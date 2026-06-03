@@ -28,56 +28,6 @@ public interface Retryer extends Cloneable {
 
   Retryer clone();
 
-  /**
-   * @deprecated use {@link DefaultRetryer} instead.
-   */
-  @Deprecated
-  class Default implements Retryer {
-    private final Retryer delegate;
-
-    public Default() {
-      Retryer temp = null;
-      try {
-        temp =
-            (Retryer) Class.forName("feign.DefaultRetryer").getDeclaredConstructor().newInstance();
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    public Default(long period, long maxPeriod, int maxAttempts) {
-      Retryer temp = null;
-      try {
-        temp =
-            (Retryer)
-                Class.forName("feign.DefaultRetryer")
-                    .getConstructor(long.class, long.class, int.class)
-                    .newInstance(period, maxPeriod, maxAttempts);
-      } catch (Exception e) {
-        // ignore
-      }
-      this.delegate = temp;
-    }
-
-    @Override
-    public void continueOrPropagate(RetryableException e) {
-      if (delegate != null) {
-        delegate.continueOrPropagate(e);
-      } else {
-        throw e;
-      }
-    }
-
-    @Override
-    public Retryer clone() {
-      if (delegate != null) {
-        return delegate.clone();
-      }
-      return this;
-    }
-  }
-
   /** Implementation that never retries request. It propagates the RetryableException. */
   Retryer NEVER_RETRY =
       new Retryer() {

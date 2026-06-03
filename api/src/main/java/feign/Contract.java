@@ -245,24 +245,4 @@ public interface Contract {
       data.indexToName().put(i, names);
     }
   }
-
-  /**
-   * @deprecated use {@link DefaultContract} instead.
-   */
-  @Deprecated
-  class Default implements Contract {
-    private final Contract delegate;
-
-    public Default() {
-      this.delegate = ServiceLoaderUtils.resolve(Contract.class, "feign.core.DefaultContract");
-    }
-
-    @Override
-    public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
-      if (delegate != null) {
-        return delegate.parseAndValidateMetadata(targetType);
-      }
-      return java.util.Collections.emptyList();
-    }
-  }
 }

@@ -18,7 +18,6 @@ package feign;
 import feign.Request.Options;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 /** Submits HTTP {@link Request requests} asynchronously, with an optional context. */
 @Experimental
@@ -38,17 +37,6 @@ public interface AsyncClient<C> {
    *     connecting to {@link Request#url()}.
    */
   CompletableFuture<Response> execute(Request request, Options options, Optional<C> requestContext);
-
-  /**
-   * @deprecated use {@link DefaultAsyncClient} instead.
-   */
-  @Deprecated
-  class Default<C> extends DefaultAsyncClient<C> {
-
-    public Default(Client client, ExecutorService executorService) {
-      super(client, executorService);
-    }
-  }
 
   /**
    * A synchronous implementation of {@link AsyncClient}
