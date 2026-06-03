@@ -16,8 +16,8 @@
 package feign.reactive;
 
 import feign.Contract;
-import feign.DefaultContract;
 import feign.Feign;
+import feign.core.DefaultContract;
 
 abstract class ReactiveFeign {
 

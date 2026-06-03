@@ -19,9 +19,9 @@ import com.netflix.client.ClientException;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import feign.Client;
-import feign.DefaultClient;
 import feign.Request;
 import feign.Response;
+import feign.core.DefaultClient;
 import java.io.IOException;
 import java.net.URI;
 

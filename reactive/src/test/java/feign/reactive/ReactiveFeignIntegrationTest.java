@@ -28,7 +28,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import feign.Client;
-import feign.DefaultRetryer;
 import feign.FeignIgnore;
 import feign.Logger;
 import feign.Logger.Level;
@@ -45,8 +44,9 @@ import feign.ResponseMapper;
 import feign.RetryableException;
 import feign.Retryer;
 import feign.codec.Decoder;
-import feign.codec.DefaultDecoder;
 import feign.codec.ErrorDecoder;
+import feign.core.DefaultRetryer;
+import feign.core.codec.DefaultDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.jaxrs.JAXRSContract;

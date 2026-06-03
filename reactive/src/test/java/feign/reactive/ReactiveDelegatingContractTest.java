@@ -18,9 +18,9 @@ package feign.reactive;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 import feign.Contract;
-import feign.DefaultContract;
 import feign.Param;
 import feign.RequestLine;
+import feign.core.DefaultContract;
 import io.reactivex.Flowable;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;

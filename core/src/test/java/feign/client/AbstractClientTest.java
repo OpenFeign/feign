@@ -210,7 +210,7 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void noResponseBodyForPost() throws Exception {
+  public void noResponseBodyForPost() throws Exception {
     server.enqueue(new MockResponse());
 
     TestInterface api =

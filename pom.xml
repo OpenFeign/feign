@@ -83,6 +83,7 @@
   </contributors>
 
   <modules>
+    <module>api</module>
     <module>core</module>
     <module>gson</module>
     <module>http-cache</module>
@@ -260,6 +261,20 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-api</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-core</artifactId>

@@ -1,0 +1,70 @@
+/*
+ * Copyright © 2012 The Feign Authors (feign@commonhaus.dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package feign;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+
+/** Controls reflective method dispatch. */
+public interface InvocationHandlerFactory {
+
+  InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch);
+
+  /**
+   * Like {@link InvocationHandler#invoke(Object, java.lang.reflect.Method, Object[])}, except for a
+   * single method.
+   */
+  interface MethodHandler {
+
+    Object invoke(Object[] argv) throws Throwable;
+
+    interface Factory<C> {
+      MethodHandler create(Target<?> target, MethodMetadata md, C requestContext);
+    }
+  }
+
+  /**
+   * @deprecated use {@link DefaultInvocationHandlerFactory} instead.
+   */
+  @Deprecated
+  static final class Default implements InvocationHandlerFactory {
+    private final InvocationHandlerFactory delegate;
+
+    public Default() {
+      InvocationHandlerFactory temp = null;
+      try {
+        temp =
+            (InvocationHandlerFactory)
+                Class.forName("feign.core.DefaultInvocationHandlerFactory")
+                    .getDeclaredConstructor()
+                    .newInstance();
+      } catch (Exception e) {
+        // ignore
+      }
+      this.delegate = temp;
+    }
+
+    @Override
+    public java.lang.reflect.InvocationHandler create(
+        Target target, Map<java.lang.reflect.Method, MethodHandler> dispatch) {
+      if (delegate != null) {
+        return delegate.create(target, dispatch);
+      }
+      return null;
+    }
+  }
+}

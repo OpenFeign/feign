@@ -16,8 +16,8 @@
 package feign.soap;
 
 import feign.Response;
-import feign.codec.DefaultErrorDecoder;
 import feign.codec.ErrorDecoder;
+import feign.core.codec.DefaultErrorDecoder;
 import jakarta.xml.soap.*;
 import jakarta.xml.ws.soap.SOAPFaultException;
 import java.io.IOException;

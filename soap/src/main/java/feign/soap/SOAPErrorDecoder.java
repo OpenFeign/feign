@@ -16,8 +16,8 @@
 package feign.soap;
 
 import feign.Response;
-import feign.codec.DefaultErrorDecoder;
 import feign.codec.ErrorDecoder;
+import feign.core.codec.DefaultErrorDecoder;
 import java.io.IOException;
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPConstants;

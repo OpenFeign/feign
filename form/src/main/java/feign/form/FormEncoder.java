@@ -22,9 +22,9 @@ import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.RequestTemplate;
-import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.core.codec.DefaultEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;

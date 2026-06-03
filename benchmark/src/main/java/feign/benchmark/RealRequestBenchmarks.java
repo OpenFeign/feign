@@ -15,11 +15,11 @@
  */
 package feign.benchmark;
 
-import feign.DefaultRetryer;
 import feign.Feign;
 import feign.Logger;
 import feign.Logger.Level;
 import feign.Response;
+import feign.core.DefaultRetryer;
 import io.netty.buffer.ByteBuf;
 import io.reactivex.netty.protocol.http.server.HttpServer;
 import java.io.IOException;

@@ -19,9 +19,9 @@ import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
 
 import feign.RequestTemplate;
-import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.core.codec.DefaultEncoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
 import java.lang.reflect.Type;

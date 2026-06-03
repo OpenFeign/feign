@@ -19,9 +19,9 @@ import static feign.Feign.configKey;
 
 import feign.Response;
 import feign.codec.Decoder;
-import feign.codec.DefaultDecoder;
-import feign.codec.DefaultErrorDecoder;
 import feign.codec.ErrorDecoder;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultErrorDecoder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;

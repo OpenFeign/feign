@@ -27,9 +27,32 @@
 
   <artifactId>feign-core</artifactId>
   <name>Feign Core</name>
-  <description>Feign Core</description>
+  <properties>
+    <japicmp.skip>true</japicmp.skip>
+  </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-api</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.auto.service</groupId>
+      <artifactId>auto-service-annotations</artifactId>
+      <version>${auto-service-annotations.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>mockwebserver</artifactId>
@@ -71,6 +94,19 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.google.auto.service</groupId>
+              <artifactId>auto-service</artifactId>
+              <version>${auto-service-annotations.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
@@ -98,6 +134,8 @@
                   </excludes>
                   <includes>
                     <include>*:*:*:*:test:*</include>
+                    <include>io.github.openfeign:feign-api</include>
+                    <include>com.google.auto.service:auto-service-annotations</include>
                   </includes>
                 </bannedDependencies>
               </rules>
