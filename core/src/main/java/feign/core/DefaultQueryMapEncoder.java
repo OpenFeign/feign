@@ -15,13 +15,10 @@
  */
 package feign.core;
 
-import com.google.auto.service.AutoService;
-import feign.QueryMapEncoder;
 import feign.core.querymap.FieldQueryMapEncoder;
 
 /**
  * @deprecated use {@link feign.core.querymap.BeanQueryMapEncoder} instead.
  */
 @Deprecated
-@AutoService(QueryMapEncoder.class)
 public class DefaultQueryMapEncoder extends FieldQueryMapEncoder {}

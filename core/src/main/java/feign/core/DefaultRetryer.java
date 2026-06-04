@@ -17,11 +17,9 @@ package feign.core;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.auto.service.AutoService;
 import feign.RetryableException;
 import feign.Retryer;
 
-@AutoService(Retryer.class)
 public class DefaultRetryer implements Retryer {
 
   private final int maxAttempts;

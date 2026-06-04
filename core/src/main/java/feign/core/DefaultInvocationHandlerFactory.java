@@ -15,7 +15,6 @@
  */
 package feign.core;
 
-import com.google.auto.service.AutoService;
 import feign.InvocationHandlerFactory;
 import feign.ReflectiveFeign;
 import feign.Target;
@@ -23,7 +22,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-@AutoService(InvocationHandlerFactory.class)
 public class DefaultInvocationHandlerFactory implements InvocationHandlerFactory {
 
   @Override

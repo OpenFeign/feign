@@ -21,7 +21,6 @@ import static feign.Util.ensureClosed;
 import static feign.Util.valuesOrEmpty;
 import static java.util.Objects.nonNull;
 
-import com.google.auto.service.AutoService;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -264,7 +263,6 @@ public abstract class Logger {
     }
   }
 
-  @AutoService(Logger.class)
   public static class NoOpLogger extends Logger {
 
     @Override

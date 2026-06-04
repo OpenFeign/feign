@@ -72,8 +72,7 @@ public final class AsyncFeign<C> {
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
     private AsyncClient<C> client =
         new DefaultAsyncClient<>(
-            ServiceLoaderUtils.resolve(Client.class, "feign.core.DefaultClient"),
-            LazyInitializedExecutorService.instance);
+            ServiceLoaderUtils.defaults().client(), LazyInitializedExecutorService.instance);
     private MethodInfoResolver methodInfoResolver = MethodInfo::new;
 
     @Deprecated

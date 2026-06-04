@@ -96,7 +96,7 @@ public abstract class Feign {
 
   public static class Builder extends BaseBuilder<Builder, Feign> {
 
-    private Client client = ServiceLoaderUtils.resolve(Client.class, "feign.core.DefaultClient");
+    private Client client = ServiceLoaderUtils.defaults().client();
 
     @Override
     public Builder logLevel(Logger.Level logLevel) {

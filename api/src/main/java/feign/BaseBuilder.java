@@ -42,25 +42,17 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected List<MethodInterceptor> methodInterceptors = new ArrayList<>();
   protected Logger.Level logLevel = Logger.Level.NONE;
-  protected Contract contract =
-      ServiceLoaderUtils.resolve(Contract.class, "feign.core.DefaultContract");
-  protected Retryer retryer =
-      ServiceLoaderUtils.resolve(Retryer.class, "feign.core.DefaultRetryer");
-  protected Logger logger = ServiceLoaderUtils.resolve(Logger.class, "feign.Logger$NoOpLogger");
-  protected Encoder encoder =
-      ServiceLoaderUtils.resolve(Encoder.class, "feign.core.codec.DefaultEncoder");
-  protected Decoder decoder =
-      ServiceLoaderUtils.resolve(Decoder.class, "feign.core.codec.DefaultDecoder");
+  protected Contract contract;
+  protected Retryer retryer;
+  protected Logger logger;
+  protected Encoder encoder;
+  protected Decoder decoder;
   protected boolean closeAfterDecode = true;
   protected boolean decodeVoid = false;
-  protected QueryMapEncoder queryMapEncoder =
-      ServiceLoaderUtils.resolve(QueryMapEncoder.class, "feign.core.querymap.FieldQueryMapEncoder");
-  protected ErrorDecoder errorDecoder =
-      ServiceLoaderUtils.resolve(ErrorDecoder.class, "feign.core.codec.DefaultErrorDecoder");
+  protected QueryMapEncoder queryMapEncoder;
+  protected ErrorDecoder errorDecoder;
   protected Options options = new Options();
-  protected InvocationHandlerFactory invocationHandlerFactory =
-      ServiceLoaderUtils.resolve(
-          InvocationHandlerFactory.class, "feign.core.DefaultInvocationHandlerFactory");
+  protected InvocationHandlerFactory invocationHandlerFactory;
   protected boolean dismiss404;
   protected ExceptionPropagationPolicy propagationPolicy = NONE;
   protected List<Capability> capabilities = new ArrayList<>();
@@ -68,6 +60,15 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   public BaseBuilder() {
     super();
     thisB = (B) this;
+    FeignDefaults defaults = ServiceLoaderUtils.defaults();
+    this.contract = defaults.contract();
+    this.retryer = defaults.retryer();
+    this.logger = defaults.logger();
+    this.encoder = defaults.encoder();
+    this.decoder = defaults.decoder();
+    this.queryMapEncoder = defaults.queryMapEncoder();
+    this.errorDecoder = defaults.errorDecoder();
+    this.invocationHandlerFactory = defaults.invocationHandlerFactory();
   }
 
   public B logLevel(Logger.Level logLevel) {

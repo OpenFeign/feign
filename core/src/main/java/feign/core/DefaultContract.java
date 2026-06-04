@@ -18,9 +18,7 @@ package feign.core;
 import static feign.Util.checkState;
 import static feign.Util.emptyToNull;
 
-import com.google.auto.service.AutoService;
 import feign.Body;
-import feign.Contract;
 import feign.DeclarativeContract;
 import feign.HeaderMap;
 import feign.Headers;
@@ -36,7 +34,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@AutoService(Contract.class)
 public class DefaultContract extends DeclarativeContract {
 
   static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.*)$");

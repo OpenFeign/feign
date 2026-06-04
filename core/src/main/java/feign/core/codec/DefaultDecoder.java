@@ -15,14 +15,11 @@
  */
 package feign.core.codec;
 
-import com.google.auto.service.AutoService;
 import feign.Response;
 import feign.Util;
-import feign.codec.Decoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-@AutoService(Decoder.class)
 public class DefaultDecoder extends StringDecoder {
 
   @Override

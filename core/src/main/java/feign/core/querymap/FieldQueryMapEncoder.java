@@ -15,7 +15,6 @@
  */
 package feign.core.querymap;
 
-import com.google.auto.service.AutoService;
 import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
  * <p>order of included query parameters not guaranteed, and as usual, if any value is null, it will
  * be left out
  */
-@AutoService(QueryMapEncoder.class)
 public class FieldQueryMapEncoder implements QueryMapEncoder {
 
   private final Map<Class<?>, ObjectParamMetadata> classToMetadata = new ConcurrentHashMap<>();

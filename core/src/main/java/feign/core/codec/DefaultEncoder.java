@@ -17,13 +17,11 @@ package feign.core.codec;
 
 import static java.lang.String.format;
 
-import com.google.auto.service.AutoService;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.lang.reflect.Type;
 
-@AutoService(Encoder.class)
 public class DefaultEncoder implements Encoder {
 
   @Override

@@ -23,7 +23,6 @@ import static feign.Util.ENCODING_GZIP;
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.format;
 
-import com.google.auto.service.AutoService;
 import feign.Client;
 import feign.Request;
 import feign.Request.Options;
@@ -45,7 +44,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-@AutoService(Client.class)
 public class DefaultClient implements Client {
 
   private final SSLSocketFactory sslContextFactory;

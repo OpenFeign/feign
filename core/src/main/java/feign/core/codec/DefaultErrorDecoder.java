@@ -18,7 +18,6 @@ package feign.core.codec;
 import static feign.FeignException.errorStatus;
 import static feign.Util.RETRY_AFTER;
 
-import com.google.auto.service.AutoService;
 import feign.FeignException;
 import feign.Response;
 import feign.RetryableException;
@@ -26,7 +25,6 @@ import feign.codec.ErrorDecoder;
 import java.util.Collection;
 import java.util.Map;
 
-@AutoService(ErrorDecoder.class)
 public class DefaultErrorDecoder implements ErrorDecoder {
 
   private final ErrorDecoder.RetryAfterDecoder retryAfterDecoder =
