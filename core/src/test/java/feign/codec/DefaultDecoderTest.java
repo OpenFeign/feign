@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
-import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
@@ -74,7 +73,7 @@ class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(headers)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .body(inputStream, content.length())
         .build();
   }
@@ -84,7 +83,7 @@ class DefaultDecoderTest {
         .status(200)
         .reason("OK")
         .headers(Collections.<String, Collection<String>>emptyMap())
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .build();
   }
 }

@@ -16,10 +16,12 @@
 package feign.sax.examples;
 
 import static feign.Util.UTF_8;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Request;
 import feign.RequestTemplate;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
 import javax.crypto.Mac;
@@ -72,14 +74,17 @@ public class AWSSignatureVersion4 {
     canonicalRequest.append("host").append('\n');
 
     // HexEncode(Hash(Payload))
-    byte[] data = input.body();
-    String bodyText = (data != null) ? new String(data, input.requestCharset()) : null;
+    String bodyText = input.requestBody().map(AWSSignatureVersion4::bodyAsUtf8String).orElse(null);
     if (bodyText != null) {
       canonicalRequest.append(hex(sha256(bodyText)));
     } else {
       canonicalRequest.append(EMPTY_STRING_HASH);
     }
     return canonicalRequest.toString();
+  }
+
+  private static String bodyAsUtf8String(Request.Body body) {
+    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
   }
 
   private static String toSign(String timestamp, String credentialScope, String canonicalRequest) {
@@ -116,7 +121,7 @@ public class AWSSignatureVersion4 {
     if (!input.headers().isEmpty()) {
       throw new UnsupportedOperationException("headers not supported");
     }
-    if (input.body() != null) {
+    if (input.requestBody().isPresent()) {
       throw new UnsupportedOperationException("body not supported");
     }
 

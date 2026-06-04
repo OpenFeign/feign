@@ -16,10 +16,13 @@
 package feign.graphql;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.jackson.JacksonEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -51,13 +54,29 @@ class GraphqlEncoderTest {
     return template;
   }
 
+  private byte[] bodyAsByteArray(Request.Body body) {
+    return assertDoesNotThrow(body::writeToByteArray);
+  }
+
+  private String bodyAsUtf8String(Request.Body body) {
+    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
+  }
+
+  private byte[] requestBodyBytes(RequestTemplate template) {
+    return template.requestBody().map(this::bodyAsByteArray).orElse(null);
+  }
+
+  private String requestBodyString(RequestTemplate template) {
+    return template.requestBody().map(this::bodyAsUtf8String).orElse(null);
+  }
+
   @Test
   void encodesBodyWithVariables() throws Exception {
     var template = templateFor(MutationApi.class);
     var body = Map.of("name", "John", "email", "john@example.com");
     encoder.encode(body, Map.class, template);
 
-    var result = mapper.readTree(template.body());
+    var result = mapper.readTree(requestBodyBytes(template));
     assertThat(result.has("query")).isTrue();
     assertThat(result.get("query").asText()).contains("createUser");
     assertThat(result.has("variables")).isTrue();
@@ -69,7 +88,7 @@ class GraphqlEncoderTest {
   void delegatesToWrappedEncoderForNonGraphql() {
     var template = new RequestTemplate();
     encoder.encode("plain body", String.class, template);
-    assertThat(template.body()).isNotNull();
+    assertThat(template.requestBody()).isNotEmpty();
   }
 
   @Test
@@ -77,7 +96,7 @@ class GraphqlEncoderTest {
     var template = templateFor(NoVariableApi.class);
     interceptor.apply(template);
 
-    var result = mapper.readTree(template.body());
+    var result = mapper.readTree(requestBodyBytes(template));
     assertThat(result.get("query").asText()).contains("pending");
     assertThat(result.has("variables")).isFalse();
   }
@@ -85,16 +104,16 @@ class GraphqlEncoderTest {
   @Test
   void interceptorSkipsWhenBodyAlreadySet() {
     var template = templateFor(MutationApi.class);
-    template.body("already set");
+    template.body(Request.Body.of("already set"));
     interceptor.apply(template);
-    assertThat(new String(template.body())).isEqualTo("already set");
+    assertThat(requestBodyString(template)).isEqualTo("already set");
   }
 
   @Test
   void interceptorSkipsForNonGraphql() {
     var template = new RequestTemplate();
-    template.body("some body");
+    template.body(Request.Body.of("some body"));
     interceptor.apply(template);
-    assertThat(new String(template.body())).isEqualTo("some body");
+    assertThat(requestBodyString(template)).isEqualTo("some body");
   }
 }

@@ -971,6 +971,14 @@
             <excludes>
               <exclude>@feign.Experimental</exclude>
               <exclude>feign.graphql</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.Request</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.RequestTemplate</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.mock.RequestKey</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.vertx.VertxHttpClient</exclude>
             </excludes>
             <accessModifier>public</accessModifier>
           </parameter>

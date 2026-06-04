@@ -25,7 +25,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -96,8 +95,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -112,8 +110,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
@@ -125,8 +122,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -145,8 +141,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
@@ -167,8 +162,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(DATES_JSON, UTF_8)
             .build();
@@ -201,8 +195,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body(
                 new String(
@@ -228,8 +221,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
             .build();
@@ -307,8 +299,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new JacksonJrDecoder().decode(response, byte[].class)).isEmpty();
@@ -348,12 +339,7 @@ class JacksonCodecTest {
     Response.Builder responseBuilder =
         Response.builder()
             .request(
-                Request.create(
-                    HttpMethod.GET,
-                    "/v1/dummy",
-                    Collections.emptyMap(),
-                    Request.Body.empty(),
-                    null));
+                Request.create(HttpMethod.GET, "/v1/dummy", Collections.emptyMap(), null, null));
     return Stream.of(
         Arguments.of(
             responseBuilder.body("{\"data\":2024}", StandardCharsets.UTF_8).build(),

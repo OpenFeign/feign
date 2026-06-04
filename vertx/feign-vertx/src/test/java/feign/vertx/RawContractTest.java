@@ -45,6 +45,7 @@ class RawContractTest extends AbstractFeignVertxTest {
   static void createClient(Vertx vertx) {
     client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(WebClient.create(vertx))
             .encoder(new JacksonEncoder(TestUtils.MAPPER))
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
