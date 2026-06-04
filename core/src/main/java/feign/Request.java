@@ -22,6 +22,7 @@ import static feign.Util.valuesOrEmpty;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,150 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
-public final class Request {
+public final class Request implements Serializable {
+  private final HttpMethod httpMethod;
+  private final String url;
+  private final Map<String, Collection<String>> headers;
+  private final transient Body body;
+  private final RequestTemplate requestTemplate;
+  private final ProtocolVersion protocolVersion;
+
+  /**
+   * Creates a new Request.
+   *
+   * @param method of the request.
+   * @param url for the request.
+   * @param headers for the request.
+   * @param body for the request, optional.
+   * @param requestTemplate used to build the request.
+   */
+  Request(
+      HttpMethod method,
+      String url,
+      Map<String, Collection<String>> headers,
+      Body body,
+      RequestTemplate requestTemplate) {
+    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
+    this.url = checkNotNull(url, "url");
+    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
+    this.body = body;
+    this.requestTemplate = requestTemplate;
+    protocolVersion = ProtocolVersion.HTTP_1_1;
+  }
+
+  /**
+   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   *
+   * @param httpMethod for the request.
+   * @param url for the request.
+   * @param headers to include.
+   * @param body of the request, can be {@literal null}
+   * @return a Request
+   */
+  public static Request create(
+      HttpMethod httpMethod,
+      String url,
+      Map<String, Collection<String>> headers,
+      Body body,
+      RequestTemplate requestTemplate) {
+    return new Request(httpMethod, url, headers, body, requestTemplate);
+  }
+
+  /**
+   * Returns the body of the request, if any.
+   *
+   * @return the body of the request, if any
+   */
+  public Optional<Body> body() {
+    return Optional.ofNullable(body);
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param values
+   */
+  public void header(String key, Collection<String> values) {
+    headers.put(key, values);
+  }
+
+  /**
+   * Add new entries to request Headers. It overrides existing entries
+   *
+   * @param key
+   * @param value
+   */
+  public void header(String key, String value) {
+    header(key, Arrays.asList(value));
+  }
+
+  /**
+   * Request Headers.
+   *
+   * @return the request headers.
+   */
+  public Map<String, Collection<String>> headers() {
+    return Collections.unmodifiableMap(headers);
+  }
+
+  /**
+   * Http Method for the request.
+   *
+   * @return the HttpMethod.
+   */
+  public HttpMethod httpMethod() {
+    return this.httpMethod;
+  }
+
+  /**
+   * Request HTTP protocol version
+   *
+   * @return HTTP protocol version
+   */
+  public ProtocolVersion protocolVersion() {
+    return protocolVersion;
+  }
+
+  @Experimental
+  public RequestTemplate requestTemplate() {
+    return this.requestTemplate;
+  }
+
+  /**
+   * URL for the request.
+   *
+   * @return URL as a String.
+   */
+  public String url() {
+    return url;
+  }
+
+  /**
+   * Request as an HTTP/1.1 request.
+   *
+   * @return the request.
+   */
+  @Override
+  public String toString() {
+    final StringBuilder builder = new StringBuilder();
+    builder
+        .append(httpMethod)
+        .append(' ')
+        .append(url)
+        .append(' ')
+        .append(protocolVersion)
+        .append('\n');
+    for (final String field : headers.keySet()) {
+      for (final String value : valuesOrEmpty(headers, field)) {
+        builder.append(field).append(": ").append(value).append('\n');
+      }
+    }
+    if (body != null) {
+      builder.append('\n').append(body);
+    }
+    return builder.toString();
+  }
 
   public enum HttpMethod {
     GET,
@@ -88,142 +232,117 @@ public final class Request {
   }
 
   /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   * Request Body
    *
-   * @param httpMethod for the request.
-   * @param url for the request.
-   * @param headers to include.
-   * @param body of the request, can be {@literal null}
-   * @return a Request
+   * <p>Considered experimental, will most likely be made internal going forward.
    */
-  public static Request create(
-      HttpMethod httpMethod,
-      String url,
-      Map<String, Collection<String>> headers,
-      Body body,
-      RequestTemplate requestTemplate) {
-    return new Request(httpMethod, url, headers, body, requestTemplate);
-  }
+  @Experimental
+  @FunctionalInterface
+  public interface Body {
+    /**
+     * Creates a new {@link Body} instance from the provided string content.
+     *
+     * @param content the string content to be used as the body of the request
+     * @return a new {@link Body} instance containing the provided string content
+     * @apiNote It's assumed that the content was constructed using {@link StandardCharsets#UTF_8}
+     *     charset.
+     */
+    static Body of(String content) {
+      return of(content, StandardCharsets.UTF_8);
+    }
 
-  private final HttpMethod httpMethod;
-  private final String url;
-  private final Map<String, Collection<String>> headers;
-  private final Body body;
-  private final RequestTemplate requestTemplate;
-  private final ProtocolVersion protocolVersion;
+    /**
+     * Creates a new {@link Body} instance from the provided byte array.
+     *
+     * @param content the byte array representing the body content
+     * @return a new {@link Body} instance
+     * @apiNote It's assumed that the byte array can be converted to a string using {@link
+     *     StandardCharsets#UTF_8} charset.
+     */
+    static Body of(byte[] content) {
+      return of(content, StandardCharsets.UTF_8);
+    }
 
-  /**
-   * Creates a new Request.
-   *
-   * @param method of the request.
-   * @param url for the request.
-   * @param headers for the request.
-   * @param body for the request, optional.
-   * @param requestTemplate used to build the request.
-   */
-  Request(
-      HttpMethod method,
-      String url,
-      Map<String, Collection<String>> headers,
-      Body body,
-      RequestTemplate requestTemplate) {
-    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
-    this.url = checkNotNull(url, "url");
-    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
-    this.requestTemplate = requestTemplate;
-    protocolVersion = ProtocolVersion.HTTP_1_1;
-  }
+    /**
+     * Creates a new {@link Body} instance from the provided string content, using the specified
+     * charset.
+     *
+     * @param content the string content to be used as the body content
+     * @param charset the content charset
+     * @return a new {@link Body} instance containing the provided content
+     */
+    static Body of(String content, Charset charset) {
+      Objects.requireNonNull(content, "content is required");
+      Objects.requireNonNull(charset, "charset is required");
 
-  /**
-   * Http Method for the request.
-   *
-   * @return the HttpMethod.
-   */
-  public HttpMethod httpMethod() {
-    return this.httpMethod;
-  }
+      return of(content.getBytes(charset), charset);
+    }
 
-  /**
-   * URL for the request.
-   *
-   * @return URL as a String.
-   */
-  public String url() {
-    return url;
-  }
+    /**
+     * Creates a new {@link Body} instance from the provided byte array, using the specified
+     * charset.
+     *
+     * @param content the byte array representing the body content
+     * @param charset the content charset
+     * @return a new {@link Body} instance
+     */
+    static Body of(byte[] content, Charset charset) {
+      return new Request.BodyImpl(content, charset);
+    }
 
-  /**
-   * Request Headers.
-   *
-   * @return the request headers.
-   */
-  public Map<String, Collection<String>> headers() {
-    return Collections.unmodifiableMap(headers);
-  }
+    /**
+     * Writes the body content to the provided {@link OutputStream}.
+     *
+     * @param outputStream the output stream to which the body content should be written
+     * @throws IOException if an I/O error occurs while writing the body content
+     */
+    void writeTo(OutputStream outputStream) throws IOException;
 
-  /**
-   * Add new entries to request Headers. It overrides existing entries
-   *
-   * @param key
-   * @param value
-   */
-  public void header(String key, String value) {
-    header(key, Arrays.asList(value));
-  }
-
-  /**
-   * Add new entries to request Headers. It overrides existing entries
-   *
-   * @param key
-   * @param values
-   */
-  public void header(String key, Collection<String> values) {
-    headers.put(key, values);
-  }
-
-  /**
-   * Returns the body of the request, if any.
-   *
-   * @return the body of the request, if any
-   */
-  public Optional<Body> body() {
-    return Optional.ofNullable(body);
-  }
-
-  /**
-   * Request HTTP protocol version
-   *
-   * @return HTTP protocol version
-   */
-  public ProtocolVersion protocolVersion() {
-    return protocolVersion;
-  }
-
-  /**
-   * Request as an HTTP/1.1 request.
-   *
-   * @return the request.
-   */
-  @Override
-  public String toString() {
-    final StringBuilder builder = new StringBuilder();
-    builder
-        .append(httpMethod)
-        .append(' ')
-        .append(url)
-        .append(' ')
-        .append(protocolVersion)
-        .append('\n');
-    for (final String field : headers.keySet()) {
-      for (final String value : valuesOrEmpty(headers, field)) {
-        builder.append(field).append(": ").append(value).append('\n');
+    /**
+     * Writes the body content to a byte array.
+     *
+     * @return a byte array containing the body content
+     * @throws IOException if an I/O error occurs while writing the body content to a byte array
+     */
+    default byte[] writeToByteArray() throws IOException {
+      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        writeTo(outputStream);
+        return outputStream.toByteArray();
       }
     }
-    if (body != null) {
-      builder.append('\n').append(body);
+
+    /**
+     * Writes the body content to a string using the specified charset for decoding.
+     *
+     * @param charset the charset to be used for decoding the body content
+     * @return a string representation of the body content
+     * @throws IOException if an I/O error occurs while writing the body content to a string
+     */
+    default String writeToString(Charset charset) throws IOException {
+      Objects.requireNonNull(charset, "charset is required");
+      return new String(writeToByteArray(), charset);
     }
-    return builder.toString();
+
+    /**
+     * Returns the content length of the body, or {@code -1} if unknown. This can be used by clients
+     * to set the {@code Content-Length} header. Defaults to {@code -1}.
+     *
+     * @return the content length, or {@code -1} if unknown
+     */
+    default long contentLength() {
+      return -1;
+    }
+
+    /**
+     * Indicates whether the body can be written multiple times. This is important for clients that
+     * may need to retry requests, as non-repeatable bodies (e.g., streaming data) cannot be
+     * re-sent. Defaults to {@code false}.
+     *
+     * @return {@code true} if the body can be written multiple times, {@code false} otherwise
+     */
+    default boolean isRepeatable() {
+      return false;
+    }
   }
 
   /**
@@ -238,34 +357,6 @@ public final class Request {
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
     private final Map<String, Map<String, Options>> threadToMethodOptions;
-
-    /**
-     * Get an Options by methodName
-     *
-     * @param methodName it's your FeignInterface method name.
-     * @return method Options
-     */
-    @Experimental
-    public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions =
-          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
-      return methodOptions.getOrDefault(methodName, this);
-    }
-
-    /**
-     * Set methodOptions by methodKey and options
-     *
-     * @param methodName it's your FeignInterface method name.
-     * @param options it's the Options for this method.
-     */
-    @Experimental
-    public void setMethodOptions(String methodName, Options options) {
-      String threadIdentifier = getThreadIdentifier();
-      Map<String, Request.Options> methodOptions =
-          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
-      threadToMethodOptions.put(threadIdentifier, methodOptions);
-      methodOptions.put(methodName, options);
-    }
 
     /**
      * Creates a new Options instance.
@@ -351,39 +442,21 @@ public final class Request {
     }
 
     /**
-     * Defaults to 10 seconds. {@code 0} implies no timeout.
-     *
-     * @see java.net.HttpURLConnection#getConnectTimeout()
-     */
-    public int connectTimeoutMillis() {
-      return (int) connectTimeoutUnit.toMillis(connectTimeout);
-    }
-
-    /**
-     * Defaults to 60 seconds. {@code 0} implies no timeout.
-     *
-     * @see java.net.HttpURLConnection#getReadTimeout()
-     */
-    public int readTimeoutMillis() {
-      return (int) readTimeoutUnit.toMillis(readTimeout);
-    }
-
-    /**
-     * Defaults to true. {@code false} tells the client to not follow the redirections.
-     *
-     * @see HttpURLConnection#getFollowRedirects()
-     */
-    public boolean isFollowRedirects() {
-      return followRedirects;
-    }
-
-    /**
      * Connect Timeout Value.
      *
      * @return current timeout value.
      */
     public long connectTimeout() {
       return connectTimeout;
+    }
+
+    /**
+     * Defaults to 10 seconds. {@code 0} implies no timeout.
+     *
+     * @see java.net.HttpURLConnection#getConnectTimeout()
+     */
+    public int connectTimeoutMillis() {
+      return (int) connectTimeoutUnit.toMillis(connectTimeout);
     }
 
     /**
@@ -396,12 +469,43 @@ public final class Request {
     }
 
     /**
+     * Get an Options by methodName
+     *
+     * @param methodName it's your FeignInterface method name.
+     * @return method Options
+     */
+    @Experimental
+    public Options getMethodOptions(String methodName) {
+      Map<String, Options> methodOptions =
+          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
+      return methodOptions.getOrDefault(methodName, this);
+    }
+
+    /**
+     * Defaults to true. {@code false} tells the client to not follow the redirections.
+     *
+     * @see HttpURLConnection#getFollowRedirects()
+     */
+    public boolean isFollowRedirects() {
+      return followRedirects;
+    }
+
+    /**
      * Read Timeout value.
      *
      * @return current read timeout value.
      */
     public long readTimeout() {
       return readTimeout;
+    }
+
+    /**
+     * Defaults to 60 seconds. {@code 0} implies no timeout.
+     *
+     * @see java.net.HttpURLConnection#getReadTimeout()
+     */
+    public int readTimeoutMillis() {
+      return (int) readTimeoutUnit.toMillis(readTimeout);
     }
 
     /**
@@ -412,124 +516,20 @@ public final class Request {
     public TimeUnit readTimeoutUnit() {
       return readTimeoutUnit;
     }
-  }
-
-  @Experimental
-  public RequestTemplate requestTemplate() {
-    return this.requestTemplate;
-  }
-
-  /**
-   * Request Body
-   *
-   * <p>Considered experimental, will most likely be made internal going forward.
-   */
-  @Experimental
-  @FunctionalInterface
-  public interface Body {
-    /**
-     * Creates a new {@link Body} instance from the provided string content.
-     *
-     * @param content the string content to be used as the body of the request
-     * @return a new {@link Body} instance containing the provided string content
-     * @apiNote It's assumed that the content was constructed using {@link StandardCharsets#UTF_8}
-     *     charset.
-     */
-    static Body of(String content) {
-      return of(content, StandardCharsets.UTF_8);
-    }
 
     /**
-     * Creates a new {@link Body} instance from the provided byte array.
+     * Set methodOptions by methodKey and options
      *
-     * @param content the byte array representing the body content
-     * @return a new {@link Body} instance
-     * @apiNote It's assumed that the byte array can be converted to a string using {@link
-     *     StandardCharsets#UTF_8} charset.
+     * @param methodName it's your FeignInterface method name.
+     * @param options it's the Options for this method.
      */
-    static Body of(byte[] content) {
-      return of(content, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Creates a new {@link Body} instance from the provided string content, using the specified
-     * charset.
-     *
-     * @param content the string content to be used as the body content
-     * @param charset the content charset
-     * @return a new {@link Body} instance containing the provided content
-     */
-    static Body of(String content, Charset charset) {
-      Objects.requireNonNull(content, "content is required");
-      Objects.requireNonNull(charset, "charset is required");
-
-      return of(content.getBytes(charset), charset);
-    }
-
-    /**
-     * Creates a new {@link Body} instance from the provided byte array, using the specified
-     * charset.
-     *
-     * @param content the byte array representing the body content
-     * @param charset the content charset
-     * @return a new {@link Body} instance
-     */
-    static Body of(byte[] content, Charset charset) {
-      return new Request.BodyImpl(content, charset);
-    }
-
-    /**
-     * Writes the body content to the provided {@link OutputStream}.
-     *
-     * @param outputStream the output stream to which the body content should be written
-     * @throws IOException if an I/O error occurs while writing the body content
-     */
-    void writeTo(OutputStream outputStream) throws IOException;
-
-    /**
-     * Writes the body content to a string using the specified charset for decoding.
-     *
-     * @param charset the charset to be used for decoding the body content
-     * @return a string representation of the body content
-     * @throws IOException if an I/O error occurs while writing the body content to a string
-     */
-    default String writeToString(Charset charset) throws IOException {
-      Objects.requireNonNull(charset, "charset is required");
-      return new String(writeToByteArray(), charset);
-    }
-
-    /**
-     * Writes the body content to a byte array.
-     *
-     * @return a byte array containing the body content
-     * @throws IOException if an I/O error occurs while writing the body content to a byte array
-     */
-    default byte[] writeToByteArray() throws IOException {
-      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-        writeTo(outputStream);
-        return outputStream.toByteArray();
-      }
-    }
-
-    /**
-     * Indicates whether the body can be written multiple times. This is important for clients that
-     * may need to retry requests, as non-repeatable bodies (e.g., streaming data) cannot be
-     * re-sent. Defaults to {@code false}.
-     *
-     * @return {@code true} if the body can be written multiple times, {@code false} otherwise
-     */
-    default boolean isRepeatable() {
-      return false;
-    }
-
-    /**
-     * Returns the content length of the body, or {@code -1} if unknown. This can be used by clients
-     * to set the {@code Content-Length} header. Defaults to {@code -1}.
-     *
-     * @return the content length, or {@code -1} if unknown
-     */
-    default long contentLength() {
-      return -1;
+    @Experimental
+    public void setMethodOptions(String methodName, Options options) {
+      String threadIdentifier = getThreadIdentifier();
+      Map<String, Request.Options> methodOptions =
+          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
+      threadToMethodOptions.put(threadIdentifier, methodOptions);
+      methodOptions.put(methodName, options);
     }
   }
 
@@ -548,13 +548,13 @@ public final class Request {
     }
 
     @Override
-    public boolean isRepeatable() {
-      return true;
+    public long contentLength() {
+      return content.length;
     }
 
     @Override
-    public long contentLength() {
-      return content.length;
+    public boolean isRepeatable() {
+      return true;
     }
 
     @Override

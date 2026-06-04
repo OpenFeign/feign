@@ -63,7 +63,7 @@ public final class RequestTemplate implements Serializable {
   private BodyTemplate bodyTemplate;
   private HttpMethod method;
   private transient Charset charset = Util.UTF_8;
-  private Request.Body body;
+  private transient Request.Body body;
   private boolean decodeSlash = true;
   private CollectionFormat collectionFormat = CollectionFormat.EXPLODED;
   private MethodMetadata methodMetadata;

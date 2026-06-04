@@ -320,10 +320,10 @@ code.
 
 ---
 
-### 12. `Request` no longer implements `Serializable`
+### 12. `Request.Body` no longer implements `Serializable`
 
-`feign.Request` (and the old `feign.Request.Body`) previously implemented `java.io.Serializable`. This has been removed.
-If you were serializing `Request` objects (e.g., for caching or distributed tracing), you will need an alternative
+`feign.Request.Body` previously implemented `java.io.Serializable`. This has been removed.
+If you were serializing `Request.Body` objects (e.g., for caching or distributed tracing), you will need an alternative
 serialization strategy.
 
 ---
