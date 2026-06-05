@@ -628,8 +628,8 @@ public class RequestTemplateTest {
     template.uri("/resource?filter={filter}&sort={sort}");
     assertThat(template.requestUriTemplate()).isEqualTo("/resource");
     assertThat(template)
-            .hasQueries(
-                    entry("filter", Collections.singletonList("{filter}")),
-                    entry("sort", Collections.singletonList("{sort}")));
+        .hasQueries(
+            entry("filter", Collections.singletonList("{filter}")),
+            entry("sort", Collections.singletonList("{sort}")));
   }
 }
