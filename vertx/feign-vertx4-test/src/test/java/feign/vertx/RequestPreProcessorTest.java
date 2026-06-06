@@ -47,6 +47,7 @@ class RequestPreProcessorTest extends AbstractFeignVertxTest {
 
     client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .requestPreProcessor(req -> req.addQueryParam("version", "v1"))

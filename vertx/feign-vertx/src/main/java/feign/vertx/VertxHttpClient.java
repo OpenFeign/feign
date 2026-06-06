@@ -44,6 +44,7 @@ import java.util.stream.StreamSupport;
  */
 @SuppressWarnings("unused")
 public final class VertxHttpClient {
+  private final Vertx vertx;
   private final WebClient webClient;
   private final long timeout;
   private final UnaryOperator<HttpRequest<Buffer>> requestPreProcessor;
@@ -56,12 +57,15 @@ public final class VertxHttpClient {
    * @param requestPreProcessor request pre-processor
    */
   public VertxHttpClient(
+      final Vertx vertx,
       final WebClient webClient,
       final long timeout,
       final UnaryOperator<HttpRequest<Buffer>> requestPreProcessor) {
+    checkNotNull(vertx, "Argument vertx must not be null");
     checkNotNull(webClient, "Argument webClient must not be null");
     checkNotNull(requestPreProcessor, "Argument requestPreProcessor must be not null");
 
+    this.vertx = vertx;
     this.webClient = webClient;
     this.timeout = timeout;
     this.requestPreProcessor = requestPreProcessor;
@@ -85,9 +89,25 @@ public final class VertxHttpClient {
     }
 
     final Future<HttpResponse<Buffer>> responseFuture =
-        request.body() != null
-            ? httpClientRequest.sendBuffer(Buffer.buffer(request.body()))
-            : httpClientRequest.send();
+        request
+            .body()
+            .map(
+                body -> {
+                  OutputToReadStream stream = new OutputToReadStream(vertx);
+                  Future<HttpResponse<Buffer>> sendStreamFuture =
+                      httpClientRequest.sendStream(stream);
+                  Future<Void> writeFuture =
+                      vertx.executeBlocking(
+                          () -> {
+                            try (stream) {
+                              body.writeTo(stream);
+                            }
+                            return null;
+                          });
+                  return Future.all(sendStreamFuture, writeFuture)
+                      .map(composite -> sendStreamFuture.result());
+                })
+            .orElseGet(httpClientRequest::send);
 
     return responseFuture.compose(
         response -> {

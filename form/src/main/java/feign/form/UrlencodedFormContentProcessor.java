@@ -18,6 +18,7 @@ package feign.form;
 import static feign.form.ContentType.URLENCODED;
 
 import feign.CollectionFormat;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.net.URLEncoder;
@@ -74,7 +75,7 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
 
     template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeValue);
-    template.body(bytes, charset);
+    template.body(Request.Body.of(bytes));
   }
 
   @Override

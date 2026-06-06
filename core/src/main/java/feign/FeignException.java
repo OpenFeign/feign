@@ -15,7 +15,9 @@
  */
 package feign;
 
-import static feign.Util.*;
+import static feign.Util.UTF_8;
+import static feign.Util.caseInsensitiveCopyOf;
+import static feign.Util.checkNotNull;
 import static java.lang.String.format;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
@@ -182,7 +184,7 @@ public class FeignException extends RuntimeException {
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.body(),
+        null,
         request.headers());
   }
 
