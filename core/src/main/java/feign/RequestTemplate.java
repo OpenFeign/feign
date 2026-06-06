@@ -889,6 +889,8 @@ public final class RequestTemplate implements Serializable {
     /* body template must be cleared to prevent double processing */
     this.bodyTemplate = null;
 
+    /* reset any prior Content-Length so it cannot be duplicated or left stale */
+    this.header(CONTENT_LENGTH, Collections.emptyList());
     if (body.contentLength() >= 0) {
       this.header(CONTENT_LENGTH, String.valueOf(body.contentLength()));
     }

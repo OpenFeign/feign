@@ -85,7 +85,7 @@ public abstract class Logger {
                   body -> {
                     if (logLevel.ordinal() >= Level.FULL.ordinal()) {
                       log(configKey, ""); // CRLF
-                      log(configKey, body.toString());
+                      log(configKey, "%s", body.toString());
                     }
                     return body.contentLength();
                   })
