@@ -20,12 +20,14 @@ import static feign.Util.isDefault;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.Decoder;
-import feign.codec.DefaultDecoder;
-import feign.codec.DefaultEncoder;
-import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
-import feign.querymap.FieldQueryMapEncoder;
+import feign.core.DefaultContract;
+import feign.core.DefaultRetryer;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultEncoder;
+import feign.core.codec.DefaultErrorDecoder;
+import feign.core.querymap.FieldQueryMapEncoder;
 import feign.vertx.VertxDelegatingContract;
 import feign.vertx.VertxHttpClient;
 import io.vertx.core.Vertx;

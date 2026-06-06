@@ -17,7 +17,7 @@ package feign.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.codec.DefaultDecoder;
+import feign.core.codec.DefaultDecoder;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorException;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorWithOtherConstructorsException;

@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.core.DefaultClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -279,7 +280,8 @@ public class FeignBuilderTest {
     // noinspection rawtypes
     InvocationHandlerFactory factory =
         new InvocationHandlerFactory() {
-          private final InvocationHandlerFactory delegate = new Default();
+          private final InvocationHandlerFactory delegate =
+              new feign.core.DefaultInvocationHandlerFactory();
 
           @Override
           public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {

@@ -25,9 +25,9 @@ import feign.RequestLine
 import feign.Response
 import feign.Util
 import feign.codec.Decoder
-import feign.codec.DefaultDecoder
 import feign.codec.Encoder
 import feign.codec.ErrorDecoder
+import feign.core.codec.DefaultDecoder
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer

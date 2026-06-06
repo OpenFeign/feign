@@ -51,6 +51,7 @@ class ConnectionsLeakTests {
       new HttpServerOptions().setLogActivity(true).setPort(8091).setSsl(false);
 
   HttpServer httpServer;
+  WebClient webClient;
 
   private final Set<HttpConnection> connections = Collections.synchronizedSet(new HashSet<>());
 
@@ -69,6 +70,9 @@ class ConnectionsLeakTests {
 
   @AfterEach
   void shutdownServer() {
+    if (webClient != null) {
+      webClient.close();
+    }
     httpServer.close();
     connections.clear();
   }
@@ -80,7 +84,7 @@ class ConnectionsLeakTests {
     int nbRequests = 100;
 
     WebClientOptions options = new WebClientOptions().setMaxPoolSize(poolSize);
-    WebClient webClient = WebClient.create(vertx, options);
+    webClient = WebClient.create(vertx, options);
 
     HelloServiceAPI client =
         VertxFeign.builder()
@@ -99,9 +103,16 @@ class ConnectionsLeakTests {
     int poolSize = 1;
     int nbRequests = 100;
 
+    // Use h2c with prior knowledge instead of the default HTTP/1.1 upgrade: during the upgrade
+    // handshake the connection is still HTTP/1.1, so the pool applies the HTTP/1.1 max pool size
+    // rather than the HTTP/2 one and can open several connections under load before the first
+    // upgrades to HTTP/2 - which made this test flaky on CI.
     WebClientOptions options =
-        new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_2).setHttp2MaxPoolSize(1);
-    WebClient webClient = WebClient.create(vertx, options);
+        new WebClientOptions()
+            .setProtocolVersion(HttpVersion.HTTP_2)
+            .setHttp2MaxPoolSize(1)
+            .setHttp2ClearTextUpgrade(false);
+    webClient = WebClient.create(vertx, options);
 
     HelloServiceAPI client =
         VertxFeign.builder()

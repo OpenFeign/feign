@@ -19,6 +19,7 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.*;
 import feign.assertj.MockWebServerAssertions;
@@ -39,6 +40,19 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class Http2ClientTest extends AbstractClientTest {
+
+  private static final boolean HTTPBIN_REACHABLE;
+
+  static {
+    boolean reachable = false;
+    try {
+      java.net.InetAddress.getByName("nghttp2.org");
+      reachable = true;
+    } catch (java.net.UnknownHostException e) {
+      // ignore
+    }
+    HTTPBIN_REACHABLE = reachable;
+  }
 
   public interface TestInterface {
     @RequestLine("PATCH /patch")
@@ -83,6 +97,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void patch() throws Exception {
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     assertThat(api.patch("")).contains("https://nghttp2.org/httpbin/patch");
@@ -91,6 +106,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void noResponseBodyForPatch() {
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     assertThat(api.patch()).contains("https://nghttp2.org/httpbin/patch");
@@ -151,6 +167,7 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   void getWithRequestBody() throws JSONException {
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.getWithBody();
@@ -160,6 +177,7 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   void deleteWithRequestBody() throws JSONException {
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
         newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
     String result = api.deleteWithBody();

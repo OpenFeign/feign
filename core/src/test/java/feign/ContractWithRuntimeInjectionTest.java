@@ -17,6 +17,7 @@ package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 
+import feign.core.DefaultContract;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;

@@ -22,10 +22,10 @@ import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.DefaultRetryer;
 import feign.Logger;
 import feign.RetryableException;
 import feign.VertxFeign;
+import feign.core.DefaultRetryer;
 import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
 import feign.vertx.testcase.IcecreamServiceApi;

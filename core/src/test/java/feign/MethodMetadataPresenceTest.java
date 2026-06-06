@@ -20,8 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import feign.FeignBuilderTest.TestInterface;
-import feign.codec.DefaultDecoder;
-import feign.codec.DefaultEncoder;
+import feign.core.DefaultClient;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultEncoder;
 import java.io.IOException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;

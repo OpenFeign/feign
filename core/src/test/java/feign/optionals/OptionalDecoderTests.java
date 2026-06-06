@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Feign;
 import feign.RequestLine;
-import feign.codec.DefaultDecoder;
+import feign.core.codec.DefaultDecoder;
 import java.io.IOException;
 import java.util.Optional;
 import okhttp3.mockwebserver.MockResponse;

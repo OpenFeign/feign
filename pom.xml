@@ -83,6 +83,7 @@
   </contributors>
 
   <modules>
+    <module>api</module>
     <module>core</module>
     <module>gson</module>
     <module>http-cache</module>
@@ -133,6 +134,7 @@
     <module>validation</module>
     <module>validation-jakarta</module>
     <module>vertx</module>
+    <module>feign-bom</module>
   </modules>
 
   <scm>
@@ -204,9 +206,9 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.40.0</rewrite-maven-plugin.version>
-    <rewrite-testing-frameworks.version>3.36.0</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.35.0</rewrite-migrate-java.version>
+    <rewrite-maven-plugin.version>6.41.0</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.37.0</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.36.0</rewrite-migrate-java.version>
     <japicmp-maven-plugin.version>0.26.1</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
@@ -260,6 +262,20 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>feign-api</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>feign-core</artifactId>
@@ -894,11 +910,22 @@
                 <license.skip>true</license.skip>
               </properties>
 
+              <!-- sundr only generates the BOM pom; the committed feign-bom module
+                   (wired into <modules>) is what actually gets published, via the same
+                   central-publishing path as every other module. -->
+              <goals>
+                <excludes>
+                  <exclude>install</exclude>
+                  <exclude>deploy</exclude>
+                </excludes>
+              </goals>
+
               <modules>
                 <includes>
                   <include>io.github.openfeign:*</include>
                 </includes>
                 <excludes>
+                  <exclude>*:feign-bom</exclude>
                   <exclude>*:feign-example-*</exclude>
                   <exclude>*:feign-benchmark</exclude>
                 </excludes>

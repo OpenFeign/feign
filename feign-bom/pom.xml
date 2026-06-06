@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright © 2012 The Feign Authors (feign@commonhaus.dev)
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- GENERATED FILE - do not edit by hand.
+       Regenerate with: mvn -Pquickbuild validate && cp target/classes/feign-bom/pom.xml feign-bom/pom.xml
+       Source of the dependency list: sundr-maven-plugin generate-bom (see root pom.xml).
+       Inherits the release profile (gpg + central-publishing) from feign-parent so it
+       publishes through the same path as every other module. -->
+
+  <parent>
+    <groupId>io.github.openfeign</groupId>
+    <artifactId>feign-parent</artifactId>
+    <version>14.0-alpha1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>feign-bom</artifactId>
+  <packaging>pom</packaging>
+  <name>Feign (Bill Of Materials)</name>
+  <description>Bill of material</description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-api</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-core</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-gson</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-http-cache</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxrs</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-httpclient</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxrs2</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-hc5</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-hystrix</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson3</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson-jaxb</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jackson-jr</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxb</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxb-jakarta</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxrs3</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jaxrs4</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-java11</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jakarta</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-mock</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-json</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-okhttp</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-googlehttpclient</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-ribbon</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-sax</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-slf4j</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-spring</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-soap</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-soap-jakarta</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-reactive-wrappers</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-micrometer</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-dropwizard-metrics4</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-dropwizard-metrics5</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-kotlin</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-graphql</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-annotation-error-decoder</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-form</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-form-spring</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-moshi</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-fastjson2</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-validation</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-validation-jakarta</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-vertx</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-vertx4-test</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-vertx5-test</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>

@@ -17,11 +17,11 @@ package feign.benchmark;
 
 import feign.Client;
 import feign.Contract;
-import feign.DefaultContract;
 import feign.Feign;
 import feign.MethodMetadata;
 import feign.Response;
 import feign.Target.HardCodedTarget;
+import feign.core.DefaultContract;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;

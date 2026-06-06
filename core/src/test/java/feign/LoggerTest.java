@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Logger.Level;
 import feign.Request.ProtocolVersion;
+import feign.core.DefaultClient;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -548,7 +549,7 @@ public class LoggerTest {
     // }
   }
 
-  private static final class TestProtocolVersionClient extends Client.Default {
+  private static final class TestProtocolVersionClient extends DefaultClient {
     private final String protocolVersionName;
 
     public TestProtocolVersionClient(String protocolVersionName) {
@@ -557,7 +558,8 @@ public class LoggerTest {
     }
 
     @Override
-    Response convertResponse(HttpURLConnection connection, Request request) throws IOException {
+    public Response convertResponse(HttpURLConnection connection, Request request)
+        throws IOException {
       Response response = super.convertResponse(connection, request);
       if (nonNull((protocolVersionName))) {
         response =
