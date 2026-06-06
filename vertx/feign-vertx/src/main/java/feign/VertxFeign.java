@@ -30,6 +30,7 @@ import feign.core.codec.DefaultErrorDecoder;
 import feign.core.querymap.FieldQueryMapEncoder;
 import feign.vertx.VertxDelegatingContract;
 import feign.vertx.VertxHttpClient;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
@@ -96,6 +97,7 @@ public final class VertxFeign extends Feign {
 
   /** VertxFeign builder. */
   public static final class Builder extends Feign.Builder {
+    private Vertx vertx;
     private WebClient webClient;
     private final List<RequestInterceptor> requestInterceptors = new ArrayList<>();
     private Logger.Level logLevel = Logger.Level.NONE;
@@ -122,6 +124,11 @@ public final class VertxFeign extends Feign {
     public Builder invocationHandlerFactory(
         final InvocationHandlerFactory invocationHandlerFactory) {
       throw new UnsupportedOperationException();
+    }
+
+    public Builder vertx(final Vertx vertx) {
+      this.vertx = vertx;
+      return this;
     }
 
     /**
@@ -372,10 +379,12 @@ public final class VertxFeign extends Feign {
 
     @Override
     public VertxFeign internalBuild() {
+      checkNotNull(this.vertx, "Vertx instance wasn't provided in VertxFeign builder");
       checkNotNull(
           this.webClient, "Vertx WebClient instance wasn't provided in VertxFeign builder");
 
-      final VertxHttpClient client = new VertxHttpClient(webClient, timeout, requestPreProcessor);
+      final VertxHttpClient client =
+          new VertxHttpClient(vertx, webClient, timeout, requestPreProcessor);
       final VertxMethodHandler.Factory methodHandlerFactory =
           new VertxMethodHandler.Factory(
               client, retryer, requestInterceptors, logger, logLevel, decode404);

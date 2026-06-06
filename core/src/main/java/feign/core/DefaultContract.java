@@ -24,6 +24,7 @@ import feign.HeaderMap;
 import feign.Headers;
 import feign.Param;
 import feign.QueryMap;
+import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestLine;
 import java.lang.reflect.Parameter;
@@ -83,7 +84,7 @@ public class DefaultContract extends DeclarativeContract {
               "Body annotation was empty on method %s.",
               data.configKey());
           if (body.indexOf('{') == -1) {
-            data.template().body(body);
+            data.template().body(Request.Body.of(body));
           } else {
             data.template().bodyTemplate(body);
           }

@@ -15,15 +15,17 @@
  */
 package feign.core.codec;
 
-import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.util.Arrays;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class DefaultEncoderTest {
@@ -35,7 +37,11 @@ class DefaultEncoderTest {
     String content = "This is my content";
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, String.class, template);
-    assertThat(new String(template.body(), UTF_8)).isEqualTo(content);
+    Optional<Request.Body> optionalBody = template.requestBody();
+    assertThat(optionalBody).isPresent();
+    String body =
+        assertDoesNotThrow(() -> optionalBody.get().writeToString(StandardCharsets.UTF_8));
+    assertThat(body).contains(content);
   }
 
   @Test
@@ -43,7 +49,10 @@ class DefaultEncoderTest {
     byte[] content = {12, 34, 56};
     RequestTemplate template = new RequestTemplate();
     encoder.encode(content, byte[].class, template);
-    assertThat(Arrays.equals(content, template.body())).isTrue();
+    Optional<Request.Body> optionalBody = template.requestBody();
+    assertThat(optionalBody).isPresent();
+    byte[] body = assertDoesNotThrow(() -> optionalBody.get().writeToByteArray());
+    assertThat(body).isEqualTo(content);
   }
 
   @Test

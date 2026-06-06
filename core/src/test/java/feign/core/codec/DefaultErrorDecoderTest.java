@@ -27,6 +27,7 @@ import feign.Util;
 import feign.codec.ErrorDecoder;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,8 +49,7 @@ class DefaultErrorDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal server error")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .build();
 
@@ -64,8 +64,7 @@ class DefaultErrorDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal server error")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body("hello world", UTF_8)
             .build();
@@ -87,8 +86,7 @@ class DefaultErrorDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal server error")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body(actualBody, UTF_8)
             .build();
@@ -120,8 +118,7 @@ class DefaultErrorDecoderTest {
         Response.builder()
             .status(400)
             .reason("Bad request")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .build();
 
@@ -139,8 +136,7 @@ class DefaultErrorDecoderTest {
         Response.builder()
             .status(503)
             .reason("Service Unavailable")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .build();
 
@@ -195,8 +191,7 @@ class DefaultErrorDecoderTest {
                 Request.HttpMethod.GET,
                 "/home",
                 Collections.emptyMap(),
-                "data".getBytes(Util.UTF_8),
-                Util.UTF_8,
+                Request.Body.of("data".getBytes(StandardCharsets.UTF_8)),
                 null))
         .body(content, Util.UTF_8)
         .build();

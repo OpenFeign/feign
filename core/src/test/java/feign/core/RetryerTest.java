@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request;
 import feign.RetryableException;
 import feign.Retryer;
-import feign.Util;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class RetryerTest {
 
   private static final Request REQUEST =
-      Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
+      Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, null);
 
   @Test
   void only5TriesAllowedAndExponentialBackoff() {

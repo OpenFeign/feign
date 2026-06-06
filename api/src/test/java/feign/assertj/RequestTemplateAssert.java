@@ -17,7 +17,10 @@ package feign.assertj;
 
 import static feign.Util.UTF_8;
 
+import feign.Request;
 import feign.RequestTemplate;
+import java.io.IOException;
+import java.util.Optional;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
@@ -58,7 +61,16 @@ public final class RequestTemplateAssert
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
-    objects.assertEqual(info, new String(actual.body(), UTF_8), utf8Expected);
+    Optional<Request.Body> requestBody = actual.requestBody();
+    if (!requestBody.isPresent()) {
+      failWithMessage("\nExpecting body to be <%s>, but was empty", utf8Expected);
+      return this;
+    }
+    try {
+      objects.assertEqual(info, requestBody.get().writeToString(UTF_8), utf8Expected);
+    } catch (IOException e) {
+      failWithMessage("\nFailed to read body: %s", e.getMessage());
+    }
     return this;
   }
 
@@ -67,14 +79,23 @@ public final class RequestTemplateAssert
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
-    arrays.assertContains(info, actual.body(), expected);
+    Optional<Request.Body> requestBody = actual.requestBody();
+    if (!requestBody.isPresent()) {
+      failWithMessage("\nExpecting body to be present, but was empty");
+      return this;
+    }
+    try {
+      arrays.assertContains(info, requestBody.get().writeToByteArray(), expected);
+    } catch (IOException e) {
+      failWithMessage("\nFailed to read body: %s", e.getMessage());
+    }
     return this;
   }
 
   public RequestTemplateAssert hasBodyTemplate(String expected) {
     isNotNull();
-    if (actual.body() != null) {
-      failWithMessage("\nExpecting body to be null, but was:<%s>", actual.bodyTemplate());
+    if (actual.requestBody().isPresent()) {
+      failWithMessage("\nExpecting body to be null, but was present");
     }
     objects.assertEqual(info, actual.bodyTemplate(), expected);
     return this;
@@ -99,15 +120,17 @@ public final class RequestTemplateAssert
 
   public RequestTemplateAssert noRequestBody() {
     isNotNull();
-    if (actual.body() != null) {
-      if (actual.bodyTemplate() != null) {
-        failWithMessage(
-            "\nExpecting requestBody.bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
-      }
-      if (actual.body() != null) {
+    if (actual.bodyTemplate() != null) {
+      failWithMessage(
+          "\nExpecting requestBody.bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
+    }
+    if (actual.requestBody().isPresent()) {
+      try {
         failWithMessage(
             "\nExpecting requestBody.data to be null, but was:<%s>",
-            new String(actual.body(), actual.requestCharset()));
+            actual.requestBody().get().writeToString(UTF_8));
+      } catch (IOException e) {
+        failWithMessage("\nExpecting requestBody to be null, but was present");
       }
     }
     return this;

@@ -22,7 +22,6 @@ import com.alibaba.fastjson2.TypeReference;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -107,8 +106,7 @@ class FastJsonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -124,8 +122,7 @@ class FastJsonCodecTest {
             .status(204)
             .reason("OK")
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat(new Fastjson2Decoder().decode(response, String.class)).isNull();
@@ -138,8 +135,7 @@ class FastJsonCodecTest {
             .status(204)
             .reason("OK")
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -158,8 +154,7 @@ class FastJsonCodecTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body(
                 new String(
@@ -205,8 +200,7 @@ class FastJsonCodecTest {
             .status(404)
             .reason("NOT FOUND")
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new Fastjson2Decoder().decode(response, byte[].class)).isEmpty();

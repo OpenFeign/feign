@@ -36,8 +36,7 @@ class ResponseTest {
         Response.builder()
             .status(200)
             .headers(Collections.<String, Collection<String>>emptyMap())
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
 
@@ -54,8 +53,7 @@ class ResponseTest {
         Response.builder()
             .status(200)
             .headers(headersMap)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
     assertThat(response.headers())
@@ -80,8 +78,7 @@ class ResponseTest {
         Response.builder()
             .status(200)
             .headers(headersMap)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
     assertThat(response.charset()).isEqualTo(Util.UTF_8);
@@ -97,8 +94,7 @@ class ResponseTest {
         Response.builder()
             .status(200)
             .headers(headersMap)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
 
@@ -115,8 +111,7 @@ class ResponseTest {
     Response response =
         Response.builder()
             .status(200)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
     assertThat(response.headers()).isNotNull().isEmpty();
@@ -127,8 +122,7 @@ class ResponseTest {
     Response response =
         Response.builder()
             .status(103)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body((Response.Body) null)
             .build();
 
@@ -145,7 +139,7 @@ class ResponseTest {
                       .status(statusCode)
                       .request(
                           Request.create(
-                              HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                              HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
                       .body((Response.Body) null)
                       .build();
 
@@ -158,8 +152,7 @@ class ResponseTest {
     Response response =
         Response.builder()
             .status(200)
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .protocolVersion(null)
             .body(new byte[0])
             .build();

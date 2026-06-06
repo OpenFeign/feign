@@ -17,7 +17,6 @@ package feign.core;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -29,6 +28,7 @@ import feign.Headers;
 import feign.MethodMetadata;
 import feign.Param;
 import feign.QueryMap;
+import feign.Request;
 import feign.RequestLine;
 import feign.Response;
 import java.lang.annotation.ElementType;
@@ -154,7 +154,15 @@ class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(
+                    md.template()
+                        .requestBody()
+                        .map(Request.Body::contentLength)
+                        .filter(contentLength -> contentLength >= 0)
+                        .map(String::valueOf)
+                        .orElse("0"))));
   }
 
   @Test
@@ -164,7 +172,15 @@ class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", asList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(
+                    md.template()
+                        .requestBody()
+                        .map(Request.Body::contentLength)
+                        .filter(contentLength -> contentLength >= 0)
+                        .map(String::valueOf)
+                        .orElse("0"))));
   }
 
   @Test
@@ -174,7 +190,15 @@ class DefaultContractTest {
     assertThat(md.template())
         .hasHeaders(
             entry("Content-Type", Collections.singletonList("application/xml")),
-            entry("Content-Length", asList(String.valueOf(md.template().body().length))));
+            entry(
+                "Content-Length",
+                asList(
+                    md.template()
+                        .requestBody()
+                        .map(Request.Body::contentLength)
+                        .filter(contentLength -> contentLength >= 0)
+                        .map(String::valueOf)
+                        .orElse("0"))));
   }
 
   @Test

@@ -17,9 +17,12 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
@@ -46,8 +49,15 @@ public class DelegateWriter extends AbstractWriter {
   protected void write(Output output, String key, Object value) throws EncodeException {
     val fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
-    val bytes = fake.body();
-    val string = new String(bytes, output.getCharset()).replaceAll("\n", "");
-    parameterWriter.write(output, key, string);
+    fake.requestBody().ifPresent(body -> write(output, key, body));
+  }
+
+  private void write(Output output, String key, Request.Body body) {
+    try {
+      val encoded = body.writeToString(StandardCharsets.UTF_8).replaceAll("\n", "");
+      parameterWriter.write(output, key, encoded);
+    } catch (IOException e) {
+      throw new EncodeException("Failed to write request body for key: " + key, e);
+    }
   }
 }

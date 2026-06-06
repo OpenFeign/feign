@@ -142,11 +142,7 @@ public class DefaultErrorDecoderHttpErrorTest {
             .reason("anything")
             .request(
                 Request.create(
-                    HttpMethod.GET,
-                    "http://example.com/api",
-                    Collections.emptyMap(),
-                    null,
-                    Util.UTF_8))
+                    HttpMethod.GET, "http://example.com/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body("response body", Util.UTF_8)
             .build();

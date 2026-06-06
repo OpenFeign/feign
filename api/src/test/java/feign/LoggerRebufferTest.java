@@ -43,8 +43,7 @@ public class LoggerRebufferTest {
             .status(404)
             .reason("Not Found")
             .request(
-                Request.create(
-                    HttpMethod.GET, "/api/resource", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.GET, "/api/resource", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();
@@ -70,8 +69,7 @@ public class LoggerRebufferTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(
-                    HttpMethod.GET, "/api/resource", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.GET, "/api/resource", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();
@@ -94,8 +92,7 @@ public class LoggerRebufferTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(
-                    HttpMethod.POST, "/api/create", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.POST, "/api/create", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();
@@ -122,8 +119,7 @@ public class LoggerRebufferTest {
             .status(200)
             .reason("OK")
             .request(
-                Request.create(
-                    HttpMethod.GET, "/api/status", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.GET, "/api/status", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();
@@ -146,7 +142,7 @@ public class LoggerRebufferTest {
             .reason("No Content")
             .request(
                 Request.create(
-                    HttpMethod.DELETE, "/api/resource/1", Collections.emptyMap(), null, Util.UTF_8))
+                    HttpMethod.DELETE, "/api/resource/1", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("should be ignored", Util.UTF_8)
             .build();
@@ -168,8 +164,7 @@ public class LoggerRebufferTest {
             .status(205)
             .reason("Reset Content")
             .request(
-                Request.create(
-                    HttpMethod.POST, "/api/form", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.POST, "/api/form", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("should be ignored", Util.UTF_8)
             .build();
@@ -192,7 +187,7 @@ public class LoggerRebufferTest {
             .reason("OK")
             .request(
                 Request.create(
-                    HttpMethod.HEAD, "/api/resource", Collections.emptyMap(), null, Util.UTF_8))
+                    HttpMethod.HEAD, "/api/resource", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body((byte[]) null)
             .build();

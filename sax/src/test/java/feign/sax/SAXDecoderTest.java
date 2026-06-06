@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
-import feign.Util;
 import feign.codec.Decoder;
 import java.io.IOException;
 import java.text.ParseException;
@@ -77,7 +76,7 @@ class SAXDecoderTest {
     return Response.builder()
         .status(200)
         .reason("OK")
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .headers(Collections.<String, Collection<String>>emptyMap())
         .body(statusFailed, UTF_8)
         .build();
@@ -89,8 +88,7 @@ class SAXDecoderTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();
@@ -103,8 +101,7 @@ class SAXDecoderTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat((byte[]) decoder.decode(response, byte[].class)).isEmpty();

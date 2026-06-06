@@ -15,13 +15,19 @@
  */
 package feign.micrometer;
 
+import static feign.Util.CONTENT_LENGTH;
 import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import io.micrometer.core.instrument.*;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
 import java.lang.reflect.Type;
+import java.util.Collections;
 
 /** Wrap feign {@link Encoder} with metrics. */
 public class MeteredEncoder implements Encoder {
@@ -52,9 +58,11 @@ public class MeteredEncoder implements Encoder {
     createTimer(object, bodyType, template)
         .record(() -> encoder.encode(object, bodyType, template));
 
-    if (template.body() != null) {
-      createSummary(object, bodyType, template).record(template.body().length);
-    }
+    template.headers().getOrDefault(CONTENT_LENGTH, Collections.emptySet()).stream()
+        .findFirst()
+        .ifPresent(
+            contentLength ->
+                createSummary(object, bodyType, template).record(Long.parseLong(contentLength)));
   }
 
   protected Timer createTimer(Object object, Type bodyType, RequestTemplate template) {

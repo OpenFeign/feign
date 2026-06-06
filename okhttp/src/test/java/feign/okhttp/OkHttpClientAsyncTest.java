@@ -16,7 +16,6 @@
 package feign.okhttp;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
@@ -528,7 +527,7 @@ public class OkHttpClientAsyncTest {
     } catch (final FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
+      assertThat(e.contentUTF8()).isEmpty();
       return;
     }
     fail("");
@@ -565,7 +564,7 @@ public class OkHttpClientAsyncTest {
             .status(302)
             .reason("Found")
             .headers(headers)
-            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
 
@@ -769,7 +768,7 @@ public class OkHttpClientAsyncTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .headers(new HashMap<>())
         .build();
   }
@@ -1027,9 +1026,9 @@ public class OkHttpClientAsyncTest {
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {
-                    template.body(new Gson().toJson(object));
+                    template.body(Request.Body.of(new Gson().toJson(object)));
                   } else {
-                    template.body(object.toString());
+                    template.body(Request.Body.of(object.toString()));
                   }
                 });
 

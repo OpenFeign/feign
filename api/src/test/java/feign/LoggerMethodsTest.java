@@ -36,7 +36,7 @@ public class LoggerMethodsTest {
   @Test
   void responseIsClosedAfterRebuffer() throws IOException {
     Request request =
-        Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, UTF_8, null);
+        Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null);
     Response response =
         Response.builder()
             .status(200)
