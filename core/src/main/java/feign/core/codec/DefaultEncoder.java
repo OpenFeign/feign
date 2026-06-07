@@ -21,7 +21,10 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.File;
+import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 
 public class DefaultEncoder implements Encoder {
 
@@ -31,6 +34,14 @@ public class DefaultEncoder implements Encoder {
       template.body(Request.Body.of(object.toString()));
     } else if (bodyType == byte[].class) {
       template.body(Request.Body.of((byte[]) object));
+    } else if (object instanceof File) {
+      template.body(new Request.PathBody(((File) object).toPath()));
+    } else if (object instanceof Path) {
+      template.body(new Request.PathBody((Path) object));
+    } else if (object instanceof InputStream) {
+      template.body(new Request.InputStreamBody((InputStream) object));
+    } else if (object instanceof Request.Body) {
+      template.body((Request.Body) object);
     } else if (object != null) {
       throw new EncodeException(
           format("%s is not a type supported by this encoder.", object.getClass()));

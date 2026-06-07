@@ -21,11 +21,14 @@ import static feign.Util.valuesOrEmpty;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -345,6 +348,125 @@ public final class Request implements Serializable {
     }
   }
 
+  /** A {@link Body} implementation that reads content from a file specified by a {@link Path}. */
+  public static class PathBody implements Body {
+    private final Path path;
+
+    /**
+     * Creates a new {@link PathBody} instance with the specified file path.
+     *
+     * @param path the path to the file whose content will be used as the body of the request; must
+     *     not be {@code null}
+     */
+    public PathBody(Path path) {
+      this.path = Objects.requireNonNull(path, "path is required");
+    }
+
+    /**
+     * Writes the content of the file specified by the {@link Path} to the provided {@link
+     * OutputStream}.
+     *
+     * @param outputStream the output stream to which the body content should be written
+     * @throws IOException if an I/O error occurs while reading the file content or writing it to
+     *     the output stream
+     */
+    @Override
+    public void writeTo(OutputStream outputStream) throws IOException {
+      try (InputStream inputStream = Files.newInputStream(path)) {
+        Util.copy(inputStream, outputStream);
+      }
+    }
+
+    /**
+     * Returns the content length of the file specified by the {@link Path}, or {@code -1} if an I/O
+     * error occurs while determining the file size. This can be used by clients to set the {@code
+     * Content-Length} header.
+     *
+     * @return the content length of the file, or {@code -1} if an I/O error occurs while
+     *     determining the file size
+     */
+    @Override
+    public long contentLength() {
+      try {
+        return Files.size(path);
+      } catch (IOException e) {
+        return Body.super.contentLength();
+      }
+    }
+
+    /**
+     * Indicates that the body can be written multiple times, as the content is read from a file and
+     * can be re-read as needed. This is important for clients that may need to retry requests, as
+     * it allows the body to be re-sent without issues.
+     *
+     * @return {@code true} since the body can be written multiple times by re-reading the file
+     *     content
+     */
+    @Override
+    public boolean isRepeatable() {
+      return true;
+    }
+
+    /**
+     * Returns a string representation of the body content, which includes the file path and its
+     * size in bytes (or "unknown size" if the content length cannot be determined). This provides a
+     * human-readable description of the body content for debugging or logging purposes.
+     *
+     * @return a string representation of the body content, including the file path and its size in
+     *     bytes (or "unknown size" if the content length cannot be determined)
+     */
+    @Override
+    public String toString() {
+      long contentLength = contentLength();
+      String size = contentLength < 0 ? "unknown size" : contentLength + " bytes";
+
+      return "[Content of " + path + "(" + size + ")]";
+    }
+  }
+
+  /**
+   * A {@link Body} implementation that reads content from an {@link InputStream}. The content
+   * length is unknown, and the body is not repeatable.
+   */
+  public static class InputStreamBody implements Body {
+    private final InputStream inputStream;
+
+    /**
+     * Creates a new {@link InputStreamBody} instance with the specified input stream.
+     *
+     * @param inputStream the input stream from which the body content will be read; must not be
+     *     {@code null}
+     */
+    public InputStreamBody(InputStream inputStream) {
+      this.inputStream = Objects.requireNonNull(inputStream, "inputStream is required");
+    }
+
+    /**
+     * Writes the content read from the {@link InputStream} to the provided {@link OutputStream}.
+     * The content is read from the input stream and written to the output stream until the end of
+     * the stream is reached.
+     *
+     * @param outputStream the output stream to which the body content should be written
+     * @throws IOException if an I/O error occurs while reading from the input stream or writing to
+     *     the output stream
+     */
+    @Override
+    public void writeTo(OutputStream outputStream) throws IOException {
+      Util.copy(inputStream, outputStream);
+    }
+
+    /**
+     * Returns a string representation of the body content, which is a binary data of unknown size.
+     *
+     * @return a string representation of the body content, indicating that it is binary data of
+     *     unknown size
+     */
+    @Override
+    public String toString() {
+      return "[Binary data (unknown size)]";
+    }
+  }
+
   /**
    * Controls the per-request settings currently required to be implemented by all {@link Client
    * clients}
@@ -544,7 +666,7 @@ public final class Request implements Serializable {
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
-      Objects.requireNonNull(outputStream, "outputStream is required").write(content);
+      outputStream.write(content);
     }
 
     @Override

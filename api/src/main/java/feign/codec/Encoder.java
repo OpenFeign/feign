@@ -45,7 +45,7 @@ import java.lang.reflect.Type;
  *
  *   &#064;Override
  *   public void encode(Object object, Type bodyType, RequestTemplate template) {
- *     template.body(gson.toJson(object, bodyType));
+ *     template.body(Request.Body.of(gson.toJson(object, bodyType)));
  *   }
  * }
  * </pre>

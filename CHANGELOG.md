@@ -1,3 +1,9 @@
+### Version 14.0
+
+* `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
+  avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
+  these cases.
+
 ### Version 13.12
 
 * `UrlencodedFormContentProcessor` now honors `CollectionFormat` from `@RequestLine`/`RequestTemplate` for array and
