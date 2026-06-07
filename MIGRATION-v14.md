@@ -19,7 +19,7 @@ The **breaking changes** primarily affect code that interacts directly with requ
 - Any code that directly reads `Request.body()`, `Request.length()`, `Request.charset()`, or `RequestTemplate.body()`/
   `RequestTemplate.requestBody()`
 
-### `DefaultEncoder` streaming support (non-breaking)
+### `DefaultEncoder` streaming support (non-breaking) (https://github.com/OpenFeign/feign/pull/3396)
 
 `DefaultEncoder` now additionally supports `File`, `Path`, `InputStream`, and `Request.Body` as request body types.
 This is an additive, non-breaking change. Existing `DefaultEncoder` users do not need to modify code; users can now opt
