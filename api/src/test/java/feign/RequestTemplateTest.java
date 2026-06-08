@@ -601,4 +601,37 @@ public class RequestTemplateTest {
     String name = "";
     template.header(name, values);
   }
+
+  @Test
+  void requestUriTemplateReturnsPathWithoutHost() {
+    RequestTemplate template = new RequestTemplate();
+    template.target("https://api.example.com:8443");
+    template.uri("/v1/api/resource/{id}");
+    assertThat(template.requestUriTemplate()).isEqualTo("/v1/api/resource/{id}");
+  }
+
+  @Test
+  void requestUriTemplateWithMultiplePathSegments() {
+    RequestTemplate template = new RequestTemplate();
+    template.target("https://api.example.com:8443");
+    template.uri("/api/v1/users/{userId}/posts/{postId}");
+    assertThat(template.requestUriTemplate()).isEqualTo("/api/v1/users/{userId}/posts/{postId}");
+  }
+
+  @Test
+  void requestUriTemplateReturnsRootPathWhenNotSet() {
+    RequestTemplate template = new RequestTemplate();
+    assertThat(template.requestUriTemplate()).isEqualTo("/");
+  }
+
+  @Test
+  void requestUriTemplateDoesNotIncludeQueries() {
+    RequestTemplate template = new RequestTemplate();
+    template.uri("/resource?filter={filter}&sort={sort}");
+    assertThat(template.requestUriTemplate()).isEqualTo("/resource");
+    assertThat(template)
+        .hasQueries(
+            entry("filter", Collections.singletonList("{filter}")),
+            entry("sort", Collections.singletonList("{sort}")));
+  }
 }

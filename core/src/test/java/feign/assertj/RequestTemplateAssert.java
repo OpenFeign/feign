@@ -15,9 +15,10 @@
  */
 package feign.assertj;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import feign.Request;
 import feign.RequestTemplate;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
@@ -115,18 +116,10 @@ public final class RequestTemplateAssert
   }
 
   private String bodyAsUtf8String(Request.Body body) {
-    try {
-      return body.writeToString(StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
+    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
   }
 
   private byte[] bodyAsBytes(Request.Body body) {
-    try {
-      return body.writeToByteArray();
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
+    return assertDoesNotThrow(body::writeToByteArray);
   }
 }

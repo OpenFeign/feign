@@ -666,7 +666,7 @@ public final class Request implements Serializable {
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
-      outputStream.write(content);
+      Objects.requireNonNull(outputStream, "outputStream is required").write(content);
     }
 
     @Override

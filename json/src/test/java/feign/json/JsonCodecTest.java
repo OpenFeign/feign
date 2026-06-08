@@ -17,6 +17,7 @@ package feign.json;
 
 import static feign.Util.toByteArray;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Feign;
 import feign.Param;
@@ -25,7 +26,6 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
@@ -82,13 +82,10 @@ class JsonCodecTest {
     JSONObject response = github.create("openfeign", "feign", contributor);
     Request request = mockClient.verifyOne(HttpMethod.POST, "/repos/openfeign/feign/contributors");
     assertThat(request.body()).isPresent();
-    String json;
-    try {
-      json = request.body().get().writeToString(StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
-    assertThat(json).contains("\"login\":\"radio-rogal\"").contains("\"contributions\":0");
+    String json =
+        assertDoesNotThrow(() -> request.body().get().writeToString(StandardCharsets.UTF_8));
+    assertThat(json).contains("\"login\":\"radio-rogal\"");
+    assertThat(json).contains("\"contributions\":0");
     assertThat(response.getString("login")).isEqualTo("radio-rogal");
     assertThat(response.getInt("contributions")).isZero();
   }

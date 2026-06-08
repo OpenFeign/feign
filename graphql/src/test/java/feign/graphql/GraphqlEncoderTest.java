@@ -16,12 +16,12 @@
 package feign.graphql;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.jackson.JacksonEncoder;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -55,19 +55,11 @@ class GraphqlEncoderTest {
   }
 
   private byte[] bodyAsByteArray(Request.Body body) {
-    try {
-      return body.writeToByteArray();
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
+    return assertDoesNotThrow(body::writeToByteArray);
   }
 
   private String bodyAsUtf8String(Request.Body body) {
-    try {
-      return body.writeToString(StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
+    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
   }
 
   private byte[] requestBodyBytes(RequestTemplate template) {

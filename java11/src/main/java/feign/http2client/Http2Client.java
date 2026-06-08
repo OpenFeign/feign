@@ -59,7 +59,7 @@ import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -67,6 +67,19 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 public class Http2Client implements Client, AsyncClient<Object> {
+
+  /**
+   * Dedicated default executor for the blocking body-writing bridge. Avoids starving the JVM-wide
+   * {@link java.util.concurrent.ForkJoinPool#commonPool()} when a thread is pinned per in-flight
+   * request.
+   */
+  private static final Executor DEFAULT_EXECUTOR =
+      Executors.newCachedThreadPool(
+          runnable -> {
+            Thread thread = new Thread(runnable, "feign-http2-body-writer");
+            thread.setDaemon(true);
+            return thread;
+          });
 
   private final HttpClient client;
 
@@ -95,11 +108,11 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   public Http2Client(HttpClient client) {
-    this(client, ForkJoinPool.commonPool());
+    this(client, DEFAULT_EXECUTOR);
   }
 
   public Http2Client(Options options) {
-    this(options, ForkJoinPool.commonPool());
+    this(options, DEFAULT_EXECUTOR);
   }
 
   public Http2Client(Options options, Executor executor) {

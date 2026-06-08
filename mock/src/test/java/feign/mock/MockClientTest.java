@@ -17,6 +17,7 @@ package feign.mock;
 
 import static feign.Util.toByteArray;
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Body;
 import feign.Feign;
@@ -188,12 +189,7 @@ class MockClientTest {
         mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
     assertThat(body).isPresent();
 
-    String message;
-    try {
-      message = body.get().writeToString(StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new AssertionError("Failed to write body", e);
-    }
+    String message = assertDoesNotThrow(() -> body.get().writeToString(StandardCharsets.UTF_8));
     assertThat(message).contains("velo_at_github").contains("preposterous hacker");
 
     mockClient.verifyStatus();

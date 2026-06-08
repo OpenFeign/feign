@@ -34,7 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.async.methods.SimpleResponseConsumer;
 import org.apache.hc.client5.http.config.Configurable;
@@ -71,6 +71,19 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
+  /**
+   * Dedicated default executor for the blocking body-writing bridge. Avoids starving the JVM-wide
+   * {@link java.util.concurrent.ForkJoinPool#commonPool()} when a thread is pinned per in-flight
+   * request.
+   */
+  private static final Executor DEFAULT_EXECUTOR =
+      Executors.newCachedThreadPool(
+          runnable -> {
+            Thread thread = new Thread(runnable, "feign-hc5-async-body-writer");
+            thread.setDaemon(true);
+            return thread;
+          });
+
   private final CloseableHttpAsyncClient client;
 
   private final Executor executor;
@@ -80,7 +93,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
   }
 
   public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
-    this(client, ForkJoinPool.commonPool());
+    this(client, DEFAULT_EXECUTOR);
   }
 
   public AsyncApacheHttp5Client(CloseableHttpAsyncClient client, Executor executor) {

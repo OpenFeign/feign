@@ -577,6 +577,22 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
+   * The Uri Template (relative path) without the host and port. This is the templated path with
+   * parameter placeholders but without the scheme://host:port prefix.
+   *
+   * <p>For example, given a target of {@code https://api.example.com:8443} and a uri of {@code
+   * /v1/api/resource/{id}}, this method will return {@code /v1/api/resource/{id}}.
+   *
+   * @return the uri template path without host/port, or "/" if no path is set
+   */
+  public String requestUriTemplate() {
+    if (this.uriTemplate != null) {
+      return this.uriTemplate.toString();
+    }
+    return "/";
+  }
+
+  /**
    * List all of the template variable expressions for this template.
    *
    * @return a list of template variable names
@@ -889,6 +905,8 @@ public final class RequestTemplate implements Serializable {
     /* body template must be cleared to prevent double processing */
     this.bodyTemplate = null;
 
+    /* reset any prior Content-Length so it cannot be duplicated or left stale */
+    this.header(CONTENT_LENGTH, Collections.emptyList());
     if (body.contentLength() >= 0) {
       this.header(CONTENT_LENGTH, String.valueOf(body.contentLength()));
     }
