@@ -158,7 +158,7 @@
     <jvm.options>-Duser.language=en</jvm.options>
 
     <!-- default bytecode version for src/main -->
-    <main.java.version>1.8</main.java.version>
+    <main.java.version>11</main.java.version>
     <latest.java.version>25</latest.java.version>
 
     <!-- default bytecode version for src/test -->
@@ -232,10 +232,10 @@
     <jakarta.xml.soap-api.version>3.0.2</jakarta.xml.soap-api.version>
     <jakarta.xml.ws-api.version>4.0.3</jakarta.xml.ws-api.version>
     <javax.ws.rs-api.version>2.1.1</javax.ws.rs-api.version>
-    <jaxb-api.version>2.3.1</jaxb-api.version>
+    <jaxb-api.version>2.3.3</jaxb-api.version>
     <jaxb-impl-2.version>2.3.9</jaxb-impl-2.version>
     <jaxb-impl-4.version>4.0.3</jaxb-impl-4.version>
-    <jaxws-api.version>2.3.1</jaxws-api.version>
+    <jaxws-api.version>2.3.3</jaxws-api.version>
     <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
     <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
     <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
@@ -1206,8 +1206,12 @@
                 <configuration>
                   <exportDatatables>true</exportDatatables>
                   <activeRecipes>
-                    <recipe>org.openrewrite.java.migrate.UpgradeToJava8</recipe>
+                    <recipe>org.openrewrite.java.migrate.Java8toJava11</recipe>
                   </activeRecipes>
+                  <exclusions>
+                    <exclusion>**/src/test/java/**</exclusion>
+                    <exclusion>pom.xml</exclusion>
+                  </exclusions>
                 </configuration>
               </execution>
             </executions>

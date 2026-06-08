@@ -19,7 +19,6 @@ import static lombok.AccessLevel.PRIVATE;
 
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * Supported content types.
@@ -55,8 +54,8 @@ public enum ContentType {
       return UNDEFINED;
     }
 
-    val trimmed = str.trim();
-    for (val type : values()) {
+    final var trimmed = str.trim();
+    for (var type : values()) {
       if (trimmed.startsWith(type.getHeader())) {
         return type;
       }

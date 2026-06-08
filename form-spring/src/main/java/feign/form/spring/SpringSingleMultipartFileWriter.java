@@ -19,7 +19,6 @@ import feign.codec.EncodeException;
 import feign.form.multipart.AbstractWriter;
 import feign.form.multipart.Output;
 import java.io.IOException;
-import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -36,7 +35,7 @@ public class SpringSingleMultipartFileWriter extends AbstractWriter {
 
   @Override
   protected void write(Output output, String key, Object value) throws EncodeException {
-    val file = (MultipartFile) value;
+    final var file = (MultipartFile) value;
     writeFileMetadata(output, key, file.getOriginalFilename(), file.getContentType());
 
     byte[] bytes;

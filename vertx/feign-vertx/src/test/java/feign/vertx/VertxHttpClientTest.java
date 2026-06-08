@@ -99,7 +99,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
                       Collection<Flavor> flavors = res.result();
 
                       assertThat(flavors)
-                          .hasSize(Flavor.values().length)
+                          .hasSameSizeAs(Flavor.values())
                           .containsAll(Arrays.asList(Flavor.values()));
                       testContext.completeNow();
                     } else {
@@ -134,7 +134,7 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
                       Collection<Mixin> mixins = res.result();
 
                       assertThat(mixins)
-                          .hasSize(Mixin.values().length)
+                          .hasSameSizeAs(Mixin.values())
                           .containsAll(Arrays.asList(Mixin.values()));
                       testContext.completeNow();
                     } else {

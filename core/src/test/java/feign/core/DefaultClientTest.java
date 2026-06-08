@@ -16,8 +16,8 @@
 package feign.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Client;
 import feign.Feign;
@@ -27,11 +27,9 @@ import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import feign.client.TrustingSSLSocketFactory;
 import feign.core.DefaultClient.Proxied;
-import java.io.IOException;
 import java.net.*;
 import java.util.Collections;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.SocketPolicy;
+import mockwebserver3.MockResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
@@ -47,10 +45,10 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  void retriesFailedHandshake() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.FAIL_HANDSHAKE));
-    server.enqueue(new MockResponse());
+  void retriesFailedHandshake() throws Exception {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.enqueue(new MockResponse.Builder().failHandshake().build());
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "https://localhost:" + server.getPort());
@@ -60,9 +58,9 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
-  void canOverrideSSLSocketFactory() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("localhost"), false);
-    server.enqueue(new MockResponse());
+  void canOverrideSSLSocketFactory() throws Exception {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "https://localhost:" + server.getPort());
@@ -79,7 +77,8 @@ public class DefaultClientTest extends AbstractClientTest {
   @Test
   @Override
   public void patch() throws Exception {
-    RetryableException exception = assertThrows(RetryableException.class, super::patch);
+    RetryableException exception =
+        assertThatExceptionOfType(RetryableException.class).isThrownBy(super::patch).actual();
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
@@ -94,7 +93,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
-  public void noRequestBodyForPostWithAllowRestrictedHeaders() throws Exception {
+  void noRequestBodyForPostWithAllowRestrictedHeaders() throws Exception {
     super.noResponseBodyForPost();
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("POST")
@@ -113,7 +112,7 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
-  public void noResponseBodyForPutWithAllowRestrictedHeaders() throws Exception {
+  void noResponseBodyForPutWithAllowRestrictedHeaders() throws Exception {
     super.noResponseBodyForPut();
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("PUT")
@@ -125,14 +124,16 @@ public class DefaultClientTest extends AbstractClientTest {
   @Override
   public void noResponseBodyForPatch() {
     RetryableException exception =
-        assertThrows(RetryableException.class, super::noResponseBodyForPatch);
+        assertThatExceptionOfType(RetryableException.class)
+            .isThrownBy(super::noResponseBodyForPatch)
+            .actual();
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test
-  void canOverrideHostnameVerifier() throws IOException, InterruptedException {
-    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);
-    server.enqueue(new MockResponse());
+  void canOverrideHostnameVerifier() throws Exception {
+    server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"));
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         Feign.builder()
@@ -159,7 +160,7 @@ public class DefaultClientTest extends AbstractClientTest {
     /* verify that the proxy */
     HttpURLConnection connection =
         proxied.getConnection(URI.create("http://www.example.com").toURL());
-    assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
+    assertThat(connection).isInstanceOf(HttpURLConnection.class);
   }
 
   @Test
@@ -176,6 +177,6 @@ public class DefaultClientTest extends AbstractClientTest {
 
     HttpURLConnection connection =
         proxied.getConnection(URI.create("http://www.example.com").toURL());
-    assertThat(connection).isNotNull().isInstanceOf(HttpURLConnection.class);
+    assertThat(connection).isInstanceOf(HttpURLConnection.class);
   }
 }

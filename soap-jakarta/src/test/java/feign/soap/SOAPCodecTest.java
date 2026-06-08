@@ -17,8 +17,7 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -35,6 +34,7 @@ import jakarta.xml.soap.SOAPElement;
 import jakarta.xml.soap.SOAPException;
 import jakarta.xml.soap.SOAPFactory;
 import jakarta.xml.soap.SOAPMessage;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -85,11 +85,12 @@ class SOAPCodecTest {
 
     RequestTemplate template = new RequestTemplate();
     Throwable exception =
-        assertThrows(
-            UnsupportedOperationException.class,
-            () ->
-                new SOAPEncoder(new JAXBContextFactory.Builder().build())
-                    .encode(Collections.emptyMap(), parameterized, template));
+        assertThatExceptionOfType(UnsupportedOperationException.class)
+            .isThrownBy(
+                () ->
+                    new SOAPEncoder(new JAXBContextFactory.Builder().build())
+                        .encode(Collections.emptyMap(), parameterized, template))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
@@ -367,11 +368,12 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .build();
 
     Throwable exception =
-        assertThrows(
-            feign.codec.DecodeException.class,
-            () ->
-                new SOAPDecoder(new JAXBContextFactory.Builder().build())
-                    .decode(response, parameterized));
+        assertThatExceptionOfType(feign.codec.DecodeException.class)
+            .isThrownBy(
+                () ->
+                    new SOAPDecoder(new JAXBContextFactory.Builder().build())
+                        .decode(response, parameterized))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             """
@@ -460,7 +462,11 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
   }
 
   private byte[] bodyAsBytes(Request.Body body) {
-    return assertDoesNotThrow(body::writeToByteArray);
+    try {
+      return body.writeToByteArray();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   @XmlRootElement

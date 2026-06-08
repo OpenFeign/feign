@@ -240,7 +240,7 @@ class GraphqlDecoderTest {
 
     assertThat(result.id()).isEqualTo("1");
     assertThat(result.email()).isPresent();
-    assertThat(result.email().get()).isEqualTo("alice@test.com");
+    assertThat(result.email()).hasValue("alice@test.com");
   }
 
   @Test

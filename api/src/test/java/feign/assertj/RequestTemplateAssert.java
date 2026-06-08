@@ -62,7 +62,7 @@ public final class RequestTemplateAssert
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
     Optional<Request.Body> requestBody = actual.requestBody();
-    if (!requestBody.isPresent()) {
+    if (requestBody.isEmpty()) {
       failWithMessage("\nExpecting body to be <%s>, but was empty", utf8Expected);
       return this;
     }
@@ -80,7 +80,7 @@ public final class RequestTemplateAssert
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
     Optional<Request.Body> requestBody = actual.requestBody();
-    if (!requestBody.isPresent()) {
+    if (requestBody.isEmpty()) {
       failWithMessage("\nExpecting body to be present, but was empty");
       return this;
     }
@@ -129,7 +129,7 @@ public final class RequestTemplateAssert
         failWithMessage(
             "\nExpecting requestBody.data to be null, but was:<%s>",
             actual.requestBody().get().writeToString(UTF_8));
-      } catch (IOException e) {
+      } catch (IOException _) {
         failWithMessage("\nExpecting requestBody to be null, but was present");
       }
     }

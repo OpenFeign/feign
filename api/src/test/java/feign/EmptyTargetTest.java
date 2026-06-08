@@ -16,7 +16,7 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request.HttpMethod;
 import feign.Target.EmptyTarget;
@@ -33,24 +33,25 @@ class EmptyTargetTest {
 
   @Test
   void toString_withoutName() {
-    assertThat(EmptyTarget.create(UriInterface.class).toString())
-        .isEqualTo("EmptyTarget(type=UriInterface)");
+    assertThat(EmptyTarget.create(UriInterface.class))
+        .hasToString("EmptyTarget(type=UriInterface)");
   }
 
   @Test
   void toString_withName() {
-    assertThat(EmptyTarget.create(UriInterface.class, "manager-access").toString())
-        .isEqualTo("EmptyTarget(type=UriInterface, name=manager-access)");
+    assertThat(EmptyTarget.create(UriInterface.class, "manager-access"))
+        .hasToString("EmptyTarget(type=UriInterface, name=manager-access)");
   }
 
   @Test
   void mustApplyToAbsoluteUrl() {
     UnsupportedOperationException exception =
-        assertThrows(
-            UnsupportedOperationException.class,
-            () ->
-                EmptyTarget.create(UriInterface.class)
-                    .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")));
+        assertThatExceptionOfType(UnsupportedOperationException.class)
+            .isThrownBy(
+                () ->
+                    EmptyTarget.create(UriInterface.class)
+                        .apply(new RequestTemplate().method(HttpMethod.GET).uri("/relative")))
+            .actual();
     assertThat(exception.getMessage())
         .isEqualTo("Request with non-absolute URL not supported with empty target");
   }

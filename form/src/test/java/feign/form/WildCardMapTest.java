@@ -52,7 +52,7 @@ class WildCardMapTest {
   }
 
   @Test
-  void testOk() {
+  void ok() {
     Map<String, Object> param =
         new HashMap<String, Object>() {
 
@@ -68,7 +68,7 @@ class WildCardMapTest {
   }
 
   @Test
-  void testBadRequest() {
+  void badRequest() {
     Map<String, Object> param =
         new HashMap<String, Object>() {
 

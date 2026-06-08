@@ -16,10 +16,10 @@
 package feign.jaxb.examples;
 
 import static feign.Util.UTF_8;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Request;
 import feign.RequestTemplate;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -84,7 +84,11 @@ public class AWSSignatureVersion4 {
   }
 
   private static String bodyAsUtf8String(Request.Body body) {
-    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
+    try {
+      return body.writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   private static String toSign(String timestamp, String credentialScope, String canonicalRequest) {

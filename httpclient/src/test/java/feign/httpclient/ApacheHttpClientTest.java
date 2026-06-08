@@ -17,7 +17,7 @@ package feign.httpclient;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -32,8 +32,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import org.apache.http.ProtocolException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -57,59 +57,63 @@ public class ApacheHttpClientTest extends AbstractClientTest {
             .client(new ApacheHttpClient(HttpClientBuilder.create().build()))
             .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
 
-    server.enqueue(new MockResponse().setResponseCode(303));
+    server.enqueue(new MockResponse.Builder().code(303).build());
 
     RetryableException exception =
-        assertThrows(RetryableException.class, () -> api.withoutBody("foo"));
+        assertThatExceptionOfType(RetryableException.class)
+            .isThrownBy(() -> api.withoutBody("foo"))
+            .actual();
 
     assertThat(exception.getCause()).isInstanceOf(ClientProtocolException.class);
     assertThat(exception.getCause()).hasCauseInstanceOf(ProtocolException.class);
   }
 
   @Test
-  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     assertThat(testInterface.withBody("foo", "bar")).isEqualTo("foo");
     final RecordedRequest request1 = server.takeRequest();
-    assertThat(request1.getPath()).isEqualTo("/withBody?foo=foo");
-    assertThat(request1.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("bar");
+    assertThat(request1.getTarget()).isEqualTo("/withBody?foo=foo");
+    assertThat(request1.getBody().string(StandardCharsets.UTF_8)).isEqualTo("bar");
 
     assertThat(testInterface.withoutBody("foo")).isEqualTo("foo");
     final RecordedRequest request2 = server.takeRequest();
-    assertThat(request2.getPath()).isEqualTo("/withoutBody?foo=foo");
-    assertThat(request2.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("");
+    assertThat(request2.getTarget()).isEqualTo("/withoutBody?foo=foo");
+    assertThat(request2.getBody().string(StandardCharsets.UTF_8)).isEmpty();
   }
 
   @Test
-  void followRedirectIsRespected() throws InterruptedException {
+  void followRedirectIsRespected() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";
-    server.enqueue(buildMockResponseWithHeaderLocation(redirectPath));
-    server.enqueue(new MockResponse().setBody("redirect"));
+    server.enqueue(buildMockResponseWithHeaderLocation(redirectPath).build());
+    server.enqueue(new MockResponse.Builder().body("redirect").build());
     Options options = buildRequestOptions(true);
 
     assertThat(testInterface.withOptions(options)).isEqualTo("redirect");
-    assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
-    assertThat(server.takeRequest().getPath()).isEqualTo(redirectPath);
+    assertThat(server.takeRequest().getTarget()).isEqualTo("/withOptions");
+    assertThat(server.takeRequest().getTarget()).isEqualTo(redirectPath);
   }
 
   @Test
-  void notFollowRedirectIsRespected() throws InterruptedException {
+  void notFollowRedirectIsRespected() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = "/redirected";
-    server.enqueue(buildMockResponseWithHeaderLocation(redirectPath));
+    server.enqueue(buildMockResponseWithHeaderLocation(redirectPath).build());
     Options options = buildRequestOptions(false);
 
     FeignException feignException =
-        assertThrows(FeignException.class, () -> testInterface.withOptions(options));
+        assertThatExceptionOfType(FeignException.class)
+            .isThrownBy(() -> testInterface.withOptions(options))
+            .actual();
     assertThat(feignException.status()).isEqualTo(302);
-    assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
+    assertThat(server.takeRequest().getTarget()).isEqualTo("/withOptions");
   }
 
   private JaxRsTestInterface buildTestInterface() {
@@ -123,9 +127,9 @@ public class ApacheHttpClientTest extends AbstractClientTest {
     return new Options(1, SECONDS, 1, SECONDS, followRedirects);
   }
 
-  private MockResponse buildMockResponseWithHeaderLocation(String redirectPath) {
-    return new MockResponse()
-        .setResponseCode(302)
+  private MockResponse.Builder buildMockResponseWithHeaderLocation(String redirectPath) {
+    return new MockResponse.Builder()
+        .code(302)
         .addHeader("location", "http://localhost:" + server.getPort() + redirectPath);
   }
 

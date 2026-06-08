@@ -19,7 +19,6 @@ import static lombok.AccessLevel.PRIVATE;
 
 import feign.codec.EncodeException;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A multiple parameters writer.
@@ -40,8 +39,8 @@ public class ManyParametersWriter extends AbstractWriter {
     if (!(value instanceof Iterable)) {
       return false;
     }
-    val iterable = (Iterable<?>) value;
-    val iterator = iterable.iterator();
+    final var iterable = (Iterable<?>) value;
+    final var iterator = iterable.iterator();
     return iterator.hasNext() && parameterWriter.isApplicable(iterator.next());
   }
 
@@ -49,13 +48,13 @@ public class ManyParametersWriter extends AbstractWriter {
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
     if (value.getClass().isArray()) {
-      val objects = (Object[]) value;
-      for (val object : objects) {
+      final var objects = (Object[]) value;
+      for (var object : objects) {
         parameterWriter.write(output, boundary, key, object);
       }
     } else if (value instanceof Iterable) {
-      val iterable = (Iterable<?>) value;
-      for (val object : iterable) {
+      final var iterable = (Iterable<?>) value;
+      for (var object : iterable) {
         parameterWriter.write(output, boundary, key, object);
       }
     }

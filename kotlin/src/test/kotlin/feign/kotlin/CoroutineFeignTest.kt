@@ -29,10 +29,11 @@ import feign.codec.Encoder
 import feign.codec.ErrorDecoder
 import feign.core.codec.DefaultDecoder
 import kotlinx.coroutines.runBlocking
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
+
 import java.io.IOException
 import java.lang.reflect.Type
 import java.util.concurrent.atomic.AtomicBoolean
@@ -42,8 +43,10 @@ class CoroutineFeignTest {
     fun `sut should run correctly when response is basic type`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
+        server.start()
         val expected = "Hello Worlda"
-        server.enqueue(MockResponse().setBody(expected))
+        server.enqueue(MockResponse.Builder().body(expected)
+            .build())
         val client = TestInterfaceAsyncBuilder()
             .target("http://localhost:" + server.port)
 
@@ -58,11 +61,13 @@ class CoroutineFeignTest {
     fun `sut should run correctly when response is complex type`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
+        server.start()
         val expected = IceCreamOrder(
             id = "HELLO WORLD",
             no = 999,
         )
-        server.enqueue(MockResponse().setBody("{ id: '${expected.id}', no: '${expected.no}'}"))
+        server.enqueue(MockResponse.Builder().body("{ id: '${expected.id}', no: '${expected.no}'}")
+            .build())
 
         val client = TestInterfaceAsyncBuilder()
             .decoder(GsonDecoder())
@@ -79,7 +84,9 @@ class CoroutineFeignTest {
     fun `sut should run correctly when empty response is represented by java_lang_Void`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("HELLO WORLD"))
+        server.start()
+        server.enqueue(MockResponse.Builder().body("HELLO WORLD")
+            .build())
 
         val client = TestInterfaceAsyncBuilder()
             .target("http://localhost:" + server.port)
@@ -95,23 +102,27 @@ class CoroutineFeignTest {
     fun `sut should run correctly when empty response is represented by kotlin_Unit`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("HELLO WORLD"))
+        server.start()
+        server.enqueue(MockResponse.Builder().body("HELLO WORLD")
+            .build())
 
         val client = TestInterfaceAsyncBuilder()
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder: Unit = client.findOrderThatReturningUnit(orderId = 1)
+        val firstOrder: Unit? = client.findOrderThatReturningUnit(orderId = 1)
 
         // Assert
-        assertThat(firstOrder).isEqualTo(Unit)
+        assertThat(firstOrder).isNull()
     }
 
     @Test
     fun `sut should dismiss 404 responses when dismiss404 is configured on CoroutineBuilder`(): Unit = runBlocking {
         // Arrange: server returns 404; a custom decoder records whether it was invoked
         val server = MockWebServer()
-        server.enqueue(MockResponse().setResponseCode(404))
+        server.start()
+        server.enqueue(MockResponse.Builder().code(404)
+            .build())
 
         val decoderInvokedFor404 = AtomicBoolean(false)
         val recordingDecoder = Decoder { response, _ ->
@@ -136,7 +147,9 @@ class CoroutineFeignTest {
     fun `sut should run correctly when using http body`(): Unit = runBlocking {
         // Arrange
         val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("HELLO WORLD"))
+        server.start()
+        server.enqueue(MockResponse.Builder().body("HELLO WORLD")
+            .build())
 
         val client = TestInterfaceAsyncBuilder()
             .target("http://localhost:" + server.port)
@@ -150,7 +163,7 @@ class CoroutineFeignTest {
         )
 
         // Assert
-        assertThat(firstOrder).isEqualTo(Unit)
+        assertThat(firstOrder).isNull()
     }
 
     internal class GsonDecoder : Decoder {

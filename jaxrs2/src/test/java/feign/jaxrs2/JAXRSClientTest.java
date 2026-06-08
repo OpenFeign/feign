@@ -29,7 +29,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import okhttp3.mockwebserver.MockResponse;
+import mockwebserver3.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +43,7 @@ public class JAXRSClientTest extends AbstractJAXRSClientTest {
 
   @Test
   void consumesMultipleWithContentTypeHeaderAndBody() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     final JaxRSClientTestInterfaceWithJaxRsContract api =
         newBuilder()
             .contract(new JAXRSContract()) // use JAXRSContract

@@ -17,7 +17,7 @@ package feign.hc5;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.Feign;
@@ -31,8 +31,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -45,52 +45,53 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
-  void queryParamsAreRespectedWhenBodyIsEmpty() throws InterruptedException {
+  void queryParamsAreRespectedWhenBodyIsEmpty() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     assertThat(testInterface.withBody("foo", "bar")).isEqualTo("foo");
     final RecordedRequest request1 = server.takeRequest();
-    assertThat(request1.getPath()).isEqualTo("/withBody?foo=foo");
-    assertThat(request1.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("bar");
+    assertThat(request1.getTarget()).isEqualTo("/withBody?foo=foo");
+    assertThat(request1.getBody().string(StandardCharsets.UTF_8)).isEqualTo("bar");
 
     assertThat(testInterface.withoutBody("foo")).isEqualTo("foo");
     final RecordedRequest request2 = server.takeRequest();
-    assertThat(request2.getPath()).isEqualTo("/withoutBody?foo=foo");
-    assertThat(request2.getBody().readString(StandardCharsets.UTF_8)).isEqualTo("");
+    assertThat(request2.getTarget()).isEqualTo("/withoutBody?foo=foo");
+    assertThat(request2.getBody().string(StandardCharsets.UTF_8)).isEmpty();
   }
 
   @Test
-  void followRedirectsIsTrue() throws InterruptedException {
+  void followRedirectsIsTrue() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
-    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
-    server.enqueue(new MockResponse().setBody("redirected"));
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath).build());
+    server.enqueue(new MockResponse.Builder().body("redirected").build());
     Request.Options options = buildRequestOptions(true);
 
     Object response = testInterface.withOptions(options);
-    assertThat(response).isNotNull();
-    assertThat(response).isEqualTo("redirected");
-    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
+    assertThat(response).isNotNull().isEqualTo("redirected");
+    assertThat(server.takeRequest().getTarget()).isEqualTo("/withRequestOptions");
   }
 
   @Test
-  void followRedirectsIsFalse() throws InterruptedException {
+  void followRedirectsIsFalse() throws Exception {
     final JaxRsTestInterface testInterface = buildTestInterface();
 
     String redirectPath = getRedirectionUrl();
-    server.enqueue(buildMockResponseWithLocationHeader(redirectPath));
+    server.enqueue(buildMockResponseWithLocationHeader(redirectPath).build());
     Request.Options options = buildRequestOptions(false);
 
     FeignException feignException =
-        assertThrows(FeignException.class, () -> testInterface.withOptions(options));
+        assertThatExceptionOfType(FeignException.class)
+            .isThrownBy(() -> testInterface.withOptions(options))
+            .actual();
     assertThat(feignException.status()).isEqualTo(302);
     assertThat(feignException.responseHeaders().get("location").stream().findFirst().orElse(null))
         .isEqualTo(redirectPath);
-    assertThat(server.takeRequest().getPath()).isEqualTo("/withRequestOptions");
+    assertThat(server.takeRequest().getTarget()).isEqualTo("/withRequestOptions");
   }
 
   private JaxRsTestInterface buildTestInterface() {
@@ -100,8 +101,8 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
         .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
   }
 
-  private MockResponse buildMockResponseWithLocationHeader(String redirectPath) {
-    return new MockResponse().setResponseCode(302).addHeader("location", redirectPath);
+  private MockResponse.Builder buildMockResponseWithLocationHeader(String redirectPath) {
+    return new MockResponse.Builder().code(302).addHeader("location", redirectPath);
   }
 
   private String getRedirectionUrl() {
@@ -113,11 +114,13 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
   }
 
   @Override
+  @Test
   public void veryLongResponseNullLength() {
     assumeTrue(false, "HC5 client seems to hang with response size equalto Long.MAX");
   }
 
   @Override
+  @Test
   public void contentTypeDefaultsToRequestCharset() throws Exception {
     assumeTrue(false, "this test is flaky on windows, but works fine.");
   }

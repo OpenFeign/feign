@@ -15,13 +15,12 @@
  */
 package feign.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import org.json.JSONArray;
@@ -74,14 +73,19 @@ class JsonEncoderTest {
   @Test
   void unknownTypeThrowsEncodeException() {
     Exception exception =
-        assertThrows(
-            EncodeException.class,
-            () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()));
+        assertThatExceptionOfType(EncodeException.class)
+            .isThrownBy(
+                () -> new JsonEncoder().encode("qwerty", Clock.class, new RequestTemplate()))
+            .actual();
     assertThat(exception.getMessage())
         .isEqualTo("class java.time.Clock is not a type supported by this encoder.");
   }
 
   private String bodyAsUtf8String(Request.Body body) {
-    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
+    try {
+      return body.writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 }

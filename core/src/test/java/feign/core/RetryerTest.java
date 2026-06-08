@@ -15,9 +15,7 @@
  */
 package feign.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import feign.Request;
 import feign.RetryableException;
@@ -36,8 +34,8 @@ class RetryerTest {
     final Long nonRetryable = null;
     RetryableException e = new RetryableException(-1, null, null, nonRetryable, REQUEST);
     DefaultRetryer retryer = new DefaultRetryer();
-    assertThat(retryer.attempt).isEqualTo(1);
-    assertThat(retryer.sleptForMillis).isEqualTo(0);
+    assertThat(retryer.attempt).isOne();
+    assertThat(retryer.sleptForMillis).isZero();
 
     retryer.continueOrPropagate(e);
     assertThat(retryer.attempt).isEqualTo(2);
@@ -54,7 +52,7 @@ class RetryerTest {
     retryer.continueOrPropagate(e);
     assertThat(retryer.attempt).isEqualTo(5);
     assertThat(retryer.sleptForMillis).isEqualTo(1218);
-    assertThrows(RetryableException.class, () -> retryer.continueOrPropagate(e));
+    assertThatThrownBy(() -> retryer.continueOrPropagate(e)).isInstanceOf(RetryableException.class);
   }
 
   @Test
@@ -74,11 +72,11 @@ class RetryerTest {
 
   @Test
   void neverRetryAlwaysPropagates() {
-    assertThrows(
-        RetryableException.class,
-        () ->
-            Retryer.NEVER_RETRY.continueOrPropagate(
-                new RetryableException(-1, null, null, 5000L, REQUEST)));
+    assertThatThrownBy(
+            () ->
+                Retryer.NEVER_RETRY.continueOrPropagate(
+                    new RetryableException(-1, null, null, 5000L, REQUEST)))
+        .isInstanceOf(RetryableException.class);
   }
 
   @Test

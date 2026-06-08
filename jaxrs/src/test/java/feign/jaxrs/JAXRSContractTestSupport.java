@@ -18,8 +18,8 @@ package feign.jaxrs;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.MethodMetadata;
 import java.net.URI;
@@ -112,9 +112,9 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void producesNada() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(producesAndConsumesClass(), "producesNada"));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> parseAndValidateMetadata(producesAndConsumesClass(), "producesNada"))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Produces.value() was empty on ProducesAndConsumes#producesNada");
   }
@@ -122,9 +122,9 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void producesEmpty() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(producesAndConsumesClass(), "producesEmpty"));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> parseAndValidateMetadata(producesAndConsumesClass(), "producesEmpty"))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Produces.value() was empty on ProducesAndConsumes#producesEmpty");
   }
@@ -153,9 +153,9 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void consumesNada() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(producesAndConsumesClass(), "consumesNada"));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> parseAndValidateMetadata(producesAndConsumesClass(), "consumesNada"))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Consumes.value() was empty on ProducesAndConsumes#consumesNada");
   }
@@ -163,9 +163,9 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void consumesEmpty() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(producesAndConsumesClass(), "consumesEmpty"));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> parseAndValidateMetadata(producesAndConsumesClass(), "consumesEmpty"))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Consumes.value() was empty on ProducesAndConsumes#consumesEmpty");
   }
@@ -185,7 +185,7 @@ public abstract class JAXRSContractTestSupport<E> {
   void bodyParamIsGeneric() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(bodyParamsClass(), "post", List.class);
 
-    assertThat(md.bodyIndex()).isEqualTo(0);
+    assertThat(md.bodyIndex()).isZero();
     assertThat(md.bodyType())
         .isEqualTo(JAXRSContractTestSupport.class.getDeclaredField("STRING_LIST").getGenericType());
   }
@@ -193,9 +193,11 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void tooManyBodies() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(bodyParamsClass(), "tooMany", List.class, List.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () ->
+                    parseAndValidateMetadata(bodyParamsClass(), "tooMany", List.class, List.class))
+            .actual();
     assertThat(exception.getMessage()).contains("Method has too many Body");
   }
 
@@ -226,9 +228,10 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void emptyPathParam() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(pathOnTypeClass(), "emptyPathParam", String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () -> parseAndValidateMetadata(pathOnTypeClass(), "emptyPathParam", String.class))
+            .actual();
     assertThat(exception.getMessage()).contains("PathParam.value() was empty on parameter 0");
   }
 
@@ -275,7 +278,7 @@ public abstract class JAXRSContractTestSupport<E> {
             // Skips 1 as it is a url index!
             entry(2, asList("2")));
 
-    assertThat(md.urlIndex()).isEqualTo(1);
+    assertThat(md.urlIndex()).isOne();
   }
 
   @Test
@@ -299,9 +302,11 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void emptyQueryParam() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(withPathAndQueryParamsClass(), "empty", String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () ->
+                    parseAndValidateMetadata(withPathAndQueryParamsClass(), "empty", String.class))
+            .actual();
     assertThat(exception.getMessage()).contains("QueryParam.value() was empty on parameter 0");
   }
 
@@ -333,9 +338,10 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void emptyFormParam() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(formParamsClass(), "emptyFormParam", String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () -> parseAndValidateMetadata(formParamsClass(), "emptyFormParam", String.class))
+            .actual();
     assertThat(exception.getMessage()).contains("FormParam.value() was empty on parameter 0");
   }
 
@@ -351,9 +357,11 @@ public abstract class JAXRSContractTestSupport<E> {
   @Test
   void emptyHeaderParam() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(headerParamsClass(), "emptyHeaderParam", String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () ->
+                    parseAndValidateMetadata(headerParamsClass(), "emptyHeaderParam", String.class))
+            .actual();
     assertThat(exception.getMessage()).contains("HeaderParam.value() was empty on parameter 0");
   }
 

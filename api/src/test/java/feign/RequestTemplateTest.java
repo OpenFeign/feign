@@ -17,8 +17,8 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class RequestTemplateTest {
@@ -451,9 +452,9 @@ public class RequestTemplateTest {
   @Test
   void uriStuffedIntoMethod() {
     Throwable exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> new RequestTemplate().method("/path?queryParam={queryParam}"));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> new RequestTemplate().method("/path?queryParam={queryParam}"))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Invalid HTTP Method: /path?queryParam={queryParam}");
   }
@@ -511,19 +512,19 @@ public class RequestTemplateTest {
     RequestTemplate template = new RequestTemplate().header("key1", "valid");
 
     assertThat(template.headers()).hasSize(1);
-    assertThat(template.headers().keySet()).containsExactly("key1");
+    Assertions.assertThat(template.headers()).containsOnlyKeys("key1");
     assertThat(template.headers().get("key1")).containsExactly("valid");
 
     template.headers().put("key2", Collections.singletonList("other value"));
     // nothing should change
     assertThat(template.headers()).hasSize(1);
-    assertThat(template.headers().keySet()).containsExactly("key1");
+    Assertions.assertThat(template.headers()).containsOnlyKeys("key1");
     assertThat(template.headers().get("key1")).containsExactly("valid");
 
     template.headers().get("key1").add("value2");
     // nothing should change either
     assertThat(template.headers()).hasSize(1);
-    assertThat(template.headers().keySet()).containsExactly("key1");
+    Assertions.assertThat(template.headers()).containsOnlyKeys("key1");
     assertThat(template.headers().get("key1")).containsExactly("valid");
   }
 

@@ -22,10 +22,12 @@ import feign.Feign;
 import feign.FeignException;
 import feign.Param;
 import feign.RequestLine;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import java.io.IOException;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class HttpCacheInterceptorTest {
@@ -33,9 +35,14 @@ class HttpCacheInterceptorTest {
   private final MockWebServer server = new MockWebServer();
   private final InMemoryHttpCacheStore store = new InMemoryHttpCacheStore();
 
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
+  }
+
   @AfterEach
   void tearDown() throws Exception {
-    server.shutdown();
+    server.close();
   }
 
   interface Api {
@@ -54,20 +61,22 @@ class HttpCacheInterceptorTest {
 
   @Test
   void firstCallStoresEntryWhenETagPresent() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload-1"));
+    server.enqueue(
+        new MockResponse.Builder().setHeader("ETag", "\"v1\"").body("payload-1").build());
 
     String result = api().fetch("42");
 
     assertThat(result).isEqualTo("payload-1");
-    assertThat(store.size()).isEqualTo(1);
+    assertThat(store.size()).isOne();
     RecordedRequest first = server.takeRequest();
-    assertThat(first.getHeader("If-None-Match")).isNull();
+    assertThat(first.getHeaders().get("If-None-Match")).isNull();
   }
 
   @Test
   void notModifiedReturnsCachedValueAndSendsConditionalHeader() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload-1"));
-    server.enqueue(new MockResponse().setResponseCode(304));
+    server.enqueue(
+        new MockResponse.Builder().setHeader("ETag", "\"v1\"").body("payload-1").build());
+    server.enqueue(new MockResponse.Builder().code(304).build());
 
     Api api = api();
     String first = api.fetch("42");
@@ -77,14 +86,16 @@ class HttpCacheInterceptorTest {
     assertThat(second).isEqualTo("payload-1");
     server.takeRequest(); // first
     RecordedRequest revalidation = server.takeRequest();
-    assertThat(revalidation.getHeader("If-None-Match")).isEqualTo("\"v1\"");
+    assertThat(revalidation.getHeaders().get("If-None-Match")).isEqualTo("\"v1\"");
   }
 
   @Test
   void freshTwoHundredReplacesCachedEntry() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload-1"));
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v2\"").setBody("payload-2"));
-    server.enqueue(new MockResponse().setResponseCode(304));
+    server.enqueue(
+        new MockResponse.Builder().setHeader("ETag", "\"v1\"").body("payload-1").build());
+    server.enqueue(
+        new MockResponse.Builder().setHeader("ETag", "\"v2\"").body("payload-2").build());
+    server.enqueue(new MockResponse.Builder().code(304).build());
 
     Api api = api();
     String first = api.fetch("42");
@@ -97,12 +108,12 @@ class HttpCacheInterceptorTest {
     server.takeRequest();
     server.takeRequest();
     RecordedRequest third304 = server.takeRequest();
-    assertThat(third304.getHeader("If-None-Match")).isEqualTo("\"v2\"");
+    assertThat(third304.getHeaders().get("If-None-Match")).isEqualTo("\"v2\"");
   }
 
   @Test
   void responseWithoutValidatorsIsNotStored() throws Exception {
-    server.enqueue(new MockResponse().setBody("payload"));
+    server.enqueue(new MockResponse.Builder().body("payload").build());
 
     api().fetch("42");
 
@@ -111,22 +122,23 @@ class HttpCacheInterceptorTest {
 
   @Test
   void postRequestsBypassCache() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload"));
+    server.enqueue(new MockResponse.Builder().setHeader("ETag", "\"v1\"").body("payload").build());
 
     api().create("body");
 
     assertThat(store.size()).isZero();
     RecordedRequest recorded = server.takeRequest();
-    assertThat(recorded.getHeader("If-None-Match")).isNull();
+    assertThat(recorded.getHeaders().get("If-None-Match")).isNull();
   }
 
   @Test
   void noStoreCacheControlPreventsStorage() throws Exception {
     server.enqueue(
-        new MockResponse()
+        new MockResponse.Builder()
             .setHeader("ETag", "\"v1\"")
             .setHeader("Cache-Control", "no-store")
-            .setBody("payload"));
+            .body("payload")
+            .build());
 
     api().fetch("42");
 
@@ -135,22 +147,27 @@ class HttpCacheInterceptorTest {
 
   @Test
   void serverErrorPropagatesAndDoesNotEvictExistingEntry() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload-1"));
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("nope"));
+    server.enqueue(
+        new MockResponse.Builder().setHeader("ETag", "\"v1\"").body("payload-1").build());
+    server.enqueue(new MockResponse.Builder().code(500).body("nope").build());
 
     Api api = api();
     String first = api.fetch("42");
     assertThatThrownBy(() -> api.fetch("42")).isInstanceOf(FeignException.class);
 
     assertThat(first).isEqualTo("payload-1");
-    assertThat(store.size()).isEqualTo(1);
+    assertThat(store.size()).isOne();
   }
 
   @Test
   void lastModifiedRevalidationSendsIfModifiedSince() throws Exception {
     String lastModified = "Wed, 21 Oct 2020 07:28:00 GMT";
-    server.enqueue(new MockResponse().setHeader("Last-Modified", lastModified).setBody("payload"));
-    server.enqueue(new MockResponse().setResponseCode(304));
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("Last-Modified", lastModified)
+            .body("payload")
+            .build());
+    server.enqueue(new MockResponse.Builder().code(304).build());
 
     Api api = api();
     api.fetch("42");
@@ -159,6 +176,6 @@ class HttpCacheInterceptorTest {
     assertThat(second).isEqualTo("payload");
     server.takeRequest();
     RecordedRequest revalidation = server.takeRequest();
-    assertThat(revalidation.getHeader("If-Modified-Since")).isEqualTo(lastModified);
+    assertThat(revalidation.getHeaders().get("If-Modified-Since")).isEqualTo(lastModified);
   }
 }

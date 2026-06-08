@@ -134,7 +134,7 @@ class ConnectionsLeakTests {
                     () -> {
                       try {
                         if (poolSize == 1) {
-                          assertThat(this.connections.size()).isLessThanOrEqualTo(2);
+                          assertThat(this.connections).hasSizeLessThanOrEqualTo(2);
                         } else {
                           assertThat(this.connections).hasSize(poolSize);
                         }

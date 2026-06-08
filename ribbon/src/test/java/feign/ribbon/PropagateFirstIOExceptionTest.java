@@ -15,9 +15,7 @@
  */
 package feign.ribbon;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import com.netflix.client.ClientException;
 import java.io.IOException;
@@ -27,22 +25,21 @@ import org.junit.jupiter.api.Test;
 class PropagateFirstIOExceptionTest {
 
   @Test
-  void propagatesNestedIOE() throws IOException {
-    assertThatExceptionOfType(IOException.class)
-        .isThrownBy(
-            () -> {
-              RibbonClient.propagateFirstIOException(new ClientException(new IOException()));
-            });
+  void propagatesNestedIOE() throws Exception {
+    assertThatThrownBy(
+            () -> RibbonClient.propagateFirstIOException(new ClientException(new IOException())))
+        .isInstanceOf(IOException.class);
   }
 
   @Test
-  void propagatesFirstNestedIOE() throws IOException {
+  void propagatesFirstNestedIOE() throws Exception {
     IOException exception =
-        assertThrows(
-            IOException.class,
-            () ->
-                RibbonClient.propagateFirstIOException(
-                    new ClientException(new IOException(new IOException()))));
+        assertThatExceptionOfType(IOException.class)
+            .isThrownBy(
+                () ->
+                    RibbonClient.propagateFirstIOException(
+                        new ClientException(new IOException(new IOException()))))
+            .actual();
     assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
@@ -51,17 +48,16 @@ class PropagateFirstIOExceptionTest {
    * exception
    */
   @Test
-  void propagatesDoubleNestedIOE() throws IOException {
-    assertThatExceptionOfType(ConnectException.class)
-        .isThrownBy(
-            () -> {
-              RibbonClient.propagateFirstIOException(
-                  new ClientException(new RuntimeException(new ConnectException())));
-            });
+  void propagatesDoubleNestedIOE() throws Exception {
+    assertThatThrownBy(
+            () ->
+                RibbonClient.propagateFirstIOException(
+                    new ClientException(new RuntimeException(new ConnectException()))))
+        .isInstanceOf(ConnectException.class);
   }
 
   @Test
-  void doesntPropagateWhenNotIOE() throws IOException {
+  void doesntPropagateWhenNotIOE() throws Exception {
     RibbonClient.propagateFirstIOException(new ClientException(new RuntimeException()));
   }
 }

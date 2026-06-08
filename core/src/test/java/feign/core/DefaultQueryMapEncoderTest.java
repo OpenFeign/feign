@@ -40,16 +40,16 @@ class DefaultQueryMapEncoderTest {
     object.baz = "bazz";
 
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
+    assertThat(encodedMap)
+        .as("Unexpected encoded query map")
+        .containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   @Test
   void encodesObject_visibleFields_emptyObject() {
     VisibleFieldsObject object = new VisibleFieldsObject();
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertThat(encodedMap.isEmpty())
-        .as("Non-empty map generated from null fields: " + encodedMap)
-        .isTrue();
+    assertThat(encodedMap).as("Non-empty map generated from null fields: " + encodedMap).isEmpty();
   }
 
   @Test
@@ -60,14 +60,16 @@ class DefaultQueryMapEncoderTest {
     QueryMapEncoderObject object = new QueryMapEncoderObject("fooz", "barz");
 
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
+    assertThat(encodedMap)
+        .as("Unexpected encoded query map")
+        .containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   @Test
   void encodesObject_nonVisibleFields_emptyObject() {
     QueryMapEncoderObject object = new QueryMapEncoderObject(null, null);
     Map<String, Object> encodedMap = encoder.encode(object);
-    assertThat(encodedMap.isEmpty()).as("Non-empty map generated from null fields").isTrue();
+    assertThat(encodedMap).as("Non-empty map generated from null fields").isEmpty();
   }
 
   static class VisibleFieldsObject {

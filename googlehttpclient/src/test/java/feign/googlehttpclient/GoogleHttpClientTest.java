@@ -27,7 +27,7 @@ import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import java.util.Collections;
-import okhttp3.mockwebserver.MockResponse;
+import mockwebserver3.MockResponse;
 import org.junit.jupiter.api.Test;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
@@ -39,12 +39,15 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   // Google http client doesn't support PATCH. See:
   // https://github.com/googleapis/google-http-java-client/issues/167
   @Override
+  @Test
   public void noResponseBodyForPatch() {}
 
   @Override
+  @Test
   public void patch() {}
 
   @Override
+  @Test
   public void parsesUnauthorizedResponseBody() {}
 
   /*
@@ -52,33 +55,38 @@ public class GoogleHttpClientTest extends AbstractClientTest {
    * out-of-the-box. You can replace the transport with Apache HTTP Client.
    */
   @Override
+  @Test
   public void canSupportGzip() throws Exception {
     assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportGzipOnError() throws Exception {
     assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflate() throws Exception {
     assumeFalse(false, "Google HTTP client client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflateOnError() throws Exception {
     assumeFalse(false, "Google HTTP client client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canExceptCaseInsensitiveHeader() throws Exception {
     assumeFalse(false, "Google HTTP client client do not support gzip compression");
   }
 
   @Test
   void contentTypeHeaderGetsAddedOnce() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -94,6 +102,7 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   }
 
   @Override
+  @Test
   public void veryLongResponseNullLength() {
     assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }

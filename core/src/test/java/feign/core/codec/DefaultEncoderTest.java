@@ -16,9 +16,9 @@
 package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request;
 import feign.RequestTemplate;
@@ -47,8 +47,12 @@ class DefaultEncoderTest {
     encoder.encode(content, String.class, template);
     Optional<Request.Body> optionalBody = template.requestBody();
     assertThat(optionalBody).isPresent();
-    String body =
-        assertDoesNotThrow(() -> optionalBody.get().writeToString(StandardCharsets.UTF_8));
+    String body;
+    try {
+      body = optionalBody.get().writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to read body", e);
+    }
     assertThat(body).contains(content);
   }
 
@@ -59,16 +63,21 @@ class DefaultEncoderTest {
     encoder.encode(content, byte[].class, template);
     Optional<Request.Body> optionalBody = template.requestBody();
     assertThat(optionalBody).isPresent();
-    byte[] body = assertDoesNotThrow(() -> optionalBody.get().writeToByteArray());
+    byte[] body;
+    try {
+      body = optionalBody.get().writeToByteArray();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to read body", e);
+    }
     assertThat(body).isEqualTo(content);
   }
 
   @Test
   void refusesToEncodeOtherTypes() throws Exception {
     Throwable exception =
-        assertThrows(
-            EncodeException.class,
-            () -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()));
+        assertThatExceptionOfType(EncodeException.class)
+            .isThrownBy(() -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()))
+            .actual();
     assertThat(exception.getMessage()).contains("is not a type supported by this encoder.");
   }
 

@@ -98,7 +98,7 @@ public class GoogleHttpClient implements Client {
   }
 
   private HttpContent toHttpContent(final Request inputRequest) {
-    if (!inputRequest.httpMethod().isWithBody() || !inputRequest.body().isPresent()) {
+    if (!inputRequest.httpMethod().isWithBody() || inputRequest.body().isEmpty()) {
       return null;
     }
 

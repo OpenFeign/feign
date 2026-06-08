@@ -15,10 +15,7 @@
  */
 package feign.micrometer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import feign.AsyncFeign;
 import feign.Capability;
@@ -128,7 +125,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     assertThat(clientMetrics).hasSize(2);
     clientMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
-        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
+        .forEach(metric -> assertThat(getMetricCounter(metric)).isOne());
 
     final Map<METRIC_ID, METRIC> decoderMetrics =
         getFeignMetrics().entrySet().stream()
@@ -138,7 +135,7 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
     assertThat(decoderMetrics).hasSize(2);
     decoderMetrics.values().stream()
         .filter(this::doesMetricHasCounter)
-        .forEach(metric -> assertEquals(1, getMetricCounter(metric)));
+        .forEach(metric -> assertThat(getMetricCounter(metric)).isOne());
   }
 
   protected abstract boolean doesMetricIncludeHost(METRIC_ID metricId);
@@ -205,7 +202,9 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
             .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
     FeignException.NotFound thrown =
-        assertThrows(FeignException.NotFound.class, () -> source.get("0x3456789"));
+        assertThatExceptionOfType(FeignException.NotFound.class)
+            .isThrownBy(() -> source.get("0x3456789"))
+            .actual();
     assertThat(thrown).isSameAs(notFound.get());
   }
 
@@ -221,7 +220,10 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
                     .addCapability(createMetricCapability()))
             .target(new MockTarget<>(MicrometerCapabilityTest.SimpleSource.class));
 
-    RuntimeException thrown = assertThrows(RuntimeException.class, () -> source.get("0x3456789"));
+    RuntimeException thrown =
+        assertThatExceptionOfType(RuntimeException.class)
+            .isThrownBy(() -> source.get("0x3456789"))
+            .actual();
     assertThat(thrown.getMessage()).isEqualTo("Test error");
 
     assertThat(
@@ -313,7 +315,9 @@ public abstract class AbstractMetricsTestBase<MR, METRIC_ID, METRIC> {
             .target(new MockTarget<>(MicrometerCapabilityTest.SourceWithPathExpressions.class));
 
     FeignException.NotFound thrown =
-        assertThrows(FeignException.NotFound.class, () -> source.get("123", "0x3456789"));
+        assertThatExceptionOfType(FeignException.NotFound.class)
+            .isThrownBy(() -> source.get("123", "0x3456789"))
+            .actual();
     assertThat(thrown).isSameAs(notFound.get());
 
     final Map<METRIC_ID, METRIC> decoderMetrics =

@@ -24,7 +24,6 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import java.io.Closeable;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -206,7 +205,7 @@ class Jackson3CodecTest {
   }
 
   @Test
-  void decoderCharset() throws IOException {
+  void decoderCharset() throws Exception {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<>();

@@ -21,7 +21,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.ribbon.LBClient.RibbonRequest;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,7 +38,7 @@ class LBClientTest {
   }
 
   @Test
-  void ribbonRequest() throws URISyntaxException {
+  void ribbonRequest() throws Exception {
     // test for RibbonRequest.toRequest()
     // the url has a query whose value is an encoded json string
     String urlWithEncodedJson = "http://test.feign.com/p?q=%7b%22a%22%3a1%7d";

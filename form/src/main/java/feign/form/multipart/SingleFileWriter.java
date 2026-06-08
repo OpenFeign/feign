@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import lombok.val;
 
 /**
  * A single-file writer.
@@ -36,18 +35,18 @@ public class SingleFileWriter extends AbstractWriter {
 
   @Override
   protected void write(Output output, String key, Object value) throws EncodeException {
-    val file = (File) value;
+    final var file = (File) value;
     writeFileMetadata(output, key, file.getName(), null);
 
     try (InputStream input = new FileInputStream(file)) {
-      val buf = new byte[4096];
+      final var buf = new byte[4096];
       int length = input.read(buf);
       while (length > 0) {
         output.write(buf, 0, length);
         length = input.read(buf);
       }
     } catch (IOException ex) {
-      val message = String.format("Writing file's '%s' content error", file.getName());
+      final var message = String.format("Writing file's '%s' content error", file.getName());
       throw new EncodeException(message, ex);
     }
   }

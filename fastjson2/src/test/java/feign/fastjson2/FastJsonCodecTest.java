@@ -22,7 +22,6 @@ import com.alibaba.fastjson2.TypeReference;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
@@ -143,7 +142,7 @@ class FastJsonCodecTest {
   }
 
   @Test
-  void decoderCharset() throws IOException {
+  void decoderCharset() throws Exception {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<>();

@@ -101,7 +101,7 @@ class RetryingTest extends AbstractFeignVertxTest {
                 () -> {
                   if (res.succeeded()) {
                     assertThat(res.result())
-                        .hasSize(Flavor.values().length)
+                        .hasSameSizeAs(Flavor.values())
                         .containsAll(Arrays.asList(Flavor.values()));
                     testContext.completeNow();
                   } else {

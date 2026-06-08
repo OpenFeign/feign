@@ -22,9 +22,10 @@ import feign.Feign;
 import feign.RequestLine;
 import java.io.IOException;
 import java.net.URL;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class LoadBalancingTargetTest {
@@ -32,18 +33,24 @@ public class LoadBalancingTargetTest {
   public final MockWebServer server1 = new MockWebServer();
   public final MockWebServer server2 = new MockWebServer();
 
+  @BeforeEach
+  void setUp() throws IOException {
+    server1.start();
+    server2.start();
+  }
+
   static String hostAndPort(URL url) {
     // our build slaves have underscores in their hostnames which aren't permitted by ribbon
     return "localhost:" + url.getPort();
   }
 
   @Test
-  void loadBalancingDefaultPolicyRoundRobin() throws IOException, InterruptedException {
+  void loadBalancingDefaultPolicyRoundRobin() throws Exception {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
-    server1.enqueue(new MockResponse().setBody("success!"));
-    server2.enqueue(new MockResponse().setBody("success!"));
+    server1.enqueue(new MockResponse.Builder().body("success!").build());
+    server2.enqueue(new MockResponse.Builder().body("success!").build());
 
     getConfigInstance()
         .setProperty(
@@ -58,8 +65,8 @@ public class LoadBalancingTargetTest {
       api.post();
       api.post();
 
-      assertThat(server1.getRequestCount()).isEqualTo(1);
-      assertThat(server2.getRequestCount()).isEqualTo(1);
+      assertThat(server1.getRequestCount()).isOne();
+      assertThat(server2.getRequestCount()).isOne();
       // TODO: verify ribbon stats match
       // assertEquals(target.lb().getLoadBalancerStats().getSingleServerStat())
     } finally {
@@ -68,11 +75,11 @@ public class LoadBalancingTargetTest {
   }
 
   @Test
-  void loadBalancingTargetPath() throws InterruptedException {
+  void loadBalancingTargetPath() throws Exception {
     String name = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
     String serverListKey = name + ".ribbon.listOfServers";
 
-    server1.enqueue(new MockResponse().setBody("success!"));
+    server1.enqueue(new MockResponse.Builder().body("success!").build());
 
     getConfigInstance().setProperty(serverListKey, hostAndPort(server1.url("").url()));
 
@@ -84,7 +91,7 @@ public class LoadBalancingTargetTest {
       api.get();
 
       assertThat(target.url()).isEqualTo("http:///context-path");
-      assertThat(server1.takeRequest().getPath()).isEqualTo("/context-path/servers");
+      assertThat(server1.takeRequest().getTarget()).isEqualTo("/context-path/servers");
     } finally {
       getConfigInstance().clearProperty(serverListKey);
     }

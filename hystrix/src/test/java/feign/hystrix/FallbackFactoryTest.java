@@ -23,9 +23,10 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FallbackFactoryTest {
@@ -39,8 +40,8 @@ public class FallbackFactoryTest {
 
   @Test
   void fallbackFactory_example_lambda() {
-    server.enqueue(new MockResponse().setResponseCode(500));
-    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse.Builder().code(500).build());
+    server.enqueue(new MockResponse.Builder().code(404).build());
 
     TestInterface api =
         target(
@@ -69,19 +70,19 @@ public class FallbackFactoryTest {
 
   @Test
   void fallbackFactory_example_ctor() {
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     // method reference
     TestInterface api = target(FallbackApiWithCtor::new);
 
     assertThat(api.invoke()).isEqualTo("foo");
 
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     // lambda factory
     api = target(FallbackApiWithCtor::new);
 
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     // old school
     api = target(FallbackApiWithCtor::new);
@@ -115,7 +116,7 @@ public class FallbackFactoryTest {
 
   @Test
   void fallbackFactory_example_retro() {
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     TestInterface api = target(new FallbackApiRetro());
 
@@ -128,7 +129,7 @@ public class FallbackFactoryTest {
 
   @Test
   void defaultFallbackFactory_delegates() {
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     TestInterface api = target(new FallbackFactory.Default<>(() -> "foo"));
 
@@ -137,7 +138,7 @@ public class FallbackFactoryTest {
 
   @Test
   void defaultFallbackFactory_doesntLogByDefault() {
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     Logger logger =
         new Logger("", null) {
@@ -152,7 +153,7 @@ public class FallbackFactoryTest {
 
   @Test
   void defaultFallbackFactory_logsAtFineLevel() {
-    server.enqueue(new MockResponse().setResponseCode(500));
+    server.enqueue(new MockResponse.Builder().code(500).build());
 
     AtomicBoolean logged = new AtomicBoolean();
     Logger logger =
@@ -178,6 +179,11 @@ public class FallbackFactoryTest {
   TestInterface target(FallbackFactory<? extends TestInterface> factory) {
     return HystrixFeign.builder()
         .target(TestInterface.class, "http://localhost:" + server.getPort(), factory);
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

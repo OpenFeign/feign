@@ -16,7 +16,7 @@
 package feign.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,25 +28,27 @@ class HeaderTemplateTest {
   @Test
   void it_should_throw_exception_when_name_is_null() {
     IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> HeaderTemplate.create(null, Collections.singletonList("test")));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> HeaderTemplate.create(null, Collections.singletonList("test")))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
   void it_should_throw_exception_when_name_is_empty() {
     IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> HeaderTemplate.create("", Collections.singletonList("test")));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> HeaderTemplate.create("", Collections.singletonList("test")))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("name is required.");
   }
 
   @Test
   void it_should_throw_exception_when_value_is_null() {
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> HeaderTemplate.create("test", null));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> HeaderTemplate.create("test", null))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("values are required");
   }
 
@@ -83,12 +85,12 @@ class HeaderTemplateTest {
     HeaderTemplate headerTemplateWithFirstOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 1", "test 2"));
     assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()))
-        .isEqualTo(Arrays.asList("test 1", "test 2"));
+        .containsExactlyElementsOf(Arrays.asList("test 1", "test 2"));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.create("hello", Arrays.asList("test 2", "test 1"));
     assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()))
-        .isEqualTo(Arrays.asList("test 2", "test 1"));
+        .containsExactlyElementsOf(Arrays.asList("test 2", "test 1"));
   }
 
   @Test
@@ -102,14 +104,14 @@ class HeaderTemplateTest {
             HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 1", "test 2"));
     assertThat(new ArrayList<>(headerTemplateWithFirstOrdering.getValues()))
-        .isEqualTo(Arrays.asList("test 1", "test 2"));
+        .containsExactlyElementsOf(Arrays.asList("test 1", "test 2"));
 
     HeaderTemplate headerTemplateWithSecondOrdering =
         HeaderTemplate.append(
             HeaderTemplate.create("hello", Collections.emptyList()),
             Arrays.asList("test 2", "test 1"));
     assertThat(new ArrayList<>(headerTemplateWithSecondOrdering.getValues()))
-        .isEqualTo(Arrays.asList("test 2", "test 1"));
+        .containsExactlyElementsOf(Arrays.asList("test 2", "test 1"));
   }
 
   @Test

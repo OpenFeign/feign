@@ -21,8 +21,6 @@ import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import feign.codec.Decoder;
 import java.io.Reader;
@@ -58,7 +56,7 @@ class UtilTest {
     assertThat(Util.emptyValueOf(Boolean.class)).isEqualTo(false);
     assertThat((byte[]) Util.emptyValueOf(byte[].class)).isEmpty();
     assertThat(Util.emptyValueOf(Collection.class)).isEqualTo(Collections.emptyList());
-    assertThat(((Iterator<?>) Util.emptyValueOf(Iterator.class)).hasNext()).isFalse();
+    assertThat(((Iterator<?>) Util.emptyValueOf(Iterator.class))).isExhausted();
     assertThat(Util.emptyValueOf(List.class)).isEqualTo(Collections.emptyList());
     assertThat(Util.emptyValueOf(Map.class)).isEqualTo(Collections.emptyMap());
     assertThat(Util.emptyValueOf(Set.class)).isEqualTo(Collections.emptySet());
@@ -94,7 +92,7 @@ class UtilTest {
         LastTypeParameter.class.getDeclaredField("PARAMETERIZED_LIST_STRING").getGenericType();
     Type listStringType = LastTypeParameter.class.getDeclaredField("LIST_STRING").getGenericType();
     Type last = resolveLastTypeParameter(context, Parameterized.class);
-    assertEquals(last, listStringType);
+    assertThat(listStringType).isEqualTo(last);
   }
 
   @Test
@@ -143,8 +141,7 @@ class UtilTest {
 
   @Test
   void checkArgumentInputFalseNotNullNullOutputIllegalArgumentException() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
+    assertThatThrownBy(
             () -> {
               // Arrange
               final boolean expression = false;
@@ -152,14 +149,14 @@ class UtilTest {
               final Object[] errorMessageArgs = null;
               Util.checkArgument(expression, errorMessageTemplate, errorMessageArgs);
               // Method is not expected to return due to exception thrown
-            });
+            })
+        .isInstanceOf(IllegalArgumentException.class);
     // Method is not expected to return due to exception thrown
   }
 
   @Test
   void checkNotNullInputNullNotNullNullOutputNullPointerException() {
-    assertThatExceptionOfType(NullPointerException.class)
-        .isThrownBy(
+    assertThatThrownBy(
             () -> {
               // Arrange
               final Object reference = null;
@@ -167,7 +164,8 @@ class UtilTest {
               final Object[] errorMessageArgs = null;
               Util.checkNotNull(reference, errorMessageTemplate, errorMessageArgs);
               // Method is not expected to return due to exception thrown
-            });
+            })
+        .isInstanceOf(NullPointerException.class);
     // Method is not expected to return due to exception thrown
   }
 
@@ -185,8 +183,7 @@ class UtilTest {
 
   @Test
   void checkStateInputFalseNotNullNullOutputIllegalStateException() {
-    assertThatExceptionOfType(IllegalStateException.class)
-        .isThrownBy(
+    assertThatThrownBy(
             () -> {
               // Arrange
               final boolean expression = false;
@@ -194,7 +191,8 @@ class UtilTest {
               final Object[] errorMessageArgs = null;
               Util.checkState(expression, errorMessageTemplate, errorMessageArgs);
               // Method is not expected to return due to exception thrown
-            });
+            })
+        .isInstanceOf(IllegalStateException.class);
     // Method is not expected to return due to exception thrown
   }
 
@@ -225,7 +223,7 @@ class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    assertThat(retval).isEqualTo(false);
+    assertThat(retval).isFalse();
   }
 
   @Test
@@ -235,7 +233,7 @@ class UtilTest {
     // Act
     final boolean retval = Util.isBlank(value);
     // Assert result
-    assertThat(retval).isEqualTo(true);
+    assertThat(retval).isTrue();
   }
 
   @Test
@@ -245,7 +243,7 @@ class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    assertThat(retval).isEqualTo(false);
+    assertThat(retval).isFalse();
   }
 
   @Test
@@ -255,7 +253,7 @@ class UtilTest {
     // Act
     final boolean retval = Util.isNotBlank(value);
     // Assert result
-    assertThat(retval).isEqualTo(true);
+    assertThat(retval).isTrue();
   }
 
   @Test
@@ -312,7 +310,7 @@ class UtilTest {
     // Act
     Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(null);
     // Assert result
-    assertThat(actualMap).isNotNull().isEmpty();
+    assertThat(actualMap).isEmpty();
   }
 
   interface LastTypeParameter {

@@ -17,7 +17,7 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.FeignException;
 import feign.Request;
@@ -43,7 +43,7 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void soapDecoderThrowsSOAPFaultException() throws IOException {
+  void soapDecoderThrowsSOAPFaultException() throws Exception {
 
     Response response =
         Response.builder()
@@ -61,12 +61,14 @@ class SOAPFaultDecoderTest {
             .build();
 
     Throwable exception =
-        assertThrows(SOAPFaultException.class, () -> decoder.decode(response, Object.class));
+        assertThatExceptionOfType(SOAPFaultException.class)
+            .isThrownBy(() -> decoder.decode(response, Object.class))
+            .actual();
     assertThat(exception.getMessage()).contains("Processing error");
   }
 
   @Test
-  void errorDecoderReturnsSOAPFaultException() throws IOException {
+  void errorDecoderReturnsSOAPFaultException() throws Exception {
     Response response =
         Response.builder()
             .status(400)
@@ -83,7 +85,7 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
+  void errorDecoderReturnsFeignExceptionOn503Status() throws Exception {
     Response response =
         Response.builder()
             .status(503)
@@ -103,7 +105,7 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
+  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws Exception {
     String responseBody =
         """
         <?xml version = '1.0' encoding = 'UTF-8'?>

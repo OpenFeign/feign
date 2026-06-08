@@ -24,8 +24,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,14 +37,14 @@ public class FeignRequestBodyStreamingTest {
 
   @BeforeEach
   void setup() throws IOException {
-    mockWebServer.enqueue(new MockResponse());
+    mockWebServer.enqueue(new MockResponse.Builder().build());
     mockWebServer.start();
     testClient = Feign.builder().target(TestClient.class, mockWebServer.url("/").toString());
   }
 
   @AfterEach
   void tearDown() throws IOException {
-    mockWebServer.shutdown();
+    mockWebServer.close();
   }
 
   @Test

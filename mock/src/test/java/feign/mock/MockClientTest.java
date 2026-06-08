@@ -16,9 +16,7 @@
 package feign.mock;
 
 import static feign.Util.toByteArray;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.*;
 
 import feign.Body;
 import feign.Feign;
@@ -180,7 +178,7 @@ class MockClientTest {
     // making sure it received a proper response
     assertThat(contribution).isNotNull();
     assertThat(contribution.login).isEqualTo("velo");
-    assertThat(contribution.contributions).isEqualTo(0);
+    assertThat(contribution.contributions).isZero();
 
     List<Request> results =
         mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 1);
@@ -190,9 +188,13 @@ class MockClientTest {
         mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors").body();
     assertThat(body).isPresent();
 
-    String message = assertDoesNotThrow(() -> body.get().writeToString(StandardCharsets.UTF_8));
-    assertThat(message).contains("velo_at_github");
-    assertThat(message).contains("preposterous hacker");
+    String message;
+    try {
+      message = body.get().writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
+    assertThat(message).contains("velo_at_github").contains("preposterous hacker");
 
     mockClient.verifyStatus();
   }
@@ -270,7 +272,7 @@ class MockClientTest {
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
     List<Request> results =
         mockClient.verifyTimes(HttpMethod.POST, "/repos/netflix/feign/contributors", 0);
-    assertThat(results).hasSize(0);
+    assertThat(results).isEmpty();
     try {
       mockClient.verifyOne(HttpMethod.POST, "/repos/netflix/feign/contributors");
       fail("");

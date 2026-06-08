@@ -25,7 +25,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -185,7 +184,7 @@ class JacksonCodecTest {
   }
 
   @Test
-  void decoderCharset() throws IOException {
+  void decoderCharset() throws Exception {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<>();
@@ -308,7 +307,7 @@ class JacksonCodecTest {
   @ParameterizedTest
   @MethodSource("decodeGenericsArguments")
   void decodeGenerics(Response response, Type responseType, DataWrapper<?> expectedDataWrapper)
-      throws IOException {
+      throws Exception {
     assertThat(new JacksonJrDecoder().decode(response, responseType))
         .isEqualTo(expectedDataWrapper);
   }

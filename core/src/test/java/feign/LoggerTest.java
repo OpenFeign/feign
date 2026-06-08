@@ -17,7 +17,7 @@ package feign;
 
 import static feign.Util.enumForName;
 import static java.util.Objects.nonNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Logger.Level;
 import feign.Request.ProtocolVersion;
@@ -29,14 +29,27 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class LoggerTest {
   public final MockWebServer server = new MockWebServer();
   public final RecordingLogger logger = new RecordingLogger();
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
+  }
+
+  @AfterEach
+  void tearDown() throws IOException {
+    server.close();
+  }
 
   interface SendsStuff {
 
@@ -51,7 +64,8 @@ public class LoggerTest {
         @Param("password") String password);
   }
 
-  public static class LogLevelEmitsTest extends LoggerTest {
+  @Nested
+  public class LogLevelEmitsTest {
 
     private Level logLevel;
 
@@ -104,7 +118,8 @@ public class LoggerTest {
     @ParameterizedTest
     void levelEmits(Level logLevel, List<String> expectedMessages) {
       initLogLevelEmitsTest(logLevel, expectedMessages);
-      server.enqueue(new MockResponse().setHeader("Y-Powered-By", "Mock").setBody("foo"));
+      server.enqueue(
+          new MockResponse.Builder().setHeader("Y-Powered-By", "Mock").body("foo").build());
 
       SendsStuff api =
           Feign.builder()
@@ -116,7 +131,8 @@ public class LoggerTest {
     }
   }
 
-  public static class ReasonPhraseOptionalTest extends LoggerTest {
+  @Nested
+  public class ReasonPhraseOptionalTest {
 
     private Level logLevel;
 
@@ -141,7 +157,7 @@ public class LoggerTest {
     @ParameterizedTest
     void reasonPhraseOptional(Level logLevel, List<String> expectedMessages) {
       initReasonPhraseOptional(logLevel, expectedMessages);
-      server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+      server.enqueue(new MockResponse.Builder().status("HTTP/1.1 " + 200).build());
 
       SendsStuff api =
           Feign.builder()
@@ -153,7 +169,8 @@ public class LoggerTest {
     }
   }
 
-  public static class HttpProtocolVersionTest extends LoggerTest {
+  @Nested
+  public class HttpProtocolVersionTest {
 
     private Level logLevel;
     private String protocolVersionName;
@@ -204,7 +221,7 @@ public class LoggerTest {
     void httpProtocolVersion(
         Level logLevel, String protocolVersionName, List<String> expectedMessages) {
       initHttpProtocolVersionTest(logLevel, protocolVersionName, expectedMessages);
-      server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+      server.enqueue(new MockResponse.Builder().status("HTTP/1.1 " + 200).build());
 
       SendsStuff api =
           Feign.builder()
@@ -217,7 +234,8 @@ public class LoggerTest {
     }
   }
 
-  public static class ReadTimeoutEmitsTest extends LoggerTest {
+  @Nested
+  public class ReadTimeoutEmitsTest {
 
     private Level logLevel;
 
@@ -269,7 +287,8 @@ public class LoggerTest {
     @ParameterizedTest
     void levelEmitsOnReadTimeout(Level logLevel, List<String> expectedMessages) {
       initReadTimeoutEmitsTest(logLevel, expectedMessages);
-      server.enqueue(new MockResponse().throttleBody(1, 1, TimeUnit.SECONDS).setBody("foo"));
+      server.enqueue(
+          new MockResponse.Builder().throttleBody(1, 1, TimeUnit.SECONDS).body("foo").build());
 
       SendsStuff api =
           Feign.builder()
@@ -292,11 +311,13 @@ public class LoggerTest {
                   })
               .target(SendsStuff.class, "http://localhost:" + server.getPort());
 
-      assertThrows(FeignException.class, () -> api.login("netflix", "denominator", "password"));
+      assertThatThrownBy(() -> api.login("netflix", "denominator", "password"))
+          .isInstanceOf(FeignException.class);
     }
   }
 
-  public static class UnknownHostEmitsTest extends LoggerTest {
+  @Nested
+  public class UnknownHostEmitsTest {
 
     private Level logLevel;
 
@@ -366,11 +387,13 @@ public class LoggerTest {
                   })
               .target(SendsStuff.class, "http://non-exist.invalid");
 
-      assertThrows(FeignException.class, () -> api.login("netflix", "denominator", "password"));
+      assertThatThrownBy(() -> api.login("netflix", "denominator", "password"))
+          .isInstanceOf(FeignException.class);
     }
   }
 
-  public static class FormatCharacterTest extends LoggerTest {
+  @Nested
+  public class FormatCharacterTest {
 
     private Level logLevel;
 
@@ -440,11 +463,13 @@ public class LoggerTest {
                   })
               .target(SendsStuff.class, "http://non-exist.invalid");
 
-      assertThrows(FeignException.class, () -> api.login("netflix", "denominator", "password"));
+      assertThatThrownBy(() -> api.login("netflix", "denominator", "password"))
+          .isInstanceOf(FeignException.class);
     }
   }
 
-  public static class RetryEmitsTest extends LoggerTest {
+  @Nested
+  public class RetryEmitsTest {
 
     private Level logLevel;
 
@@ -501,7 +526,8 @@ public class LoggerTest {
                   })
               .target(SendsStuff.class, "http://non-exist.invalid");
 
-      assertThrows(FeignException.class, () -> api.login("netflix", "denominator", "password"));
+      assertThatThrownBy(() -> api.login("netflix", "denominator", "password"))
+          .isInstanceOf(FeignException.class);
     }
   }
 

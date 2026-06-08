@@ -17,14 +17,12 @@ package feign.sax;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
 import feign.codec.Decoder;
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -57,17 +55,18 @@ class SAXDecoderTest {
           .build();
 
   @Test
-  void parsesConfiguredTypes() throws ParseException, IOException {
+  void parsesConfiguredTypes() throws Exception {
     assertThat(decoder.decode(statusFailedResponse(), NetworkStatus.class))
         .isEqualTo(NetworkStatus.FAILED);
     assertThat(decoder.decode(statusFailedResponse(), String.class)).isEqualTo("Failed");
   }
 
   @Test
-  void niceErrorOnUnconfiguredType() throws ParseException, IOException {
+  void niceErrorOnUnconfiguredType() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class, () -> decoder.decode(statusFailedResponse(), int.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> decoder.decode(statusFailedResponse(), int.class))
+            .actual();
 
     assertThat(exception.getMessage()).contains("type int not in configured handlers");
   }

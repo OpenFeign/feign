@@ -30,7 +30,7 @@ import feign.client.AbstractClientTest;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import okhttp3.mockwebserver.MockResponse;
+import mockwebserver3.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
@@ -43,8 +43,8 @@ public class OkHttpClientTest extends AbstractClientTest {
   }
 
   @Test
-  public void testContentTypeWithoutCharset() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+  void testContentTypeWithoutCharset() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     OkHttpClientTestInterface api =
         newBuilder()
             .target(OkHttpClientTestInterface.class, "http://localhost:" + server.getPort());
@@ -63,10 +63,10 @@ public class OkHttpClientTest extends AbstractClientTest {
   @Test
   void noFollowRedirect() throws Exception {
     server.enqueue(
-        new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
+        new MockResponse.Builder().code(302).addHeader("Location", server.url("redirect")).build());
     // Enqueue a response to fail fast if the redirect is followed, instead of waiting for the
     // timeout
-    server.enqueue(new MockResponse().setBody("Hello"));
+    server.enqueue(new MockResponse.Builder().body("Hello").build());
 
     OkHttpClientTestInterface api =
         newBuilder()
@@ -88,8 +88,8 @@ public class OkHttpClientTest extends AbstractClientTest {
     String expectedBody = "Hello";
 
     server.enqueue(
-        new MockResponse().setResponseCode(302).addHeader("Location", server.url("redirect")));
-    server.enqueue(new MockResponse().setBody(expectedBody));
+        new MockResponse.Builder().code(302).addHeader("Location", server.url("redirect")).build());
+    server.enqueue(new MockResponse.Builder().body(expectedBody).build());
 
     OkHttpClientTestInterface api =
         newBuilder()
@@ -113,26 +113,31 @@ public class OkHttpClientTest extends AbstractClientTest {
    * manually-using-java-android
    */
   @Override
+  @Test
   public void canSupportGzip() throws Exception {
     assumeFalse(false, "OkHTTP client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportGzipOnError() throws Exception {
     assumeFalse(false, "OkHTTP client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflate() throws Exception {
     assumeFalse(false, "OkHTTP client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflateOnError() throws Exception {
     assumeFalse(false, "OkHTTP client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canExceptCaseInsensitiveHeader() throws Exception {
     assumeFalse(false, "OkHTTP client do not support gzip compression");
   }

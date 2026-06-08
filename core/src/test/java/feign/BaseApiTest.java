@@ -21,9 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.util.List;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class BaseApiTest {
@@ -58,8 +59,8 @@ public class BaseApiTest {
   interface MyApi extends BaseApi<String, Long> {}
 
   @Test
-  void resolvesParameterizedResult() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo"));
+  void resolvesParameterizedResult() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     String baseUrl = server.url("/default").toString();
 
@@ -76,8 +77,8 @@ public class BaseApiTest {
   }
 
   @Test
-  void resolvesBodyParameter() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo"));
+  void resolvesBodyParameter() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     String baseUrl = server.url("/default").toString();
 
@@ -92,6 +93,11 @@ public class BaseApiTest {
             })
         .target(MyApi.class, baseUrl)
         .getAll(new Keys<>());
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

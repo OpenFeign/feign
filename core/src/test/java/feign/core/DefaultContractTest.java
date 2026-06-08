@@ -17,8 +17,8 @@ package feign.core;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.gson.reflect.TypeToken;
 import feign.Body;
@@ -74,7 +74,7 @@ class DefaultContractTest {
   void bodyParamIsGeneric() throws Exception {
     final MethodMetadata md = parseAndValidateMetadata(BodyParams.class, "post", List.class);
 
-    assertThat(md.bodyIndex()).isEqualTo(0);
+    assertThat(md.bodyIndex()).isZero();
     assertThat(md.bodyType()).isEqualTo(new TypeToken<List<String>>() {}.getType());
   }
 
@@ -83,16 +83,17 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(BodyParams.class, "post", int.class, List.class);
 
-    assertThat(md.bodyIndex()).isEqualTo(1);
+    assertThat(md.bodyIndex()).isOne();
     assertThat(md.indexToName()).containsOnly(entry(0, asList("id")));
   }
 
   @Test
   void tooManyBodies() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () -> parseAndValidateMetadata(BodyParams.class, "tooMany", List.class, List.class))
+            .actual();
     assertThat(exception.getMessage()).contains("Method has too many Body");
   }
 
@@ -213,7 +214,7 @@ class DefaultContractTest {
             // Skips 1 as it is a url index!
             entry(2, asList("2")));
 
-    assertThat(md.urlIndex()).isEqualTo(1);
+    assertThat(md.urlIndex()).isOne();
   }
 
   @Test
@@ -282,11 +283,12 @@ class DefaultContractTest {
   @Test
   void formParamAndBodyParams() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                parseAndValidateMetadata(
-                    FormParams.class, "formParamAndBodyParams", String.class, String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () ->
+                    parseAndValidateMetadata(
+                        FormParams.class, "formParamAndBodyParams", String.class, String.class))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Body parameters cannot be used with form parameters.");
   }
@@ -294,11 +296,12 @@ class DefaultContractTest {
   @Test
   void bodyParamsAndformParam() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                parseAndValidateMetadata(
-                    FormParams.class, "bodyParamsAndformParam", String.class, String.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(
+                () ->
+                    parseAndValidateMetadata(
+                        FormParams.class, "bodyParamsAndformParam", String.class, String.class))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Body parameters cannot be used with form parameters.");
   }
@@ -363,7 +366,7 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "queryMap", Map.class);
 
-    assertThat(md.queryMapIndex()).isEqualTo(0);
+    assertThat(md.queryMapIndex()).isZero();
   }
 
   @Test
@@ -372,7 +375,7 @@ class DefaultContractTest {
         parseAndValidateMetadata(
             QueryMapTestInterface.class, "queryMapMapSubclass", SortedMap.class);
 
-    assertThat(md.queryMapIndex()).isEqualTo(0);
+    assertThat(md.queryMapIndex()).isZero();
   }
 
   @Test
@@ -401,7 +404,7 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(QueryMapTestInterface.class, "pojoObject", Object.class);
 
-    assertThat(md.queryMapIndex()).isEqualTo(0);
+    assertThat(md.queryMapIndex()).isZero();
   }
 
   @Test
@@ -431,7 +434,7 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(
             HeaderMapInterface.class, "headerMapSubClass", SubClassHeaders.class);
-    assertThat(md.headerMapIndex()).isEqualTo(0);
+    assertThat(md.headerMapIndex()).isZero();
   }
 
   @Test
@@ -439,7 +442,7 @@ class DefaultContractTest {
     final MethodMetadata md =
         parseAndValidateMetadata(
             HeaderMapInterface.class, "headerMapUserObject", HeaderMapUserObject.class);
-    assertThat(md.headerMapIndex()).isEqualTo(0);
+    assertThat(md.headerMapIndex()).isZero();
   }
 
   interface Methods {
@@ -828,8 +831,8 @@ class DefaultContractTest {
     } catch (Exception e) {
       if (e instanceof java.lang.reflect.InvocationTargetException) {
         Throwable cause = e.getCause();
-        if (cause instanceof RuntimeException) {
-          throw (RuntimeException) cause;
+        if (cause instanceof RuntimeException exception) {
+          throw exception;
         }
         throw new RuntimeException(cause);
       }
@@ -846,9 +849,9 @@ class DefaultContractTest {
   @Test
   void missingMethod() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> contract.parseAndValidateMetadata(MissingMethod.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> contract.parseAndValidateMetadata(MissingMethod.class))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             "RequestLine annotation didn't start with an HTTP verb on method"
@@ -908,9 +911,9 @@ class DefaultContractTest {
   @Test
   void errorMessageOnMixedContracts() {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> contract.parseAndValidateMetadata(MixedAnnotations.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> contract.parseAndValidateMetadata(MixedAnnotations.class))
+            .actual();
     assertThat(exception.getMessage()).contains("are not used by contract DefaultContract");
   }
 
@@ -964,9 +967,9 @@ class DefaultContractTest {
         !isCompiledWithParameters(NoValueParamsInterface.class), "Skip if -parameters is enabled");
 
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> contract.parseAndValidateMetadata(NoValueParamsInterface.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> contract.parseAndValidateMetadata(NoValueParamsInterface.class))
+            .actual();
 
     assertThat(exception.getMessage())
         .contains("Param annotation was empty on param 0")
