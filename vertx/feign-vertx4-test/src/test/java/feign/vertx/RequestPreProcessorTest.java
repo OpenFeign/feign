@@ -82,7 +82,7 @@ class RequestPreProcessorTest extends AbstractFeignVertxTest {
                   if (res.succeeded()) {
                     Collection<Flavor> flavors = res.result();
                     assertThat(flavors)
-                        .hasSize(Flavor.values().length)
+                        .hasSameSizeAs(Flavor.values())
                         .containsAll(Arrays.asList(Flavor.values()));
                     testContext.completeNow();
                   } else {

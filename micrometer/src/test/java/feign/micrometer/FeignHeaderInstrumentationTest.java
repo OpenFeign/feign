@@ -43,7 +43,6 @@ import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,15 +74,14 @@ class FeignHeaderInstrumentationTest {
 
     verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
     Timer timer = meterRegistry.get(METER_NAME).timer();
-    assertThat(timer.count()).isEqualTo(1);
+    assertThat(timer.count()).isOne();
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
 
     assertTags();
   }
 
   @Test
-  void getTemplatedPathForUriForAsync(WireMockRuntimeInfo wmRuntimeInfo)
-      throws ExecutionException, InterruptedException {
+  void getTemplatedPathForUriForAsync(WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
     stubFor(get(anyUrl()).willReturn(ok()));
 
     AsyncTestClient testClient =
@@ -92,7 +90,7 @@ class FeignHeaderInstrumentationTest {
 
     verify(getRequestedFor(urlEqualTo("/customers/1/carts/2")).withHeader("foo", equalTo("bar")));
     Timer timer = meterRegistry.get(METER_NAME).timer();
-    assertThat(timer.count()).isEqualTo(1);
+    assertThat(timer.count()).isOne();
     assertThat(timer.totalTime(TimeUnit.NANOSECONDS)).isPositive();
 
     assertTags();

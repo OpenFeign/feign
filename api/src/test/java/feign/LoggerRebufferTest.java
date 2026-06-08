@@ -15,16 +15,14 @@
  */
 package feign;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.HttpMethod;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-public class LoggerRebufferTest {
+class LoggerRebufferTest {
 
   private static final String CONFIG_KEY = "TestApi#testMethod()";
 
@@ -55,8 +53,10 @@ public class LoggerRebufferTest {
     // then
     String read1 = Util.toString(result.body().asReader(Util.UTF_8));
     String read2 = Util.toString(result.body().asReader(Util.UTF_8));
-    assertEquals(originalBody, read1, "First read should return original body");
-    assertEquals(originalBody, read2, "Second read should return same body (rebuffered)");
+    assertThat(read1).as("First read should return original body").isEqualTo(originalBody);
+    assertThat(read2)
+        .as("Second read should return same body (rebuffered)")
+        .isEqualTo(originalBody);
   }
 
   @Test
@@ -79,7 +79,7 @@ public class LoggerRebufferTest {
 
     // then
     String read1 = Util.toString(result.body().asReader(Util.UTF_8));
-    assertEquals(originalBody, read1, "First read should return original body");
+    assertThat(read1).as("First read should return original body").isEqualTo(originalBody);
   }
 
   @Test
@@ -104,9 +104,9 @@ public class LoggerRebufferTest {
     String read1 = Util.toString(result.body().asReader(Util.UTF_8));
     String read2 = Util.toString(result.body().asReader(Util.UTF_8));
     String read3 = Util.toString(result.body().asReader(Util.UTF_8));
-    assertEquals(originalBody, read1, "First read should return original body");
-    assertEquals(originalBody, read2, "Second read should return same body");
-    assertEquals(originalBody, read3, "Third read should return same body");
+    assertThat(read1).as("First read should return original body").isEqualTo(originalBody);
+    assertThat(read2).as("Second read should return same body").isEqualTo(originalBody);
+    assertThat(read3).as("Third read should return same body").isEqualTo(originalBody);
   }
 
   @Test
@@ -129,7 +129,7 @@ public class LoggerRebufferTest {
 
     // then
     String read1 = Util.toString(result.body().asReader(Util.UTF_8));
-    assertEquals(originalBody, read1, "Body should be readable");
+    assertThat(read1).as("Body should be readable").isEqualTo(originalBody);
   }
 
   @Test
@@ -152,7 +152,7 @@ public class LoggerRebufferTest {
         logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.HEADERS, response, 100);
 
     // then
-    assertNotNull(result.body(), "Response body object should exist");
+    assertThat(result.body()).as("Response body object should exist").isNotNull();
   }
 
   @Test
@@ -174,7 +174,7 @@ public class LoggerRebufferTest {
         logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.HEADERS, response, 100);
 
     // then
-    assertNotNull(result.body(), "Response body object should exist");
+    assertThat(result.body()).as("Response body object should exist").isNotNull();
   }
 
   @Test
@@ -197,6 +197,6 @@ public class LoggerRebufferTest {
         logger.logAndRebufferResponse(CONFIG_KEY, Logger.Level.HEADERS, response, 100);
 
     // then
-    assertNull(result.body(), "Body should remain null");
+    assertThat(result.body()).as("Body should remain null").isNull();
   }
 }

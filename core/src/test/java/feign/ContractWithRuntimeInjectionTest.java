@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationContext;
@@ -61,8 +62,8 @@ public class ContractWithRuntimeInjectionTest {
   }
 
   @Test
-  void baseCaseExpanderNewInstance() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void baseCaseExpanderNewInstance() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     String baseUrl = server.url("/default").toString();
 
@@ -111,8 +112,8 @@ public class ContractWithRuntimeInjectionTest {
   }
 
   @Test
-  void contractWithRuntimeInjection() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void contractWithRuntimeInjection() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     String baseUrl = server.url("/default").toString();
     ApplicationContext context = new AnnotationConfigApplicationContext(FeignConfiguration.class);
@@ -123,6 +124,11 @@ public class ContractWithRuntimeInjectionTest {
         .get("FOO");
 
     assertThat(server.takeRequest()).hasPath("/default/path?query=foo");
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

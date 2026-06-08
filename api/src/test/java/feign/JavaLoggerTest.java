@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class JavaLoggerTest {
+class JavaLoggerTest {
 
   private static final String CONFIG_KEY = "TestApi#testMethod()";
   private java.util.logging.Logger julLogger;

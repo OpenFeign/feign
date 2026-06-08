@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import mockwebserver3.RecordedRequest;
 import okhttp3.Headers;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
@@ -59,7 +59,7 @@ public final class RecordedRequestAssert
 
   public RecordedRequestAssert hasPath(String expected) {
     isNotNull();
-    objects.assertEqual(info, actual.getPath(), expected);
+    objects.assertEqual(info, actual.getTarget(), expected);
     return this;
   }
 
@@ -78,27 +78,27 @@ public final class RecordedRequestAssert
   }
 
   private Collection<String> getQueryParams() {
-    String path = actual.getPath();
+    String path = actual.getTarget();
     int queryStart = path.indexOf("?") + 1;
-    String[] queryParams = actual.getPath().substring(queryStart).split("&");
+    String[] queryParams = actual.getTarget().substring(queryStart).split("&");
     return Arrays.asList(queryParams);
   }
 
   public RecordedRequestAssert hasOneOfPath(String... expected) {
     isNotNull();
-    objects.assertIsIn(info, actual.getPath(), expected);
+    objects.assertIsIn(info, actual.getTarget(), expected);
     return this;
   }
 
   public RecordedRequestAssert hasBody(String utf8Expected) {
     isNotNull();
-    objects.assertEqual(info, actual.getBody().readUtf8(), utf8Expected);
+    objects.assertEqual(info, actual.getBody().utf8(), utf8Expected);
     return this;
   }
 
   public RecordedRequestAssert hasGzippedBody(byte[] expectedUncompressed) {
     isNotNull();
-    byte[] compressedBody = actual.getBody().readByteArray();
+    byte[] compressedBody = actual.getBody().toByteArray();
     byte[] uncompressedBody;
     try {
       uncompressedBody =
@@ -112,7 +112,7 @@ public final class RecordedRequestAssert
 
   public RecordedRequestAssert hasDeflatedBody(byte[] expectedUncompressed) {
     isNotNull();
-    byte[] compressedBody = actual.getBody().readByteArray();
+    byte[] compressedBody = actual.getBody().toByteArray();
     byte[] uncompressedBody;
     try {
       uncompressedBody =
@@ -126,7 +126,7 @@ public final class RecordedRequestAssert
 
   public RecordedRequestAssert hasBody(byte[] expected) {
     isNotNull();
-    arrays.assertContains(info, actual.getBody().readByteArray(), expected);
+    arrays.assertContains(info, actual.getBody().toByteArray(), expected);
     return this;
   }
 

@@ -39,7 +39,7 @@ class RequestKeyTest {
   void builder() throws Exception {
     assertThat(requestKey.getMethod()).isEqualTo(HttpMethod.GET);
     assertThat(requestKey.getUrl()).isEqualTo("a");
-    assertThat(requestKey.getHeaders().size()).isEqualTo(1);
+    assertThat(requestKey.getHeaders().size()).isOne();
     assertThat(requestKey.getHeaders().fetch("my-header")).isEqualTo(Arrays.asList("val"));
   }
 
@@ -54,7 +54,7 @@ class RequestKeyTest {
 
     assertThat(requestKey.getMethod()).isEqualTo(HttpMethod.GET);
     assertThat(requestKey.getUrl()).isEqualTo("a");
-    assertThat(requestKey.getHeaders().size()).isEqualTo(1);
+    assertThat(requestKey.getHeaders().size()).isOne();
     assertThat(requestKey.getHeaders().fetch("my-header")).isEqualTo(Arrays.asList("val"));
   }
 
@@ -88,16 +88,14 @@ class RequestKeyTest {
 
   @Test
   void equalSelf() {
-    assertThat(requestKey.hashCode()).isEqualTo(requestKey.hashCode());
-    assertThat(requestKey).isEqualTo(requestKey);
+    assertThat(requestKey).hasSameHashCodeAs(requestKey).isEqualTo(requestKey);
   }
 
   @Test
   void equalMinimum() {
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
-    assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
-    assertThat(requestKey).isEqualTo(requestKey2);
+    assertThat(requestKey).hasSameHashCodeAs(requestKey2).isEqualTo(requestKey2);
   }
 
   @Test
@@ -105,16 +103,15 @@ class RequestKeyTest {
     RequestHeaders headers = RequestHeaders.builder().add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers).build();
 
-    assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
-    assertThat(requestKey).isEqualTo(requestKey2);
+    assertThat(requestKey).hasSameHashCodeAs(requestKey2).isEqualTo(requestKey2);
   }
 
   @Test
   void equalsExtended() {
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").build();
 
-    assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
-    assertThat(requestKey.equalsExtended(requestKey2)).isEqualTo(true);
+    assertThat(requestKey).hasSameHashCodeAs(requestKey2);
+    assertThat(requestKey.equalsExtended(requestKey2)).isTrue();
   }
 
   @Test
@@ -122,8 +119,8 @@ class RequestKeyTest {
     RequestHeaders headers = RequestHeaders.builder().add("my-other-header", "other value").build();
     RequestKey requestKey2 = RequestKey.builder(HttpMethod.GET, "a").headers(headers).build();
 
-    assertThat(requestKey.hashCode()).isEqualTo(requestKey2.hashCode());
-    assertThat(requestKey.equalsExtended(requestKey2)).isEqualTo(false);
+    assertThat(requestKey).hasSameHashCodeAs(requestKey2);
+    assertThat(requestKey.equalsExtended(requestKey2)).isFalse();
   }
 
   @Test

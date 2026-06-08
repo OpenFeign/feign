@@ -76,3 +76,8 @@ release.properties
 pom.xml.releaseBackup
 .mvn/.develocity/develocity-workspace-id
 .sdkmanrc
+
+# AI assistant tooling
+.antigravitycli/
+.claude/
+.understand-anything/

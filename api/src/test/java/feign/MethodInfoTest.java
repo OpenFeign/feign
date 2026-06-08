@@ -21,11 +21,13 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 public class MethodInfoTest {
 
-  static class AsyncClientTest {
+  @Nested
+  class AsyncClientTest {
     public interface AsyncClient {
       CompletableFuture<String> log();
     }
@@ -38,7 +40,8 @@ public class MethodInfoTest {
     }
   }
 
-  static class GenericAsyncClientTest {
+  @Nested
+  class GenericAsyncClientTest {
     public interface GenericAsyncClient<T> {
       T log();
     }
@@ -53,7 +56,8 @@ public class MethodInfoTest {
     }
   }
 
-  static class SyncClientTest {
+  @Nested
+  class SyncClientTest {
     public interface SyncClient {
       String log();
     }
@@ -66,7 +70,8 @@ public class MethodInfoTest {
     }
   }
 
-  static class GenericSyncClientTest {
+  @Nested
+  class GenericSyncClientTest {
     public interface GenericSyncClient<T> {
       T log();
     }

@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
-import lombok.val;
 
 /**
  * An URL encoded form content processor.
@@ -53,7 +52,7 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
   @Override
   public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
       throws EncodeException {
-    val bodyData = new StringBuilder();
+    final var bodyData = new StringBuilder();
     for (Entry<String, Object> entry : data.entrySet()) {
       if (entry == null || entry.getKey() == null) {
         continue;
@@ -64,14 +63,14 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
       bodyData.append(createKeyValuePair(template.collectionFormat(), entry, charset));
     }
 
-    val contentTypeValue =
+    final var contentTypeValue =
         new StringBuilder()
             .append(getSupportedContentType().getHeader())
             .append("; charset=")
             .append(charset.name())
             .toString();
 
-    val bytes = bodyData.toString().getBytes(charset);
+    final var bytes = bodyData.toString().getBytes(charset);
 
     template.header(CONTENT_TYPE_HEADER, Collections.<String>emptyList()); // reset header
     template.header(CONTENT_TYPE_HEADER, contentTypeValue);
@@ -106,7 +105,7 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
 
   private CharSequence createKeyValuePair(
       CollectionFormat collectionFormat, String key, Stream<?> values, Charset charset) {
-    val stringValues =
+    final var stringValues =
         values.filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
     return collectionFormat.join(key, stringValues, charset);
   }

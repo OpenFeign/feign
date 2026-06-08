@@ -140,7 +140,7 @@ class GraphqlDecoderOptionalFieldCodecTest {
     var item = api.getItem();
 
     assertThat(item.name()).isEqualTo("test");
-    assertThat(item.step()).isPresent().hasValue("foo");
+    assertThat(item.step()).hasValue("foo");
   }
 
   private ItemApi buildClient(MockClient mockClient, JsonCodec codec) {

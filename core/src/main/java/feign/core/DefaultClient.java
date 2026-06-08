@@ -227,7 +227,7 @@ public class DefaultClient implements Client {
       }
     }
 
-    if (!body.isPresent() && request.httpMethod().isWithBody()) {
+    if (body.isEmpty() && request.httpMethod().isWithBody()) {
       // To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
       connection.addRequestProperty("Content-Length", "0");
     }

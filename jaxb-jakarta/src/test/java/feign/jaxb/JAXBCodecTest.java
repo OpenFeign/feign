@@ -17,8 +17,7 @@ package feign.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -33,6 +32,7 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -74,11 +74,12 @@ class JAXBCodecTest {
 
     RequestTemplate template = new RequestTemplate();
     Throwable exception =
-        assertThrows(
-            UnsupportedOperationException.class,
-            () ->
-                new JAXBEncoder(new JAXBContextFactory.Builder().build())
-                    .encode(Collections.emptyMap(), parameterized, template));
+        assertThatExceptionOfType(UnsupportedOperationException.class)
+            .isThrownBy(
+                () ->
+                    new JAXBEncoder(new JAXBContextFactory.Builder().build())
+                        .encode(Collections.emptyMap(), parameterized, template))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             "JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
@@ -227,11 +228,12 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
             .build();
 
     Throwable exception =
-        assertThrows(
-            feign.codec.DecodeException.class,
-            () ->
-                new JAXBDecoder(new JAXBContextFactory.Builder().build())
-                    .decode(response, parameterized));
+        assertThatExceptionOfType(feign.codec.DecodeException.class)
+            .isThrownBy(
+                () ->
+                    new JAXBDecoder(new JAXBContextFactory.Builder().build())
+                        .decode(response, parameterized))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             """
@@ -315,9 +317,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerSchema(getMockIntObjSchema()).build();
     DecodeException exception =
-        assertThrows(
-            DecodeException.class,
-            () -> new JAXBDecoder(factory).decode(response, MockIntObject.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> new JAXBDecoder(factory).decode(response, MockIntObject.class))
+            .actual();
     assertThat(exception)
         .hasCauseInstanceOf(UnmarshalException.class)
         .hasMessageContaining("'Test' is not a valid value for 'integer'.");
@@ -358,9 +360,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
 
     RequestTemplate template = new RequestTemplate();
     EncodeException exception =
-        assertThrows(
-            EncodeException.class,
-            () -> encoder.encode(new MockIntObject(), MockIntObject.class, template));
+        assertThatExceptionOfType(EncodeException.class)
+            .isThrownBy(() -> encoder.encode(new MockIntObject(), MockIntObject.class, template))
+            .actual();
     assertThat(exception)
         .hasCauseInstanceOf(MarshalException.class)
         .hasMessageContaining("The content of element 'mockIntObject' is not complete.");
@@ -387,7 +389,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
   }
 
   private byte[] bodyAsBytes(Request.Body body) {
-    return assertDoesNotThrow(body::writeToByteArray);
+    try {
+      return body.writeToByteArray();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   @XmlRootElement

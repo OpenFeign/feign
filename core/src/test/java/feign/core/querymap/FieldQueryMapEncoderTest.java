@@ -46,7 +46,9 @@ class FieldQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertThat(encodedMap).as("Unexpected encoded query map").isEqualTo(expected);
+    assertThat(encodedMap)
+        .as("Unexpected encoded query map")
+        .containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   @Test
@@ -55,9 +57,7 @@ class FieldQueryMapEncoderTest {
 
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
-    assertThat(encodedMap.isEmpty())
-        .as("Non-empty map generated from null getter: " + encodedMap)
-        .isTrue();
+    assertThat(encodedMap).as("Non-empty map generated from null getter: " + encodedMap).isEmpty();
   }
 
   @Test

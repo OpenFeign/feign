@@ -31,7 +31,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * An utility class to work with POJOs.
@@ -41,33 +40,33 @@ import lombok.val;
 public final class PojoUtil {
 
   public static boolean isUserPojo(@NonNull Object object) {
-    val type = object.getClass();
-    val packageName = type.getPackage().getName();
+    final var type = object.getClass();
+    final var packageName = type.getPackage().getName();
     return !packageName.startsWith("java.");
   }
 
   public static boolean isUserPojo(@NonNull Type type) {
-    val typeName = type.toString();
+    final var typeName = type.toString();
     return !typeName.startsWith("class java.");
   }
 
   @SneakyThrows
   public static Map<String, Object> toMap(@NonNull Object object) {
-    val result = new HashMap<String, Object>();
-    val type = object.getClass();
-    for (val field : type.getDeclaredFields()) {
-      val modifiers = field.getModifiers();
+    final var result = new HashMap<String, Object>();
+    final var type = object.getClass();
+    for (var field : type.getDeclaredFields()) {
+      final var modifiers = field.getModifiers();
       if (isFinal(modifiers) || isStatic(modifiers)) {
         continue;
       }
       field.setAccessible(true);
 
-      val fieldValue = field.get(object);
+      final var fieldValue = field.get(object);
       if (fieldValue == null) {
         continue;
       }
 
-      val propertyKey =
+      final var propertyKey =
           field.isAnnotationPresent(FormProperty.class)
               ? field.getAnnotation(FormProperty.class).value()
               : field.getName();

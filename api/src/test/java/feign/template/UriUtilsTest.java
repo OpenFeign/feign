@@ -45,7 +45,7 @@ class UriUtilsTest {
 
   @ParameterizedTest
   @MethodSource("provideValuesToEncode")
-  void testVariousEncodingScenarios(String input, String expected) {
+  void variousEncodingScenarios(String input, String expected) {
     assertThat(UriUtils.encode(input, UTF_8)).isEqualTo(expected);
   }
 

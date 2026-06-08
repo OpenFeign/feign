@@ -20,12 +20,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.ProtocolVersion;
 import java.util.Arrays;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class EnumForNameTest {
 
-  public static class KnownEnumValuesTest {
+  @Nested
+  public class KnownEnumValuesTest {
     public Object name;
     public ProtocolVersion expectedProtocolVersion;
 
@@ -56,7 +58,8 @@ public class EnumForNameTest {
     }
   }
 
-  public static class UnknownEnumValuesTest {
+  @Nested
+  public class UnknownEnumValuesTest {
 
     public Object name;
 

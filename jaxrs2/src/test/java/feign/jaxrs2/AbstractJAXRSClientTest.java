@@ -28,7 +28,7 @@ import feign.client.AbstractClientTest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
-import okhttp3.mockwebserver.MockResponse;
+import mockwebserver3.MockResponse;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
 
   @Override
+  @Test
   public void patch() throws Exception {
     try {
       super.patch();
@@ -45,6 +46,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
+  @Test
   public void noResponseBodyForPut() throws Exception {
     try {
       super.noResponseBodyForPut();
@@ -54,6 +56,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
+  @Test
   public void noResponseBodyForPatch() {
     try {
       super.noResponseBodyForPatch();
@@ -65,7 +68,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   @Override
   @Test
   public void reasonPhraseIsOptional() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+    server.enqueue(new MockResponse.Builder().status("HTTP/1.1 " + 200).build());
 
     final TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -80,7 +83,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   @Override
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
+    server.enqueue(new MockResponse.Builder().body("foo").addHeader("Foo: Bar").build());
 
     final TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -112,7 +115,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
 
   @Test
   void contentTypeWithoutCharset2() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     final JaxRSClientTestInterface api =
         newBuilder().target(JaxRSClientTestInterface.class, "http://localhost:" + server.getPort());
 
@@ -131,26 +134,31 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
    * JaxRS does not support gzip and deflate compression out-of-the-box.
    */
   @Override
+  @Test
   public void canSupportGzip() throws Exception {
     assumeFalse(false, "JaxRS client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportGzipOnError() throws Exception {
     assumeFalse(false, "JaxRS client do not support gzip compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflate() throws Exception {
     assumeFalse(false, "JaxRS client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canSupportDeflateOnError() throws Exception {
     assumeFalse(false, "JaxRS client do not support deflate compression");
   }
 
   @Override
+  @Test
   public void canExceptCaseInsensitiveHeader() throws Exception {
     assumeFalse(false, "JaxRS client do not support gzip compression");
   }
@@ -163,6 +171,7 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
   }
 
   @Override
+  @Test
   public void veryLongResponseNullLength() {
     assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }

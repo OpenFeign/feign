@@ -73,7 +73,7 @@ class JAXRS3ContractTest extends JAXRSContractTestSupport<JAXRS3Contract> {
     assertThat(methodMetadata.template())
         .hasHeaders(entry("X-Custom-Header", asList("{X-Custom-Header}")));
     assertThat(methodMetadata.template()).hasQueries(entry("query", asList("{query}")));
-    assertThat(methodMetadata.formParams()).isNotEmpty().containsExactly("form");
+    assertThat(methodMetadata.formParams()).containsExactly("form");
   }
 
   public interface JakartaInternals {

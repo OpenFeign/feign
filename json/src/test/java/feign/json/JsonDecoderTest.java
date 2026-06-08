@@ -17,7 +17,7 @@ package feign.json;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,7 +58,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void decodesArray() throws IOException {
+  void decodesArray() throws Exception {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
@@ -72,7 +72,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void decodesObject() throws IOException {
+  void decodesObject() throws Exception {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()
@@ -86,7 +86,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void decodesString() throws IOException {
+  void decodesString() throws Exception {
     String json = "qwerty";
     Response response =
         Response.builder()
@@ -100,7 +100,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void notFoundDecodesToEmpty() throws IOException {
+  void notFoundDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(404)
@@ -113,7 +113,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void nullBodyDecodesToEmpty() throws IOException {
+  void nullBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -126,7 +126,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void nullBodyDecodesToNullString() throws IOException {
+  void nullBodyDecodesToNullString() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -138,7 +138,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void emptyBodyDecodesToEmpty() throws IOException {
+  void emptyBodyDecodesToEmpty() throws Exception {
     Response response =
         Response.builder()
             .status(204)
@@ -152,7 +152,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void unknownTypeThrowsDecodeException() throws IOException {
+  void unknownTypeThrowsDecodeException() throws Exception {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
@@ -163,13 +163,15 @@ class JsonDecoderTest {
             .request(request)
             .build();
     Exception exception =
-        assertThrows(DecodeException.class, () -> new JsonDecoder().decode(response, Clock.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> new JsonDecoder().decode(response, Clock.class))
+            .actual();
     assertThat(exception.getMessage())
         .isEqualTo("class java.time.Clock is not a type supported by this decoder.");
   }
 
   @Test
-  void badJsonThrowsWrappedJSONException() throws IOException {
+  void badJsonThrowsWrappedJSONException() throws Exception {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()
@@ -180,15 +182,16 @@ class JsonDecoderTest {
             .request(request)
             .build();
     Exception exception =
-        assertThrows(
-            DecodeException.class, () -> new JsonDecoder().decode(response, JSONArray.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> new JsonDecoder().decode(response, JSONArray.class))
+            .actual();
     assertThat(exception.getMessage())
         .isEqualTo("A JSONArray text must start with '[' at 1 [character 2 line 1]");
     assertThat(exception.getCause() instanceof JSONException).isTrue();
   }
 
   @Test
-  void causedByCommonException() throws IOException {
+  void causedByCommonException() throws Exception {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any()))
         .thenThrow(new JSONException("test exception", new Exception("test cause exception")));
@@ -201,13 +204,14 @@ class JsonDecoderTest {
             .request(request)
             .build();
     Exception exception =
-        assertThrows(
-            DecodeException.class, () -> new JsonDecoder().decode(response, JSONArray.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> new JsonDecoder().decode(response, JSONArray.class))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("test exception");
   }
 
   @Test
-  void causedByIOException() throws IOException {
+  void causedByIOException() throws Exception {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any()))
         .thenThrow(new JSONException("test exception", new IOException("test cause exception")));
@@ -220,12 +224,14 @@ class JsonDecoderTest {
             .request(request)
             .build();
     Exception exception =
-        assertThrows(IOException.class, () -> new JsonDecoder().decode(response, JSONArray.class));
+        assertThatExceptionOfType(IOException.class)
+            .isThrownBy(() -> new JsonDecoder().decode(response, JSONArray.class))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("test cause exception");
   }
 
   @Test
-  void checkedException() throws IOException {
+  void checkedException() throws Exception {
     Response.Body body = mock(Response.Body.class);
     when(body.asReader(any())).thenThrow(new IOException("test exception"));
     Response response =
@@ -237,12 +243,14 @@ class JsonDecoderTest {
             .request(request)
             .build();
     Exception exception =
-        assertThrows(IOException.class, () -> new JsonDecoder().decode(response, JSONArray.class));
+        assertThatExceptionOfType(IOException.class)
+            .isThrownBy(() -> new JsonDecoder().decode(response, JSONArray.class))
+            .actual();
     assertThat(exception.getMessage()).isEqualTo("test exception");
   }
 
   @Test
-  void decodesExtendedArray() throws IOException {
+  void decodesExtendedArray() throws Exception {
     String json = "[{\"a\":\"b\",\"c\":1},123]";
     Response response =
         Response.builder()
@@ -257,7 +265,7 @@ class JsonDecoderTest {
   }
 
   @Test
-  void decodeExtendedObject() throws IOException {
+  void decodeExtendedObject() throws Exception {
     String json = "{\"a\":\"b\",\"c\":1}";
     Response response =
         Response.builder()

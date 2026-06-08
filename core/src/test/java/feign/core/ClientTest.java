@@ -15,8 +15,7 @@
  */
 package feign.core;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,7 +24,6 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -35,7 +33,7 @@ import org.mockito.ArgumentMatchers;
 class ClientTest {
 
   @Test
-  void testClientExecute() throws IOException {
+  void clientExecute() throws Exception {
     Client client = mock(Client.class);
     RequestTemplate requestTemplate = mock(RequestTemplate.class);
     Request request =
@@ -54,11 +52,11 @@ class ClientTest {
                 .build());
     Response response = client.execute(request, null);
     String result = Util.toString(response.body().asReader(Charset.defaultCharset()));
-    assertEquals("Hello, World!", result);
+    assertThat(result).isEqualTo("Hello, World!");
   }
 
   @Test
-  void testConvertAndSendWithAcceptEncoding() throws IOException {
+  void convertAndSendWithAcceptEncoding() throws Exception {
     Map<String, Collection<String>> headers = new HashMap<>();
     List<String> acceptEncoding = new ArrayList<>();
     acceptEncoding.add("gzip");
@@ -76,11 +74,11 @@ class ClientTest {
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
     // Test Avoid add "Accept-encoding" twice or more when "compression" option is enabled
-    assertEquals(1, requestProperties.get(Util.ACCEPT_ENCODING).size());
+    assertThat(requestProperties.get(Util.ACCEPT_ENCODING)).hasSize(1);
   }
 
   @Test
-  void testConvertAndSendWithContentLength() throws IOException {
+  void convertAndSendWithContentLength() throws Exception {
     Map<String, Collection<String>> headers = new HashMap<>();
     List<String> acceptEncoding = new ArrayList<>();
     headers.put(Util.CONTENT_LENGTH, Collections.singletonList("100"));
@@ -101,6 +99,6 @@ class ClientTest {
      * of HttpURLConnection. Unless set system property "sun.net.http.allowRestrictedHeaders" to
      * "true"
      */
-    assertNull(requestProperties.get(Util.CONTENT_LENGTH));
+    assertThat(requestProperties.get(Util.CONTENT_LENGTH)).isNull();
   }
 }

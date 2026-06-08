@@ -17,7 +17,7 @@ package feign.core.codec;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -43,7 +43,7 @@ class DefaultDecoderTest {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, String.class);
     assertThat(decodedObject.getClass()).isEqualTo(String.class);
-    assertThat(decodedObject.toString()).isEqualTo("response body");
+    assertThat(decodedObject).hasToString("response body");
   }
 
   @Test
@@ -62,7 +62,9 @@ class DefaultDecoderTest {
   @Test
   void refusesToDecodeOtherTypes() throws Exception {
     Throwable exception =
-        assertThrows(DecodeException.class, () -> decoder.decode(knownResponse(), Document.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> decoder.decode(knownResponse(), Document.class))
+            .actual();
     assertThat(exception.getMessage()).contains(" is not a type supported by this decoder.");
   }
 

@@ -16,7 +16,7 @@
 package feign.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Util;
 import java.net.URI;
@@ -38,7 +38,8 @@ class UriTemplateTest {
 
   @Test
   void nullTemplate() {
-    assertThrows(IllegalArgumentException.class, () -> UriTemplate.create(null, Util.UTF_8));
+    assertThatThrownBy(() -> UriTemplate.create(null, Util.UTF_8))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -154,7 +155,8 @@ class UriTemplateTest {
     variables.put("bar", "stuff");
 
     /* the foo variable must be a number and no more than four, this should fail */
-    assertThrows(IllegalArgumentException.class, () -> uriTemplate.expand(variables));
+    assertThatThrownBy(() -> uriTemplate.expand(variables))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -187,7 +189,8 @@ class UriTemplateTest {
   @Test
   void rejectEmptyExpressions() {
     String template = "https://www.example.com/{}/things";
-    assertThrows(IllegalArgumentException.class, () -> UriTemplate.create(template, Util.UTF_8));
+    assertThatThrownBy(() -> UriTemplate.create(template, Util.UTF_8))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -244,8 +247,8 @@ class UriTemplateTest {
 
   @Test
   void substituteNullMap() {
-    assertThrows(
-        IllegalArgumentException.class, () -> UriTemplate.create("stuff", Util.UTF_8).expand(null));
+    assertThatThrownBy(() -> UriTemplate.create("stuff", Util.UTF_8).expand(null))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

@@ -16,7 +16,7 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -255,40 +255,41 @@ class FeignExceptionTest {
 
   @Test
   void nullRequestShouldThrowNPEwThrowable() {
-    assertThrows(
-        NullPointerException.class, () -> new Derived(404, "message", null, new Throwable()));
+    assertThatThrownBy(() -> new Derived(404, "message", null, new Throwable()))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @Test
   void nullRequestShouldThrowNPEwThrowableAndBytes() {
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new Derived(
-                404,
-                "message",
-                null,
-                new Throwable(),
-                "content".getBytes(StandardCharsets.UTF_8),
-                Collections.emptyMap()));
+    assertThatThrownBy(
+            () ->
+                new Derived(
+                    404,
+                    "message",
+                    null,
+                    new Throwable(),
+                    "content".getBytes(StandardCharsets.UTF_8),
+                    Collections.emptyMap()))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @Test
   void nullRequestShouldThrowNPE() {
-    assertThrows(NullPointerException.class, () -> new Derived(404, "message", null));
+    assertThatThrownBy(() -> new Derived(404, "message", null))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @Test
   void nullRequestShouldThrowNPEwBytes() {
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new Derived(
-                404,
-                "message",
-                null,
-                "content".getBytes(StandardCharsets.UTF_8),
-                Collections.emptyMap()));
+    assertThatThrownBy(
+            () ->
+                new Derived(
+                    404,
+                    "message",
+                    null,
+                    "content".getBytes(StandardCharsets.UTF_8),
+                    Collections.emptyMap()))
+        .isInstanceOf(NullPointerException.class);
   }
 
   static class Derived extends FeignException {

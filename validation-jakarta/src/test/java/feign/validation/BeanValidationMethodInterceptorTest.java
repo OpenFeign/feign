@@ -26,18 +26,25 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import java.io.IOException;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class BeanValidationMethodInterceptorTest {
 
   private final MockWebServer server = new MockWebServer();
 
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
+  }
+
   @AfterEach
   void tearDown() throws Exception {
-    server.shutdown();
+    server.close();
   }
 
   static class Payload {
@@ -77,20 +84,19 @@ class BeanValidationMethodInterceptorTest {
 
   private Api api() {
     return Feign.builder()
-        .encoder(
-            (object, bodyType, template) -> template.body(Request.Body.of(String.valueOf(object))))
+        .encoder((object, _, template) -> template.body(Request.Body.of(String.valueOf(object))))
         .methodInterceptor(BeanValidationMethodInterceptor.usingDefaultFactory())
         .target(Api.class, "http://localhost:" + server.getPort());
   }
 
   @Test
   void validBodyReachesServer() throws Exception {
-    server.enqueue(new MockResponse().setBody("ok"));
+    server.enqueue(new MockResponse.Builder().body("ok").build());
 
     String result = api().create(new Payload("a", "b"));
 
     assertThat(result).isEqualTo("ok");
-    assertThat(server.getRequestCount()).isEqualTo(1);
+    assertThat(server.getRequestCount()).isOne();
   }
 
   @Test
@@ -118,11 +124,11 @@ class BeanValidationMethodInterceptorTest {
 
   @Test
   void noArgsMethodPassesThrough() throws Exception {
-    server.enqueue(new MockResponse().setBody("ok"));
+    server.enqueue(new MockResponse.Builder().body("ok").build());
 
     String result = api().list();
 
     assertThat(result).isEqualTo("ok");
-    assertThat(server.getRequestCount()).isEqualTo(1);
+    assertThat(server.getRequestCount()).isOne();
   }
 }

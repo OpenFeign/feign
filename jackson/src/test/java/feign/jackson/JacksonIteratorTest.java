@@ -16,10 +16,7 @@
 package feign.jackson;
 
 import static feign.Util.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
@@ -40,73 +37,73 @@ import org.junit.jupiter.api.Test;
 class JacksonIteratorTest {
 
   @Test
-  void shouldDecodePrimitiveArrays() throws IOException {
+  void shouldDecodePrimitiveArrays() throws Exception {
     assertThat(iterator(Integer.class, "[0,1,2,3]")).toIterable().containsExactly(0, 1, 2, 3);
   }
 
   @Test
-  void shouldNotSkipElementsOnHasNext() throws IOException {
+  void shouldNotSkipElementsOnHasNext() throws Exception {
     JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
-    assertThat(iterator.hasNext()).isTrue();
-    assertThat(iterator.hasNext()).isTrue();
-    assertThat(iterator.next()).isEqualTo(0);
-    assertThat(iterator.hasNext()).isFalse();
+    assertThat(iterator).hasNext().hasNext();
+    assertThat(iterator.next()).isZero();
+    assertThat(iterator).isExhausted();
   }
 
   @Test
-  void hasNextIsNotMandatory() throws IOException {
+  void hasNextIsNotMandatory() throws Exception {
     JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
-    assertThat(iterator.next()).isEqualTo(0);
-    assertThat(iterator.hasNext()).isFalse();
+    assertThat(iterator.next()).isZero();
+    assertThat(iterator).isExhausted();
   }
 
   @Test
-  void expectExceptionOnNoElements() throws IOException {
+  void expectExceptionOnNoElements() throws Exception {
     JacksonIterator<Integer> iterator = iterator(Integer.class, "[0]");
-    assertThat(iterator.next()).isEqualTo(0);
+    assertThat(iterator.next()).isZero();
     assertThatThrownBy(() -> iterator.next())
         .hasMessage(null)
         .isInstanceOf(NoSuchElementException.class);
   }
 
   @Test
-  void shouldDecodeObjects() throws IOException {
+  void shouldDecodeObjects() throws Exception {
     assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe\"}]"))
         .toIterable()
         .containsExactly(new User("bob"), new User("joe"));
   }
 
   @Test
-  void malformedObjectThrowsDecodeException() throws IOException {
+  void malformedObjectThrowsDecodeException() throws Exception {
     DecodeException exception =
-        assertThrows(
-            DecodeException.class,
-            () ->
-                assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
-                    .toIterable()
-                    .containsOnly(new User("bob")));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(
+                () ->
+                    assertThat(iterator(User.class, "[{\"login\":\"bob\"},{\"login\":\"joe..."))
+                        .toIterable()
+                        .containsOnly(new User("bob")))
+            .actual();
     assertThat(exception).hasCauseInstanceOf(IOException.class);
   }
 
   @Test
-  void emptyBodyDecodesToEmptyIterator() throws IOException {
+  void emptyBodyDecodesToEmptyIterator() throws Exception {
     assertThat(iterator(String.class, "")).toIterable().isEmpty();
   }
 
   @Test
-  void unmodifiable() throws IOException {
-    assertThatExceptionOfType(UnsupportedOperationException.class)
-        .isThrownBy(
+  void unmodifiable() throws Exception {
+    assertThatThrownBy(
             () -> {
               JacksonIterator<String> it = iterator(String.class, "[\"test\"]");
 
               assertThat(it).toIterable().containsExactly("test");
               it.remove();
-            });
+            })
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
-  void responseIsClosedAfterIteration() throws IOException {
+  void responseIsClosedAfterIteration() throws Exception {
     final AtomicBoolean closed = new AtomicBoolean();
 
     byte[] jsonBytes = "[false, true]".getBytes(UTF_8);
@@ -132,7 +129,7 @@ class JacksonIteratorTest {
   }
 
   @Test
-  void responseIsClosedOnParseError() throws IOException {
+  void responseIsClosedOnParseError() throws Exception {
     final AtomicBoolean closed = new AtomicBoolean();
 
     byte[] jsonBytes = "[error".getBytes(UTF_8);
@@ -153,9 +150,8 @@ class JacksonIteratorTest {
             .body(inputStream, jsonBytes.length)
             .build();
 
-    assertThrows(
-        DecodeException.class,
-        () -> assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1));
+    assertThatThrownBy(() -> assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1))
+        .isInstanceOf(DecodeException.class);
 
     assertThat(closed.get()).isTrue();
   }

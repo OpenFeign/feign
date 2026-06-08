@@ -35,7 +35,7 @@ class SpringManyMultipartFilesReaderTest {
   private static final String DUMMY_MULTIPART_BOUNDARY = "Boundary_4_574237629_1500021738802";
 
   @Test
-  void readMultipartFormDataTest() throws IOException {
+  void readMultipartFormDataTest() throws Exception {
     var multipartFilesReader = new SpringManyMultipartFilesReader(4096);
     var multipartFiles =
         multipartFilesReader.read(MultipartFile[].class, new ValidMultipartMessage());

@@ -22,7 +22,6 @@ import static lombok.AccessLevel.PRIVATE;
 import feign.codec.EncodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A custom user's POJO writer.
@@ -43,9 +42,9 @@ public class PojoWriter extends AbstractWriter {
   @Override
   public void write(Output output, String boundary, String key, Object object)
       throws EncodeException {
-    val map = toMap(object);
-    for (val entry : map.entrySet()) {
-      val writer = findApplicableWriter(entry.getValue());
+    final var map = toMap(object);
+    for (var entry : map.entrySet()) {
+      final var writer = findApplicableWriter(entry.getValue());
       if (writer == null) {
         continue;
       }
@@ -55,7 +54,7 @@ public class PojoWriter extends AbstractWriter {
   }
 
   private Writer findApplicableWriter(Object value) {
-    for (val writer : writers) {
+    for (var writer : writers) {
       if (writer.isApplicable(value)) {
         return writer;
       }

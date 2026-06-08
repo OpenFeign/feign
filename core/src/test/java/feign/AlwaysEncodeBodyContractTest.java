@@ -17,7 +17,6 @@ package feign;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -89,7 +88,11 @@ class AlwaysEncodeBodyContractTest {
     }
 
     private byte[] bodyAsBytes(Request.Body body) {
-      return assertDoesNotThrow(body::writeToByteArray);
+      try {
+        return body.writeToByteArray();
+      } catch (IOException e) {
+        throw new AssertionError("Failed to write body", e);
+      }
     }
   }
 
@@ -113,7 +116,7 @@ class AlwaysEncodeBodyContractTest {
             .encoder(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetNoParameters.class, "http://localhost");
-    assertThat(sampleClient2.concatenate()).isEqualTo("");
+    assertThat(sampleClient2.concatenate()).isEmpty();
 
     SampleTargetOneParameter sampleClient3 =
         Feign.builder()

@@ -21,11 +21,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import feign.Logger.Level;
-import java.io.IOException;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
-public class LoggerMethodsTest {
+class LoggerMethodsTest {
 
   Logger logger =
       new Logger() {
@@ -34,7 +33,7 @@ public class LoggerMethodsTest {
       };
 
   @Test
-  void responseIsClosedAfterRebuffer() throws IOException {
+  void responseIsClosedAfterRebuffer() throws Exception {
     Request request =
         Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null);
     Response response =

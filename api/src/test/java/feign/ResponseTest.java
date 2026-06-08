@@ -114,7 +114,7 @@ class ResponseTest {
             .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
-    assertThat(response.headers()).isNotNull().isEmpty();
+    assertThat(response.headers()).isEmpty();
   }
 
   @Test

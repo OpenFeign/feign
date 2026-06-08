@@ -67,7 +67,7 @@ public final class StreamDecoder implements Decoder {
   @Override
   public Object decode(Response response, Type type) throws IOException, FeignException {
     if (!isStream(type)) {
-      if (!delegateDecoder.isPresent()) {
+      if (delegateDecoder.isEmpty()) {
         throw new IllegalArgumentException(
             "StreamDecoder supports types other than stream. "
                 + "When type is not stream, the delegate decoder needs to be setting.");

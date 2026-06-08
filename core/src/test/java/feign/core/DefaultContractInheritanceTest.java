@@ -18,8 +18,8 @@ package feign.core;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Body;
 import feign.Contract;
@@ -61,9 +61,9 @@ class DefaultContractInheritanceTest {
   @Test
   void parameterizedApiUnsupported() throws Exception {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> contract.parseAndValidateMetadata(SimpleParameterizedBaseApi.class))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Parameterized types unsupported: SimpleParameterizedBaseApi");
   }
@@ -158,9 +158,9 @@ class DefaultContractInheritanceTest {
   @Test
   void multipleInheritanceDoneWrong() {
     Throwable exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class));
+        assertThatExceptionOfType(IllegalStateException.class)
+            .isThrownBy(() -> contract.parseAndValidateMetadata(MultipleInheritanceDoneWrong.class))
+            .actual();
     assertThat(exception.getMessage())
         .contains("Only single inheritance supported: MultipleInheritanceDoneWrong");
   }

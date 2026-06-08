@@ -15,7 +15,7 @@
  */
 package feign.metrics5;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Capability;
 import feign.Feign;
@@ -34,8 +34,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.junit.jupiter.api.Test;
 
-public class Metrics5CapabilityTest
-    extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
+class Metrics5CapabilityTest extends AbstractMetricsTestBase<MetricRegistry, MetricName, Metric> {
 
   @Override
   protected MetricRegistry createMetricsRegistry() {
@@ -145,6 +144,6 @@ public class Metrics5CapabilityTest
         metricsRegistry.getMetrics().keySet().stream()
             .anyMatch(name -> "prod".equals(name.getTags().get("env")));
 
-    assertTrue(hasCustomTag);
+    assertThat(hasCustomTag).isTrue();
   }
 }

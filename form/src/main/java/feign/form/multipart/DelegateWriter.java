@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A delegate writer.
@@ -47,14 +46,14 @@ public class DelegateWriter extends AbstractWriter {
 
   @Override
   protected void write(Output output, String key, Object value) throws EncodeException {
-    val fake = new RequestTemplate();
+    final var fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
     fake.requestBody().ifPresent(body -> write(output, key, body));
   }
 
   private void write(Output output, String key, Request.Body body) {
     try {
-      val encoded = body.writeToString(StandardCharsets.UTF_8).replaceAll("\n", "");
+      final var encoded = body.writeToString(StandardCharsets.UTF_8).replaceAll("\n", "");
       parameterWriter.write(output, key, encoded);
     } catch (IOException e) {
       throw new EncodeException("Failed to write request body for key: " + key, e);

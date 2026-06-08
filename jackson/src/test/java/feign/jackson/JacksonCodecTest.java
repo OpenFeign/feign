@@ -205,7 +205,7 @@ class JacksonCodecTest {
   }
 
   @Test
-  void decoderCharset() throws IOException {
+  void decoderCharset() throws Exception {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<>();
