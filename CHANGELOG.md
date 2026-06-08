@@ -1,7 +1,13 @@
+### Version 14.0
+
+* `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
+  avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
+  these cases. (https://github.com/OpenFeign/feign/pull/3396)
+
 ### Version 13.12
 
 * `UrlencodedFormContentProcessor` now honors `CollectionFormat` from `@RequestLine`/`RequestTemplate` for array and
-  collection values in `application/x-www-form-urlencoded` bodies.
+  collection values in `application/x-www-form-urlencoded` bodies. (https://github.com/OpenFeign/feign/pull/3286)
 
 ### Version 11.9
 

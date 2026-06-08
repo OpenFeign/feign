@@ -17,16 +17,24 @@ package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class DefaultEncoderTest {
 
@@ -62,5 +70,66 @@ class DefaultEncoderTest {
             EncodeException.class,
             () -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()));
     assertThat(exception.getMessage()).contains("is not a type supported by this encoder.");
+  }
+
+  @Test
+  void shouldEncodeFile(@TempDir File tempDir) throws IOException {
+    var file = new File(tempDir, "DefaultEncoderTest_shouldEncodeFile.txt");
+    var template = new RequestTemplate();
+    var expected = "File content";
+
+    Files.writeString(file.toPath(), expected);
+
+    encoder.encode(file, File.class, template);
+
+    verifyBody(template, expected.length(), true, expected);
+  }
+
+  @Test
+  void shouldEncodePath(@TempDir Path tempDir) throws IOException {
+    var path = tempDir.resolve("DefaultEncoderTest_shouldEncodePath.txt");
+    var template = new RequestTemplate();
+    var expected = "Path content";
+
+    Files.writeString(path, expected);
+
+    encoder.encode(path, Path.class, template);
+
+    verifyBody(template, expected.length(), true, expected);
+  }
+
+  @Test
+  void shouldEncodeInputStream() throws IOException {
+    var template = new RequestTemplate();
+    var expected = "InputStream content";
+
+    try (var inputStream = new ByteArrayInputStream(expected.getBytes(StandardCharsets.UTF_8))) {
+      encoder.encode(inputStream, InputStream.class, template);
+    }
+
+    verifyBody(template, -1, false, expected);
+  }
+
+  @Test
+  void shouldEncodeRequestBody() {
+    var template = new RequestTemplate();
+    var expected = "Request body content";
+
+    encoder.encode(Request.Body.of(expected), Request.Body.class, template);
+
+    verifyBody(template, expected.length(), true, expected);
+  }
+
+  void verifyBody(
+      RequestTemplate template, long contentLength, boolean repeatable, String expected) {
+    var optionalBody = template.requestBody();
+    assertThat(optionalBody).isPresent();
+
+    var body = optionalBody.get();
+    assertEquals(contentLength, body.contentLength());
+    assertEquals(repeatable, body.isRepeatable());
+
+    var actual = assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
+    assertEquals(expected, actual);
   }
 }

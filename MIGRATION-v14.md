@@ -1,8 +1,8 @@
 # Migration Guide — Feign v14 (Request Body Streaming)
 
-This guide covers the breaking changes introduced in #3360 and explains how to update your code.
+This guide covers the breaking changes introduced in https://github.com/OpenFeign/feign/pull/3360 and explains how to update your code.
 
-> **Target release:** `v14.rc.1`
+> **Target release:** `v14`
 
 ---
 
@@ -18,6 +18,12 @@ The **breaking changes** primarily affect code that interacts directly with requ
 - Custom `Client` implementations
 - Any code that directly reads `Request.body()`, `Request.length()`, `Request.charset()`, or `RequestTemplate.body()`/
   `RequestTemplate.requestBody()`
+
+### `DefaultEncoder` streaming support (non-breaking) (https://github.com/OpenFeign/feign/pull/3396)
+
+`DefaultEncoder` now additionally supports `File`, `Path`, `InputStream`, and `Request.Body` as request body types.
+This is an additive, non-breaking change. Existing `DefaultEncoder` users do not need to modify code; users can now opt
+into streaming by passing these types.
 
 ---
 
@@ -406,7 +412,7 @@ public class FileBody implements Request.Body {
         try {
             return Files.size(path);
         } catch (IOException e) {
-            return super.contentLength(); // returns -1
+            return Request.Body.super.contentLength(); // returns -1
         }
     }
 }
