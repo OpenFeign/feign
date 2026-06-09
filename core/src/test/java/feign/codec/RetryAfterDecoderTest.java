@@ -55,6 +55,11 @@ class RetryAfterDecoderTest {
     assertThat(decoder.apply("86400.0")).isEqualTo(parseDateTime("Sun, 2 Jan 2000 00:00:00 GMT"));
   }
 
+  @Test
+  void overflowingRelativeSecondsFailsGracefully() {
+    assertThat(decoder.apply("99999999999999999999")).isNull();
+  }
+
   private Long parseDateTime(String text) {
     try {
       return ZonedDateTime.parse(text, RFC_1123_DATE_TIME).toInstant().toEpochMilli();
