@@ -18,10 +18,10 @@ package feign.micrometer;
 import feign.AsyncClient;
 import feign.Capability;
 import feign.Client;
-import feign.FeignException;
 import feign.Response;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import java.util.concurrent.CompletionException;
 
 /** Wrap feign {@link Client} with metrics. */
 public class MicrometerObservationCapability implements Capability {
@@ -55,13 +55,15 @@ public class MicrometerObservationCapability implements Capability {
                   this.observationRegistry)
               .start();
 
-      try {
+      try (Observation.Scope scope = observation.openScope()) {
         Response response = client.execute(request, options);
-        finalizeObservation(feignContext, observation, null, response);
+        feignContext.setResponse(response);
         return response;
-      } catch (FeignException ex) {
-        finalizeObservation(feignContext, observation, ex, null);
+      } catch (Throwable ex) {
+        observation.error(ex);
         throw ex;
+      } finally {
+        observation.stop();
       }
     };
   }
@@ -80,24 +82,29 @@ public class MicrometerObservationCapability implements Capability {
                   this.observationRegistry)
               .start();
 
-      try {
+      try (Observation.Scope scope = observation.openScope()) {
         return client
             .execute(feignContext.getCarrier(), options, context)
-            .whenComplete((r, ex) -> finalizeObservation(feignContext, observation, ex, r));
-      } catch (FeignException ex) {
-        finalizeObservation(feignContext, observation, ex, null);
-
+            .whenComplete(
+                (response, ex) -> {
+                  feignContext.setResponse(response);
+                  if (ex != null) {
+                    observation.error(unwrap(ex));
+                  }
+                  observation.stop();
+                });
+      } catch (Throwable ex) {
+        observation.error(ex);
+        observation.stop();
         throw ex;
       }
     };
   }
 
-  private void finalizeObservation(
-      FeignContext feignContext, Observation observation, Throwable ex, Response response) {
-    feignContext.setResponse(response);
-    if (ex != null) {
-      observation.error(ex);
+  private static Throwable unwrap(Throwable ex) {
+    if (ex instanceof CompletionException && ex.getCause() != null) {
+      return ex.getCause();
     }
-    observation.stop();
+    return ex;
   }
 }
