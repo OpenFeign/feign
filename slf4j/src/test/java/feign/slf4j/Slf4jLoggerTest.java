@@ -21,6 +21,7 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -124,8 +125,7 @@ public class Slf4jLoggerTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("{\"error\":\"test\"}", Util.UTF_8)
             .build();
@@ -150,8 +150,7 @@ public class Slf4jLoggerTest {
         Response.builder()
             .status(500)
             .reason("Internal Server Error")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("{\"message\":\"error details\"}", Util.UTF_8)
             .build();
@@ -177,8 +176,7 @@ public class Slf4jLoggerTest {
             .status(400)
             .reason("Bad Request")
             .request(
-                Request.create(
-                    HttpMethod.POST, "/api/submit", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(HttpMethod.POST, "/api/submit", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();

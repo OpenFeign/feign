@@ -26,16 +26,20 @@ import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.http.HttpTimeoutException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.json.JSONException;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class Http2ClientTest extends AbstractClientTest {
@@ -83,17 +87,39 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void patch() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    assertThat(api.patch("")).contains("https://nghttp2.org/httpbin/patch");
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.patch("some text")).isEqualTo("foo");
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("PATCH")
+        .hasPath("/patch")
+        .hasBody("some text");
   }
 
   @Override
   @Test
   public void noResponseBodyForPatch() {
+    server.enqueue(new MockResponse());
+
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    assertThat(api.patch()).contains("https://nghttp2.org/httpbin/patch");
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.patch()).isEmpty();
+
+    MockWebServerAssertions.assertThat(takeRequest()).hasMethod("PATCH").hasPath("/patch");
+  }
+
+  private RecordedRequest takeRequest() {
+    try {
+      return server.takeRequest();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
@@ -150,21 +176,61 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  void getWithRequestBody() throws JSONException {
-    final TestInterface api =
-        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    String result = api.getWithBody();
-    String expected = "{ \"data\":\"some request body\" }";
-    JSONAssert.assertEquals(expected, result, false);
+  void getWithRequestBody() throws Exception {
+    // MockWebServer rejects GET requests carrying a body ("Request must not have a body"),
+    // so this test runs against a minimal local socket server instead.
+    try (ServerSocket httpServer = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
+      final AtomicReference<String> receivedRequest = new AtomicReference<>();
+      final Thread serverThread =
+          new Thread(
+              () -> {
+                try (Socket socket = httpServer.accept()) {
+                  socket.setSoTimeout(5000);
+                  final InputStream in = socket.getInputStream();
+                  final StringBuilder request = new StringBuilder();
+                  final byte[] buffer = new byte[8192];
+                  while (!request.toString().contains("some request body")) {
+                    final int read = in.read(buffer);
+                    if (read == -1) {
+                      break;
+                    }
+                    request.append(new String(buffer, 0, read, UTF_8));
+                  }
+                  receivedRequest.set(request.toString());
+                  socket
+                      .getOutputStream()
+                      .write("HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nfoo".getBytes(UTF_8));
+                } catch (IOException e) {
+                  throw new UncheckedIOException(e);
+                }
+              });
+      serverThread.start();
+
+      final TestInterface api =
+          newBuilder().target(TestInterface.class, "http://localhost:" + httpServer.getLocalPort());
+
+      assertThat(api.getWithBody()).isEqualTo("foo");
+
+      serverThread.join(5000);
+      assertThat(receivedRequest.get())
+          .startsWith("GET /anything HTTP/1.1")
+          .contains("some request body");
+    }
   }
 
   @Test
-  void deleteWithRequestBody() throws JSONException {
+  void deleteWithRequestBody() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
-    String result = api.deleteWithBody();
-    String expected = "{ \"data\":\"some request body\" }";
-    JSONAssert.assertEquals(expected, result, false);
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.deleteWithBody()).isEqualTo("foo");
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("DELETE")
+        .hasPath("/anything")
+        .hasBody("some request body");
   }
 
   @Override
