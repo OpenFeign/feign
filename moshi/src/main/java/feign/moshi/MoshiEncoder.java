@@ -17,7 +17,6 @@ package feign.moshi;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
@@ -42,6 +41,6 @@ public class MoshiEncoder implements Encoder, JsonEncoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     JsonAdapter<Object> jsonAdapter = moshi.adapter(bodyType).indent("  ");
-    template.body(Request.Body.of(jsonAdapter.toJson(object)));
+    template.body(jsonAdapter.toJson(object));
   }
 }

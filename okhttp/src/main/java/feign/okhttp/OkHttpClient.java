@@ -29,15 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okio.BufferedSink;
+import okhttp3.*;
 
 /**
  * This module directs Feign's http requests to
@@ -75,6 +67,9 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
         requestBuilder.addHeader(field, value);
         if (field.equalsIgnoreCase("Content-Type")) {
           mediaType = MediaType.parse(value);
+          if (input.charset() != null) {
+            mediaType.charset(input.charset());
+          }
         }
       }
     }
@@ -83,40 +78,19 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
       requestBuilder.addHeader("Accept", "*/*");
     }
 
-    RequestBody body = input.httpMethod().isWithBody() ? toRequestBody(input, mediaType) : null;
+    byte[] inputBody = input.body();
+    if (input.httpMethod().isWithBody()) {
+      requestBuilder.removeHeader("Content-Type");
+      if (inputBody == null) {
+        // write an empty BODY to conform with okhttp 2.4.0+
+        // http://johnfeng.github.io/blog/2015/06/30/okhttp-updates-post-wouldnt-be-allowed-to-have-null-body/
+        inputBody = new byte[0];
+      }
+    }
+
+    RequestBody body = inputBody != null ? RequestBody.create(mediaType, inputBody) : null;
     requestBuilder.method(input.httpMethod().name(), body);
     return requestBuilder.build();
-  }
-
-  static RequestBody toRequestBody(feign.Request request, MediaType mediaType) {
-    return request
-        .body()
-        .map(body -> toRequestBody(body, mediaType))
-        .orElseGet(() -> RequestBody.create(new byte[0], mediaType));
-  }
-
-  static RequestBody toRequestBody(feign.Request.Body body, MediaType mediaType) {
-    return new RequestBody() {
-      @Override
-      public MediaType contentType() {
-        return mediaType;
-      }
-
-      @Override
-      public long contentLength() {
-        return body.contentLength();
-      }
-
-      @Override
-      public boolean isOneShot() {
-        return !body.isRepeatable();
-      }
-
-      @Override
-      public void writeTo(BufferedSink sink) throws IOException {
-        body.writeTo(sink.outputStream());
-      }
-    };
   }
 
   private static feign.Response toFeignResponse(Response response, feign.Request request)

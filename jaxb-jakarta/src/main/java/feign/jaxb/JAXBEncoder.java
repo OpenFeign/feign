@@ -15,7 +15,6 @@
  */
 package feign.jaxb;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -61,7 +60,7 @@ public class JAXBEncoder implements Encoder {
       Marshaller marshaller = jaxbContextFactory.createMarshaller((Class<?>) bodyType);
       StringWriter stringWriter = new StringWriter();
       marshaller.marshal(object, stringWriter);
-      template.body(Request.Body.of(stringWriter.toString()));
+      template.body(stringWriter.toString());
     } catch (JAXBException e) {
       throw new EncodeException(e.toString(), e);
     }

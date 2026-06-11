@@ -15,11 +15,9 @@
  */
 package feign.assertj;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static feign.Util.UTF_8;
 
-import feign.Request;
 import feign.RequestTemplate;
-import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.internal.ByteArrays;
@@ -60,8 +58,7 @@ public final class RequestTemplateAssert
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
-    objects.assertEqual(
-        info, actual.requestBody().map(this::bodyAsUtf8String).orElse(null), utf8Expected);
+    objects.assertEqual(info, new String(actual.body(), UTF_8), utf8Expected);
     return this;
   }
 
@@ -70,13 +67,13 @@ public final class RequestTemplateAssert
     if (actual.bodyTemplate() != null) {
       failWithMessage("\nExpecting bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
     }
-    arrays.assertContains(info, actual.requestBody().map(this::bodyAsBytes).orElse(null), expected);
+    arrays.assertContains(info, actual.body(), expected);
     return this;
   }
 
   public RequestTemplateAssert hasBodyTemplate(String expected) {
     isNotNull();
-    if (actual.requestBody().isPresent()) {
+    if (actual.body() != null) {
       failWithMessage("\nExpecting body to be null, but was:<%s>", actual.bodyTemplate());
     }
     objects.assertEqual(info, actual.bodyTemplate(), expected);
@@ -102,24 +99,17 @@ public final class RequestTemplateAssert
 
   public RequestTemplateAssert noRequestBody() {
     isNotNull();
-    if (actual.requestBody().isPresent()) {
+    if (actual.body() != null) {
       if (actual.bodyTemplate() != null) {
         failWithMessage(
             "\nExpecting requestBody.bodyTemplate to be null, but was:<%s>", actual.bodyTemplate());
       }
-      if (actual.requestBody().isPresent()) {
+      if (actual.body() != null) {
         failWithMessage(
-            "\nExpecting requestBody.data to be null, but was:<%s>", actual.requestBody().get());
+            "\nExpecting requestBody.data to be null, but was:<%s>",
+            new String(actual.body(), actual.requestCharset()));
       }
     }
     return this;
-  }
-
-  private String bodyAsUtf8String(Request.Body body) {
-    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
-  }
-
-  private byte[] bodyAsBytes(Request.Body body) {
-    return assertDoesNotThrow(body::writeToByteArray);
   }
 }

@@ -17,13 +17,14 @@ package feign.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -198,7 +199,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -221,7 +223,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("<foo/>", UTF_8)
             .build();
@@ -269,9 +272,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(template.requestBody().map(this::bodyAsBytes).orElse(null))
+            .body(template.body())
             .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
@@ -284,7 +288,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat(
@@ -307,7 +312,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -335,7 +341,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -385,10 +392,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
             <?xml version="1.0" encoding="UTF-8"\
              standalone="yes"?><mockIntObject/>\
             """);
-  }
-
-  private byte[] bodyAsBytes(Request.Body body) {
-    return assertDoesNotThrow(body::writeToByteArray);
   }
 
   @XmlRootElement

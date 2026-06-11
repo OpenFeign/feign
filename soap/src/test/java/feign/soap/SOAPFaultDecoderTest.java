@@ -23,6 +23,7 @@ import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
+import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -42,7 +43,8 @@ class SOAPFaultDecoderTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(getResourceBytes("/samples/SOAP_1_2_FAULT.xml"))
             .build();
@@ -63,7 +65,8 @@ class SOAPFaultDecoderTest {
         Response.builder()
             .status(400)
             .reason("BAD REQUEST")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(getResourceBytes("/samples/SOAP_1_1_FAULT.xml"))
             .build();
@@ -80,7 +83,8 @@ class SOAPFaultDecoderTest {
         Response.builder()
             .status(503)
             .reason("Service Unavailable")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body("Service Unavailable", UTF_8)
             .build();
@@ -111,7 +115,8 @@ class SOAPFaultDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal Server Error")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(responseBody, UTF_8)
             .build();

@@ -16,7 +16,6 @@
 package feign.graphql;
 
 import feign.Experimental;
-import feign.Request;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
@@ -112,14 +111,14 @@ public class GraphqlDecoder implements Decoder {
       }
     }
 
-    if (response.request() != null && response.request().body().isPresent()) {
+    if (response.request() != null && response.request().body() != null) {
       try {
         var fakeResponse =
             Response.builder()
                 .status(200)
                 .headers(Collections.emptyMap())
                 .request(response.request())
-                .body(bodyAsByteArray(response.request()))
+                .body(response.request().body())
                 .build();
         var requestBody = (Map<String, Object>) jsonDecoder.decode(fakeResponse, Map.class);
         if (requestBody != null) {
@@ -134,12 +133,6 @@ public class GraphqlDecoder implements Decoder {
     }
 
     return "unknown";
-  }
-
-  private byte[] bodyAsByteArray(Request request) throws IOException {
-    var body = request.body();
-
-    return body.isPresent() ? body.get().writeToByteArray() : null;
   }
 
   private boolean isOptionalType(Type type) {

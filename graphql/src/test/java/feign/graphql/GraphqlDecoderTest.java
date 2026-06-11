@@ -332,7 +332,11 @@ class GraphqlDecoderTest {
 
   private Request buildRequest() {
     return Request.create(
-        HttpMethod.POST, "http://localhost/graphql", Collections.emptyMap(), null, null);
+        HttpMethod.POST,
+        "http://localhost/graphql",
+        Collections.emptyMap(),
+        Request.Body.empty(),
+        null);
   }
 
   private static ParameterizedType optionalOf(Type inner) {

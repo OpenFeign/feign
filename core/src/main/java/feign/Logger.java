@@ -78,18 +78,16 @@ public abstract class Logger {
         }
       }
 
-      long bodyLength =
-          request
-              .body()
-              .map(
-                  body -> {
-                    if (logLevel.ordinal() >= Level.FULL.ordinal()) {
-                      log(configKey, ""); // CRLF
-                      log(configKey, "%s", body.toString());
-                    }
-                    return body.contentLength();
-                  })
-              .orElse(0L);
+      int bodyLength = 0;
+      if (request.body() != null) {
+        bodyLength = request.length();
+        if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+          String bodyText =
+              request.charset() != null ? new String(request.body(), request.charset()) : null;
+          log(configKey, ""); // CRLF
+          log(configKey, "%s", bodyText != null ? bodyText : "Binary data");
+        }
+      }
       log(configKey, "---> END HTTP (%s-byte body)", bodyLength);
     }
   }

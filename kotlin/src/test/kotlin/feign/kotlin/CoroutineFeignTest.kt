@@ -19,7 +19,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonIOException
 import feign.Param
 import feign.QueryMapEncoder
-import feign.Request
 import feign.RequestInterceptor
 import feign.RequestLine
 import feign.Response
@@ -178,9 +177,9 @@ class CoroutineFeignTest {
         private val delegate = CoroutineFeign.builder<Void>()
             .decoder(DefaultDecoder()).encoder { `object`, bodyType, template ->
                 if (`object` is Map<*, *>) {
-                    template.body(Request.Body.of(Gson().toJson(`object`)))
+                    template.body(Gson().toJson(`object`))
                 } else {
-                    template.body(Request.Body.of(`object`.toString()))
+                    template.body(`object`.toString())
                 }
             }
 

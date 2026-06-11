@@ -33,7 +33,7 @@ class RetryableExceptionTest {
     // given
     Long retryAfter = 5000L;
     Request request =
-        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, null);
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
     byte[] response = "response".getBytes(StandardCharsets.UTF_8);
     Map<String, Collection<String>> responseHeader = new HashMap<>();
     responseHeader.put("TEST_HEADER", Arrays.asList("TEST_CONTENT"));
@@ -56,7 +56,7 @@ class RetryableExceptionTest {
     Long retryAfter = 5000L;
     String methodKey = "TestClient#testMethod()";
     Request request =
-        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, null);
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
     Throwable cause = new RuntimeException("test cause");
 
     // when
@@ -81,7 +81,7 @@ class RetryableExceptionTest {
   void methodKeyIsNullWhenNotProvided() {
     // given
     Request request =
-        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, null);
+        Request.create(Request.HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8);
 
     // when
     RetryableException retryableException =

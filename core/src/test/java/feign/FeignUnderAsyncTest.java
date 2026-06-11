@@ -17,6 +17,7 @@ package feign;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -492,7 +493,7 @@ public class FeignUnderAsyncTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEmpty();
+      assertThat(e.contentUTF8()).isEqualTo("Request body");
     }
   }
 
@@ -526,7 +527,7 @@ public class FeignUnderAsyncTest {
             .status(302)
             .reason("Found")
             .headers(headers)
-            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, null))
+            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 
@@ -721,7 +722,7 @@ public class FeignUnderAsyncTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(new HashMap<>())
         .build();
   }
@@ -963,9 +964,9 @@ public class FeignUnderAsyncTest {
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {
-                    template.body(Request.Body.of(new Gson().toJson(object)));
+                    template.body(new Gson().toJson(object));
                   } else {
-                    template.body(Request.Body.of(object.toString()));
+                    template.body(object.toString());
                   }
                 });
 

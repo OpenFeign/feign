@@ -17,7 +17,6 @@ package feign.jackson.jr;
 
 import com.fasterxml.jackson.jr.ob.JSON;
 import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -54,9 +53,9 @@ public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       if (bodyType == byte[].class) {
-        template.body(Request.Body.of(mapper.asBytes(object)));
+        template.body(mapper.asBytes(object), null);
       } else {
-        template.body(Request.Body.of(mapper.asString(object)));
+        template.body(mapper.asString(object));
       }
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);

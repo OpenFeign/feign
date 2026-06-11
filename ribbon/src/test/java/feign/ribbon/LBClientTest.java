@@ -22,6 +22,7 @@ import feign.Request.HttpMethod;
 import feign.ribbon.LBClient.RibbonRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,7 +48,8 @@ class LBClientTest {
     URI uri = new URI(urlWithEncodedJson);
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     // create a Request for recreating another Request by toRequest()
-    Request requestOrigin = Request.create(method, uri.toASCIIString(), headers, null, null);
+    Request requestOrigin =
+        Request.create(method, uri.toASCIIString(), headers, null, Charset.forName("utf-8"));
     RibbonRequest ribbonRequest = new RibbonRequest(null, requestOrigin, uri);
 
     // use toRequest() recreate a Request

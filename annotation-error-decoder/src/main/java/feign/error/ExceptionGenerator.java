@@ -45,7 +45,9 @@ class ExceptionGenerator {
             .status(500)
             .body((Response.Body) null)
             .headers(testHeaders)
-            .request(Request.create(Request.HttpMethod.GET, "http://test", testHeaders, null, null))
+            .request(
+                Request.create(
+                    Request.HttpMethod.GET, "http://test", testHeaders, Request.Body.empty(), null))
             .build();
   }
 
