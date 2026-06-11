@@ -17,45 +17,24 @@ package feign.hc5;
 
 import static feign.Util.enumForName;
 
-import feign.AsyncClient;
-import feign.Request;
+import feign.*;
 import feign.Request.Options;
-import feign.Response;
-import feign.Util;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
-import org.apache.hc.client5.http.async.methods.SimpleResponseConsumer;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.entity.GzipCompressingEntity;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
 import org.apache.hc.core5.concurrent.FutureCallback;
-import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.NameValuePair;
-import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
-import org.apache.hc.core5.http.nio.support.classic.ClassicToAsyncRequestProducer;
 import org.apache.hc.core5.io.CloseMode;
-import org.apache.hc.core5.net.URIBuilder;
-import org.apache.hc.core5.net.URLEncodedUtils;
-import org.apache.hc.core5.util.Timeout;
 
 /**
  * This module directs Feign's http requests to Apache's
@@ -71,34 +50,14 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private static final String ACCEPT_HEADER_NAME = "Accept";
 
-  /**
-   * Dedicated default executor for the blocking body-writing bridge. Avoids starving the JVM-wide
-   * {@link java.util.concurrent.ForkJoinPool#commonPool()} when a thread is pinned per in-flight
-   * request.
-   */
-  private static final Executor DEFAULT_EXECUTOR =
-      Executors.newCachedThreadPool(
-          runnable -> {
-            Thread thread = new Thread(runnable, "feign-hc5-async-body-writer");
-            thread.setDaemon(true);
-            return thread;
-          });
-
   private final CloseableHttpAsyncClient client;
-
-  private final Executor executor;
 
   public AsyncApacheHttp5Client() {
     this(createStartedClient());
   }
 
   public AsyncApacheHttp5Client(CloseableHttpAsyncClient client) {
-    this(client, DEFAULT_EXECUTOR);
-  }
-
-  public AsyncApacheHttp5Client(CloseableHttpAsyncClient client, Executor executor) {
-    this.client = Objects.requireNonNull(client, "client must not be null");
-    this.executor = Objects.requireNonNull(executor, "executor must not be null");
+    this.client = client;
   }
 
   private static CloseableHttpAsyncClient createStartedClient() {
@@ -110,15 +69,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
   @Override
   public CompletableFuture<Response> execute(
       Request request, Options options, Optional<HttpClientContext> requestContext) {
-    ClassicHttpRequest httpUriRequest;
-    try {
-      httpUriRequest = toClassicHttpRequest(request, options);
-    } catch (final URISyntaxException e) {
-      CompletableFuture<Response> failedFuture = new CompletableFuture<>();
-      failedFuture.completeExceptionally(
-          new IOException("URL '" + request.url() + "' couldn't be parsed into a URI", e));
-      return failedFuture;
-    }
+    final SimpleHttpRequest httpUriRequest = toClassicHttpRequest(request, options);
 
     final CompletableFuture<Response> result = new CompletableFuture<>();
     final FutureCallback<SimpleHttpResponse> callback =
@@ -139,24 +90,11 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
             result.cancel(false);
           }
         };
-    final ClassicToAsyncRequestProducer requestProducer =
-        new ClassicToAsyncRequestProducer(
-            httpUriRequest, Timeout.of(options.connectTimeout(), options.connectTimeoutUnit()));
 
     client.execute(
-        requestProducer,
-        SimpleResponseConsumer.create(),
+        httpUriRequest,
         configureTimeoutsAndRedirection(options, requestContext.orElseGet(HttpClientContext::new)),
         callback);
-
-    executor.execute(
-        () -> {
-          try {
-            requestProducer.blockWaiting().execute();
-          } catch (IOException | InterruptedException e) {
-            result.completeExceptionally(e);
-          }
-        });
 
     return result;
   }
@@ -176,20 +114,9 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     return context;
   }
 
-  ClassicHttpRequest toClassicHttpRequest(Request request, Request.Options options)
-      throws URISyntaxException {
-    final ClassicRequestBuilder requestBuilder =
-        ClassicRequestBuilder.create(request.httpMethod().name());
-
-    final URI uri = new URIBuilder(request.url()).build();
-
-    requestBuilder.setUri(uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath());
-
-    // request query params
-    final List<NameValuePair> queryParams = URLEncodedUtils.parse(uri, requestBuilder.getCharset());
-    for (final NameValuePair queryParam : queryParams) {
-      requestBuilder.addParameter(queryParam);
-    }
+  SimpleHttpRequest toClassicHttpRequest(Request request, Request.Options options) {
+    final SimpleHttpRequest httpRequest =
+        new SimpleHttpRequest(request.httpMethod().name(), request.url());
 
     // request headers
     boolean hasAcceptHeader = false;
@@ -215,27 +142,34 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
               "Deflate Content-Encoding is not supported by feign-hc5");
         }
       }
+
       for (final String headerValue : headerEntry.getValue()) {
-        requestBuilder.addHeader(headerName, headerValue);
+        httpRequest.addHeader(headerName, headerValue);
       }
     }
     // some servers choke on the default accept string, so we'll set it to anything
     if (!hasAcceptHeader) {
-      requestBuilder.addHeader(ACCEPT_HEADER_NAME, "*/*");
+      httpRequest.addHeader(ACCEPT_HEADER_NAME, "*/*");
     }
 
     // request body
-    if (request.body().isPresent()) {
-      HttpEntity entity = new FeignBodyEntity(request.body().get(), getContentType(request));
-      if (isGzip) {
-        entity = new GzipCompressingEntity(entity);
+    // final Body requestBody = request.requestBody();
+    byte[] data = request.body();
+    if (isGzip && data != null && data.length > 0) {
+      // compress if needed
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          GZIPOutputStream gzipOs = new GZIPOutputStream(baos, true)) {
+        gzipOs.write(data);
+        gzipOs.flush();
+        data = baos.toByteArray();
+      } catch (IOException suppressed) { // NOPMD
       }
-      requestBuilder.setEntity(entity);
-    } else {
-      requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
+    }
+    if (data != null) {
+      httpRequest.setBody(data, getContentType(request));
     }
 
-    return requestBuilder.build();
+    return httpRequest;
   }
 
   private ContentType getContentType(Request request) {
@@ -245,6 +179,9 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         final Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           contentType = ContentType.parse(values.iterator().next());
+          if (contentType.getCharset() == null) {
+            contentType = contentType.withCharset(request.charset());
+          }
           break;
         }
       }

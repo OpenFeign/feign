@@ -27,6 +27,7 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +66,8 @@ class GsonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body("{\"foo\": 1}", UTF_8)
             .build();
@@ -129,7 +131,8 @@ class GsonCodecTest {
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
     assertThat(new GsonDecoder().decode(response, new TypeToken<List<Zone>>() {}.getType()))
@@ -143,7 +146,8 @@ class GsonCodecTest {
             .status(204)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .build();
     assertThat(new GsonDecoder().decode(response, String.class)).isNull();
   }
@@ -155,7 +159,8 @@ class GsonCodecTest {
             .status(204)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
     assertThat(new GsonDecoder().decode(response, String.class)).isNull();
@@ -211,7 +216,8 @@ class GsonCodecTest {
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .body(zonesJson, UTF_8)
             .build();
     assertThat(decoder.decode(response, new TypeToken<List<Zone>>() {}.getType())).isEqualTo(zones);
@@ -250,7 +256,8 @@ class GsonCodecTest {
             .status(404)
             .reason("NOT FOUND")
             .headers(Collections.emptyMap())
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .build();
     assertThat((byte[]) new GsonDecoder().decode(response, byte[].class)).isEmpty();
   }

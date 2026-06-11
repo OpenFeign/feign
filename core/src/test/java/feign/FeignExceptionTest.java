@@ -39,7 +39,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_8)),
+            "data".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
             null);
 
     Response response =
@@ -51,7 +52,7 @@ class FeignExceptionTest {
 
     FeignException exception =
         FeignException.errorReading(request, response, new IOException("socket closed"));
-    assertThat(exception.responseBody()).isEmpty();
+    assertThat(exception.responseBody()).isNotEmpty();
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
   }
@@ -63,12 +64,14 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_8)),
+            "data".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
             null);
 
     FeignException exception =
         FeignException.errorExecuting(request, new IOException("connection timeout"));
     assertThat(exception.responseBody()).isEmpty();
+    assertThat(exception.content()).isNullOrEmpty();
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
   }
@@ -87,7 +90,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_16BE)),
+            "data".getBytes(StandardCharsets.UTF_16BE),
+            StandardCharsets.UTF_16BE,
             null);
 
     Response response =
@@ -123,7 +127,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_16BE)),
+            "data".getBytes(StandardCharsets.UTF_16BE),
+            StandardCharsets.UTF_16BE,
             null);
 
     Response response =
@@ -153,7 +158,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_16BE)),
+            "data".getBytes(StandardCharsets.UTF_16BE),
+            StandardCharsets.UTF_16BE,
             null);
 
     Response response =
@@ -176,7 +182,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_8)),
+            "data".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
             null);
 
     Map<String, Collection<String>> responseHeaders = new HashMap<>();
@@ -234,7 +241,8 @@ class FeignExceptionTest {
             Request.HttpMethod.GET,
             "/home",
             Collections.emptyMap(),
-            Request.Body.of("data".getBytes(StandardCharsets.UTF_8)),
+            "data".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
             null);
 
     Response response =
@@ -265,12 +273,7 @@ class FeignExceptionTest {
         NullPointerException.class,
         () ->
             new Derived(
-                404,
-                "message",
-                null,
-                new Throwable(),
-                "content".getBytes(StandardCharsets.UTF_8),
-                Collections.emptyMap()));
+                404, "message", null, new Throwable(), new byte[1], Collections.emptyMap()));
   }
 
   @Test
@@ -282,13 +285,7 @@ class FeignExceptionTest {
   void nullRequestShouldThrowNPEwBytes() {
     assertThrows(
         NullPointerException.class,
-        () ->
-            new Derived(
-                404,
-                "message",
-                null,
-                "content".getBytes(StandardCharsets.UTF_8),
-                Collections.emptyMap()));
+        () -> new Derived(404, "message", null, new byte[1], Collections.emptyMap()));
   }
 
   static class Derived extends FeignException {

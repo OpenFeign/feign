@@ -17,13 +17,14 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
+import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -253,7 +254,8 @@ class SOAPCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -288,7 +290,8 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -325,7 +328,8 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -349,7 +353,8 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(
                 """
@@ -399,9 +404,10 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
-            .body(template.requestBody().map(this::bodyAsBytes).orElse(null))
+            .body(template.body())
             .build();
 
     new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
@@ -414,7 +420,8 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .build();
     assertThat(
@@ -457,10 +464,6 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             + "</env:Body>"
             + "</env:Envelope>";
     assertThat(template).hasBody(soapEnvelop);
-  }
-
-  private byte[] bodyAsBytes(Request.Body body) {
-    return assertDoesNotThrow(body::writeToByteArray);
   }
 
   @XmlRootElement

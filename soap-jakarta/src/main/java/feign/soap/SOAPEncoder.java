@@ -15,7 +15,6 @@
  */
 package feign.soap;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -33,11 +32,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
@@ -136,7 +131,7 @@ public class SOAPEncoder implements Encoder {
       } else {
         soapMessage.writeTo(bos);
       }
-      template.body(Request.Body.of(bos.toByteArray()));
+      template.body(bos.toString());
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

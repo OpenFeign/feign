@@ -76,7 +76,7 @@ public class DefaultContract extends DeclarativeContract {
               "Body annotation was empty on method %s.",
               data.configKey());
           if (body.indexOf('{') == -1) {
-            data.template().body(Request.Body.of(body));
+            data.template().body(body);
           } else {
             data.template().bodyTemplate(body);
           }

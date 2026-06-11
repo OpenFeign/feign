@@ -17,6 +17,7 @@ package feign;
 
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -91,9 +92,11 @@ public class RequestTemplateTest {
 
   @Test
   void resolveTemplateWithBinaryBody() {
-    byte[] body = new byte[] {7, 3, -3, -7};
     RequestTemplate template =
-        new RequestTemplate().method(HttpMethod.GET).uri("{zoneId}").body(Request.Body.of(body));
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("{zoneId}")
+            .body(new byte[] {7, 3, -3, -7}, null);
     template = template.resolve(mapOf("zoneId", "/hostedzone/Z1PA6795UKMFR9"));
 
     assertThat(template).hasUrl("/hostedzone/Z1PA6795UKMFR9");
@@ -342,11 +345,7 @@ public class RequestTemplateTest {
         .hasHeaders(
             entry(
                 "Content-Length",
-                Collections.singletonList(
-                    template
-                        .requestBody()
-                        .map(body -> String.valueOf(body.contentLength()))
-                        .orElse("0"))));
+                Collections.singletonList(String.valueOf(template.body().length))));
   }
 
   @Test

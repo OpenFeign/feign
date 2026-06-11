@@ -18,7 +18,6 @@ package feign.form;
 import static feign.form.ContentType.MULTIPART;
 import static lombok.AccessLevel.PRIVATE;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -104,7 +103,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
       // so, I set it to null (in spite of availability charset) for backward
       // compatibility.
       val bytes = output.toByteArray();
-      template.body(Request.Body.of(bytes));
+      template.body(bytes, null);
     } catch (IOException ex) {
       throw new EncodeException("Output closing error", ex);
     }

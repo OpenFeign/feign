@@ -15,7 +15,6 @@
  */
 package feign.soap;
 
-import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -136,7 +135,7 @@ public class SOAPEncoder implements Encoder {
       } else {
         soapMessage.writeTo(bos);
       }
-      template.body(Request.Body.of(bos.toByteArray()));
+      template.body(new String(bos.toByteArray()));
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

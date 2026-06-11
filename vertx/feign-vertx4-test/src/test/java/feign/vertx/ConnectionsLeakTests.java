@@ -84,7 +84,6 @@ class ConnectionsLeakTests {
 
     HelloServiceAPI client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(webClient)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
@@ -112,7 +111,6 @@ class ConnectionsLeakTests {
 
     HelloServiceAPI client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(webClient)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())

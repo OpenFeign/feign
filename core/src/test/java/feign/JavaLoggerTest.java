@@ -43,7 +43,8 @@ public class JavaLoggerTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("{\"error\":\"test\"}", Util.UTF_8)
             .build();
@@ -68,7 +69,8 @@ public class JavaLoggerTest {
         Response.builder()
             .status(500)
             .reason("Internal Server Error")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("{\"message\":\"error details\"}", Util.UTF_8)
             .build();
@@ -93,7 +95,8 @@ public class JavaLoggerTest {
             .status(400)
             .reason("Bad Request")
             .request(
-                Request.create(HttpMethod.POST, "/api/submit", Collections.emptyMap(), null, null))
+                Request.create(
+                    HttpMethod.POST, "/api/submit", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body(originalBody, Util.UTF_8)
             .build();

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Feign;
 import feign.Param;
-import feign.Request;
 import feign.RequestLine;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -77,8 +76,7 @@ class BeanValidationMethodInterceptorTest {
 
   private Api api() {
     return Feign.builder()
-        .encoder(
-            (object, bodyType, template) -> template.body(Request.Body.of(String.valueOf(object))))
+        .encoder((object, bodyType, template) -> template.body(String.valueOf(object)))
         .methodInterceptor(BeanValidationMethodInterceptor.usingDefaultFactory())
         .target(Api.class, "http://localhost:" + server.getPort());
   }

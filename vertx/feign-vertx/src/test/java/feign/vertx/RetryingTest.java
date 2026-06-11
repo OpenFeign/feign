@@ -48,7 +48,6 @@ class RetryingTest extends AbstractFeignVertxTest {
   static void createClient(Vertx vertx) {
     client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(WebClient.create(vertx))
             .decoder(new JacksonDecoder(MAPPER))
             .retryer(new DefaultRetryer(100, SECONDS.toMillis(1), 5))

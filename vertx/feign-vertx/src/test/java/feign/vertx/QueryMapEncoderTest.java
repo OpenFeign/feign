@@ -55,7 +55,6 @@ class QueryMapEncoderTest extends AbstractFeignVertxTest {
 
     client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .queryMapEncoder(new CustomQueryMapEncoder())

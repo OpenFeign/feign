@@ -17,7 +17,6 @@ package feign.codec;
 
 import static java.lang.String.format;
 
-import feign.Request;
 import feign.RequestTemplate;
 import java.lang.reflect.Type;
 
@@ -26,9 +25,9 @@ public class DefaultEncoder implements Encoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     if (bodyType == String.class) {
-      template.body(Request.Body.of(object.toString()));
+      template.body(object.toString());
     } else if (bodyType == byte[].class) {
-      template.body(Request.Body.of((byte[]) object));
+      template.body((byte[]) object, null);
     } else if (object != null) {
       throw new EncodeException(
           format("%s is not a type supported by this encoder.", object.getClass()));

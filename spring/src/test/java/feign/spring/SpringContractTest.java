@@ -16,7 +16,6 @@
 package feign.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Feign;
@@ -182,8 +181,7 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(null);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String))
-        .contains("null");
+    assertThat(request.requestTemplate().body()).asString().isEqualTo("null");
   }
 
   @Test
@@ -193,8 +191,7 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(object);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String).orElse(null))
-        .contains("\"name\" : \"hello\"");
+    assertThat(request.requestTemplate().body()).asString().contains("\"name\" : \"hello\"");
   }
 
   @Test
@@ -282,10 +279,6 @@ class SpringContractTest {
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
     assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
     assertThat(request.headers()).containsEntry("Accept", Arrays.asList("text/plain"));
-  }
-
-  private String bodyAsUtf8String(Request.Body body) {
-    return assertDoesNotThrow(() -> body.writeToString(StandardCharsets.UTF_8));
   }
 
   interface GenericResource<DTO> {

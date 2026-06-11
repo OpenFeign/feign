@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
+import feign.Util;
 import feign.codec.DecodeException;
 import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import java.io.ByteArrayInputStream;
@@ -122,7 +123,8 @@ class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
@@ -148,7 +150,8 @@ class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(inputStream, jsonBytes.length)
             .build();
@@ -178,7 +181,8 @@ class JacksonIteratorTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
             .headers(Collections.emptyMap())
             .body(json, UTF_8)
             .build();

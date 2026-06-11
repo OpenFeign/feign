@@ -50,15 +50,13 @@ public class MeteredEncoder implements Encoder {
       encoder.encode(object, bodyType, template);
     }
 
-    template
-        .requestBody()
-        .ifPresent(
-            body ->
-                metricRegistry
-                    .histogram(
-                        metricName.metricName(
-                            template.methodMetadata(), template.feignTarget(), "request_size"),
-                        metricSuppliers.histograms())
-                    .update(body.contentLength()));
+    if (template.body() != null) {
+      metricRegistry
+          .histogram(
+              metricName.metricName(
+                  template.methodMetadata(), template.feignTarget(), "request_size"),
+              metricSuppliers.histograms())
+          .update(template.body().length);
+    }
   }
 }
