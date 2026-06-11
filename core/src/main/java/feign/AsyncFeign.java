@@ -56,23 +56,28 @@ public final class AsyncFeign<C> {
     return builder();
   }
 
-  private static class LazyInitializedExecutorService {
-
-    private static final ExecutorService instance =
-        Executors.newCachedThreadPool(
-            r -> {
-              final Thread result = new Thread(r);
-              result.setDaemon(true);
-              return result;
-            });
+  /**
+   * Creates the default {@link ExecutorService} used when neither a custom {@link AsyncClient} nor
+   * a custom executor is provided. The executor is created per built client (instance scoped)
+   * rather than being held in a static singleton, so that it - together with its daemon threads -
+   * becomes eligible for garbage collection once the owning client is discarded. This avoids the
+   * {@code ClassLoader} leak that a static singleton causes on application redeployments inside
+   * servlet containers (see gh-3178).
+   */
+  private static ExecutorService defaultExecutorService() {
+    return Executors.newCachedThreadPool(
+        r -> {
+          final Thread result = new Thread(r);
+          result.setDaemon(true);
+          return result;
+        });
   }
 
   public static class AsyncBuilder<C> extends BaseBuilder<AsyncBuilder<C>, AsyncFeign<C>> {
 
     private AsyncContextSupplier<C> defaultContextSupplier = () -> null;
-    private AsyncClient<C> client =
-        new DefaultAsyncClient<>(
-            new DefaultClient(null, null), LazyInitializedExecutorService.instance);
+    private AsyncClient<C> client;
+    private ExecutorService executorService;
     private MethodInfoResolver methodInfoResolver = MethodInfo::new;
 
     @Deprecated
@@ -84,6 +89,28 @@ public final class AsyncFeign<C> {
     public AsyncBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
       return this;
+    }
+
+    /**
+     * Sets the {@link ExecutorService} used by the default {@link AsyncClient} to run the
+     * (blocking) underlying client calls. When provided, the caller owns the executor's lifecycle
+     * and is responsible for shutting it down. This is the recommended way to avoid the {@code
+     * ClassLoader} leak described in gh-3178: supply a managed, shut-downable executor instead of
+     * relying on the built-in default. Ignored when a custom {@link #client(AsyncClient)} is
+     * supplied.
+     */
+    public AsyncBuilder<C> executorService(ExecutorService executorService) {
+      this.executorService = executorService;
+      return this;
+    }
+
+    private AsyncClient<C> resolveClient() {
+      if (client != null) {
+        return client;
+      }
+      final ExecutorService executor =
+          executorService != null ? executorService : defaultExecutorService();
+      return new DefaultAsyncClient<>(new DefaultClient(null, null), executor);
     }
 
     public AsyncBuilder<C> methodInfoResolver(MethodInfoResolver methodInfoResolver) {
@@ -206,6 +233,7 @@ public final class AsyncFeign<C> {
 
     @Override
     public AsyncFeign<C> internalBuild() {
+      final AsyncClient<C> client = resolveClient();
       AsyncResponseHandler responseHandler =
           (AsyncResponseHandler)
               Capability.enrich(
