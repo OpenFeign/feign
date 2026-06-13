@@ -120,14 +120,14 @@ public interface ErrorDecoder {
       if (retryAfter == null) {
         return null;
       }
-      if (retryAfter.matches("^[0-9]+\\.?0*$")) {
-        retryAfter = retryAfter.replaceAll("\\.0*$", "");
-        long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
-        return currentTimeMillis() + deltaMillis;
-      }
       try {
+        if (retryAfter.matches("^[0-9]+\\.?0*$")) {
+          retryAfter = retryAfter.replaceAll("\\.0*$", "");
+          long deltaMillis = SECONDS.toMillis(Long.parseLong(retryAfter));
+          return currentTimeMillis() + deltaMillis;
+        }
         return ZonedDateTime.parse(retryAfter, dateTimeFormatter).toInstant().toEpochMilli();
-      } catch (NullPointerException | DateTimeParseException ignored) {
+      } catch (NumberFormatException | NullPointerException | DateTimeParseException ignored) {
         return null;
       }
     }

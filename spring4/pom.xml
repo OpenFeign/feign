@@ -36,10 +36,6 @@
     </relocation>
   </distributionManagement>
 
-  <properties>
-    <spring.version>4.3.30.RELEASE</spring.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.github.openfeign</groupId>
