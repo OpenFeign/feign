@@ -34,7 +34,7 @@ public class GraphqlRequestInterceptor implements RequestInterceptor {
 
   @Override
   public void apply(RequestTemplate template) {
-    if (template.requestBody().isPresent()) {
+    if (template.body() != null) {
       return;
     }
 

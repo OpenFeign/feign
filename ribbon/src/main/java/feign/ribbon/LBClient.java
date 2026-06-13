@@ -122,18 +122,15 @@ public final class LBClient
 
     @SuppressWarnings("deprecation")
     Request toRequest() {
+      // add header "Content-Length" according to the request body
+      final byte[] body = request.body();
+      final int bodyLength = body != null ? body.length : 0;
       // create a new Map to avoid side effect, not to change the old headers
       Map<String, Collection<String>> headers = new LinkedHashMap<String, Collection<String>>();
       headers.putAll(request.headers());
-      String contentLength =
-          request.body().map(body -> String.valueOf(body.contentLength())).orElse("0");
-      headers.put(Util.CONTENT_LENGTH, Collections.singletonList(contentLength));
+      headers.put(Util.CONTENT_LENGTH, Collections.singletonList(String.valueOf(bodyLength)));
       return Request.create(
-          request.httpMethod(),
-          getUri().toASCIIString(),
-          headers,
-          request.body().orElse(null),
-          null);
+          request.httpMethod(), getUri().toASCIIString(), headers, body, request.charset());
     }
 
     Client client() {

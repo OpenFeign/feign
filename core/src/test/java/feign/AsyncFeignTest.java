@@ -18,11 +18,16 @@ package feign;
 import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -101,6 +106,39 @@ public class AsyncFeignTest {
         .hasBody(
             "{\"customer_name\": \"netflix\", \"user_name\": \"denominator\", \"password\":"
                 + " \"password\"}");
+  }
+
+  @Test
+  void usesProvidedExecutorService() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    ExecutorService executorService = spy(Executors.newCachedThreadPool());
+    try {
+      TestInterfaceAsync api =
+          AsyncFeign.<Void>builder()
+              .decoder(new DefaultDecoder())
+              .executorService(executorService)
+              .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+      String result = api.post().join();
+
+      assertThat(result).isEqualTo("foo");
+      verify(executorService, atLeastOnce()).submit(any(Runnable.class));
+    } finally {
+      executorService.shutdownNow();
+    }
+  }
+
+  @Test
+  void defaultExecutorServiceStillExecutesRequests() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    TestInterfaceAsync api =
+        AsyncFeign.<Void>builder()
+            .decoder(new DefaultDecoder())
+            .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.post().join()).isEqualTo("foo");
   }
 
   @Test
@@ -583,7 +621,7 @@ public class AsyncFeignTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .contains("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEmpty();
+      assertThat(e.contentUTF8()).isEqualTo("Request body");
       return;
     }
     fail("");
@@ -698,7 +736,7 @@ public class AsyncFeignTest {
             .status(302)
             .reason("Found")
             .headers(headers)
-            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, null))
+            .request(Request.create(HttpMethod.GET, "/", Collections.emptyMap(), null, Util.UTF_8))
             .body(new byte[0])
             .build();
 
@@ -969,7 +1007,7 @@ public class AsyncFeignTest {
     return Response.builder()
         .body(text, Util.UTF_8)
         .status(200)
-        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
         .headers(new HashMap<>())
         .build();
   }
@@ -1226,9 +1264,9 @@ public class AsyncFeignTest {
             .encoder(
                 (object, _, template) -> {
                   if (object instanceof Map) {
-                    template.body(Request.Body.of(new Gson().toJson(object)));
+                    template.body(new Gson().toJson(object));
                   } else {
-                    template.body(Request.Body.of(object.toString()));
+                    template.body(object.toString());
                   }
                 });
 

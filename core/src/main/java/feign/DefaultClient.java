@@ -32,7 +32,6 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
@@ -188,9 +187,9 @@ public class DefaultClient implements Client {
       connection.addRequestProperty("Accept", "*/*");
     }
 
-    Optional<Request.Body> body = request.body();
+    byte[] body = request.body();
 
-    if (body.isPresent()) {
+    if (body != null) {
       /*
        * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
        * retry logic applies to such requests.
@@ -210,7 +209,7 @@ public class DefaultClient implements Client {
         out = new DeflaterOutputStream(out);
       }
       try {
-        body.get().writeTo(out);
+        out.write(body);
       } finally {
         try {
           out.close();
@@ -219,7 +218,7 @@ public class DefaultClient implements Client {
       }
     }
 
-    if (!body.isPresent() && request.httpMethod().isWithBody()) {
+    if (body == null && request.httpMethod().isWithBody()) {
       // To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
       connection.addRequestProperty("Content-Length", "0");
     }

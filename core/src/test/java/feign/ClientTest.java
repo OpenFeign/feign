@@ -61,12 +61,13 @@ class ClientTest {
     headers.put(Util.ACCEPT_ENCODING, acceptEncoding);
 
     RequestTemplate requestTemplate = mock(RequestTemplate.class);
+    Request.Body body = mock(Request.Body.class);
     Request.Options options = mock(Request.Options.class);
     Client client = mock(Client.class);
 
     Request request =
         Request.create(
-            Request.HttpMethod.GET, "http://example.com", headers, null, requestTemplate);
+            Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
     DefaultClient defaultClient = new DefaultClient(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();
@@ -81,12 +82,13 @@ class ClientTest {
     headers.put(Util.CONTENT_LENGTH, Collections.singletonList("100"));
 
     RequestTemplate requestTemplate = mock(RequestTemplate.class);
+    Request.Body body = mock(Request.Body.class);
     Request.Options options = mock(Request.Options.class);
     Client client = mock(Client.class);
 
     Request request =
         Request.create(
-            Request.HttpMethod.GET, "http://example.com", headers, null, requestTemplate);
+            Request.HttpMethod.GET, "http://example.com", headers, body, requestTemplate);
     DefaultClient defaultClient = new DefaultClient(null, null);
     HttpURLConnection urlConnection = defaultClient.convertAndSend(request, options);
     Map<String, List<String>> requestProperties = urlConnection.getRequestProperties();

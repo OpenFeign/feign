@@ -65,7 +65,6 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
 
       client =
           VertxFeign.builder()
-              .vertx(vertx)
               .webClient(webClient)
               .decoder(new JacksonDecoder(TestUtils.MAPPER))
               .logger(new Slf4jLogger())
@@ -218,7 +217,6 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
     void createClient(Vertx vertx) {
       client =
           VertxFeign.builder()
-              .vertx(vertx)
               .webClient(WebClient.create(vertx))
               .encoder(new JacksonEncoder(TestUtils.MAPPER))
               .decoder(new JacksonDecoder(TestUtils.MAPPER))
@@ -309,23 +307,6 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       /* Then */
       assertThatCode(instantiateContractForgottenVertx)
           .isInstanceOf(NullPointerException.class)
-          .hasMessage("Vertx instance wasn't provided in VertxFeign builder");
-    }
-
-    @Test
-    @DisplayName("when Vertx WebClient is not provided")
-    void whenVertxWebClientMissing(Vertx vertx) {
-
-      /* Given */
-      ThrowableAssert.ThrowingCallable instantiateContractForgottenVertx =
-          () ->
-              VertxFeign.builder()
-                  .vertx(vertx)
-                  .target(IcecreamServiceApi.class, wireMock.baseUrl());
-
-      /* Then */
-      assertThatCode(instantiateContractForgottenVertx)
-          .isInstanceOf(NullPointerException.class)
           .hasMessage("Vertx WebClient instance wasn't provided in VertxFeign builder");
     }
 
@@ -337,7 +318,6 @@ public class VertxHttpClientTest extends AbstractFeignVertxTest {
       ThrowableAssert.ThrowingCallable instantiateBrokenContract =
           () ->
               VertxFeign.builder()
-                  .vertx(vertx)
                   .webClient(WebClient.create(vertx))
                   .target(IcecreamServiceApiBroken.class, wireMock.baseUrl());
 

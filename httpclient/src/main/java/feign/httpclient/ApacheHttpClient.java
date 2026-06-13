@@ -24,7 +24,6 @@ import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -41,15 +40,12 @@ import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.Configurable;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.AbstractHttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
@@ -138,49 +134,22 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    HttpEntity entity =
-        request
-            .body()
-            .map(body -> toHttpEntity(body, getContentType(request)))
-            .orElseGet(() -> new ByteArrayEntity(new byte[0]));
+    if (request.body() != null) {
+      HttpEntity entity = null;
+      if (request.charset() != null) {
+        ContentType contentType = getContentType(request);
+        String content = new String(request.body(), request.charset());
+        entity = new StringEntity(content, contentType);
+      } else {
+        entity = new ByteArrayEntity(request.body());
+      }
 
-    requestBuilder.setEntity(entity);
+      requestBuilder.setEntity(entity);
+    } else {
+      requestBuilder.setEntity(new ByteArrayEntity(new byte[0]));
+    }
 
     return requestBuilder.build();
-  }
-
-  private HttpEntity toHttpEntity(Request.Body body, ContentType contentType) {
-    AbstractHttpEntity httpEntity =
-        new AbstractHttpEntity() {
-          @Override
-          public long getContentLength() {
-            return body.contentLength();
-          }
-
-          @Override
-          public InputStream getContent() {
-            throw new UnsupportedOperationException(
-                "Streaming request body does not expose InputStream");
-          }
-
-          @Override
-          public void writeTo(OutputStream outStream) throws IOException {
-            body.writeTo(outStream);
-          }
-
-          @Override
-          public boolean isRepeatable() {
-            return body.isRepeatable();
-          }
-
-          @Override
-          public boolean isStreaming() {
-            return !isRepeatable();
-          }
-        };
-    httpEntity.setContentType(contentType != null ? contentType.toString() : null);
-    httpEntity.setChunked(body.contentLength() < 0);
-    return httpEntity;
   }
 
   private ContentType getContentType(Request request) {
@@ -190,6 +159,9 @@ public final class ApacheHttpClient implements Client {
         Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           contentType = ContentType.parse(values.iterator().next());
+          if (contentType.getCharset() == null) {
+            contentType = contentType.withCharset(request.charset());
+          }
           break;
         }
       }

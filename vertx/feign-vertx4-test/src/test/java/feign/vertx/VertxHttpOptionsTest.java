@@ -64,7 +64,6 @@ class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
     IcecreamServiceApi client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .logger(new Slf4jLogger())
@@ -86,7 +85,6 @@ class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
     IcecreamServiceApi client =
         VertxFeign.builder()
-            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .logger(new Slf4jLogger())

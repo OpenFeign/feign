@@ -17,6 +17,7 @@ package feign.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.Request;
 import feign.codec.DefaultDecoder;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors;
 import feign.error.AnnotationErrorDecoderExceptionConstructorsTest.TestClientInterfaceWithDifferentExceptionConstructors.DeclaredDefaultConstructorException;
@@ -55,7 +56,11 @@ public class AnnotationErrorDecoderExceptionConstructorsTest
   private static final String NON_NULL_BODY = "A GIVEN BODY";
   private static final feign.Request REQUEST =
       feign.Request.create(
-          feign.Request.HttpMethod.GET, "http://test", Collections.emptyMap(), null, null);
+          feign.Request.HttpMethod.GET,
+          "http://test",
+          Collections.emptyMap(),
+          Request.Body.empty(),
+          null);
   private static final feign.Request NO_REQUEST = null;
   private static final Map<String, Collection<String>> NON_NULL_HEADERS = new HashMap<>();
   private static final Map<String, Collection<String>> NO_HEADERS = null;
