@@ -362,6 +362,8 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
         .filter(field -> !Objects.equals(field.getName(), "requestInterceptors"))
         .filter(field -> !Objects.equals(field.getName(), "responseInterceptors"))
         .filter(field -> !Objects.equals(field.getName(), "methodInterceptors"))
+        // caller-owned lifecycle resources are not capability-enriched
+        .filter(field -> !Objects.equals(field.getName(), "executorService"))
         // skip primitive types
         .filter(field -> !field.getType().isPrimitive())
         // skip enumerations

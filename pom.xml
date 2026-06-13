@@ -133,6 +133,7 @@
     <module>validation</module>
     <module>validation-jakarta</module>
     <module>vertx</module>
+    <module>feign-bom</module>
   </modules>
 
   <scm>
@@ -169,11 +170,11 @@
     <gson.version>2.14.0</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.18</slf4j.version>
-    <json.version>20251224</json.version>
+    <json.version>20260522</json.version>
     <springboot.version>4.0.6</springboot.version>
 
-    <junit5.version>6.0.3</junit5.version>
-    <jackson.version>2.21.3</jackson.version>
+    <junit5.version>6.1.0</junit5.version>
+    <jackson.version>2.22.0</jackson.version>
     <jackson3.version>3.1.3</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
@@ -191,7 +192,7 @@
     <maven-bundle-plugin.version>6.0.2</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
     <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
-    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <bom-generator.version>0.300.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.2.1</maven-scm-plugin.version>
@@ -200,14 +201,14 @@
     <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
     <moditect-maven-plugin.version>1.3.0.Final</moditect-maven-plugin.version>
-    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
+    <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.39.0</rewrite-maven-plugin.version>
-    <rewrite-testing-frameworks.version>3.35.3</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.34.1</rewrite-migrate-java.version>
-    <japicmp-maven-plugin.version>0.25.7</japicmp-maven-plugin.version>
+    <rewrite-maven-plugin.version>6.41.0</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.37.0</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.36.0</rewrite-migrate-java.version>
+    <japicmp-maven-plugin.version>0.26.1</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
     <!-- Third-party dependency versions -->
@@ -237,24 +238,24 @@
     <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
     <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
     <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
-    <hibernate-validator-8.version>8.0.1.Final</hibernate-validator-8.version>
+    <hibernate-validator-8.version>9.1.0.Final</hibernate-validator-8.version>
     <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
     <expressly.version>6.0.0</expressly.version>
     <jersey-client.version>1.19.4</jersey-client.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <lombok.version>1.18.46</lombok.version>
     <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
-    <metrics-core-4.version>4.2.38</metrics-core-4.version>
-    <metrics-core-5.version>5.0.6</metrics-core-5.version>
+    <metrics-core-4.version>4.2.39</metrics-core-4.version>
+    <metrics-core-5.version>5.0.7</metrics-core-5.version>
     <org.eclipse.transformer.maven.version>0.2.0</org.eclipse.transformer.maven.version>
     <really-executable-jar-maven-plugin.version>2.1.1</really-executable-jar-maven-plugin.version>
     <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
     <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
-    <spring-cloud-dependencies.version>2025.1.1</spring-cloud-dependencies.version>
-    <spring-cloud-starter-openfeign.version>5.0.1</spring-cloud-starter-openfeign.version>
+    <spring-cloud-dependencies.version>2025.1.2</spring-cloud-dependencies.version>
+    <spring-cloud-starter-openfeign.version>5.0.2</spring-cloud-starter-openfeign.version>
     <spring-context.version>7.0.7</spring-context.version>
     <spring-web.version>7.0.7</spring-web.version>
-    <undertow-core.version>2.4.0.Final</undertow-core.version>
+    <undertow-core.version>2.4.1.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>
 
@@ -894,11 +895,22 @@
                 <license.skip>true</license.skip>
               </properties>
 
+              <!-- sundr only generates the BOM pom; the committed feign-bom module
+                   (wired into <modules>) is what actually gets published, via the same
+                   central-publishing path as every other module. -->
+              <goals>
+                <excludes>
+                  <exclude>install</exclude>
+                  <exclude>deploy</exclude>
+                </excludes>
+              </goals>
+
               <modules>
                 <includes>
                   <include>io.github.openfeign:*</include>
                 </includes>
                 <excludes>
+                  <exclude>*:feign-bom</exclude>
                   <exclude>*:feign-example-*</exclude>
                   <exclude>*:feign-benchmark</exclude>
                 </excludes>

@@ -163,25 +163,27 @@ public class CoroutineFeign<C> {
     @Override
     @SuppressWarnings("unchecked")
     public CoroutineFeign<C> internalBuild() {
-      AsyncFeign<C> asyncFeign =
-          (AsyncFeign<C>)
-              AsyncFeign.builder()
-                  .logLevel(logLevel)
-                  .client((AsyncClient<Object>) client)
-                  .decoder(decoder)
-                  .errorDecoder(errorDecoder)
-                  .contract(contract)
-                  .retryer(retryer)
-                  .logger(logger)
-                  .encoder(encoder)
-                  .queryMapEncoder(queryMapEncoder)
-                  .options(options)
-                  .requestInterceptors(requestInterceptors)
-                  .responseInterceptors(responseInterceptors)
-                  .invocationHandlerFactory(invocationHandlerFactory)
-                  .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
-                  .methodInfoResolver(methodInfoResolver)
-                  .build();
+      AsyncFeign.AsyncBuilder<Object> asyncBuilder =
+          AsyncFeign.builder()
+              .logLevel(logLevel)
+              .client((AsyncClient<Object>) client)
+              .decoder(decoder)
+              .errorDecoder(errorDecoder)
+              .contract(contract)
+              .retryer(retryer)
+              .logger(logger)
+              .encoder(encoder)
+              .queryMapEncoder(queryMapEncoder)
+              .options(options)
+              .requestInterceptors(requestInterceptors)
+              .responseInterceptors(responseInterceptors)
+              .invocationHandlerFactory(invocationHandlerFactory)
+              .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
+              .methodInfoResolver(methodInfoResolver);
+      if (dismiss404) {
+        asyncBuilder.dismiss404();
+      }
+      AsyncFeign<C> asyncFeign = (AsyncFeign<C>) asyncBuilder.build();
       return new CoroutineFeign<>(asyncFeign);
     }
   }

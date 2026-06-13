@@ -83,9 +83,8 @@ final class SynchronousMethodHandler implements MethodHandler {
                   || isDeclaredCheckedException(
                       cause, methodHandlerConfiguration.getMetadata().method()))) {
             throw cause;
-          } else {
-            throw th;
           }
+          throw th;
         }
         if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
           methodHandlerConfiguration
