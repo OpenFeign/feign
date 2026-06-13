@@ -24,7 +24,6 @@ import feign.Request.Options;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -76,13 +75,16 @@ final class SynchronousMethodHandler implements MethodHandler {
           retryer.continueOrPropagate(e);
         } catch (RetryableException th) {
           Throwable cause = th.getCause();
-          if (methodHandlerConfiguration.getPropagationPolicy() == UNWRAP
-              && cause != null
-              && (cause instanceof RuntimeException
-                  || cause instanceof Error
-                  || isDeclaredCheckedException(
-                      cause, methodHandlerConfiguration.getMetadata().method()))) {
-            throw cause;
+          if (methodHandlerConfiguration.getPropagationPolicy() == UNWRAP && cause != null) {
+            if (cause instanceof RuntimeException || cause instanceof Error) {
+              throw cause;
+            }
+            for (Class<?> exceptionType :
+                methodHandlerConfiguration.getMetadata().method().getExceptionTypes()) {
+              if (exceptionType.isAssignableFrom(cause.getClass())) {
+                throw cause;
+              }
+            }
           }
           throw th;
         }
@@ -163,16 +165,6 @@ final class SynchronousMethodHandler implements MethodHandler {
             this.methodHandlerConfiguration
                 .getOptions()
                 .getMethodOptions(methodHandlerConfiguration.getMetadata().method().getName()));
-  }
-
-  private static boolean isDeclaredCheckedException(Throwable cause, Method method) {
-    Class<?>[] exceptionTypes = method.getExceptionTypes();
-    for (Class<?> exType : exceptionTypes) {
-      if (exType.isAssignableFrom(cause.getClass())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static class Factory implements MethodHandler.Factory<Object> {

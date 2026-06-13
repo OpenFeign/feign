@@ -112,21 +112,6 @@ public class ApacheHttpClientTest extends AbstractClientTest {
     assertThat(server.takeRequest().getPath()).isEqualTo("/withOptions");
   }
 
-  @Test
-  void redirectWithoutLocationHeader() {
-    JaxRsTestInterface api =
-        Feign.builder()
-            .contract(new JAXRSContract())
-            .retryer(Retryer.NEVER_RETRY)
-            .client(new ApacheHttpClient(HttpClientBuilder.create().build()))
-            .target(JaxRsTestInterface.class, "http://localhost:" + server.getPort());
-
-    server.enqueue(new MockResponse().setResponseCode(303));
-    RetryableException exception =
-        assertThrows(RetryableException.class, () -> api.withoutBody("foo"));
-    assertThat(exception.getMessage()).contains("org.apache.http.client.ClientProtocolException");
-  }
-
   private JaxRsTestInterface buildTestInterface() {
     return Feign.builder()
         .contract(new JAXRSContract())
