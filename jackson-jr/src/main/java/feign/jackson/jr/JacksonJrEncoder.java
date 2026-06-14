@@ -21,11 +21,12 @@ import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.JsonEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
 /** A {@link Encoder} that uses Jackson Jr to convert objects to String or byte representation. */
-public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
+public class JacksonJrEncoder extends JacksonJrMapper implements JsonEncoder {
 
   public JacksonJrEncoder() {
     super();

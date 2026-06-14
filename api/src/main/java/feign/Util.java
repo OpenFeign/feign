@@ -62,6 +62,8 @@ public class Util {
   /** The HTTP Content-Encoding header field name. */
   public static final String CONTENT_ENCODING = "Content-Encoding";
 
+  public static final String CONTENT_TYPE = "Content-Type";
+
   /** The HTTP Accept-Encoding header field name. */
   public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
