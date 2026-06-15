@@ -177,13 +177,20 @@ public class FeignException extends RuntimeException {
   }
 
   static FeignException errorReading(Request request, Response response, IOException cause) {
+    byte[] body = {};
+    try {
+      if (response.body() != null) {
+        body = Util.toByteArray(response.body().asInputStream());
+      }
+    } catch (IOException ignored) { // NOPMD
+    }
     return new FeignException(
         response.status(),
         format("%s reading %s %s", cause.getMessage(), request.httpMethod(), request.url()),
         request,
         cause,
-        request.body(),
-        request.headers());
+        body,
+        response.headers());
   }
 
   public static FeignException errorStatus(String methodKey, Response response) {

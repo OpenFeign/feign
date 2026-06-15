@@ -43,16 +43,22 @@ class FeignExceptionTest {
             StandardCharsets.UTF_8,
             null);
 
+    Map<String, Collection<String>> responseHeaders =
+        Collections.singletonMap("content-type", Collections.singletonList("application/json"));
     Response response =
         Response.builder()
             .status(400)
             .body("response".getBytes(StandardCharsets.UTF_8))
+            .headers(responseHeaders)
             .request(request)
             .build();
 
     FeignException exception =
         FeignException.errorReading(request, response, new IOException("socket closed"));
     assertThat(exception.responseBody()).isNotEmpty();
+    // the exception must carry the response body, not the request body (gh-2618)
+    assertThat(exception.contentUTF8()).isEqualTo("response");
+    assertThat(exception.responseHeaders()).containsKeys("content-type");
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
   }
