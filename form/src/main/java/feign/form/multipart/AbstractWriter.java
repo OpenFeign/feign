@@ -64,10 +64,14 @@ public abstract class AbstractWriter implements Writer {
     val contentDespositionBuilder =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
-            .append(name)
+            .append(escapeHeaderParameter(name))
             .append("\"");
     if (fileName != null) {
-      contentDespositionBuilder.append("; ").append("filename=\"").append(fileName).append("\"");
+      contentDespositionBuilder
+          .append("; ")
+          .append("filename=\"")
+          .append(escapeHeaderParameter(fileName))
+          .append("\"");
     }
 
     String fileContentType = contentType;
@@ -93,5 +97,18 @@ public abstract class AbstractWriter implements Writer {
             .toString();
 
     output.write(string);
+  }
+
+  /**
+   * Escapes a {@code multipart/form-data} header parameter value so an attacker-supplied name or
+   * file name cannot break out of the quoted string and inject extra headers or part boundaries.
+   * Carriage return, line feed and double quote are percent-encoded, matching the WHATWG form-data
+   * encoding rules.
+   *
+   * @param value the raw parameter value.
+   * @return the escaped value, safe to place inside a quoted header parameter.
+   */
+  protected static String escapeHeaderParameter(String value) {
+    return value.replace("\r", "%0D").replace("\n", "%0A").replace("\"", "%22");
   }
 }

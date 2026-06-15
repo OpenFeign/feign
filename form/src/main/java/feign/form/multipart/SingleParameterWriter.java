@@ -37,7 +37,7 @@ public class SingleParameterWriter extends AbstractWriter {
     val string =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
-            .append(key)
+            .append(escapeHeaderParameter(key))
             .append('"')
             .append(CRLF)
             .append("Content-Type: text/plain; charset=")
