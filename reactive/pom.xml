@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.13-SNAPSHOT</version>
+    <version>13.14-SNAPSHOT</version>
   </parent>
   <artifactId>feign-reactive-wrappers</artifactId>
 
@@ -29,7 +29,7 @@
   <description>Reactive Wrapper for Feign Clients</description>
 
   <properties>
-    <reactor.version>3.8.5</reactor.version>
+    <reactor.version>3.8.6</reactor.version>
     <reactive.streams.version>1.0.4</reactive.streams.version>
     <reactivex.version>2.2.21</reactivex.version>
   </properties>

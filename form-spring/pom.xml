@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.13-SNAPSHOT</version>
+    <version>13.14-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-form-spring</artifactId>
@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
-      <version>${spring-web.version}</version>
+      <version>${spring.version}</version>
       <scope>compile</scope>
     </dependency>
 

@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx-parent</artifactId>
-    <version>13.13-SNAPSHOT</version>
+    <version>13.14-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-vertx5-test</artifactId>
@@ -30,7 +30,7 @@
   <description>Tests with Vertx 5.x.</description>
 
   <properties>
-    <vertx.version>5.1.1</vertx.version>
+    <vertx.version>5.1.2</vertx.version>
   </properties>
 
   <dependencies>
