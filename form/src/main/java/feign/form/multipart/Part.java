@@ -40,11 +40,11 @@ public class Part implements Request.Body {
    * Writes the multipart part to the given output stream. The part is written in the following
    * format:
    *
-   * <pre>
+   * <pre>{@code
    * headers
    *
    * body content
-   * </pre>
+   * }</pre>
    *
    * @param outputStream {@inheritDoc}
    * @throws IOException {@inheritDoc}

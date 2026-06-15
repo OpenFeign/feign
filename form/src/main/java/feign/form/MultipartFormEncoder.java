@@ -37,9 +37,9 @@ import feign.form.multipart.PartResolverChain;
 import feign.form.multipart.PathPartEncoder;
 import feign.form.util.PojoUtil;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -111,7 +111,7 @@ public class MultipartFormEncoder implements Encoder {
       Consumer<List<PartEncoder>> partEncodersCustomizer,
       Collection<Encoder> partBodyEncoders) {
     var pathPartEncoder = new PathPartEncoder();
-    var partEncoders = new ArrayList<PartEncoder>();
+    var partEncoders = new LinkedList<PartEncoder>();
 
     partEncoders.add(new ByteArrayPartEncoder());
     partEncoders.add(new FilePartEncoder(pathPartEncoder));
@@ -124,7 +124,7 @@ public class MultipartFormEncoder implements Encoder {
       partEncodersCustomizer.accept(partEncoders);
     }
 
-    var partResolvers = new ArrayList<PartResolver>();
+    var partResolvers = new LinkedList<PartResolver>();
 
     partResolvers.add(new FormDataPartResolver());
     partResolvers.add(new ArrayPartResolver());

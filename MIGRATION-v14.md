@@ -25,12 +25,12 @@ The **breaking changes** primarily affect code that interacts directly with requ
 This is an additive, non-breaking change. Existing `DefaultEncoder` users do not need to modify code; users can now opt
 into streaming by passing these types.
 
-### `MultipartFormEncoder` streaming support (non-breaking)
+### `MultipartFormEncoder` streaming support (non-breaking) (https://github.com/OpenFeign/feign/pull/3414)
 
-`feign.form.MultipartFormEncoder` can now encode multipart requests as streaming `Request.Body` instances.
+`feign.form.MultipartFormEncoder` was introduced to encode multipart requests as streaming `Request.Body` instances.
 This is also additive and non-breaking: existing multipart clients continue to work, and users can opt into streaming
-parts such as `File`, `Path`, `InputStream`, or custom `Request.Body` implementations without changing their
-existing request mappings.
+parts such as `File`, `Path`, `InputStream`, or custom `Request.Body` implementations by migrating from `FormEncoder` to
+`MultipartFormEncoder`.
 
 ---
 

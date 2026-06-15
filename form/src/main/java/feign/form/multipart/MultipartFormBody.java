@@ -52,7 +52,7 @@ public class MultipartFormBody implements Request.Body {
    * Writes the multipart form body to the given output stream. The body is written in the following
    * format:
    *
-   * <pre>
+   * <pre>{@code
    * --boundary
    * headers
    *
@@ -63,7 +63,7 @@ public class MultipartFormBody implements Request.Body {
    * body
    * ...
    * --boundary--
-   * </pre>
+   * }</pre>
    *
    * @param outputStream {@inheritDoc}
    * @throws IOException {@inheritDoc}

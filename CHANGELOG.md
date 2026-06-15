@@ -5,7 +5,7 @@
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 * Added `feign.form.MultipartFormEncoder`, a new encoder for streaming multipart request bodies. It can stream
   multipart parts from `File`, `Path`, `InputStream`, and custom `Request.Body` implementations without buffering the
-  whole payload in memory.
+  whole payload in memory. (https://github.com/OpenFeign/feign/pull/3414)
 
 ### Version 13.12
 
