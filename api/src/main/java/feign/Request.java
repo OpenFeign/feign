@@ -408,6 +408,29 @@ public final class Request implements Serializable {
     }
 
     /**
+     * Indicates whether this {@link PathBody} is equal to another object.
+     *
+     * @param o {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof PathBody)) return false;
+      PathBody pathBody = (PathBody) o;
+      return Objects.equals(path, pathBody.path);
+    }
+
+    /**
+     * Returns a hash code value for this {@link PathBody}.
+     *
+     * @return {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(path);
+    }
+
+    /**
      * Returns a string representation of the body content, which includes the file path and its
      * size in bytes (or "unknown size" if the content length cannot be determined). This provides a
      * human-readable description of the body content for debugging or logging purposes.
@@ -420,7 +443,7 @@ public final class Request implements Serializable {
       long contentLength = contentLength();
       String size = contentLength < 0 ? "unknown size" : contentLength + " bytes";
 
-      return "[Content of " + path + "(" + size + ")]";
+      return "[Content of " + path + " (" + size + ")]";
     }
   }
 
@@ -453,6 +476,29 @@ public final class Request implements Serializable {
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
       Util.copy(inputStream, outputStream);
+    }
+
+    /**
+     * Indicates whether this {@link InputStreamBody} is equal to another object.
+     *
+     * @param o {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof InputStreamBody)) return false;
+      InputStreamBody that = (InputStreamBody) o;
+      return Objects.equals(inputStream, that.inputStream);
+    }
+
+    /**
+     * Returns a hash code value for this {@link InputStreamBody}.
+     *
+     * @return {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(inputStream);
     }
 
     /**
@@ -666,7 +712,7 @@ public final class Request implements Serializable {
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
-      Objects.requireNonNull(outputStream, "outputStream is required").write(content);
+      outputStream.write(content);
     }
 
     @Override

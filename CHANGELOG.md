@@ -3,6 +3,9 @@
 * `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
+* Added `feign.form.MultipartFormEncoder`, a new encoder for streaming multipart request bodies. It can stream
+  multipart parts from `File`, `Path`, `InputStream`, and custom `Request.Body` implementations without buffering the
+  whole payload in memory. (https://github.com/OpenFeign/feign/pull/3414)
 
 ### Version 13.12
 

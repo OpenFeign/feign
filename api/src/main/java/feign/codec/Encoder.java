@@ -31,7 +31,7 @@ import java.lang.reflect.Type;
  * void create(User user);
  * </pre>
  *
- * Example implementation: <br>
+ * <p>Example implementation: <br>
  *
  * <p>
  *
@@ -66,6 +66,7 @@ import java.lang.reflect.Type;
  * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
  */
+@FunctionalInterface
 public interface Encoder {
   /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
@@ -80,4 +81,16 @@ public interface Encoder {
    * @throws EncodeException when encoding failed due to a checked exception.
    */
   void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
+
+  /**
+   * Indicates whether this encoder supports encoding the given content type. Default implementation
+   * returns {@code true} for all content types.
+   *
+   * @param contentType the content type to check for support
+   * @return {@code true} if this encoder supports encoding the given content type, {@code false}
+   *     otherwise
+   */
+  default boolean supports(String contentType) {
+    return true;
+  }
 }
