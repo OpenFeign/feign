@@ -16,12 +16,52 @@
 package feign.template;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatObject;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Collections;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class ExpressionsTest {
+
+  @AfterEach
+  void clearMaxExpressionLengthProperty() {
+    System.clearProperty(Expressions.MAX_EXPRESSION_LENGTH_PROPERTY);
+  }
+
+  @Test
+  void tooLongExpressionFailsWithDefaultLimit() {
+    String tooLong = "{" + "a".repeat(10001) + "}";
+    assertThatThrownBy(() -> Expressions.create(tooLong))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("expression is too long");
+  }
+
+  @Test
+  void maxExpressionLengthIsConfigurable() {
+    System.setProperty(Expressions.MAX_EXPRESSION_LENGTH_PROPERTY, "5");
+    assertThatThrownBy(() -> Expressions.create("{foobar}"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Max length: 5");
+  }
+
+  @Test
+  void lengthCheckCanBeDisabled() {
+    // An expression well beyond the default 10000 limit, expressed as a name plus a regular
+    // expression value modifier so the disabled length check is exercised in isolation.
+    String longExpression = "{name:" + "a".repeat(15000) + "}";
+    assertThatThrownBy(() -> Expressions.create(longExpression))
+        .as("guarded by default limit")
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("expression is too long");
+
+    System.setProperty(Expressions.MAX_EXPRESSION_LENGTH_PROPERTY, "0");
+    assertThatNoException()
+        .as("length check disabled")
+        .isThrownBy(() -> Expressions.create(longExpression));
+  }
 
   @Test
   void simpleExpression() {
