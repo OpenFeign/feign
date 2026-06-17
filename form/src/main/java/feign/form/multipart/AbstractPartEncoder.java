@@ -42,11 +42,15 @@ public abstract class AbstractPartEncoder implements PartEncoder {
     var disposition =
         new StringBuilder("form-data; name=")
             .append(DOUBLE_QUOTE)
-            .append(name)
+            .append(escapeHeaderParameter(name))
             .append(DOUBLE_QUOTE);
 
     if (filename != null) {
-      disposition.append("; filename=").append(DOUBLE_QUOTE).append(filename).append(DOUBLE_QUOTE);
+      disposition
+          .append("; filename=")
+          .append(DOUBLE_QUOTE)
+          .append(escapeHeaderParameter(filename))
+          .append(DOUBLE_QUOTE);
     }
 
     headers.put("Content-Disposition", disposition.toString());
@@ -56,5 +60,18 @@ public abstract class AbstractPartEncoder implements PartEncoder {
     }
 
     return headers;
+  }
+
+  /**
+   * Escapes a {@code multipart/form-data} header parameter value so an attacker-supplied name or
+   * file name cannot break out of the quoted string and inject extra headers or part boundaries.
+   * Carriage return, line feed and double quote are percent-encoded, matching the WHATWG form-data
+   * encoding rules.
+   *
+   * @param value the raw parameter value.
+   * @return the escaped value, safe to place inside a quoted header parameter.
+   */
+  protected static String escapeHeaderParameter(String value) {
+    return value.replace("\r", "%0D").replace("\n", "%0A").replace("\"", "%22");
   }
 }
