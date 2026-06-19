@@ -25,7 +25,14 @@ import java.util.regex.Pattern;
 
 public final class Expressions {
 
-  private static final int MAX_EXPRESSION_LENGTH = 10000;
+  /**
+   * System property controlling the maximum allowed length of a single expression. Defaults to
+   * {@link #DEFAULT_MAX_EXPRESSION_LENGTH}. Setting it to {@code 0} (or any non-positive value)
+   * disables the length check entirely.
+   */
+  static final String MAX_EXPRESSION_LENGTH_PROPERTY = "feign.template.expression.maxLength";
+
+  private static final int DEFAULT_MAX_EXPRESSION_LENGTH = 10000;
 
   private static final String PATH_STYLE_OPERATOR = ";";
 
@@ -73,10 +80,16 @@ public final class Expressions {
       throw new IllegalArgumentException("an expression is required.");
     }
 
-    /* Check if the expression is too long */
-    if (expression.length() > MAX_EXPRESSION_LENGTH) {
+    /*
+     * Check if the expression is too long. The limit is configurable through the
+     * "feign.template.expression.maxLength" system property and can be disabled by setting it to a
+     * non-positive value.
+     */
+    final int maxExpressionLength =
+        Integer.getInteger(MAX_EXPRESSION_LENGTH_PROPERTY, DEFAULT_MAX_EXPRESSION_LENGTH);
+    if (maxExpressionLength > 0 && expression.length() > maxExpressionLength) {
       throw new IllegalArgumentException(
-          "expression is too long. Max length: " + MAX_EXPRESSION_LENGTH);
+          "expression is too long. Max length: " + maxExpressionLength);
     }
 
     /* create a new regular expression matcher for the expression */
