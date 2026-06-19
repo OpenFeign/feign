@@ -726,6 +726,18 @@ public final class Request implements Serializable {
     }
 
     @Override
+    public boolean equals(Object object) {
+      if (!(object instanceof BodyImpl)) return false;
+      BodyImpl body = (BodyImpl) object;
+      return Objects.deepEquals(content, body.content) && Objects.equals(charset, body.charset);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(Arrays.hashCode(content), charset);
+    }
+
+    @Override
     public String toString() {
       return new String(content, charset);
     }

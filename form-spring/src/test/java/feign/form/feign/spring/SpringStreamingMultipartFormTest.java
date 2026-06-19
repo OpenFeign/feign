@@ -29,8 +29,14 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import feign.Util;
 import feign.codec.Encoder;
 import feign.form.MultipartFormEncoder;
+import feign.form.multipart.MultipartFormBodyFactory;
+import feign.form.multipart.PartBodyFactory;
+import feign.form.multipart.PartContextResolverChain;
+import feign.form.multipart.PartFactory;
 import feign.form.spring.MultipartFileEncoder;
+import feign.form.spring.MultipartFilePartContextResolver;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -91,8 +97,17 @@ class SpringStreamingMultipartFormTest {
   private static class SpringStreamingMultipartFormTestConfiguration {
     @Bean
     public Encoder feignEncoder() {
+      var partFactory =
+          PartFactory.builder()
+              .partBodyFactory(new PartBodyFactory(List.of(new MultipartFileEncoder())))
+              .build();
+      var multipartFormBodyFactory =
+          new MultipartFormBodyFactory(
+              new PartContextResolverChain(
+                  resolvers -> resolvers.addFirst(new MultipartFilePartContextResolver())),
+              partFactory);
       return MultipartFormEncoder.builder()
-          .partEncoders(encoders -> encoders.addFirst(new MultipartFileEncoder()))
+          .multipartFormBodyFactory(multipartFormBodyFactory)
           .build();
     }
   }

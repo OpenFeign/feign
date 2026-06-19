@@ -34,7 +34,12 @@ import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import feign.Util;
+import feign.form.multipart.ConditionalEncoder;
+import feign.form.multipart.EncoderPredicate;
 import feign.form.multipart.FormData;
+import feign.form.multipart.MultipartFormBodyFactory;
+import feign.form.multipart.PartBodyFactory;
+import feign.form.multipart.PartFactory;
 import feign.jackson.JacksonEncoder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -43,6 +48,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import lombok.Cleanup;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,17 +63,27 @@ public class StreamingMultipartFormTest {
   private static final String MULTIPART_FORM_DATA_HEADER =
       Util.CONTENT_TYPE + ": " + MediaType.MULTIPART_FORM_DATA_VALUE;
   private static final String PARAM_NAME = "data";
+  private static final String CLASSNAME = StreamingMultipartFormTest.class.getSimpleName();
 
   private MultipartFormTestClient testClient;
 
   @BeforeEach
   public void setup(WireMockRuntimeInfo wmRuntimeInfo) {
+    var partBodyFactory =
+        new PartBodyFactory(
+            encoders ->
+                encoders.addFirst(
+                    new ConditionalEncoder(
+                        new JacksonEncoder(),
+                        EncoderPredicate.forContentType(MediaType.APPLICATION_JSON_VALUE))));
+    var partFactory = PartFactory.builder().partBodyFactory(partBodyFactory).build();
+    var multipartFormBodyFactory =
+        MultipartFormBodyFactory.builder().partFactory(partFactory).build();
+    var multipartFormEncoder =
+        MultipartFormEncoder.builder().multipartFormBodyFactory(multipartFormBodyFactory).build();
     testClient =
         Feign.builder()
-            .encoder(
-                MultipartFormEncoder.builder()
-                    .partBodyEncoders(List.of(new JacksonEncoder()))
-                    .build())
+            .encoder(multipartFormEncoder)
             .target(MultipartFormTestClient.class, wmRuntimeInfo.getHttpBaseUrl());
 
     stubFor(post(REQUEST_PATH).willReturn(ok()));
@@ -145,8 +161,7 @@ public class StreamingMultipartFormTest {
   @Test
   void shouldSendFile(@TempDir File tempDir) throws IOException {
     var expected = "Hello, World!";
-    var file =
-        new File(tempDir, StreamingMultipartFormTest.class.getSimpleName() + "_shouldSendFile.txt");
+    var file = new File(tempDir, CLASSNAME + "_shouldSendFile.txt");
 
     Files.writeString(file.toPath(), expected);
 
@@ -167,10 +182,7 @@ public class StreamingMultipartFormTest {
   @Test
   void shouldSendOctetStreamFile(@TempDir File tempDir) throws IOException {
     var expected = "Hello, World!";
-    var file =
-        new File(
-            tempDir,
-            StreamingMultipartFormTest.class.getSimpleName() + "_shouldSendOctetStreamFile");
+    var file = new File(tempDir, CLASSNAME + "_shouldSendOctetStreamFile");
 
     Files.writeString(file.toPath(), expected);
 
@@ -193,14 +205,9 @@ public class StreamingMultipartFormTest {
   void shouldSendFileWithOverriddenFilenameAndContentType(@TempDir File tempDir)
       throws IOException {
     var expected = "Hello, World!";
-    var filename =
-        StreamingMultipartFormTest.class.getSimpleName()
-            + "_shouldSendFileWithOverriddenFilenameAndContentType.txt";
+    var filename = CLASSNAME + "_shouldSendFileWithOverriddenFilenameAndContentType.txt";
     var file =
-        new File(
-            tempDir,
-            StreamingMultipartFormTest.class.getSimpleName()
-                + "_shouldSendFileWithOverriddenFilenameAndContentType.md");
+        new File(tempDir, CLASSNAME + "_shouldSendFileWithOverriddenFilenameAndContentType.md");
 
     Files.writeString(file.toPath(), expected);
 
@@ -240,7 +247,7 @@ public class StreamingMultipartFormTest {
     var catwoman = "Catwoman";
     var villains = List.of(joker, harleyQuinn, catwoman);
 
-    testClient.sendStringIterable(villains);
+    testClient.sendStringCollection(villains);
 
     verify(
         postRequestedFor(urlPathEqualTo(REQUEST_PATH))
@@ -255,8 +262,7 @@ public class StreamingMultipartFormTest {
   @Test
   void shouldSendPath(@TempDir Path tempDir) throws IOException {
     var expected = "Hello, World!";
-    var path =
-        tempDir.resolve(StreamingMultipartFormTest.class.getSimpleName() + "_shouldSendPath.txt");
+    var path = tempDir.resolve(CLASSNAME + "_shouldSendPath.txt");
 
     Files.writeString(path, expected);
 
@@ -271,6 +277,121 @@ public class StreamingMultipartFormTest {
                     .withFileName(path.getFileName().toString())
                     .withHeader(Util.CONTENT_TYPE, equalTo(MediaType.TEXT_PLAIN_VALUE))
                     .withBody(equalTo(expected))
+                    .build()));
+  }
+
+  @Test
+  void shouldSendStringListFormData() {
+    var joker = "Joker";
+    var harleyQuinn = "Harley Quinn";
+    var catwoman = "Catwoman";
+    var villains = List.of(joker, harleyQuinn, catwoman);
+    var contentType = MediaType.TEXT_PLAIN_VALUE;
+
+    testClient.sendStringListFormData(new FormData<>(villains).contentType(contentType));
+
+    verify(
+        postRequestedFor(urlPathEqualTo(REQUEST_PATH))
+            .withHeader(Util.CONTENT_TYPE, containing(MediaType.MULTIPART_FORM_DATA_VALUE))
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(joker))
+                    .build())
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(harleyQuinn))
+                    .build())
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(catwoman))
+                    .build()));
+  }
+
+  @Test
+  void shouldSendFileList(@TempDir File tempDir) throws IOException {
+    var fileContent1 = "FileContent1";
+    var fileContent2 = "FileContent2";
+    var file1 = new File(tempDir, CLASSNAME + "_shouldSendFileList_file1.txt");
+    var file2 = new File(tempDir, CLASSNAME + "_shouldSendFileList_file2.txt");
+    var contentType = MediaType.TEXT_PLAIN_VALUE;
+
+    Files.writeString(file1.toPath(), fileContent1);
+    Files.writeString(file2.toPath(), fileContent2);
+
+    testClient.sendFileList(List.of(file1, file2));
+
+    verify(
+        postRequestedFor(urlPathEqualTo(REQUEST_PATH))
+            .withHeader(Util.CONTENT_TYPE, containing(MediaType.MULTIPART_FORM_DATA_VALUE))
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withFileName(file1.getName())
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(fileContent1))
+                    .build())
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withFileName(file2.getName())
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(fileContent2))
+                    .build()));
+  }
+
+  @Test
+  void shouldSendFileListFormData(@TempDir File tempDir) throws IOException {
+    var fileContent1 = "FileContent1";
+    var fileContent2 = "FileContent2";
+    var file1 = new File(tempDir, CLASSNAME + "_shouldSendFileListFormData_file1.txt");
+    var file2 = new File(tempDir, CLASSNAME + "_shouldSendFileListFormData_file2.txt");
+    var contentType = MediaType.TEXT_MARKDOWN_VALUE;
+
+    Files.writeString(file1.toPath(), fileContent1);
+    Files.writeString(file2.toPath(), fileContent2);
+
+    testClient.sendFileListFormData(new FormData<>(List.of(file1, file2)).contentType(contentType));
+
+    verify(
+        postRequestedFor(urlPathEqualTo(REQUEST_PATH))
+            .withHeader(Util.CONTENT_TYPE, containing(MediaType.MULTIPART_FORM_DATA_VALUE))
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withFileName(file1.getName())
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(fileContent1))
+                    .build())
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName(PARAM_NAME)
+                    .withFileName(file2.getName())
+                    .withHeader(Util.CONTENT_TYPE, equalTo(contentType))
+                    .withBody(equalTo(fileContent2))
+                    .build()));
+  }
+
+  @Test
+  void shouldEscapeNameAndFilenameInjectedCharacters() {
+    var input = "Hello, World!";
+    var filename = "evil\"\r\nX-Injected: 1";
+
+    testClient.sendInjectedParamName(new FormData<>(input).filename(filename));
+
+    verify(
+        postRequestedFor(urlPathEqualTo(REQUEST_PATH))
+            .withHeader(Util.CONTENT_TYPE, containing(MediaType.MULTIPART_FORM_DATA_VALUE))
+            .withRequestBodyPart(
+                aMultipart()
+                    .withName("a%22%0D%0AX-Injected: 1")
+                    .withFileName("evil%22%0D%0AX-Injected: 1")
+                    .withBody(equalTo(input))
                     .build()));
   }
 
@@ -305,11 +426,27 @@ public class StreamingMultipartFormTest {
 
     @RequestLine(REQUEST_LINE)
     @Headers(MULTIPART_FORM_DATA_HEADER)
-    void sendStringIterable(@Param(PARAM_NAME) Iterable<String> data);
+    void sendStringCollection(@Param(PARAM_NAME) Collection<String> data);
 
     @RequestLine(REQUEST_LINE)
     @Headers(MULTIPART_FORM_DATA_HEADER)
     void sendPath(@Param(PARAM_NAME) Path data);
+
+    @RequestLine(REQUEST_LINE)
+    @Headers(MULTIPART_FORM_DATA_HEADER)
+    void sendStringListFormData(@Param(PARAM_NAME) FormData<List<String>> data);
+
+    @RequestLine(REQUEST_LINE)
+    @Headers(MULTIPART_FORM_DATA_HEADER)
+    void sendFileList(@Param(PARAM_NAME) List<File> data);
+
+    @RequestLine(REQUEST_LINE)
+    @Headers(MULTIPART_FORM_DATA_HEADER)
+    void sendFileListFormData(@Param(PARAM_NAME) FormData<List<File>> data);
+
+    @RequestLine(REQUEST_LINE)
+    @Headers(MULTIPART_FORM_DATA_HEADER)
+    void sendInjectedParamName(@Param("a\"\r\nX-Injected: 1") FormData<String> data);
   }
 
   private record Movie(
