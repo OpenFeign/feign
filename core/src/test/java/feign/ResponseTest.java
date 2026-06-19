@@ -88,6 +88,36 @@ class ResponseTest {
   }
 
   @Test
+  void charsetDefaultsToUtf8ForIllegalCharsetName() {
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
+    headersMap.put("Content-Type", Collections.singletonList("text/plain; charset=@"));
+    Response response =
+        Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
+    assertThat(response.charset()).isEqualTo(Util.UTF_8);
+  }
+
+  @Test
+  void charsetDefaultsToUtf8ForUnsupportedCharset() {
+    Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
+    headersMap.put("Content-Type", Collections.singletonList("text/plain; charset=made-up-99"));
+    Response response =
+        Response.builder()
+            .status(200)
+            .headers(headersMap)
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .body(new byte[0])
+            .build();
+    assertThat(response.charset()).isEqualTo(Util.UTF_8);
+  }
+
+  @Test
   void headerValuesWithSameNameOnlyVaryingInCaseAreMerged() {
     Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
     headersMap.put("Set-Cookie", Arrays.asList("Cookie-A=Value", "Cookie-B=Value"));
