@@ -48,6 +48,18 @@ public class DelegateWriter extends AbstractWriter {
     delegate.encode(value, value.getClass(), fake);
     val bytes = fake.body();
     val string = new String(bytes, output.getCharset()).replaceAll("\n", "");
-    parameterWriter.write(output, key, string);
+    parameterWriter.writeWithContentType(output, key, string, contentType(fake));
+  }
+
+  private static String contentType(RequestTemplate template) {
+    val headers = template.headers().get("Content-Type");
+    if (headers != null) {
+      for (val header : headers) {
+        if (header != null && !header.isEmpty()) {
+          return header;
+        }
+      }
+    }
+    return null;
   }
 }
