@@ -16,16 +16,18 @@
 package feign.form.multipart;
 
 import java.util.Optional;
+import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.Accessors;
 
-/** Metadata for a single multipart part. */
+/** A context for a multipart part. */
 @Value
 @RequiredArgsConstructor
 @Accessors(fluent = true)
-public class PartMetadata {
+@Builder(toBuilder = true)
+public class PartContext {
   /** Form field name; never {@code null}. */
   @NonNull String name;
 
@@ -33,19 +35,18 @@ public class PartMetadata {
   Object content;
 
   /** Optional filename written into {@code Content-Disposition: ...; filename="<value>"}. */
-  String filenameOverride;
+  String filename;
 
   /** Optional media type written as {@code Content-Type: <value>}. */
-  String contentTypeOverride;
+  String contentType;
 
   /**
-   * Constructs a new {@link PartMetadata} with the given name and content, and no filename or
-   * content type overrides.
+   * Constructs a new {@link PartContext} with the given name and content.
    *
    * @param name form field name; must not be {@code null}
    * @param content content of the part; may be {@code null}
    */
-  public PartMetadata(String name, Object content) {
+  public PartContext(String name, Object content) {
     this(name, content, null, null);
   }
 
@@ -60,22 +61,22 @@ public class PartMetadata {
   }
 
   /**
-   * Returns the filename override of the part as an {@link Optional}.
+   * Returns the filename of the part as an {@link Optional}.
    *
-   * @return an {@link Optional} containing the filename override of the part, or an empty {@link
-   *     Optional} if the filename override is {@code null}
+   * @return an {@link Optional} containing the filename of the part, or an empty {@link Optional}
+   *     if the filename is {@code null}
    */
-  public Optional<String> filenameOverride() {
-    return Optional.ofNullable(filenameOverride);
+  public Optional<String> filename() {
+    return Optional.ofNullable(filename);
   }
 
   /**
-   * Returns the content type override of the part as an {@link Optional}.
+   * Returns the content type of the part as an {@link Optional}.
    *
-   * @return an {@link Optional} containing the content type override of the part, or an empty
-   *     {@link Optional} if the content type override is {@code null}
+   * @return an {@link Optional} containing the content type of the part, or an empty {@link
+   *     Optional} if the content type is {@code null}
    */
-  public Optional<String> contentTypeOverride() {
-    return Optional.ofNullable(contentTypeOverride);
+  public Optional<String> contentType() {
+    return Optional.ofNullable(contentType);
   }
 }

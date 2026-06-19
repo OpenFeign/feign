@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.form.multipart;
 
-/** An {@link Encoder} that encodes request bodies as XML. */
+import java.util.stream.Stream;
+
+/**
+ * A functional interface for resolving a {@link PartContext} into a stream of {@link PartContext}
+ * instances.
+ */
 @FunctionalInterface
-public interface XmlEncoder extends Encoder {
+public interface PartContextResolver {
   /**
-   * {@inheritDoc}
+   * Resolves a {@link PartContext} into a stream of {@link PartContext} instances.
    *
-   * @param contentType {@inheritDoc}
-   * @return {@code true} if the given {@code contentType} is an XML media type, {@code false}
+   * @param partContext the {@link PartContext} to resolve
+   * @param chain the {@link PartContextResolverChain} to use for resolving the {@link PartContext}
+   * @return a stream of {@link PartContext} instances
    */
-  @Override
-  default boolean supports(String contentType) {
-    return contentType != null && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?xml.*");
-  }
+  Stream<PartContext> resolve(PartContext partContext, PartContextResolverChain chain);
 }

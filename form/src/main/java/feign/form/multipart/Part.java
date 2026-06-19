@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
 
 /** A multipart part consisting of headers and a body. */
 @Data
@@ -33,8 +33,7 @@ public class Part implements Request.Body {
   private static final String CRLF = "\r\n";
 
   @NonNull private final Map<String, String> headers;
-
-  @NonNull @Delegate private final Request.Body body;
+  private final Request.Body body;
 
   /**
    * Writes the multipart part to the given output stream. The part is written in the following
@@ -52,7 +51,10 @@ public class Part implements Request.Body {
   @Override
   public void writeTo(OutputStream outputStream) throws IOException {
     outputStream.write(headersToString().getBytes(StandardCharsets.UTF_8));
-    body.writeTo(outputStream);
+
+    if (body != null) {
+      body.writeTo(outputStream);
+    }
   }
 
   /**
@@ -64,9 +66,14 @@ public class Part implements Request.Body {
    */
   @Override
   public long contentLength() {
-    var contentLength = body.contentLength();
+    var bodyLength = body != null ? body.contentLength() : 0;
 
-    return contentLength < 0 ? contentLength : contentLength + headersToString().length();
+    return bodyLength < 0 ? bodyLength : bodyLength + headersToString().length();
+  }
+
+  @Override
+  public boolean isRepeatable() {
+    return body == null || body.isRepeatable();
   }
 
   /**
@@ -77,7 +84,7 @@ public class Part implements Request.Body {
    */
   @Override
   public String toString() {
-    return headersToString() + body;
+    return headersToString() + Objects.requireNonNullElse(body, "");
   }
 
   private String headersToString() {

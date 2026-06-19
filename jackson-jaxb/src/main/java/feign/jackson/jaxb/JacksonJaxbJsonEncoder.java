@@ -23,12 +23,12 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.JsonEncoder;
+import feign.codec.Encoder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public final class JacksonJaxbJsonEncoder implements JsonEncoder {
+public final class JacksonJaxbJsonEncoder implements Encoder {
   private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
   public JacksonJaxbJsonEncoder() {

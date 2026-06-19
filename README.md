@@ -1471,11 +1471,22 @@ interface PizzaClient {
     );
 }
 
+Encoder jackson3Encoder = new ConditionalEncoder(
+        new Jackson3Encoder(),
+        EncoderPredicate.forContentType(MediaType.APPLICATION_JSON_VALUE)
+);
+PartBodyFactory partBodyFactory = new PartBodyFactory(encoders -> encoders.add(0, jackson3Encoder));
+PartFactory partFactory = PartFactory.builder()
+        .partBodyFactory(partBodyFactory)
+        .build();
+MultipartFormBodyFactory multipartFormBodyFactory = MultipartFormBodyFactory.builder()
+        .partFactory(partFactory)
+        .build();
+MultipartFormEncoder multipartFormEncoder = MultipartFormEncoder.builder()
+        .multipartFormBodyFactory(multipartFormBodyFactory)
+        .build();
 PizzaClient pizzaClient = Feign.builder()
-    .encoder(MultipartFormEncoder.builder()
-        .partBodyEncoders(List.of(new Jackson3Encoder()))
-        .build()
-    )
+    .encoder(multipartFormEncoder)
     .target(PizzaClient.class, "https://api.pizza.com");
 
 Pizza pizza = new Pizza();
@@ -1601,8 +1612,10 @@ public interface DownloadClient {
 #### Streaming Spring MultipartFile (Feign 14+)
 
 If you are using Spring Cloud OpenFeign and need to stream large `MultipartFile` payloads without consuming significant
-JVM memory, you can use `feign.form.spring.MultipartFileEncoder`. This encoder processes files as streams instead of
-loading their entire content into memory.
+JVM memory, configure `MultipartFormEncoder` with:
+
+- `MultipartFilePartContextResolver` to unwrap Spring `MultipartFile` metadata
+- `MultipartFileEncoder` as the part body encoder
 
 ```java
 @Configuration
@@ -1610,8 +1623,15 @@ public class StreamingMultipartConfig {
 
   @Bean
   public Encoder feignFormEncoder() {
+    var partFactory = PartFactory.builder()
+            .partBodyFactory(new PartBodyFactory(List.of(new MultipartFileEncoder())))
+            .build();
+    var multipartFormBodyFactory = new MultipartFormBodyFactory(
+            new PartContextResolverChain(resolvers -> resolvers.addFirst(new MultipartFilePartContextResolver())),
+            partFactory
+    );
     return MultipartFormEncoder.builder()
-            .partEncoders(encoders -> encoders.addFirst(new MultipartFileEncoder()))
+            .multipartFormBodyFactory(multipartFormBodyFactory)
             .build();
   }
 }
@@ -1619,7 +1639,11 @@ public class StreamingMultipartConfig {
 @FeignClient(name = "large-file-upload-service", configuration = StreamingMultipartConfig.class)
 public interface LargeFileUploadClient {
 
-  @RequestMapping(value = "/upload", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @RequestMapping(
+          value = "/upload",
+          method = RequestMethod.POST,
+          consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+  )
   void uploadLargeFile(@RequestBody MultipartFile file);
 }
 ```

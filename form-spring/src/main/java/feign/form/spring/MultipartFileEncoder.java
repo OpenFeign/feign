@@ -16,44 +16,30 @@
 package feign.form.spring;
 
 import feign.Request;
-import feign.form.multipart.AbstractPartEncoder;
-import feign.form.multipart.Part;
-import feign.form.multipart.PartMetadata;
+import feign.RequestTemplate;
+import feign.form.multipart.ConditionalEncoder;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import lombok.NonNull;
 import org.springframework.web.multipart.MultipartFile;
 
 /** Encoder for {@link MultipartFile} instances. */
-public class MultipartFileEncoder extends AbstractPartEncoder {
+public class MultipartFileEncoder extends ConditionalEncoder {
   /**
-   * Encodes the content of the part using given {@link MultipartFile}.
-   *
-   * @param partMetadata {@inheritDoc}
-   * @return {@inheritDoc}
+   * Creates a new instance of {@link MultipartFileEncoder} that encodes {@link MultipartFile}
+   * instances.
    */
-  @Override
-  public Request.Body encode(PartMetadata partMetadata) {
-    var multipartFile = (MultipartFile) partMetadata.content().orElseThrow();
-
-    return new Part(
-        createHeaders(
-            multipartFile.getName(),
-            multipartFile.getOriginalFilename(),
-            multipartFile.getContentType()),
-        new MultipartFileBody(multipartFile));
+  public MultipartFileEncoder() {
+    super(MultipartFileEncoder::doEncode, MultipartFileEncoder::isMultipartFile);
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * @param partMetadata {@inheritDoc}
-   * @return {@code true} if the content of the part is an instance of {@link MultipartFile}, {@code
-   *     false} otherwise
-   */
-  @Override
-  public boolean supports(PartMetadata partMetadata) {
-    return partMetadata.content().filter(MultipartFile.class::isInstance).isPresent();
+  private static void doEncode(Object object, Type bodyType, RequestTemplate template) {
+    template.body(new MultipartFileBody((MultipartFile) object));
+  }
+
+  private static boolean isMultipartFile(Object object, Type bodyType, RequestTemplate template) {
+    return object instanceof MultipartFile;
   }
 
   private record MultipartFileBody(@NonNull MultipartFile multipartFile) implements Request.Body {
