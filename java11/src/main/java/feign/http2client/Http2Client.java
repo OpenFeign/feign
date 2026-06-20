@@ -130,6 +130,10 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
+    final Integer contentLength =
+        length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
+            ? (int) length.getAsLong()
+            : null;
 
     InputStream body = httpResponse.body();
 
@@ -144,7 +148,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
     return Response.builder()
         .protocolVersion(enumForName(ProtocolVersion.class, httpResponse.version()))
-        .body(body, length.isPresent() ? (int) length.getAsLong() : null)
+        .body(body, contentLength)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
         .request(request)
         .status(httpResponse.statusCode())
