@@ -46,4 +46,29 @@ class AbstractWriterTest {
     assertThat(written).contains("name=\"a%22%0D%0AX-Injected: 1\"");
     assertThat(written).doesNotContain("\r\nX-Injected: 1");
   }
+
+  @Test
+  void fileContentTypeWithCrlfIsStripped() {
+    Output output = new Output(UTF_8);
+    FormData formData =
+        new FormData("text/plain\r\nX-Injected: 1", "file.txt", "body".getBytes(UTF_8));
+
+    new FormDataWriter().write(output, "boundary", "file", formData);
+    String written = new String(output.toByteArray(), UTF_8);
+
+    assertThat(written).contains("Content-Type: text/plainX-Injected: 1");
+    assertThat(written).doesNotContain("\r\nX-Injected: 1");
+  }
+
+  @Test
+  void parameterContentTypeWithCrlfIsStripped() {
+    Output output = new Output(UTF_8);
+
+    new SingleParameterWriter()
+        .writeWithContentType(output, "name", "value", "text/plain\r\nX-Injected: 1");
+    String written = new String(output.toByteArray(), UTF_8);
+
+    assertThat(written).contains("Content-Type: text/plainX-Injected: 1");
+    assertThat(written).doesNotContain("\r\nX-Injected: 1");
+  }
 }
