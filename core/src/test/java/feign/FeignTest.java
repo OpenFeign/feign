@@ -607,13 +607,14 @@ public class FeignTest {
     } catch (FeignException e) {
       assertThat(e.getMessage())
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
-      assertThat(e.contentUTF8()).isEqualTo("Request body");
+      // After #2618 the FeignException carries the response body, not the request body.
+      assertThat(e.contentUTF8()).isEqualTo("success!");
     }
   }
 
   @Test
   void throwsFeignExceptionWithoutBody() {
-    server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse());
 
     TestInterface api =
         Feign.builder()
