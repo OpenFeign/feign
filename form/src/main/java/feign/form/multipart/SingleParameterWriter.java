@@ -58,7 +58,7 @@ public class SingleParameterWriter extends AbstractWriter {
             .append('"')
             .append(CRLF)
             .append("Content-Type: ")
-            .append(contentTypeHeader)
+            .append(stripCrlf(contentTypeHeader))
             .append(CRLF)
             .append(CRLF)
             .append(value.toString())

@@ -89,7 +89,7 @@ public abstract class AbstractWriter implements Writer {
             .append(contentDespositionBuilder.toString())
             .append(CRLF)
             .append("Content-Type: ")
-            .append(fileContentType)
+            .append(stripCrlf(fileContentType))
             .append(CRLF)
             .append("Content-Transfer-Encoding: binary")
             .append(CRLF)
@@ -110,5 +110,18 @@ public abstract class AbstractWriter implements Writer {
    */
   protected static String escapeHeaderParameter(String value) {
     return value.replace("\r", "%0D").replace("\n", "%0A").replace("\"", "%22");
+  }
+
+  /**
+   * Removes carriage return and line feed from a media type so an attacker-supplied content type
+   * cannot inject extra part headers or boundaries. Unlike a quoted parameter the {@code
+   * Content-Type} value is not quoted, so it cannot be percent-encoded without corrupting a
+   * legitimate media type; the control characters are dropped instead.
+   *
+   * @param contentType the raw content type value.
+   * @return the content type with CR and LF removed.
+   */
+  protected static String stripCrlf(String contentType) {
+    return contentType.replace("\r", "").replace("\n", "");
   }
 }
