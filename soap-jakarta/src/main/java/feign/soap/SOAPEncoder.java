@@ -131,7 +131,7 @@ public class SOAPEncoder implements Encoder {
       } else {
         soapMessage.writeTo(bos);
       }
-      template.body(bos.toString());
+      template.body(bos.toByteArray(), charsetEncoding);
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

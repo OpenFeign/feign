@@ -132,6 +132,40 @@ class SOAPCodecTest {
   }
 
   @Test
+  void encodesSoapWithNonAsciiContentInConfiguredCharset() {
+    JAXBContextFactory jaxbContextFactory =
+        new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
+
+    Encoder encoder =
+        new SOAPEncoder.Builder()
+            .withJAXBContextFactory(jaxbContextFactory)
+            .withCharsetEncoding(StandardCharsets.UTF_16)
+            .build();
+
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Café";
+
+    RequestTemplate template = new RequestTemplate();
+    encoder.encode(mock, GetPrice.class, template);
+
+    String soapEnvelop =
+        """
+        <?xml version="1.0" encoding="UTF-16" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Header/>\
+        <SOAP-ENV:Body>\
+        <GetPrice>\
+        <Item>Café</Item>\
+        </GetPrice>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\
+        """;
+    byte[] utf16Bytes = soapEnvelop.getBytes(StandardCharsets.UTF_16LE);
+    assertThat(template).hasBody(utf16Bytes);
+  }
+
+  @Test
   void encodesSoapWithCustomJAXBSchemaLocation() {
     JAXBContextFactory jaxbContextFactory =
         new JAXBContextFactory.Builder()
