@@ -47,6 +47,20 @@ class UrlencodedFormContentProcessorTest {
   }
 
   @Test
+  void arrayValueEncodesReservedCharacters() {
+    assertEncodedBody(
+        "from=%2B987654321&to=%2B123456789&tags=a%26b%3Dc&tags=d",
+        new String[] {"a&b=c", "d"}, Client::map);
+  }
+
+  @Test
+  void collectionValueEncodesReservedCharacters() {
+    assertEncodedBody(
+        "from=%2B987654321&to=%2B123456789&tags=a%26b%3Dc&tags=d",
+        Arrays.asList("a&b=c", "d"), Client::map);
+  }
+
+  @Test
   void arrayValueUsesCsvCollectionFormat() {
     assertEncodedBody(
         "from=%2B987654321&to=%2B123456789&tags=one%2Ctwo",
