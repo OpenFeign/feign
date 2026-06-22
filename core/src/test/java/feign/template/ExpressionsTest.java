@@ -85,6 +85,18 @@ class ExpressionsTest {
   }
 
   @Test
+  void invalidValueModifierIsTreatedAsLiteral() {
+    // The text after ':' is compiled as a regex; an invalid one must not escape as a
+    // PatternSyntaxException, the chunk is a literal instead (Expressions.create returns null).
+    assertThatNoException().isThrownBy(() -> Expressions.create("{range:[1:10}"));
+    assertThat(Expressions.create("{a:[}")).isNull();
+    assertThat(Expressions.create("{a:(}")).isNull();
+
+    // a valid value modifier still produces an expression
+    assertThat(Expressions.create("{id:[0-9]+}")).isNotNull();
+  }
+
+  @Test
   void malformedBodyTemplate() {
     String bodyTemplate = "{" + "a".repeat(65536) + "}";
 
