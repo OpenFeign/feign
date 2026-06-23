@@ -1444,55 +1444,6 @@ In the example above, the `sendPhoto` method uses the `photo` parameter using th
   someApi.sendPhoto(true, formData);
 ```
 
-#### Streaming multipart/form-data (Feign 14+)
-
-Starting with Feign 14, you can stream `multipart/form-data` request bodies with low memory overhead using
-`feign.form.MultipartFormEncoder`. This encoder avoids loading entire file parts into memory, allowing you to transfer
-large payloads directly via streaming types like `java.nio.file.Path`.
-
-To customize part specifics (such as explicit filenames or content types), use the `feign.form.multipart.FormData`
-wrapper object.
-
-> [!NOTE]
-> Ensure you import `feign.form.multipart.FormData` rather than the legacy `feign.form.FormData` container.
-
-```java
-class Pizza {
-    String name;
-    List<String> ingredients;
-}
-
-interface PizzaClient {
-    @RequestLine("POST /api/v1/pizzas")
-    void create(
-        @Param("category") String category,
-        @Param("image") File image,
-        @Param("pizza") FormData<Pizza> pizza
-    );
-}
-
-PizzaClient pizzaClient = Feign.builder()
-    .encoder(MultipartFormEncoder.builder()
-        .partBodyEncoders(List.of(new Jackson3Encoder()))
-        .build()
-    )
-    .target(PizzaClient.class, "https://api.pizza.com");
-
-Pizza pizza = new Pizza();
-pizza.name = "Margherita";
-pizza.ingredients = List.of("Tomato", "Mozzarella", "Basil");
-
-pizzaClient.create(
-    "premium-crust",
-
-    // to be streamed
-    new File("margherita.png"),
-
-    // to be converted to JSON via Jackson3Encoder
-    new FormData<>(pizza).contentType("application/json")
-);
-```
-
 ### Spring MultipartFile and Spring Cloud Netflix @FeignClient support
 
 You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`.
@@ -1595,31 +1546,5 @@ public interface DownloadClient {
       });
     }
   }
-}
-```
-
-#### Streaming Spring MultipartFile (Feign 14+)
-
-If you are using Spring Cloud OpenFeign and need to stream large `MultipartFile` payloads without consuming significant
-JVM memory, you can use `feign.form.spring.MultipartFileEncoder`. This encoder processes files as streams instead of
-loading their entire content into memory.
-
-```java
-@Configuration
-public class StreamingMultipartConfig {
-
-  @Bean
-  public Encoder feignFormEncoder() {
-    return MultipartFormEncoder.builder()
-            .partEncoders(encoders -> encoders.addFirst(new MultipartFileEncoder()))
-            .build();
-  }
-}
-
-@FeignClient(name = "large-file-upload-service", configuration = StreamingMultipartConfig.class)
-public interface LargeFileUploadClient {
-
-  @RequestMapping(value = "/upload", method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  void uploadLargeFile(@RequestBody MultipartFile file);
 }
 ```
