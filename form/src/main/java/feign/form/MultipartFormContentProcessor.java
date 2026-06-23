@@ -34,6 +34,7 @@ import feign.form.multipart.SingleParameterWriter;
 import feign.form.multipart.Writer;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -48,6 +49,8 @@ import lombok.experimental.FieldDefaults;
  */
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class MultipartFormContentProcessor implements ContentProcessor {
+
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   Deque<Writer> writers;
 
@@ -75,7 +78,7 @@ public class MultipartFormContentProcessor implements ContentProcessor {
   @Override
   public void process(RequestTemplate template, Charset charset, Map<String, Object> data)
       throws EncodeException {
-    final var boundary = Long.toHexString(System.currentTimeMillis());
+    final var boundary = randomBoundary();
     try (final var output = new Output(charset)) {
       for (var entry : data.entrySet()) {
         if (entry == null || entry.getKey() == null || entry.getValue() == null) {
@@ -157,5 +160,16 @@ public class MultipartFormContentProcessor implements ContentProcessor {
       }
     }
     return defaultPerocessor;
+  }
+
+  private static String randomBoundary() {
+    var token = new byte[16];
+    RANDOM.nextBytes(token);
+    var builder = new StringBuilder(token.length * 2);
+    for (var octet : token) {
+      builder.append(Character.forDigit((octet >> 4) & 0xF, 16));
+      builder.append(Character.forDigit(octet & 0xF, 16));
+    }
+    return builder.toString();
   }
 }

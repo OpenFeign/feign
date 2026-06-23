@@ -20,7 +20,9 @@ import static feign.Util.*;
 import feign.Request.ProtocolVersion;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 
 /** An immutable response to an http invocation which only returns string content. */
@@ -219,7 +221,11 @@ public final class Response implements Closeable {
           String[] charsetParts = contentTypeParmeters[1].split("=");
           if (charsetParts.length == 2 && "charset".equalsIgnoreCase(charsetParts[0].trim())) {
             String charsetString = charsetParts[1].replaceAll("\"", "");
-            return Charset.forName(charsetString);
+            try {
+              return Charset.forName(charsetString);
+            } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+              return Util.UTF_8;
+            }
           }
         }
       }

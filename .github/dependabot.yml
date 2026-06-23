@@ -24,6 +24,9 @@ updates:
       # SAAJ impl at 1.x (soap) and 3.x (soap-jakarta)
       - dependency-name: "com.sun.xml.messaging.saaj:saaj-impl"
         update-types: ["version-update:semver-major"]
+      # feign-validation is intentionally on javax.validation; Hibernate Validator 7+ is Jakarta-only.
+      - dependency-name: "org.hibernate.validator:hibernate-validator"
+        update-types: ["version-update:semver-major"]
 
   # Jersey 2.x for jaxrs2
   - package-ecosystem: "maven"

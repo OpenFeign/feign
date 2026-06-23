@@ -63,10 +63,14 @@ public abstract class AbstractWriter implements Writer {
     final var contentDespositionBuilder =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
-            .append(name)
+            .append(escapeHeaderParameter(name))
             .append("\"");
     if (fileName != null) {
-      contentDespositionBuilder.append("; ").append("filename=\"").append(fileName).append("\"");
+      contentDespositionBuilder
+          .append("; ")
+          .append("filename=\"")
+          .append(escapeHeaderParameter(fileName))
+          .append("\"");
     }
 
     String fileContentType = contentType;
@@ -84,7 +88,7 @@ public abstract class AbstractWriter implements Writer {
             .append(contentDespositionBuilder.toString())
             .append(CRLF)
             .append("Content-Type: ")
-            .append(fileContentType)
+            .append(stripCrlf(fileContentType))
             .append(CRLF)
             .append("Content-Transfer-Encoding: binary")
             .append(CRLF)
@@ -92,5 +96,31 @@ public abstract class AbstractWriter implements Writer {
             .toString();
 
     output.write(string);
+  }
+
+  /**
+   * Escapes a {@code multipart/form-data} header parameter value so an attacker-supplied name or
+   * file name cannot break out of the quoted string and inject extra headers or part boundaries.
+   * Carriage return, line feed and double quote are percent-encoded, matching the WHATWG form-data
+   * encoding rules.
+   *
+   * @param value the raw parameter value.
+   * @return the escaped value, safe to place inside a quoted header parameter.
+   */
+  protected static String escapeHeaderParameter(String value) {
+    return value.replace("\r", "%0D").replace("\n", "%0A").replace("\"", "%22");
+  }
+
+  /**
+   * Removes carriage return and line feed from a media type so an attacker-supplied content type
+   * cannot inject extra part headers or boundaries. Unlike a quoted parameter the {@code
+   * Content-Type} value is not quoted, so it cannot be percent-encoded without corrupting a
+   * legitimate media type; the control characters are dropped instead.
+   *
+   * @param contentType the raw content type value.
+   * @return the content type with CR and LF removed.
+   */
+  protected static String stripCrlf(String contentType) {
+    return contentType.replace("\r", "").replace("\n", "");
   }
 }

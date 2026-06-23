@@ -33,14 +33,31 @@ public class SingleParameterWriter extends AbstractWriter {
 
   @Override
   protected void write(Output output, String key, Object value) throws EncodeException {
+    writeWithContentType(output, key, value, null);
+  }
+
+  /**
+   * Writes a single parameter using the given content type.
+   *
+   * @param output output writer.
+   * @param key name for piece of data.
+   * @param value piece of data.
+   * @param contentType the content type of the part. May be {@code null}, in which case {@code
+   *     text/plain} with the output charset is used.
+   * @throws EncodeException in case of write errors
+   */
+  protected void writeWithContentType(Output output, String key, Object value, String contentType)
+      throws EncodeException {
+    final var contentTypeHeader =
+        contentType != null ? contentType : "text/plain; charset=" + output.getCharset().name();
     final var string =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
-            .append(key)
+            .append(escapeHeaderParameter(key))
             .append('"')
             .append(CRLF)
-            .append("Content-Type: text/plain; charset=")
-            .append(output.getCharset().name())
+            .append("Content-Type: ")
+            .append(stripCrlf(contentTypeHeader))
             .append(CRLF)
             .append(CRLF)
             .append(value.toString())

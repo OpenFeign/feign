@@ -165,18 +165,18 @@
     <maven.compiler.source>${main.java.version}</maven.compiler.source>
     <maven.compiler.target>${main.java.version}</maven.compiler.target>
 
-    <okhttp3.version>5.3.2</okhttp3.version>
+    <okhttp3.version>5.4.0</okhttp3.version>
     <guava.version>33.6.0-jre</guava.version>
     <googlehttpclient.version>2.1.0</googlehttpclient.version>
     <gson.version>2.14.0</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.18</slf4j.version>
     <json.version>20260522</json.version>
-    <springboot.version>4.0.6</springboot.version>
+    <springboot.version>4.1.0</springboot.version>
 
     <junit5.version>6.1.0</junit5.version>
-    <jackson.version>2.21.3</jackson.version>
-    <jackson3.version>3.1.3</jackson3.version>
+    <jackson.version>2.22.0</jackson.version>
+    <jackson3.version>3.2.0</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
     <fastjson2.version>2.0.61.android8</fastjson2.version>
@@ -192,7 +192,7 @@
     <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
     <maven-bundle-plugin.version>6.0.2</maven-bundle-plugin.version>
     <centralsync-maven-plugin.version>0.1.1</centralsync-maven-plugin.version>
-    <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+    <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <bom-generator.version>0.300.0</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
@@ -206,9 +206,9 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.41.0</rewrite-maven-plugin.version>
-    <rewrite-testing-frameworks.version>3.37.0</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.36.0</rewrite-migrate-java.version>
+    <rewrite-maven-plugin.version>6.42.0</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.40.0</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.38.0</rewrite-migrate-java.version>
     <japicmp-maven-plugin.version>0.26.1</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
@@ -221,7 +221,7 @@
     <commons-text.version>1.15.0</commons-text.version>
     <compile-testing.version>0.23.0</compile-testing.version>
     <graphql-java.version>26.0</graphql-java.version>
-    <handlebars.version>4.5.1</handlebars.version>
+    <handlebars.version>4.5.2</handlebars.version>
     <httpclient4.version>4.5.14</httpclient4.version>
     <httpclient5.version>5.6.1</httpclient5.version>
     <javapoet.version>1.13.0</javapoet.version>
@@ -238,8 +238,8 @@
     <jaxws-api.version>2.3.3</jaxws-api.version>
     <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
     <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
-    <hibernate-validator-6.version>6.2.5.Final</hibernate-validator-6.version>
-    <hibernate-validator-8.version>8.0.1.Final</hibernate-validator-8.version>
+    <hibernate-validator-javax.version>6.2.5.Final</hibernate-validator-javax.version>
+    <hibernate-validator-jakarta.version>9.1.0.Final</hibernate-validator-jakarta.version>
     <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
     <expressly.version>6.0.0</expressly.version>
     <jersey-client.version>1.19.4</jersey-client.version>
@@ -252,10 +252,9 @@
     <really-executable-jar-maven-plugin.version>2.1.1</really-executable-jar-maven-plugin.version>
     <saaj-impl-1.version>1.5.3</saaj-impl-1.version>
     <saaj-impl-3.version>3.0.2</saaj-impl-3.version>
-    <spring-cloud-dependencies.version>2025.1.1</spring-cloud-dependencies.version>
-    <spring-cloud-starter-openfeign.version>5.0.1</spring-cloud-starter-openfeign.version>
-    <spring-context.version>7.0.7</spring-context.version>
-    <spring-web.version>7.0.7</spring-web.version>
+    <spring-cloud-dependencies.version>2025.1.2</spring-cloud-dependencies.version>
+    <spring-cloud-starter-openfeign.version>5.0.2</spring-cloud-starter-openfeign.version>
+    <spring.version>7.0.8</spring.version>
     <undertow-core.version>2.4.1.Final</undertow-core.version>
     <utils-java.version>1.18.0</utils-java.version>
   </properties>

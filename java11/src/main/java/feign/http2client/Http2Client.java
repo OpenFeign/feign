@@ -163,6 +163,10 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
+    final Integer contentLength =
+        length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
+            ? (int) length.getAsLong()
+            : null;
 
     InputStream body = httpResponse.body();
 
@@ -177,7 +181,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
     return Response.builder()
         .protocolVersion(enumForName(ProtocolVersion.class, httpResponse.version()))
-        .body(body, length.isPresent() ? (int) length.getAsLong() : null)
+        .body(body, contentLength)
         .reason(httpResponse.headers().firstValue("Reason-Phrase").orElse(null))
         .request(request)
         .status(httpResponse.statusCode())
@@ -295,13 +299,26 @@ public class Http2Client implements Client, AsyncClient<Object> {
    *
    * @see jdk.internal.net.http.common.Utils.DISALLOWED_HEADERS_SET
    */
-  private static final Set<String> DISALLOWED_HEADERS_SET;
+  private static final Set<String> DISALLOWED_HEADERS_SET =
+      disallowedHeaders(System.getProperty("jdk.httpclient.allowRestrictedHeaders"));
 
-  static {
+  /**
+   * Builds the set of headers the underlying JDK HttpClient refuses to send. Mirrors {@code
+   * jdk.internal.net.http.common.Utils#getDisallowedHeaders()}: headers listed (comma separated) in
+   * the {@code jdk.httpclient.allowRestrictedHeaders} system property are removed from the set, so
+   * that callers who opt in at the JDK level (e.g. to set {@code Host}) are not silently filtered
+   * out here as well.
+   */
+  static Set<String> disallowedHeaders(String allowRestrictedHeaders) {
     // A case insensitive TreeSet of strings.
     final TreeSet<String> treeSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     treeSet.addAll(Set.of("connection", "content-length", "expect", "host", "upgrade"));
-    DISALLOWED_HEADERS_SET = Collections.unmodifiableSet(treeSet);
+    if (allowRestrictedHeaders != null) {
+      for (String header : allowRestrictedHeaders.split(",")) {
+        treeSet.remove(header.trim());
+      }
+    }
+    return Collections.unmodifiableSet(treeSet);
   }
 
   private Map<String, Collection<String>> filterRestrictedHeaders(

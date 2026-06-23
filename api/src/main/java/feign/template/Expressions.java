@@ -22,10 +22,18 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public final class Expressions {
 
-  private static final int MAX_EXPRESSION_LENGTH = 10000;
+  /**
+   * System property controlling the maximum allowed length of a single expression. Defaults to
+   * {@link #DEFAULT_MAX_EXPRESSION_LENGTH}. Setting it to {@code 0} (or any non-positive value)
+   * disables the length check entirely.
+   */
+  static final String MAX_EXPRESSION_LENGTH_PROPERTY = "feign.template.expression.maxLength";
+
+  private static final int DEFAULT_MAX_EXPRESSION_LENGTH = 10000;
 
   private static final String PATH_STYLE_OPERATOR = ";";
 
@@ -73,10 +81,16 @@ public final class Expressions {
       throw new IllegalArgumentException("an expression is required.");
     }
 
-    /* Check if the expression is too long */
-    if (expression.length() > MAX_EXPRESSION_LENGTH) {
+    /*
+     * Check if the expression is too long. The limit is configurable through the
+     * "feign.template.expression.maxLength" system property and can be disabled by setting it to a
+     * non-positive value.
+     */
+    final int maxExpressionLength =
+        Integer.getInteger(MAX_EXPRESSION_LENGTH_PROPERTY, DEFAULT_MAX_EXPRESSION_LENGTH);
+    if (maxExpressionLength > 0 && expression.length() > maxExpressionLength) {
       throw new IllegalArgumentException(
-          "expression is too long. Max length: " + MAX_EXPRESSION_LENGTH);
+          "expression is too long. Max length: " + maxExpressionLength);
     }
 
     /* create a new regular expression matcher for the expression */
@@ -104,15 +118,26 @@ public final class Expressions {
       }
     }
 
-    /* check for an operator */
-    if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
-      return new PathStyleExpression(variableName, variablePattern);
-    }
+    /*
+     * The value modifier after the ':' is compiled as a regular expression. When the chunk is a
+     * dynamic value (for example a header-map value that happens to contain '{' and ':') the
+     * modifier is not a valid pattern, so treat the chunk as a literal instead of letting the
+     * PatternSyntaxException escape.
+     */
+    try {
+      /* check for an operator */
+      if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
+        return new PathStyleExpression(variableName, variablePattern);
+      }
 
-    /* default to simple */
-    return SimpleExpression.isSimpleExpression(value)
-        ? new SimpleExpression(variableName, variablePattern)
-        : null; // Return null if it can't be validated as a Simple Expression -- Probably a Literal
+      /* default to simple */
+      // Return null if it can't be validated as a Simple Expression -- Probably a Literal
+      return SimpleExpression.isSimpleExpression(value)
+          ? new SimpleExpression(variableName, variablePattern)
+          : null;
+    } catch (PatternSyntaxException e) {
+      return null;
+    }
   }
 
   private static String stripBraces(String expression) {
