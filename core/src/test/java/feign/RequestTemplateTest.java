@@ -218,6 +218,17 @@ public class RequestTemplateTest {
     assertThat(template).hasHeaders(entry("A-Header", Collections.singletonList(json)));
   }
 
+  /** A header-map value containing brackets and a colon must not be parsed as a regex. */
+  @Test
+  void resolveTemplateWithHeaderMapValueContainingPatternModifier() {
+    String value = "{range:[1:10}";
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).header("A-Header", value);
+
+    template.resolve(new LinkedHashMap<>());
+    assertThat(template).hasHeaders(entry("A-Header", Collections.singletonList(value)));
+  }
+
   @Test
   void resolveTemplateWithHeaderWithJson() {
     String json = "{ \"string\": \"val\", \"string2\": \"this should not be truncated\"}";

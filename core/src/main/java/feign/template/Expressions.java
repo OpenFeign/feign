@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public final class Expressions {
 
@@ -117,15 +118,26 @@ public final class Expressions {
       }
     }
 
-    /* check for an operator */
-    if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
-      return new PathStyleExpression(variableName, variablePattern);
-    }
+    /*
+     * The value modifier after the ':' is compiled as a regular expression. When the chunk is a
+     * dynamic value (for example a header-map value that happens to contain '{' and ':') the
+     * modifier is not a valid pattern, so treat the chunk as a literal instead of letting the
+     * PatternSyntaxException escape.
+     */
+    try {
+      /* check for an operator */
+      if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
+        return new PathStyleExpression(variableName, variablePattern);
+      }
 
-    /* default to simple */
-    return SimpleExpression.isSimpleExpression(value)
-        ? new SimpleExpression(variableName, variablePattern)
-        : null; // Return null if it can't be validated as a Simple Expression -- Probably a Literal
+      /* default to simple */
+      // Return null if it can't be validated as a Simple Expression -- Probably a Literal
+      return SimpleExpression.isSimpleExpression(value)
+          ? new SimpleExpression(variableName, variablePattern)
+          : null;
+    } catch (PatternSyntaxException e) {
+      return null;
+    }
   }
 
   private static String stripBraces(String expression) {
