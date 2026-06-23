@@ -27,6 +27,8 @@ import feign.codec.Encoder;
 import feign.core.codec.DefaultEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -129,6 +131,13 @@ public class FormEncoder implements Encoder {
 
   private Charset getCharset(String contentTypeValue) {
     final var matcher = CHARSET_PATTERN.matcher(contentTypeValue);
-    return matcher.find() ? Charset.forName(matcher.group(1)) : UTF_8;
+    if (!matcher.find()) {
+      return UTF_8;
+    }
+    try {
+      return Charset.forName(matcher.group(1));
+    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+      return UTF_8;
+    }
   }
 }

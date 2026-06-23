@@ -48,15 +48,27 @@ public class DelegateWriter extends AbstractWriter {
   protected void write(Output output, String key, Object value) throws EncodeException {
     final var fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
-    fake.requestBody().ifPresent(body -> write(output, key, body));
+    fake.requestBody().ifPresent(body -> write(output, key, body, contentType(fake)));
   }
 
-  private void write(Output output, String key, Request.Body body) {
+  private void write(Output output, String key, Request.Body body, String contentType) {
     try {
       final var encoded = body.writeToString(StandardCharsets.UTF_8).replaceAll("\n", "");
-      parameterWriter.write(output, key, encoded);
+      parameterWriter.writeWithContentType(output, key, encoded, contentType);
     } catch (IOException e) {
       throw new EncodeException("Failed to write request body for key: " + key, e);
     }
+  }
+
+  private static String contentType(RequestTemplate template) {
+    final var headers = template.headers().get("Content-Type");
+    if (headers != null) {
+      for (var header : headers) {
+        if (header != null && !header.isEmpty()) {
+          return header;
+        }
+      }
+    }
+    return null;
   }
 }
