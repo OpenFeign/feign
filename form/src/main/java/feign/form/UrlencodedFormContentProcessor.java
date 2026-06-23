@@ -106,7 +106,10 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
   private CharSequence createKeyValuePair(
       CollectionFormat collectionFormat, String key, Stream<?> values, Charset charset) {
     val stringValues =
-        values.filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
+        values
+            .filter(Objects::nonNull)
+            .map(value -> encode(value, charset))
+            .collect(Collectors.toList());
     return collectionFormat.join(key, stringValues, charset);
   }
 }
