@@ -18,15 +18,4 @@ package feign.codec;
 import feign.Experimental;
 
 @Experimental
-public interface JsonEncoder extends Encoder {
-  /**
-   * {@inheritDoc}
-   *
-   * @param contentType {@inheritDoc}
-   * @return {@code true} if the given {@code contentType} is a JSON media type, {@code false}
-   */
-  @Override
-  default boolean supports(String contentType) {
-    return contentType != null && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?json.*");
-  }
-}
+public interface JsonEncoder extends Encoder {}
