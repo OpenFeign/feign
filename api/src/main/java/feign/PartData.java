@@ -32,7 +32,7 @@ public class PartData {
   private final Type type;
   private final Object value;
   private final Map<String, Collection<String>> headers;
-  private final boolean unwrap;
+  private final boolean explode;
 
   /**
    * Creates runtime data for one multipart part.
@@ -41,14 +41,14 @@ public class PartData {
    * @param value the runtime argument value for this part
    * @param headers part header templates, keyed by header name; values may contain {@code {name}}
    *     placeholders to be resolved by the encoder
-   * @param unwrap whether arrays and iterable values should be expanded into repeated parts
+   * @param explode whether arrays and iterable values should be expanded into repeated parts
    */
   public PartData(
-      Type type, Object value, Map<String, Collection<String>> headers, boolean unwrap) {
+      Type type, Object value, Map<String, Collection<String>> headers, boolean explode) {
     this.type = Objects.requireNonNull(type, "type must not be null");
     this.value = value;
     this.headers = Objects.requireNonNull(headers, "headers must not be null");
-    this.unwrap = unwrap;
+    this.explode = explode;
   }
 
   /**
@@ -86,7 +86,7 @@ public class PartData {
    *     {@code false} otherwise
    */
   public boolean unwrap() {
-    return unwrap;
+    return explode;
   }
 
   /**
@@ -99,7 +99,7 @@ public class PartData {
   public boolean equals(Object object) {
     if (!(object instanceof PartData)) return false;
     PartData partData = (PartData) object;
-    return unwrap == partData.unwrap
+    return explode == partData.explode
         && Objects.equals(type, partData.type)
         && Objects.equals(value, partData.value)
         && Objects.equals(headers, partData.headers);
@@ -112,7 +112,7 @@ public class PartData {
    */
   @Override
   public int hashCode() {
-    return Objects.hash(type, value, headers, unwrap);
+    return Objects.hash(type, value, headers, explode);
   }
 
   /**
@@ -129,8 +129,8 @@ public class PartData {
         + value
         + ", headers="
         + headers
-        + ", unwrap="
-        + unwrap
+        + ", explode="
+        + explode
         + '}';
   }
 }
