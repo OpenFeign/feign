@@ -123,6 +123,24 @@ class HeaderTemplateTest {
   }
 
   @Test
+  void it_should_strip_crlf_from_expanded_values() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("X-Custom", Collections.singletonList("{value}"));
+    assertThat(
+            headerTemplate.expand(Collections.singletonMap("value", "legit\r\nX-Injected: evil")))
+        .isEqualTo("legitX-Injected: evil");
+  }
+
+  @Test
+  void it_should_strip_crlf_from_literal_values() {
+    HeaderTemplate headerTemplate =
+        HeaderTemplate.create("X-Custom", Collections.singletonList("legit\r\nX-Injected: evil"));
+    assertThat(new ArrayList<>(headerTemplate.getValues()))
+        .containsExactly("legitX-Injected: evil");
+    assertThat(headerTemplate.expand(Collections.emptyMap())).isEqualTo("legitX-Injected: evil");
+  }
+
+  @Test
   void it_should_support_json_literal_values() {
     HeaderTemplate headerTemplate =
         HeaderTemplate.create("CustomHeader", Collections.singletonList("{jsonParam}"));
