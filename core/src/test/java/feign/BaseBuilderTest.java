@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
+import feign.codec.Decoder;
 import java.lang.reflect.Field;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -61,5 +62,21 @@ class BaseBuilderTest {
       throws IllegalArgumentException, IllegalAccessException {
     test(
         Feign.builder().requestInterceptor(_ -> {}).responseInterceptor((ic, c) -> c.next(ic)), 10);
+  }
+
+  @Test
+  void clonedBuilderFluentMethodsReturnClone() throws CloneNotSupportedException {
+    CloneableFeignBuilder original = new CloneableFeignBuilder();
+    Feign.Builder clone = original.copy();
+
+    assertThat(clone.requestInterceptor(_ -> {})).isSameAs(clone);
+    assertThat(clone.decoder(Mockito.mock(Decoder.class))).isSameAs(clone);
+  }
+
+  private static final class CloneableFeignBuilder extends Feign.Builder {
+
+    Feign.Builder copy() throws CloneNotSupportedException {
+      return (Feign.Builder) super.clone();
+    }
   }
 }
