@@ -171,6 +171,13 @@ public interface Contract {
         }
       }
 
+      if (!data.partMetadata().isEmpty()) {
+        checkState(
+            data.bodyIndex() == null,
+            "Body parameters cannot be used with @Part parameters.%s",
+            data.warnings());
+      }
+
       return data;
     }
 

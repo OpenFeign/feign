@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 final class RequestTemplateFactoryResolver {
   private final Encoder encoder;
@@ -38,7 +39,9 @@ final class RequestTemplateFactoryResolver {
   }
 
   public RequestTemplate.Factory resolve(Target<?> target, MethodMetadata md) {
-    if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
+    if (!md.partMetadata().isEmpty()) {
+      return new BuildMultipartTemplateFromArgs(md, encoder, queryMapEncoder, target);
+    } else if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
       return new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
     } else if (md.bodyIndex() != null || md.alwaysEncodeBody()) {
       return new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
@@ -278,6 +281,47 @@ final class RequestTemplateFactoryResolver {
       } catch (RuntimeException e) {
         throw new EncodeException(e.getMessage(), e);
       }
+      return super.resolve(argv, mutable, variables);
+    }
+  }
+
+  static class BuildMultipartTemplateFromArgs extends BuildTemplateByResolvingArgs {
+    private final Encoder encoder;
+
+    BuildMultipartTemplateFromArgs(
+        MethodMetadata metadata,
+        Encoder encoder,
+        QueryMapEncoder queryMapEncoder,
+        Target<?> target) {
+      super(metadata, queryMapEncoder, target);
+      this.encoder = encoder;
+    }
+
+    @Override
+    protected RequestTemplate resolve(
+        Object[] argv, RequestTemplate mutable, Map<String, Object> variables) {
+      List<PartData> parts =
+          metadata.partMetadata().entrySet().stream()
+              .map(
+                  entry -> {
+                    PartMetadata partMeta = entry.getValue();
+                    return new PartData(
+                        partMeta.type(),
+                        argv[entry.getKey()],
+                        partMeta.headers(),
+                        partMeta.unwrap());
+                  })
+              .collect(Collectors.toList());
+      MultipartFormData formData = new MultipartFormData(parts, variables);
+
+      try {
+        encoder.encode(formData, MultipartFormData.class, mutable);
+      } catch (EncodeException e) {
+        throw e;
+      } catch (RuntimeException e) {
+        throw new EncodeException(e.getMessage(), e);
+      }
+
       return super.resolve(argv, mutable, variables);
     }
   }
