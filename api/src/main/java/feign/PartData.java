@@ -85,7 +85,7 @@ public class PartData {
    * @return {@code true} if arrays and iterable values should be expanded into repeated parts,
    *     {@code false} otherwise
    */
-  public boolean unwrap() {
+  public boolean explode() {
     return explode;
   }
 

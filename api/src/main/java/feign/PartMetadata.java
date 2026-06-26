@@ -25,7 +25,7 @@ public class PartMetadata {
   private final int index;
   private final Type type;
   private final Map<String, Collection<String>> headers;
-  private final boolean unwrap;
+  private final boolean explode;
 
   /**
    * Creates metadata for one multipart part parameter.
@@ -34,14 +34,14 @@ public class PartMetadata {
    * @param type method parameter type
    * @param headers part header templates declared by {@link Part}, keyed by header name; values may
    *     contain {@code {name}} placeholders to be resolved by the encoder
-   * @param unwrap whether arrays and iterable values should be expanded into repeated parts
+   * @param explode whether arrays and iterable values should be expanded into repeated parts
    */
   public PartMetadata(
-      int index, Type type, Map<String, Collection<String>> headers, boolean unwrap) {
+      int index, Type type, Map<String, Collection<String>> headers, boolean explode) {
     this.index = index;
     this.type = Objects.requireNonNull(type, "type must not be null");
     this.headers = Objects.requireNonNull(headers, "headers must not be null");
-    this.unwrap = unwrap;
+    this.explode = explode;
   }
 
   /**
@@ -78,8 +78,8 @@ public class PartMetadata {
    * @return {@code true} if arrays and iterable values should be expanded into repeated parts,
    *     {@code false} otherwise
    */
-  public boolean unwrap() {
-    return unwrap;
+  public boolean explode() {
+    return explode;
   }
 
   /**
@@ -93,7 +93,7 @@ public class PartMetadata {
     if (!(object instanceof PartMetadata)) return false;
     PartMetadata that = (PartMetadata) object;
     return index == that.index
-        && unwrap == that.unwrap
+        && explode == that.explode
         && Objects.equals(type, that.type)
         && Objects.equals(headers, that.headers);
   }
@@ -105,7 +105,7 @@ public class PartMetadata {
    */
   @Override
   public int hashCode() {
-    return Objects.hash(index, type, headers, unwrap);
+    return Objects.hash(index, type, headers, explode);
   }
 
   /**
@@ -122,8 +122,8 @@ public class PartMetadata {
         + type
         + ", headers="
         + headers
-        + ", unwrap="
-        + unwrap
+        + ", explode="
+        + explode
         + '}';
   }
 }

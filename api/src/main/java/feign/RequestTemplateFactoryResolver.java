@@ -309,7 +309,7 @@ final class RequestTemplateFactoryResolver {
                         partMeta.type(),
                         argv[entry.getKey()],
                         partMeta.headers(),
-                        partMeta.unwrap());
+                        partMeta.explode());
                   })
               .collect(Collectors.toList());
       MultipartFormData formData = new MultipartFormData(parts, variables);
