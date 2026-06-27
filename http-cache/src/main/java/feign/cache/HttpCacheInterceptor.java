@@ -23,6 +23,7 @@ import feign.Util;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
@@ -36,7 +37,8 @@ import java.util.regex.Pattern;
  * <p>Successful responses (2xx) carrying an {@code ETag} or {@code Last-Modified} header are
  * stored. Responses with {@code Cache-Control: no-store} are skipped.
  *
- * <p>Default scope is HTTP {@code GET} and {@code HEAD}; override via {@link #cacheable(Function)}.
+ * <p>Default scope is HTTP {@code GET}, {@code HEAD}, and {@code QUERY}; override via {@link
+ * #cacheable(Function)}.
  *
  * <p><b>Important:</b> 304 detection relies on the configured {@link feign.codec.ErrorDecoder}
  * raising a {@link FeignException} for non-2xx responses (the default behaviour). If a custom error
@@ -129,12 +131,17 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
 
   private static String defaultKey(Invocation invocation) {
     RequestTemplate template = invocation.requestTemplate();
-    return invocation.methodMetadata().configKey() + "|" + template.method() + " " + template.url();
+    String base =
+        invocation.methodMetadata().configKey() + "|" + template.method() + " " + template.url();
+    byte[] body = template.body();
+    return body != null ? base + "|" + Arrays.hashCode(body) : base;
   }
 
   private static Boolean defaultCacheable(RequestTemplate template) {
     String method = template.method();
-    return "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method);
+    return "GET".equalsIgnoreCase(method)
+        || "HEAD".equalsIgnoreCase(method)
+        || "QUERY".equalsIgnoreCase(method);
   }
 
   private static boolean containsNoStore(Map<String, Collection<String>> headers) {

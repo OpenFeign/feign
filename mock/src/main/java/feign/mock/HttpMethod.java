@@ -24,5 +24,6 @@ public enum HttpMethod {
   TRACE,
   OPTIONS,
   CONNECT,
-  PATCH
+  PATCH,
+  QUERY
 }
