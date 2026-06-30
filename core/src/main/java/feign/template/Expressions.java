@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public final class Expressions {
 
@@ -104,15 +105,23 @@ public final class Expressions {
       }
     }
 
-    /* check for an operator */
-    if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
-      return new PathStyleExpression(variableName, variablePattern);
-    }
+    try {
+      /* check for an operator */
+      if (PATH_STYLE_OPERATOR.equalsIgnoreCase(operator)) {
+        return new PathStyleExpression(variableName, variablePattern);
+      }
 
-    /* default to simple */
-    return SimpleExpression.isSimpleExpression(value)
-        ? new SimpleExpression(variableName, variablePattern)
-        : null; // Return null if it can't be validated as a Simple Expression -- Probably a Literal
+      /* default to simple; null if it can't be validated as a Simple Expression -- probably a literal */
+      return SimpleExpression.isSimpleExpression(value)
+          ? new SimpleExpression(variableName, variablePattern)
+          : null;
+    } catch (PatternSyntaxException e) {
+      /*
+       * the ':' value modifier did not contain a valid regular expression, so this is not a usable
+       * expression -- treat it as a literal instead of failing template construction.
+       */
+      return null;
+    }
   }
 
   private static String stripBraces(String expression) {

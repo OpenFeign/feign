@@ -45,6 +45,17 @@ class ExpressionsTest {
   }
 
   @Test
+  void invalidPatternModifierIsTreatedAsLiteral() {
+    /*
+     * gh-2739: a header-map value such as "{test:[abc}" parses as a "{name:pattern}" expression,
+     * but the ':' modifier ("[abc") is not a valid regular expression. Compiling it must not blow
+     * up template construction with a PatternSyntaxException -- it should fall back to a literal.
+     */
+    Expression expression = Expressions.create("{test:[abc}");
+    assertThatObject(expression).isNull();
+  }
+
+  @Test
   void malformedBodyTemplate() {
     String bodyTemplate = "{" + "a".repeat(65536) + "}";
 
