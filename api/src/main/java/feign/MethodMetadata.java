@@ -41,6 +41,7 @@ public final class MethodMetadata implements Serializable {
   private final Map<Integer, Class<? extends Expander>> indexToExpanderClass =
       new LinkedHashMap<Integer, Class<? extends Expander>>();
   private final Map<Integer, Boolean> indexToEncoded = new LinkedHashMap<Integer, Boolean>();
+  private final Map<Integer, PartMetadata> partMetadata = new LinkedHashMap<>();
   private transient Map<Integer, Expander> indexToExpander;
   private BitSet parameterToIgnore = new BitSet();
   private boolean ignored;
@@ -159,6 +160,15 @@ public final class MethodMetadata implements Serializable {
     return indexToEncoded;
   }
 
+  /**
+   * Returns metadata for {@link Part}-annotated parameters, keyed by parameter index.
+   *
+   * @return metadata for {@link Part}-annotated parameters, keyed by parameter index
+   */
+  public Map<Integer, PartMetadata> partMetadata() {
+    return partMetadata;
+  }
+
   /** If {@link #indexToExpander} is null, classes here will be instantiated by newInstance. */
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
     return indexToExpanderClass;
@@ -217,6 +227,7 @@ public final class MethodMetadata implements Serializable {
         || indexToName.containsKey(index)
         || indexToExpanderClass.containsKey(index)
         || indexToEncoded.containsKey(index)
+        || partMetadata.containsKey(index)
         || (indexToExpander != null && indexToExpander.containsKey(index))
         || parameterToIgnore.get(index);
   }

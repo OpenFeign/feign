@@ -25,6 +25,15 @@ The **breaking changes** primarily affect code that interacts directly with requ
 This is an additive, non-breaking change. Existing `DefaultEncoder` users do not need to modify code; users can now opt
 into streaming by passing these types.
 
+### `@Part` annotation & multipart encoder (non-breaking) (https://github.com/OpenFeign/feign/pull/3450)
+
+A new `@Part` parameter annotation provides first-class, declarative support for `multipart/form-data` requests.
+The `MultipartFormEncoder` (in `feign-form`) serializes `@Part`-annotated parameters into standards-compliant multipart
+bodies with streaming support. For Spring users, `MultipartFileEncoder` (in `feign-form-spring`) extends this to
+directly accept Spring's `MultipartFile` objects.
+
+These are additive, non-breaking additions. Existing form-encoded and single-body contracts are unaffected.
+
 ---
 
 ## Breaking Changes

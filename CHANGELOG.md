@@ -3,6 +3,9 @@
 * `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
+* New `@Part` annotation and `MultipartFormEncoder` for declarative, streaming `multipart/form-data` requests.
+  `MultipartFileEncoder` (in `feign-form-spring`) extends this with direct Spring `MultipartFile` support.
+  (https://github.com/OpenFeign/feign/pull/3450)
 
 ### Version 13.12
 

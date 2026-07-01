@@ -23,14 +23,19 @@ import feign.DeclarativeContract;
 import feign.HeaderMap;
 import feign.Headers;
 import feign.Param;
+import feign.Part;
+import feign.PartMetadata;
 import feign.QueryMap;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestLine;
+import feign.Types;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -142,6 +147,41 @@ public class DefaultContract extends DeclarativeContract {
               data.headerMapIndex() == null,
               "HeaderMap annotation was present on multiple parameters.");
           data.headerMapIndex(paramIndex);
+        });
+    super.registerParameterAnnotation(
+        Part.class,
+        (part, data, paramIndex) -> {
+          final String[] rawHeaders;
+          if (part.value().length > 0 && part.headers().length > 0) {
+            throw new IllegalStateException(
+                String.format(
+                    "@Part on method %s parameter %d has both value() and headers() set; use one or the other",
+                    data.configKey(), paramIndex));
+          } else if (part.value().length > 0) {
+            rawHeaders = part.value();
+          } else if (part.headers().length > 0) {
+            rawHeaders = part.headers();
+          } else {
+            throw new IllegalStateException(
+                String.format(
+                    "@Part on method %s parameter %d has neither value() nor headers() set; use one or the other",
+                    data.configKey(), paramIndex));
+          }
+
+          final Map<String, Collection<String>> headers =
+              rawHeaders.length == 1 && !rawHeaders[0].contains(":")
+                  ? Map.of(
+                      "Content-Disposition",
+                      List.of("form-data; name=\"" + rawHeaders[0].trim() + '"'))
+                  : toMap(rawHeaders);
+          final Type type =
+              Types.resolve(
+                  data.targetType(),
+                  data.targetType(),
+                  data.method().getGenericParameterTypes()[paramIndex]);
+          final PartMetadata metadata = new PartMetadata(paramIndex, type, headers, part.explode());
+
+          data.partMetadata().put(paramIndex, metadata);
         });
   }
 
