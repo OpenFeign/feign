@@ -128,6 +128,18 @@ public class DefaultClientTest extends AbstractClientTest {
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
+  /**
+   * {@link java.net.HttpURLConnection} does not support the QUERY method. For now, prefer okhttp.
+   *
+   * @see java.net.HttpURLConnection#setRequestMethod
+   */
+  @Test
+  @Override
+  public void query() throws Exception {
+    RetryableException exception = assertThrows(RetryableException.class, super::query);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
+  }
+
   @Test
   void canOverrideHostnameVerifier() throws IOException, InterruptedException {
     server.useHttps(TrustingSSLSocketFactory.get("bad.example.com"), false);

@@ -44,7 +44,8 @@ public final class Request implements Serializable {
     CONNECT,
     OPTIONS,
     TRACE,
-    PATCH(true);
+    PATCH(true),
+    QUERY(true);
 
     private final boolean withBody;
 

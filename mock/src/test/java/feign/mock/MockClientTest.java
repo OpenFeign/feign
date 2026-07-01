@@ -56,6 +56,10 @@ class MockClientTest {
     @RequestLine("PATCH /repos/{owner}/{repo}/contributors")
     List<Contributor> patchContributors(@Param("owner") String owner, @Param("repo") String repo);
 
+    @RequestLine("QUERY /repos/{owner}/{repo}/contributors")
+    @Headers("Content-Type: application/json")
+    List<Contributor> queryContributors(@Param("owner") String owner, @Param("repo") String repo);
+
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
     @Headers({"Content-Type: application/json"})
     @Body("%7B\"login\":\"{login}\",\"type\":\"{type}\"%7D")
@@ -168,6 +172,23 @@ class MockClientTest {
       fail("");
     } catch (FeignException e) {
       assertThat(e.getMessage()).contains("404");
+    }
+  }
+
+  @Test
+  void queryMock() throws IOException {
+    try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
+      byte[] data = toByteArray(input);
+      MockClient client =
+          new MockClient().ok(HttpMethod.QUERY, "/repos/netflix/feign/contributors", data);
+      GitHub api =
+          Feign.builder()
+              .decoder(new AssertionDecoder(new GsonDecoder()))
+              .client(client)
+              .target(new MockTarget<>(GitHub.class));
+      List<Contributor> contributors = api.queryContributors("netflix", "feign");
+      assertThat(contributors).hasSize(30);
+      client.verifyStatus();
     }
   }
 
