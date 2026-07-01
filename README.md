@@ -1444,6 +1444,149 @@ In the example above, the `sendPhoto` method uses the `photo` parameter using th
   someApi.sendPhoto(true, formData);
 ```
 
+#### Streaming multipart with `@Part` and `MultipartFormEncoder` (since v14)
+
+As of Feign v14, parts are streamed directly to the output without buffering the entire body in memory.
+Declare multipart contracts with the `@Part` annotation and wire up `MultipartFormEncoder`:
+
+```java
+interface UploadApi {
+  @RequestLine("POST /upload")
+  void upload(
+      @Part("file") Path file,
+
+      // Collection/array parts are exploded by default (explode = true);
+      // each element becomes a separate part.
+      //
+      // Use @Part(value = "tags", explode = false) to send tags as a single part
+      // (assuming there's an Encoder that supports List<String> types).
+      @Part("tags") List<String> tags,
+
+      // Header templates accept @Param-expanded variables
+      @Part({
+          "Content-Disposition: form-data; name=\"custom\"",
+          "Content-Type: {contentType}"
+      })
+      String customPart,
+
+      @Param("contentType") String contentType
+  );
+}
+
+public class Example {
+  public static void main(String[] args) {
+    UploadApi client = Feign.builder()
+        .encoder(new MultipartFormEncoder())
+        .target(UploadApi.class, "https://example.com");
+
+    client.upload(
+        Path.of("photo.png"),
+        List.of("tag1", "tag2"),
+        "value",
+        "text/plain"
+    );
+  }
+}
+```
+
+When `@Part` parameters are present, `MultipartFormEncoder` automatically sets the
+`Content-Type: multipart/form-data` header with a generated boundary — no `@Headers` annotation needed.
+
+##### Sending files
+
+Sending files is straightforward:
+
+```java
+interface FileUploadApi {
+  @RequestLine("POST /upload")
+  void upload(
+      // Content-Disposition and Content-Type headers are generated automatically from the File's name and extension
+      @Part("file") File file,
+ 
+      // To override the filename and/or Content-Type auto-detection
+      @Part(headers = {
+          "Content-Disposition: form-data; name=\"custom\"; filename=\"custom.md\"",
+          "Content-Type: text/markdown"
+      })
+      Path customFile,
+  
+      // To send InputStream (or String, byte[] etc.) as a file
+      @Part(headers = {
+          "Content-Disposition: form-data; name=\"stream\"; filename=\"{filename}\"",
+          "Content-Type: {contentType}"
+      })
+      InputStream stream,
+      @Param("filename") String filename,
+      @Param("contentType") String contentType
+  );
+}
+
+public class Example {
+  public static void main(String[] args) {
+    FileUploadApi client = Feign.builder()
+        .encoder(new MultipartFormEncoder())
+        .target(FileUploadApi.class, "https://example.com");
+
+    try (InputStream stream = new ByteArrayInputStream("Hello, world!".getBytes(StandardCharsets.UTF_8))) {
+      client.upload(
+          new File("photo.png"),
+          Path.of("my-file.txt"),
+          stream,
+          "hello.txt",
+          "text/plain"
+      );
+    }
+  }
+}
+```
+
+##### Encoding arbitrary part body types with `ConditionalEncoder`
+
+The `PartBodyFactory` accepts a chain of `Encoder` instances. Wrap each with `ConditionalEncoder`
+and an `EncoderPredicate` to dispatch encoding based on the part's `Content-Type` header.
+This works with any body type — JSON, XML, Protobuf, or custom formats:
+
+```java
+interface UploadApi {
+  @RequestLine("POST /upload")
+  void upload(
+      @Part({
+          "Content-Disposition: form-data; name=\"jsonPart\"",
+          "Content-Type: application/json"
+      })
+      JsonPayload jsonPart,
+
+      @Part({
+          "Content-Disposition: form-data; name=\"xmlPart\"",
+          "Content-Type: application/xml"
+      })
+      XmlPayload xmlPart
+  );
+}
+
+public class Example {
+  public static void main(String[] args) {
+    UploadApi client = Feign.builder()
+        .encoder(MultipartFormEncoder.builder()
+            .partBodyFactory(new PartBodyFactory(List.of(
+                new ConditionalEncoder(new GsonEncoder(),
+                    EncoderPredicate.forContentType("application/json")),
+                new ConditionalEncoder(new JAXBEncoder(),
+                    EncoderPredicate.forContentType("application/xml")),
+                new DefaultEncoder() // fallback for byte[], Path, InputStream etc.
+            )))
+            .build())
+        .target(UploadApi.class, "https://example.com");
+
+    client.upload(new JsonPayload(...), new XmlPayload(...));
+  }
+}
+```
+
+Each `ConditionalEncoder` only fires when its predicate matches the part's declared `Content-Type`,
+falling through to the next encoder in the chain otherwise. The last encoder acts as a catch-all
+for untyped parts (`Path`, `byte[]`, `File`, etc.).
+
 ### Spring MultipartFile and Spring Cloud Netflix @FeignClient support
 
 You can also use Form Encoder with Spring `MultipartFile` and `@FeignClient`.
@@ -1548,3 +1691,28 @@ public interface DownloadClient {
   }
 }
 ```
+
+#### Streaming `MultipartFile` with `MultipartFileEncoder` (since v14)
+
+As an alternative to `SpringFormEncoder`, `MultipartFileEncoder` extends `MultipartFormEncoder`
+to stream Spring `MultipartFile` objects directly — no buffering in memory:
+
+```java
+@FeignClient(
+    name = "file-upload-service",
+    configuration = FileUploadServiceClient.MultipartSupportConfig.class
+)
+public interface FileUploadServiceClient extends IFileUploadServiceClient {
+
+  public class MultipartSupportConfig {
+
+    @Bean
+    public Encoder feignFormEncoder () {
+      return new MultipartFileEncoder(new MultipartFormEncoder());
+    }
+  }
+}
+```
+
+`MultipartFileEncoder` handles single `MultipartFile`, `MultipartFile[]`, and `Collection<MultipartFile>`
+parameters, automatically generating `Content-Disposition` and `Content-Type` headers.
