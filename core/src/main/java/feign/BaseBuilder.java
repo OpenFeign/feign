@@ -316,10 +316,21 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
       // enrich each response interceptor, then enrich the list as a whole
       ResponseInterceptor[] responseArray =
           clone.responseInterceptors.toArray(new ResponseInterceptor[0]);
-      for (int i = 0; i < responseArray.length; i++) {
-        responseArray[i] =
+      if (responseArray.length == 0) {
+        ResponseInterceptor defaultResponseInterceptor = (context, chain) -> chain.next(context);
+        ResponseInterceptor enrichedResponseInterceptor =
             (ResponseInterceptor)
-                Capability.enrich(responseArray[i], ResponseInterceptor.class, capabilities);
+                Capability.enrich(
+                    defaultResponseInterceptor, ResponseInterceptor.class, capabilities);
+        if (enrichedResponseInterceptor != defaultResponseInterceptor) {
+          responseArray = new ResponseInterceptor[] {enrichedResponseInterceptor};
+        }
+      } else {
+        for (int i = 0; i < responseArray.length; i++) {
+          responseArray[i] =
+              (ResponseInterceptor)
+                  Capability.enrich(responseArray[i], ResponseInterceptor.class, capabilities);
+        }
       }
       ResponseInterceptors responseInterceptors =
           (ResponseInterceptors)
