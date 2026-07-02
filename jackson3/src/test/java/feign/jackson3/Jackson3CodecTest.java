@@ -264,6 +264,38 @@ class Jackson3CodecTest {
     assertThat(asList((Iterator<?>) decoded)).isEqualTo(zones);
   }
 
+  @Test
+  void decodesIteratorUsingResponseCharset() throws Exception {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .body(
+                new String(
+                        "" //
+                            + "[ {"
+                            + System.lineSeparator()
+                            + "  \"name\" : \"denominator.io.\","
+                            + System.lineSeparator()
+                            + "  \"id\" : \"ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ\""
+                            + System.lineSeparator()
+                            + "} ]")
+                    .getBytes(StandardCharsets.ISO_8859_1))
+            .build();
+    Object decoded =
+        Jackson3IteratorDecoder.create()
+            .decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
+    List<?> zones = asList((Iterator<?>) decoded);
+    assertThat(zones).hasSize(1);
+    assertThat((Zone) zones.get(0)).containsEntry("id", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
+  }
+
   private <T> List<T> asList(Iterator<T> iter) {
     final List<T> copy = new ArrayList<>();
     while (iter.hasNext()) {
