@@ -20,8 +20,10 @@ import static feign.Util.enumForName;
 import feign.AsyncClient;
 import feign.Client;
 import feign.Request.ProtocolVersion;
+import feign.Util;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -151,7 +153,8 @@ public final class OkHttpClient implements Client, AsyncClient<Object> {
 
       @Override
       public Reader asReader(Charset charset) throws IOException {
-        return asReader();
+        Util.checkNotNull(charset, "charset should not be null");
+        return new InputStreamReader(asInputStream(), charset);
       }
     };
   }
