@@ -189,7 +189,7 @@ public class DefaultClient implements Client {
 
     byte[] body = request.body();
 
-    if (body != null) {
+    if (body != null && (body.length > 0 || request.httpMethod() != Request.HttpMethod.GET)) {
       /*
        * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
        * retry logic applies to such requests.
