@@ -17,12 +17,19 @@ package feign;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -99,5 +106,35 @@ class ClientTest {
      * "true"
      */
     assertNull(requestProperties.get(Util.CONTENT_LENGTH));
+  }
+
+  @Test
+  void testConvertAndSendDoesNotAddContentLengthHeaderForBody() throws IOException {
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put(Util.CONTENT_LENGTH, Collections.singletonList("3"));
+
+    HttpURLConnection connection = mock(HttpURLConnection.class);
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    when(connection.getOutputStream()).thenReturn(output);
+    DefaultClient defaultClient =
+        new DefaultClient(null, null) {
+          @Override
+          public HttpURLConnection getConnection(URL url) {
+            return connection;
+          }
+        };
+    Request request =
+        Request.create(
+            Request.HttpMethod.POST,
+            "http://example.com",
+            headers,
+            "foo".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
+            mock(RequestTemplate.class));
+
+    defaultClient.convertAndSend(request, mock(Request.Options.class));
+
+    verify(connection, never()).addRequestProperty(eq(Util.CONTENT_LENGTH), anyString());
+    assertEquals("foo", new String(output.toByteArray(), StandardCharsets.UTF_8));
   }
 }

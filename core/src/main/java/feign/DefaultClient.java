@@ -170,7 +170,6 @@ public class DefaultClient implements Client {
         if (field.equals(CONTENT_LENGTH)) {
           if (!gzipEncodedRequest && !deflateEncodedRequest) {
             contentLength = Integer.valueOf(value);
-            connection.addRequestProperty(field, value);
           }
         }
         // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
