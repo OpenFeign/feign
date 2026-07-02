@@ -31,7 +31,7 @@ public class StringDecoder implements Decoder {
       return null;
     }
     if (String.class.equals(type)) {
-      return Util.toString(body.asReader(Util.UTF_8));
+      return Util.toString(body.asReader(response.charset()));
     }
     throw new DecodeException(
         response.status(),
