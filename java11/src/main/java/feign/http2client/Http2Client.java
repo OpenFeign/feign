@@ -38,6 +38,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,12 +53,25 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 public class Http2Client implements Client, AsyncClient<Object> {
+
+  private static final ScheduledExecutorService BODY_READ_TIMEOUT_EXECUTOR =
+      Executors.newSingleThreadScheduledExecutor(
+          runnable -> {
+            Thread thread = new Thread(runnable, "feign-http2client-body-timeout");
+            thread.setDaemon(true);
+            return thread;
+          });
 
   private final HttpClient client;
 
@@ -109,7 +123,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       throw new IOException(e);
     }
 
-    return toFeignResponse(request, httpResponse);
+    return toFeignResponse(request, httpResponse, options);
   }
 
   @Override
@@ -125,17 +139,22 @@ public class Http2Client implements Client, AsyncClient<Object> {
     HttpClient clientForRequest = getOrCreateClient(options);
     CompletableFuture<HttpResponse<InputStream>> future =
         clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-    return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse));
+    return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse, options));
   }
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
+    return toFeignResponse(request, httpResponse, null);
+  }
+
+  private Response toFeignResponse(
+      Request request, HttpResponse<InputStream> httpResponse, Options options) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
     final Integer contentLength =
         length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
             ? (int) length.getAsLong()
             : null;
 
-    InputStream body = httpResponse.body();
+    InputStream body = withReadTimeout(httpResponse.body(), options);
 
     if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_GZIP)) {
       try {
@@ -154,6 +173,110 @@ public class Http2Client implements Client, AsyncClient<Object> {
         .status(httpResponse.statusCode())
         .headers(castMapCollectType(httpResponse.headers().map()))
         .build();
+  }
+
+  private static InputStream withReadTimeout(InputStream body, Options options) {
+    if (body == null || options == null || options.readTimeout() <= 0) {
+      return body;
+    }
+    return new TimeoutInputStream(body, options.readTimeout(), options.readTimeoutUnit());
+  }
+
+  private static final class TimeoutInputStream extends InputStream {
+
+    private final InputStream delegate;
+    private final long timeout;
+    private final TimeUnit timeoutUnit;
+
+    private TimeoutInputStream(InputStream delegate, long timeout, TimeUnit timeoutUnit) {
+      this.delegate = delegate;
+      this.timeout = timeout;
+      this.timeoutUnit = timeoutUnit;
+    }
+
+    @Override
+    public int read() throws IOException {
+      return readWithTimeout(delegate::read);
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      return readWithTimeout(() -> delegate.read(b, off, len));
+    }
+
+    @Override
+    public int available() throws IOException {
+      return delegate.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+
+    private int readWithTimeout(BodyRead read) throws IOException {
+      final AtomicBoolean completed = new AtomicBoolean(false);
+      final AtomicBoolean timedOut = new AtomicBoolean(false);
+      final ScheduledFuture<?> timeoutFuture =
+          BODY_READ_TIMEOUT_EXECUTOR.schedule(
+              () -> {
+                if (completed.compareAndSet(false, true)) {
+                  timedOut.set(true);
+                  try {
+                    delegate.close();
+                  } catch (IOException ignored) {
+                  }
+                }
+              },
+              timeout,
+              timeoutUnit);
+
+      try {
+        final int result = read.read();
+        if (completed.compareAndSet(false, true)) {
+          timeoutFuture.cancel(false);
+          return result;
+        }
+        throw timeoutException(null);
+      } catch (IOException e) {
+        if (completed.compareAndSet(false, true)) {
+          timeoutFuture.cancel(false);
+        }
+        final HttpTimeoutException timeoutException = findTimeoutException(e);
+        if (timedOut.get() || timeoutException != null) {
+          throw timeoutException == null ? timeoutException(e) : timeoutException;
+        }
+        throw e;
+      } catch (RuntimeException e) {
+        if (completed.compareAndSet(false, true)) {
+          timeoutFuture.cancel(false);
+        }
+        throw e;
+      }
+    }
+
+    private static HttpTimeoutException timeoutException(IOException cause) {
+      final HttpTimeoutException exception = new HttpTimeoutException("response timed out");
+      if (cause != null) {
+        exception.initCause(cause);
+      }
+      return exception;
+    }
+
+    private static HttpTimeoutException findTimeoutException(Throwable throwable) {
+      Throwable current = throwable;
+      while (current != null) {
+        if (current instanceof HttpTimeoutException) {
+          return (HttpTimeoutException) current;
+        }
+        current = current.getCause();
+      }
+      return null;
+    }
+  }
+
+  private interface BodyRead {
+    int read() throws IOException;
   }
 
   private HttpClient getOrCreateClient(Options options) {
