@@ -198,6 +198,17 @@ public class RequestTemplateTest {
   }
 
   @Test
+  void resolveTemplateStripsCrlfFromHeaderSubstitution() {
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).header("X-Custom", "{value}");
+
+    template = template.resolve(mapOf("value", "legit\r\nX-Injected: evil"));
+
+    assertThat(template)
+        .hasHeaders(entry("X-Custom", Collections.singletonList("legitX-Injected: evil")));
+  }
+
+  @Test
   void resolveTemplateWithHeaderWithEscapedCurlyBrace() {
     RequestTemplate template =
         new RequestTemplate().method(HttpMethod.GET).header("Encoded", "{{{{dont_expand_me}}");
