@@ -110,7 +110,9 @@ public abstract class Logger {
       logResponseHeaders(configKey, logLevel, response);
 
       int bodyLength = 0;
-      if (response.body() != null && !(status == 204 || status == 205)) {
+      if (response.body() != null
+          && status != HttpStatus.NO_CONTENT.code()
+          && status != HttpStatus.RESET_CONTENT.code()) {
         // HTTP 204 No Content "...response MUST NOT include a message-body"
         // HTTP 205 Reset Content "...response MUST NOT include an entity"
         if (logLevel.atLeast(Level.FULL)) {
