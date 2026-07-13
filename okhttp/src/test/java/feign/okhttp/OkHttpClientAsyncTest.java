@@ -171,6 +171,11 @@ public class OkHttpClientAsyncTest {
                   public void encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
                   }
+
+                  @Override
+                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                    return true;
+                  }
                 })
             .target("http://localhost:" + server.getPort());
 
@@ -647,8 +652,17 @@ public class OkHttpClientAsyncTest {
     final TestInterfaceAsync api =
         newAsyncBuilder()
             .encoder(
-                (_, _, _) -> {
-                  throw new RuntimeException();
+                new Encoder() {
+                  @Override
+                  public void encode(Object object, Type bodyType, RequestTemplate template)
+                      throws EncodeException {
+                    throw new RuntimeException();
+                  }
+
+                  @Override
+                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                    return true;
+                  }
                 })
             .target("http://localhost:" + server.getPort());
 
@@ -1028,12 +1042,21 @@ public class OkHttpClientAsyncTest {
         AsyncFeign.builder()
             .client(new OkHttpClient())
             .decoder(new DefaultDecoder())
-            .encoder(
-                (object, _, template) -> {
-                  if (object instanceof Map) {
-                    template.body(Request.Body.of(new Gson().toJson(object)));
-                  } else {
-                    template.body(Request.Body.of(object.toString()));
+            .encoders(
+                new Encoder() {
+                  @Override
+                  public void encode(Object object, Type bodyType, RequestTemplate template)
+                      throws EncodeException {
+                    if (object instanceof Map) {
+                      template.body(Request.Body.of(new Gson().toJson(object)));
+                    } else {
+                      template.body(Request.Body.of(object.toString()));
+                    }
+                  }
+
+                  @Override
+                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                    return true;
                   }
                 });
 
@@ -1043,7 +1066,7 @@ public class OkHttpClientAsyncTest {
     }
 
     TestInterfaceAsyncBuilder encoder(Encoder encoder) {
-      delegate.encoder(encoder);
+      delegate.encoders(encoder);
       return this;
     }
 

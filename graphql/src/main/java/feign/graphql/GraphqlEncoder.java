@@ -53,4 +53,17 @@ public class GraphqlEncoder implements Encoder {
 
     delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
   }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return contract.lookupMetadata(template) != null;
+  }
 }

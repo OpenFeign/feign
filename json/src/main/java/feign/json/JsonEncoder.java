@@ -42,7 +42,7 @@ import org.json.JSONObject;
  *
  *   GitHub github = Feign.builder()
  *                      .decoder(new JsonDecoder())
- *                      .encoder(new JsonEncoder())
+ *                      .encoders(new JsonEncoder())
  *                      .target(GitHub.class, "https://api.github.com");
  *
  *   JSONObject contributor = new JSONObject();
@@ -63,5 +63,18 @@ public class JsonEncoder implements Encoder {
     } else {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
     }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return object == null || object instanceof JSONArray || object instanceof JSONObject;
   }
 }

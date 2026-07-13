@@ -7,7 +7,7 @@ Add `JacksonJaxbJsonEncoder` and/or `JacksonJaxbJsonDecoder` to your `Feign.Buil
 
 ```java
 GitHub github = Feign.builder()
-                     .encoder(new JacksonJaxbJsonEncoder())
+                     .encoders(new JacksonJaxbJsonEncoder())
                      .decoder(new JacksonJaxbJsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -21,7 +21,7 @@ ObjectMapper mapper = new ObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
 GitHub github = Feign.builder()
-                     .encoder(new JacksonJaxbJsonEncoder(mapper))
+                     .encoders(new JacksonJaxbJsonEncoder(mapper))
                      .decoder(new JacksonJaxbJsonDecoder(mapper))
                      .target(GitHub.class, "https://api.github.com");
 ```

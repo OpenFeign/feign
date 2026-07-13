@@ -8,7 +8,7 @@ Add `JsonEncoder` and/or `JsonDecoder` to your `Feign.Builder` like so:
 ```java
 api = Feign.builder()
            .decoder(new JsonDecoder())
-           .encoder(new JsonEncoder())
+           .encoders(new JsonEncoder())
            .target(GitHub.class, "https://api");
 ```
 

@@ -42,7 +42,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 api = Feign.builder()
-     .encoder(new SOAPEncoder(jaxbFactory))
+     .encoders(new SOAPEncoder(jaxbFactory))
      .decoder(new SOAPDecoder(jaxbFactory))
      .target(MyApi.class, "http://api");
 ```

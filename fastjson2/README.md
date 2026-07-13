@@ -15,7 +15,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoder(new Fastjson2Encoder())
+                     .encoders(new Fastjson2Encoder())
                      .decoder(new Fastjson2Decoder())
                      .target(GitHub.class, "https://api.github.com");
 ```

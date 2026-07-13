@@ -16,10 +16,12 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.reflect.TypeToken;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -83,9 +85,19 @@ public class BaseApiTest {
     String baseUrl = server.url("/default").toString();
 
     Feign.builder()
-        .encoder(
-            (_, bodyType, _) ->
-                assertThat(bodyType).isEqualTo(new TypeToken<Keys<String>>() {}.getType()))
+        .encoders(
+            new Encoder() {
+              @Override
+              public void encode(Object object, Type bodyType, RequestTemplate template)
+                  throws EncodeException {
+                assertThat(bodyType).isEqualTo(new TypeToken<Keys<String>>() {}.getType());
+              }
+
+              @Override
+              public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                return true;
+              }
+            })
         .decoder(
             (_, type) -> {
               assertThat(type).isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());

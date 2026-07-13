@@ -31,7 +31,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoder(new Jackson3Encoder())
+                     .encoders(new Jackson3Encoder())
                      .decoder(new Jackson3Decoder())
                      .target(GitHub.class, "https://api.github.com");
 ```

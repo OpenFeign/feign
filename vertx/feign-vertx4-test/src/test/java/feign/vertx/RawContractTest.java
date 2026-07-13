@@ -47,7 +47,7 @@ class RawContractTest extends AbstractFeignVertxTest {
         VertxFeign.builder()
             .vertx(vertx)
             .webClient(WebClient.create(vertx))
-            .encoder(new JacksonEncoder(TestUtils.MAPPER))
+            .encoders(new JacksonEncoder(TestUtils.MAPPER))
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .target(RawServiceAPI.class, wireMock.baseUrl());
   }

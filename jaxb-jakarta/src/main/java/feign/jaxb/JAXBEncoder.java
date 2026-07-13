@@ -18,7 +18,7 @@ package feign.jaxb;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.Encoder;
+import feign.codec.XmlEncoder;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import java.io.StringWriter;
@@ -36,14 +36,14 @@ import java.lang.reflect.Type;
  *     .build();
  *
  * api = Feign.builder()
- *     .encoder(new JAXBEncoder(jaxbFactory))
+ *     .encoders(new JAXBEncoder(jaxbFactory))
  *     .target(MyApi.class, "http://api");
  * </pre>
  *
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
  * contexts.
  */
-public class JAXBEncoder implements Encoder {
+public class JAXBEncoder implements XmlEncoder {
 
   private final JAXBContextFactory jaxbContextFactory;
 

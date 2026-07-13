@@ -47,4 +47,23 @@ public class DefaultEncoder implements Encoder {
           format("%s is not a type supported by this encoder.", object.getClass()));
     }
   }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return object == null
+        || bodyType == String.class
+        || bodyType == byte[].class
+        || object instanceof File
+        || object instanceof Path
+        || object instanceof InputStream
+        || object instanceof Request.Body;
+  }
 }

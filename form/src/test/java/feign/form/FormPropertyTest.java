@@ -43,8 +43,8 @@ class FormPropertyTest {
 
     API =
         Feign.builder()
-            .encoder(new FormEncoder(new JacksonEncoder()))
             .logger(new JavaLogger(FormPropertyTest.class).appendToFile(logFile))
+            .encoders(new FormEncoder(new JacksonEncoder()))
             .logLevel(FULL)
             .target(FormClient.class, "http://localhost:8080");
   }

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import feign.Request;
 import feign.RequestTemplate;
@@ -28,15 +29,32 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.FieldSource;
 
 class DefaultEncoderTest {
+  private static final Supplier<Stream<Arguments>> testCanEncode =
+      () ->
+          Stream.of(
+              arguments(null, Object.class, true),
+              arguments("string", String.class, true),
+              arguments(new byte[] {1, 2, 3}, byte[].class, true),
+              arguments(new File("file"), File.class, true),
+              arguments(Path.of("path"), Path.class, true),
+              arguments(new ByteArrayInputStream(new byte[] {1, 2, 3}), InputStream.class, true),
+              arguments(Request.Body.of("body"), Request.Body.class, true),
+              arguments(new DefaultEncoderTest(), DefaultEncoderTest.class, false));
 
   private final Encoder encoder = new DefaultEncoder();
 
@@ -127,6 +145,15 @@ class DefaultEncoderTest {
     encoder.encode(Request.Body.of(expected), Request.Body.class, template);
 
     verifyBody(template, expected.length(), true, expected);
+  }
+
+  @ParameterizedTest
+  @FieldSource
+  void testCanEncode(Object object, Type bodyType, boolean expected) {
+    var template = new RequestTemplate();
+    var actual = encoder.canEncode(object, bodyType, template);
+
+    assertEquals(expected, actual);
   }
 
   void verifyBody(

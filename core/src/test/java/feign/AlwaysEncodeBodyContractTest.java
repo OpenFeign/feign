@@ -68,6 +68,11 @@ class AlwaysEncodeBodyContractTest {
           Arrays.stream(methodParameters).map(String::valueOf).collect(Collectors.joining());
       template.body(Request.Body.of(body));
     }
+
+    @Override
+    public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+      return true;
+    }
   }
 
   private static class BodyParameterSampleEncoder implements Encoder {
@@ -75,6 +80,11 @@ class AlwaysEncodeBodyContractTest {
     public void encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
       template.body(Request.Body.of(String.valueOf(object)));
+    }
+
+    @Override
+    public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+      return true;
     }
   }
 
@@ -102,7 +112,7 @@ class AlwaysEncodeBodyContractTest {
     SampleTargetMultipleNonAnnotatedParameters sampleClient1 =
         Feign.builder()
             .contract(new SampleContract())
-            .encoder(new AllParametersSampleEncoder())
+            .encoders(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetMultipleNonAnnotatedParameters.class, "http://localhost");
     assertThat(sampleClient1.concatenate("foo", "bar", "char")).isEqualTo("foobarchar");
@@ -110,7 +120,7 @@ class AlwaysEncodeBodyContractTest {
     SampleTargetNoParameters sampleClient2 =
         Feign.builder()
             .contract(new SampleContract())
-            .encoder(new AllParametersSampleEncoder())
+            .encoders(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetNoParameters.class, "http://localhost");
     assertThat(sampleClient2.concatenate()).isEmpty();
@@ -118,7 +128,7 @@ class AlwaysEncodeBodyContractTest {
     SampleTargetOneParameter sampleClient3 =
         Feign.builder()
             .contract(new SampleContract())
-            .encoder(new AllParametersSampleEncoder())
+            .encoders(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetOneParameter.class, "http://localhost");
     assertThat(sampleClient3.concatenate("moo")).isEqualTo("moo");

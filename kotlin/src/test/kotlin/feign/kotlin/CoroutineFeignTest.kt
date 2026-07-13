@@ -22,6 +22,7 @@ import feign.QueryMapEncoder
 import feign.Request
 import feign.RequestInterceptor
 import feign.RequestLine
+import feign.RequestTemplate
 import feign.Response
 import feign.Util
 import feign.codec.Decoder
@@ -189,13 +190,19 @@ class CoroutineFeignTest {
 
     internal class TestInterfaceAsyncBuilder {
         private val delegate = CoroutineFeign.builder<Void>()
-            .decoder(DefaultDecoder()).encoder { `object`, bodyType, template ->
-                if (`object` is Map<*, *>) {
-                    template.body(Request.Body.of(Gson().toJson(`object`)))
-                } else {
-                    template.body(Request.Body.of(`object`.toString()))
+            .decoder(DefaultDecoder()).encoders(object : Encoder {
+                override fun encode(`object`: Any?, bodyType: Type, template: RequestTemplate) {
+                    if (`object` is Map<*, *>) {
+                        template.body(Request.Body.of(Gson().toJson(`object`)))
+                    } else {
+                        template.body(Request.Body.of(`object`.toString()))
+                    }
                 }
-            }
+
+                override fun canEncode(`object`: Any?, bodyType: Type, template: RequestTemplate): Boolean {
+                    return true
+                }
+            })
 
         fun requestInterceptor(requestInterceptor: RequestInterceptor?): TestInterfaceAsyncBuilder {
             delegate.requestInterceptor(requestInterceptor)
@@ -203,7 +210,7 @@ class CoroutineFeignTest {
         }
 
         fun encoder(encoder: Encoder?): TestInterfaceAsyncBuilder {
-            delegate.encoder(encoder)
+            delegate.encoders(encoder)
             return this
         }
 

@@ -21,6 +21,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 import feign.Logger;
 import feign.Response;
+import feign.codec.DelegatingEncoder;
 import feign.codec.Encoder;
 import feign.form.spring.SpringFormEncoder;
 import java.util.List;
@@ -92,7 +93,8 @@ interface Client {
 
     @Bean
     Encoder feignEncoder(ObjectProvider<FeignHttpMessageConverters> messageConverters) {
-      return new SpringFormEncoder(new SpringEncoder(messageConverters));
+      return new DelegatingEncoder(
+          List.of(new SpringEncoder(messageConverters), new SpringFormEncoder()));
     }
 
     @Bean

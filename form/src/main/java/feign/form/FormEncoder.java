@@ -104,6 +104,19 @@ public class FormEncoder implements Encoder {
   }
 
   /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return processors.containsKey(ContentType.of(getContentTypeValue(template.headers())));
+  }
+
+  /**
    * Returns {@link ContentProcessor} for specific {@link ContentType}.
    *
    * @param type a type for content processor search.

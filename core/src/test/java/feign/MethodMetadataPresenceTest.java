@@ -16,13 +16,15 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.FeignBuilderTest.TestInterface;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 import feign.core.DefaultClient;
 import feign.core.codec.DefaultDecoder;
 import feign.core.codec.DefaultEncoder;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -62,12 +64,21 @@ public class MethodMetadataPresenceTest {
     final String url = "http://localhost:" + server.getPort();
     final TestInterface api =
         Feign.builder()
-            .encoder(
-                (object, bodyType, template) -> {
-                  assertThat(template).isNotNull();
-                  assertThat(template.methodMetadata()).isNotNull();
-                  assertThat(template.feignTarget()).isNotNull();
-                  new DefaultEncoder().encode(object, bodyType, template);
+            .encoders(
+                new Encoder() {
+                  @Override
+                  public void encode(Object object, Type bodyType, RequestTemplate template)
+                      throws EncodeException {
+                    assertThat(template).isNotNull();
+                    assertThat(template.methodMetadata()).isNotNull();
+                    assertThat(template.feignTarget()).isNotNull();
+                    new DefaultEncoder().encode(object, bodyType, template);
+                  }
+
+                  @Override
+                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                    return true;
+                  }
                 })
             .target(TestInterface.class, url);
 

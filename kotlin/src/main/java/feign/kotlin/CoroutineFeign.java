@@ -172,7 +172,7 @@ public class CoroutineFeign<C> {
               .contract(contract)
               .retryer(retryer)
               .logger(logger)
-              .encoder(encoder)
+              .encoders(encoder)
               .queryMapEncoder(queryMapEncoder)
               .options(options)
               .requestInterceptors(requestInterceptors)

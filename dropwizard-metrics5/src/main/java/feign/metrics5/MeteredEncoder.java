@@ -73,4 +73,17 @@ public class MeteredEncoder implements Encoder {
                         metricSuppliers.histograms())
                     .update(body.contentLength()));
   }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return encoder.canEncode(object, bodyType, template);
+  }
 }

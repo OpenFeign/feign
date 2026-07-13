@@ -21,8 +21,10 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.Options;
 import feign.codec.Codec;
 import feign.codec.Decoder;
+import feign.codec.DelegatingEncoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
 import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
@@ -91,8 +93,38 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     return thisB;
   }
 
+  /**
+   * Sets the encoder.
+   *
+   * @deprecated use {@link #encoders(Encoder...)} or {@link #encoders(List)} instead
+   * @param encoder the encoder to use for encoding request bodies. Must not be {@code null}.
+   * @return this builder
+   */
+  @Deprecated(since = "14", forRemoval = true)
   public B encoder(Encoder encoder) {
-    this.encoder = encoder;
+    return encoders(encoder);
+  }
+
+  /**
+   * Sets the encoders.
+   *
+   * @param encoders the encoders to use for encoding request bodies. Must not be {@code null}.
+   * @return this builder
+   * @since 14
+   */
+  public B encoders(Encoder... encoders) {
+    return encoders(Arrays.asList(encoders));
+  }
+
+  /**
+   * Sets the encoders.
+   *
+   * @param encoders the encoders to use for encoding request bodies. Must not be {@code null}.
+   * @return this builder
+   * @since 14
+   */
+  public B encoders(List<Encoder> encoders) {
+    this.encoder = new DelegatingEncoder(encoders);
     return thisB;
   }
 

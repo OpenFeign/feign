@@ -126,7 +126,7 @@ class UrlencodedFormContentProcessorTest {
             .start()) {
       var client =
           Feign.builder()
-              .encoder(new FormEncoder(new JacksonEncoder()))
+              .encoders(new FormEncoder(new JacksonEncoder()))
               .target(Client.class, server.getConnectUrl());
 
       var data = createRequestData(tags);

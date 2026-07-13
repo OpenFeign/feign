@@ -19,17 +19,21 @@ import feign.RequestTemplate;
 import java.lang.reflect.Type;
 import java.util.List;
 
-/** An encoder that encodes objects to JSON. */
+/**
+ * An encoder that encodes objects to XML.
+ *
+ * @since 14
+ */
 @FunctionalInterface
-public interface JsonEncoder extends Encoder {
+public interface XmlEncoder extends Encoder {
   /**
-   * Checks if the given object can be encoded to JSON based on the {@code Content-Type} header in
+   * Checks if the given object can be encoded to XML based on the {@code Content-Type} header in
    * the {@link RequestTemplate}.
    *
    * @param object {@inheritDoc}
    * @param bodyType {@inheritDoc}
    * @param template {@inheritDoc}
-   * @return {@code true} if the given {@code Content-Type} header is compatible with JSON, {@code
+   * @return {@code true} if the given {@code Content-Type} header is compatible with XML, {@code
    *     false} otherwise
    */
   @Override
@@ -38,6 +42,6 @@ public interface JsonEncoder extends Encoder {
         .anyMatch(
             contentType ->
                 contentType != null
-                    && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?json.*"));
+                    && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?xml.*"));
   }
 }

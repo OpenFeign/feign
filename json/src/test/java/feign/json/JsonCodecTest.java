@@ -54,7 +54,7 @@ class JsonCodecTest {
     github =
         Feign.builder()
             .decoder(new JsonDecoder())
-            .encoder(new JsonEncoder())
+            .encoders(new JsonEncoder())
             .client(mockClient)
             .target(new MockTarget<>(GitHub.class));
   }

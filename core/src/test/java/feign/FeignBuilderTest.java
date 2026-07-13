@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 import feign.codec.Decoder;
+import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.core.DefaultClient;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
@@ -209,13 +211,25 @@ public class FeignBuilderTest {
   }
 
   @Test
-  void overrideEncoder() throws Exception {
+  void overrideEncoders() throws Exception {
     server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
-    Encoder encoder = (object, _, template) -> template.body(Request.Body.of(object.toString()));
+    Encoder encoder =
+        new Encoder() {
+          @Override
+          public void encode(Object object, Type bodyType, RequestTemplate template)
+              throws EncodeException {
+            template.body(Request.Body.of(object.toString()));
+          }
 
-    TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
+          @Override
+          public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+            return true;
+          }
+        };
+
+    TestInterface api = Feign.builder().encoders(encoder).target(TestInterface.class, url);
     api.encodedPost(Arrays.asList("This", "is", "my", "request"));
 
     assertThat(server.takeRequest()).hasBody("[This, is, my, request]");

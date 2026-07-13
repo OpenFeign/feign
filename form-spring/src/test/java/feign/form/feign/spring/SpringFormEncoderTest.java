@@ -23,6 +23,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import feign.Response;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.multipart.MultipartFile;
 
+// TODO: enable when Spring Cloud OpenFiegn migrates to Feign 14
+@Disabled("Disabled util Spring Cloud OpenFiegn migrates to Feign 14")
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,

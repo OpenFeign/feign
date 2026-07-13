@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
+import feign.RequestTemplate;
 import feign.Response;
 import feign.ResponseMapper;
 import feign.jackson.JacksonDecoder;
@@ -89,7 +90,13 @@ class SpringContractTest {
     resource =
         Feign.builder()
             .contract(new SpringContract())
-            .encoder(new JacksonEncoder())
+            .encoders(
+                new JacksonEncoder() {
+                  @Override
+                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                    return true;
+                  }
+                })
             .mapAndDecode(new TextResponseMapper(), new JacksonDecoder())
             .client(mockClient)
             .target(new MockTarget<>(HealthResource.class));

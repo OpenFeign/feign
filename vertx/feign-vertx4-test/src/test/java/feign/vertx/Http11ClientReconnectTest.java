@@ -38,7 +38,7 @@ class Http11ClientReconnectTest extends AbstractClientReconnectTest {
         VertxFeign.builder()
             .vertx(vertx)
             .webClient(webClient)
-            .encoder(new JacksonEncoder())
+            .encoders(new JacksonEncoder())
             .decoder(new JacksonDecoder())
             .target(HelloServiceAPI.class, baseUrl);
   }

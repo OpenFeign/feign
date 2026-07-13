@@ -52,8 +52,8 @@ class CustomClientTest {
 
     API =
         Feign.builder()
-            .encoder(encoder)
             .logger(new JavaLogger(CustomClientTest.class).appendToFile(logFile))
+            .encoders(encoder)
             .logLevel(FULL)
             .target(CustomClient.class, "http://localhost:8080");
   }

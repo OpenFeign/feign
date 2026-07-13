@@ -23,6 +23,7 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.interceptor.MethodInterceptor;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -163,9 +164,39 @@ public final class AsyncFeign<C> {
       return super.logger(logger);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @deprecated use {@link #encoders(Encoder...)} or {@link #encoders(List)} instead
+     * @param encoder {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
+    @Deprecated(since = "14", forRemoval = true)
     public AsyncBuilder<C> encoder(Encoder encoder) {
       return super.encoder(encoder);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param encoders {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public AsyncBuilder<C> encoders(Encoder... encoders) {
+      return super.encoders(encoders);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param encoders {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public AsyncBuilder<C> encoders(List<Encoder> encoders) {
+      return super.encoders(encoders);
     }
 
     @Override

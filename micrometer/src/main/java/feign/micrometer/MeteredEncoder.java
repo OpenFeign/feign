@@ -65,6 +65,19 @@ public class MeteredEncoder implements Encoder {
                 createSummary(object, bodyType, template).record(Long.parseLong(contentLength)));
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return encoder.canEncode(object, bodyType, template);
+  }
+
   protected Timer createTimer(Object object, Type bodyType, RequestTemplate template) {
     final Tags allTags =
         metricTagResolver.tag(

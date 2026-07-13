@@ -22,7 +22,11 @@ import feign.Feign;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -84,7 +88,19 @@ class BeanValidationMethodInterceptorTest {
 
   private Api api() {
     return Feign.builder()
-        .encoder((object, _, template) -> template.body(Request.Body.of(String.valueOf(object))))
+        .encoders(
+            new Encoder() {
+              @Override
+              public void encode(Object object, Type bodyType, RequestTemplate template)
+                  throws EncodeException {
+                template.body(Request.Body.of(String.valueOf(object)));
+              }
+
+              @Override
+              public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+                return true;
+              }
+            })
         .methodInterceptor(BeanValidationMethodInterceptor.usingDefaultFactory())
         .target(Api.class, "http://localhost:" + server.getPort());
   }
