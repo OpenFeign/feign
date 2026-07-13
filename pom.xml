@@ -173,7 +173,7 @@
     <json.version>20260522</json.version>
     <springboot.version>4.1.0</springboot.version>
 
-    <junit5.version>6.1.1</junit5.version>
+    <junit5.version>6.1.2</junit5.version>
     <jackson.version>2.22.1</jackson.version>
     <jackson3.version>3.2.1</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
