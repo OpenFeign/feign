@@ -355,6 +355,129 @@ VertxFeign.builder()
 
 ---
 
+### 14. `Encoder.canEncode()` — new required method (https://github.com/OpenFeign/feign/pull/3476)
+
+`Encoder` now requires a `canEncode(Object, Type, RequestTemplate)` method. There is **no default
+implementation** — every custom `Encoder` must implement it.
+
+**Before:**
+
+```java
+public class MyEncoder implements Encoder {
+    @Override
+    public void encode(Object object, Type bodyType, RequestTemplate template) {
+        template.body(Request.Body.of(serialize(object)));
+    }
+}
+```
+
+**After:**
+
+```java
+public class MyEncoder implements Encoder {
+    @Override
+    public void encode(Object object, Type bodyType, RequestTemplate template) {
+        template.body(Request.Body.of(serialize(object)));
+    }
+
+    @Override
+    public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+        return true; // or implement content-type / type-based logic
+    }
+}
+```
+
+Built-in encoders (`DefaultEncoder`, `FormEncoder`, `MeteredEncoder`, `GraphqlEncoder`, and all
+`JsonEncoder`/`XmlEncoder` subtypes) already implement this method. If your encoder returns `true`
+from `canEncode()`, it may still throw `EncodeException` from `encode()` if encoding fails.
+
+---
+
+### 15. `Encoder` moved from `core` to `api` module
+
+`feign.codec.Encoder` has been relocated from the `feign-core` module to the new `feign-api`
+module. The package name (`feign.codec`) is unchanged. If you have a direct dependency on
+`feign-core` without `feign-api`, you need to add `feign-api` to your classpath.
+
+---
+
+### 16. `Encoder.Default` removed
+
+The deprecated inner class `Encoder.Default` (which extended `DefaultEncoder`) has been removed.
+
+**Before:**
+
+```java
+new Encoder.Default()
+```
+
+**After:**
+
+```java
+new feign.core.codec.DefaultEncoder()
+```
+
+---
+
+### 17. `BaseBuilder.encoder()` deprecated — use `encoders()` (https://github.com/OpenFeign/feign/pull/3476)
+
+The single-encoder setter `encoder(Encoder)` is deprecated (`forRemoval = true`) and replaced by
+variadic `encoders(Encoder...)` and `encoders(List<Encoder>)`.
+
+**Before:**
+
+```java
+Feign.builder()
+    .encoder(new JacksonEncoder())
+    .target(MyApi.class, "https://api.example.com");
+```
+
+**After:**
+
+```java
+Feign.builder()
+    .encoders(new JacksonEncoder())
+    .target(MyApi.class, "https://api.example.com");
+```
+
+The new methods wrap the supplied encoders in a `DelegatingEncoder`, which delegates to the first
+encoder whose `canEncode()` returns `true`.
+
+---
+
+### 18. Multi-encoder support — `DelegatingEncoder`, `JsonEncoder`, `XmlEncoder` (https://github.com/OpenFeign/feign/pull/3476)
+
+You can now register multiple encoders, and Feign will pick the right one at request time based on
+`canEncode()`. This is especially useful for APIs that mix JSON, XML, and other content types:
+
+**Before:**
+
+```java
+// Only one encoder — had to manually choose or wrap
+Feign.builder()
+    .encoder(new FormEncoder(new JacksonEncoder()))
+    .target(MyApi.class, "https://api.example.com");
+```
+
+**After:**
+
+```java
+Feign.builder()
+    .encoders(
+        new FormEncoder(),          // handles multipart/form-urlencoded by Content-Type
+        new JacksonEncoder(),       // auto-detects JSON via Content-Type (implements JsonEncoder)
+        new JAXBEncoder(factory)    // auto-detects XML via Content-Type (implements XmlEncoder)
+    )
+    .target(MyApi.class, "https://api.example.com");
+```
+
+New marker interfaces `JsonEncoder` and `XmlEncoder` provide default `canEncode()` implementations
+that check the `Content-Type` request header. All existing JSON/XMl encoders (Jackson, Gson, Moshi,
+JAXB, SOAP, Fastjson2, Jackson-Jr) now implement the appropriate interface. You can also use
+`DelegatingEncoder` directly to compose custom encoder chains.
+
+---
+
 ## Implementing a Custom Streaming Body
 
 If you want to stream a body (e.g., from a file or `InputStream`), implement `Request.Body` directly. Because

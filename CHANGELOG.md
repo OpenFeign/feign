@@ -3,6 +3,11 @@
 * `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
+* `Encoder` now supports multiple encoder registration via `Feign.builder().encoders(...)`. New
+  `DelegatingEncoder` picks the first encoder whose `canEncode()` returns `true`. New `JsonEncoder`
+  and `XmlEncoder` interfaces provide Content-Type-based auto-detection. `BaseBuilder.encoder()` is
+  deprecated in favor of `encoders()`. Existing custom `Encoder` implementations must implement the
+  new `canEncode()` method. (https://github.com/OpenFeign/feign/pull/3476)
 
 ### Version 13.12
 
