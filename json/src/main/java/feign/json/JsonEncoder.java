@@ -20,7 +20,6 @@ import static java.lang.String.format;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -52,7 +51,7 @@ import org.json.JSONObject;
  *   github.create("openfeign", "feign", contributor);
  * </pre>
  */
-public class JsonEncoder implements Encoder {
+public class JsonEncoder implements feign.codec.JsonEncoder {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
@@ -63,18 +62,5 @@ public class JsonEncoder implements Encoder {
     } else {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @param object {@inheritDoc}
-   * @param bodyType {@inheritDoc}
-   * @param template {@inheritDoc}
-   * @return {@inheritDoc}
-   */
-  @Override
-  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return object == null || object instanceof JSONArray || object instanceof JSONObject;
   }
 }
