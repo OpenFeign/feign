@@ -471,7 +471,7 @@ Feign.builder()
     .target(MyApi.class, "https://api.example.com");
 ```
 
-New marker interfaces `JsonEncoder` and `XmlEncoder` provide default `canEncode()` implementations
+Marker interfaces `JsonEncoder` and `XmlEncoder` provide default `canEncode()` implementations
 that check the `Content-Type` request header. All existing JSON/XMl encoders (Jackson, Gson, Moshi,
 JAXB, SOAP, Fastjson2, Jackson-Jr) now implement the appropriate interface. You can also use
 `DelegatingEncoder` directly to compose custom encoder chains.
