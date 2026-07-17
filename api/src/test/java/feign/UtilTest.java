@@ -21,6 +21,7 @@ import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import feign.codec.Decoder;
 import java.io.Reader;
@@ -35,6 +36,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class UtilTest {
 
@@ -311,6 +314,48 @@ class UtilTest {
     Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(null);
     // Assert result
     assertThat(actualMap).isEmpty();
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      textBlock =
+          """
+                         application/json, true
+                         application/json;charset=UTF-8, true
+                         application/ld+json, true
+                         application/json-patch+json, true
+                         application/vnd.api+json, true
+                         application/manifest+json, true
+                         text/json, true
+                         text/xml, false
+                         application/xml, false
+                         """)
+  void testIsJsonContentType(String contentType, boolean expected) {
+    var template = new RequestTemplate().header("Content-Type", contentType);
+    var actual = Util.isJsonContentType(template);
+
+    assertEquals(expected, actual);
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      textBlock =
+          """
+                         application/xml, true
+                         application/xml;charset=UTF-8, true
+                         application/atom+xml, true
+                         application/rss+xml, true
+                         application/soap+xml, true
+                         text/xml, true
+                         text/xml;charset=UTF-8, true
+                         application/json, false
+                         text/json, false
+                         """)
+  void testIsXmlContentType(String contentType, boolean expected) {
+    var template = new RequestTemplate().header("Content-Type", contentType);
+    var actual = Util.isXmlContentType(template);
+
+    assertEquals(expected, actual);
   }
 
   interface LastTypeParameter {

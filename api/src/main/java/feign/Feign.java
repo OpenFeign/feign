@@ -25,7 +25,6 @@ import feign.interceptor.MethodInterceptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.List;
 
 /**
  * Feign's purpose is to ease development against http apis that feign restfulness. <br>
@@ -125,39 +124,9 @@ public abstract class Feign {
       return super.logger(logger);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @deprecated use {@link #encoders(Encoder...)} or {@link #encoders(List)} instead
-     * @param encoder {@inheritDoc}
-     * @return {@inheritDoc}
-     */
     @Override
-    @Deprecated(since = "14", forRemoval = true)
     public Builder encoder(Encoder encoder) {
       return super.encoder(encoder);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(Encoder... encoders) {
-      return super.encoders(encoders);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(List<Encoder> encoders) {
-      return super.encoders(encoders);
     }
 
     @Override

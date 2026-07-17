@@ -45,8 +45,8 @@ class WildCardMapTest {
 
     api =
         Feign.builder()
+            .encoder(new FormEncoder())
             .logger(new JavaLogger(WildCardMapTest.class).appendToFile(logFile))
-            .encoders(new FormEncoder())
             .logLevel(FULL)
             .target(FormUrlEncodedApi.class, "http://localhost:8080");
   }

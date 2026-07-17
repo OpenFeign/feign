@@ -15,7 +15,6 @@
  */
 package feign.codec;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -26,8 +25,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -41,27 +38,13 @@ class DelegatingEncoderTest {
     encoder = new DelegatingEncoder(List.of(delegate));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void testCanEncode(boolean expected) {
-    var object = "Hello, World!";
-    var bodyType = String.class;
-    var requestTemplate = mock(RequestTemplate.class);
-
-    when(delegate.canEncode(object, bodyType, requestTemplate)).thenReturn(expected);
-
-    var actual = encoder.canEncode(object, bodyType, requestTemplate);
-
-    assertEquals(expected, actual);
-  }
-
   @Test
   void shouldEncode() {
     var object = "Hello, World!";
     var bodyType = String.class;
     var requestTemplate = mock(RequestTemplate.class);
 
-    when(delegate.canEncode(object, bodyType, requestTemplate)).thenReturn(true);
+    when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
 
     encoder.encode(object, bodyType, requestTemplate);
 

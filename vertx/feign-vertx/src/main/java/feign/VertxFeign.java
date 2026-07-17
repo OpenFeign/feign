@@ -20,7 +20,6 @@ import static feign.Util.isDefault;
 
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.codec.Decoder;
-import feign.codec.DelegatingEncoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.core.DefaultContract;
@@ -39,7 +38,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -194,39 +192,14 @@ public final class VertxFeign extends Feign {
     }
 
     /**
-     * {@inheritDoc}
+     * Sets encoder.
      *
-     * @deprecated use {@link #encoders(Encoder...)} or {@link #encoders(List)} instead.
-     * @param encoder {@inheritDoc}
-     * @return {@inheritDoc}
+     * @param encoder encoder
+     * @return this builder
      */
     @Override
-    @Deprecated(since = "14", forRemoval = true)
     public Builder encoder(final Encoder encoder) {
-      return encoders(checkNotNull(encoder, "Argument encoder must be not null"));
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(final Encoder... encoders) {
-      return encoders(Arrays.asList(encoders));
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(final List<Encoder> encoders) {
-      this.encoder =
-          new DelegatingEncoder(checkNotNull(encoders, "Argument encoders must be not null"));
+      this.encoder = checkNotNull(encoder, "Argument encoder must be not null");
       return this;
     }
 

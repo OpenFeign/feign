@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Feign;
-import feign.Headers;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
@@ -40,7 +39,6 @@ interface GitHub {
   JSONArray contributors(@Param("owner") String owner, @Param("repo") String repo);
 
   @RequestLine("POST /repos/{owner}/{repo}/contributors")
-  @Headers("Content-Type: application/json")
   JSONObject create(
       @Param("owner") String owner, @Param("repo") String repo, JSONObject contributor);
 }
@@ -56,7 +54,7 @@ class JsonCodecTest {
     github =
         Feign.builder()
             .decoder(new JsonDecoder())
-            .encoders(new JsonEncoder())
+            .encoder(new JsonEncoder())
             .client(mockClient)
             .target(new MockTarget<>(GitHub.class));
   }

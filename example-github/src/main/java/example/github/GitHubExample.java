@@ -73,7 +73,7 @@ public class GitHubExample {
       final Decoder decoder = new GsonDecoder();
       final Encoder encoder = new GsonEncoder();
       return Feign.builder()
-          .encoders(encoder)
+          .encoder(encoder)
           .decoder(decoder)
           .errorDecoder(new GitHubErrorDecoder(decoder))
           .logger(new Logger.ErrorLogger())

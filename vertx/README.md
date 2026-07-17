@@ -67,7 +67,7 @@ WebClient webClient = WebClient.create(vertx);  // create Vert.x WebClient
 IcecreamServiceApi icecreamApi = VertxFeign
     .builder()
     .webClient(webClient) // provide WebClient instance
-    .encoders(new JacksonEncoder())
+    .encoder(new JacksonEncoder())
     .decoder(new JacksonDecoder())
     .target(IcecreamServiceApi.class, "https://www.icecream.com");
     

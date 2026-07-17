@@ -15,7 +15,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new MoshiEncoder())
+                     .encoder(new MoshiEncoder())
                      .decoder(new MoshiDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```

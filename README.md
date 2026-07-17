@@ -386,7 +386,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new GsonEncoder())
+                     .encoder(new GsonEncoder())
                      .decoder(new GsonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -404,7 +404,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new JacksonEncoder())
+                     .encoder(new JacksonEncoder())
                      .decoder(new JacksonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -425,7 +425,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new MoshiEncoder())
+                     .encoder(new MoshiEncoder())
                      .decoder(new MoshiDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -455,7 +455,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 Api api = Feign.builder()
-               .encoders(new JAXBEncoder(jaxbFactory))
+               .encoder(new JAXBEncoder(jaxbFactory))
                .decoder(new JAXBDecoder(jaxbFactory))
                .target(Api.class, "https://apihost");
 ```
@@ -476,7 +476,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 Api api = Feign.builder()
-               .encoders(new SOAPEncoder(jaxbFactory))
+               .encoder(new SOAPEncoder(jaxbFactory))
                .decoder(new SOAPDecoder(jaxbFactory))
                .errorDecoder(new SOAPErrorDecoder())
                .target(MyApi.class, "http://api");
@@ -498,7 +498,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new Fastjson2Encoder())
+                     .encoder(new Fastjson2Encoder())
                      .decoder(new Fastjson2Decoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -701,7 +701,7 @@ interface LoginClient {
 public class Example {
   public static void main(String[] args) {
     LoginClient client = Feign.builder()
-                              .encoders(new GsonEncoder())
+                              .encoder(new GsonEncoder())
                               .target(LoginClient.class, "https://foo.com");
 
     client.login(new Credentials("denominator", "secret"));
@@ -1343,7 +1343,7 @@ Add `FormEncoder` to your `Feign.Builder` like so:
 
 ```java
 SomeApi github = Feign.builder()
-                      .encoders(new FormEncoder())
+                      .encoder(new FormEncoder())
                       .target(SomeApi.class, "http://api.some.org");
 ```
 
@@ -1351,7 +1351,7 @@ Moreover, you can decorate the existing encoder, for example JsonEncoder like th
 
 ```java
 SomeApi github = Feign.builder()
-                      .encoders(new FormEncoder(new JacksonEncoder()))
+                      .encoder(new FormEncoder(new JacksonEncoder()))
                       .target(SomeApi.class, "http://api.some.org");
 ```
 

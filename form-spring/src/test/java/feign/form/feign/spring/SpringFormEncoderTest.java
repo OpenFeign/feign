@@ -32,8 +32,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.web.multipart.MultipartFile;
 
-// TODO: enable when Spring Cloud OpenFiegn migrates to Feign 14
-@Disabled("Disabled util Spring Cloud OpenFiegn migrates to Feign 14")
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
@@ -79,6 +77,8 @@ class SpringFormEncoderTest {
         .isEqualTo(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder);
   }
 
+  // TODO: enable when Spring Cloud OpenFiegn migrates to Feign 14
+  @Disabled("Disabled util Spring Cloud OpenFiegn migrates to Feign 14")
   @Test
   void upload4Test() throws Exception {
     var map = new HashMap<Object, Object>();

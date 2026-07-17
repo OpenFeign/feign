@@ -26,7 +26,7 @@ import java.util.Objects;
  *
  * @since 14
  */
-public class DelegatingEncoder implements Encoder {
+class DelegatingEncoder implements Encoder {
   private final List<Encoder> delegates;
 
   /**
@@ -35,7 +35,7 @@ public class DelegatingEncoder implements Encoder {
    * @param delegates the list of delegates to use for encoding. Both list and its elements must not
    *     be {@code null}.
    */
-  public DelegatingEncoder(List<Encoder> delegates) {
+  DelegatingEncoder(List<Encoder> delegates) {
     this.delegates = Objects.requireNonNull(delegates, "delegates cannot be null");
   }
 
@@ -49,10 +49,11 @@ public class DelegatingEncoder implements Encoder {
    * @throws EncodeException {@inheritDoc}
    */
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    delegates.stream()
-        .filter(encoder -> encoder.canEncode(object, bodyType, template))
+    return delegates.stream()
+        .map(encoder -> encoder.encode(object, bodyType, template))
+        .filter(Boolean::booleanValue)
         .findFirst()
         .orElseThrow(
             () ->
@@ -60,21 +61,7 @@ public class DelegatingEncoder implements Encoder {
                     "No suitable encoder found for object encoding: "
                         + object
                         + ", encoders: "
-                        + delegates))
-        .encode(object, bodyType, template);
-  }
-
-  /**
-   * Checks if any of the delegates can encode the given object.
-   *
-   * @param object {@inheritDoc}
-   * @param bodyType {@inheritDoc}
-   * @param template {@inheritDoc}
-   * @return {@inheritDoc}
-   */
-  @Override
-  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return delegates.stream().anyMatch(delegate -> delegate.canEncode(object, bodyType, template));
+                        + delegates));
   }
 
   /**

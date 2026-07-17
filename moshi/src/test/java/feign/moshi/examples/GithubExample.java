@@ -27,7 +27,7 @@ public class GithubExample {
   public static void main(String... args) {
     GitHub github =
         Feign.builder()
-            .encoders(new MoshiEncoder())
+            .encoder(new MoshiEncoder())
             .decoder(new MoshiDecoder())
             .target(GitHub.class, "https://api.github.com");
 

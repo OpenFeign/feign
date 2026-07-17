@@ -90,7 +90,7 @@ interface GitHub {
             val decoder: Decoder = feign.gson.GsonDecoder()
             val encoder: Encoder = GsonEncoder()
             return CoroutineFeign.builder<Unit>()
-                .encoders(encoder)
+                .encoder(encoder)
                 .decoder(decoder)
                 .errorDecoder(GitHubErrorDecoder(decoder))
                 .logger(ErrorLogger())

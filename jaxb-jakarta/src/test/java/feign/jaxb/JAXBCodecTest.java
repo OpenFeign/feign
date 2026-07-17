@@ -54,6 +54,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     new JAXBEncoder(new JAXBContextFactory.Builder().build())
         .encode(mock, MockObject.class, template);
 
@@ -73,6 +74,7 @@ class JAXBCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     Throwable exception =
         assertThatExceptionOfType(UnsupportedOperationException.class)
             .isThrownBy(
@@ -96,6 +98,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -119,6 +122,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -144,6 +148,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -167,6 +172,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     // RequestTemplate always expects a UNIX style newline.
@@ -359,6 +365,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     EncodeException exception =
         assertThatExceptionOfType(EncodeException.class)
             .isThrownBy(() -> encoder.encode(new MockIntObject(), MockIntObject.class, template))
@@ -379,6 +386,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(new MockIntObject(), MockIntObject.class, template);
     assertThat(template)
         .hasBody(

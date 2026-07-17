@@ -20,7 +20,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 Response response = Feign.builder()
-                         .encoders(new JAXBEncoder(jaxbFactory))
+                         .encoder(new JAXBEncoder(jaxbFactory))
                          .decoder(new JAXBDecoder(jaxbFactory))
                          .target(Response.class, "https://apihost");
 ```

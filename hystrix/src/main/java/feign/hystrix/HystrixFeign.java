@@ -31,7 +31,6 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -169,39 +168,9 @@ public final class HystrixFeign {
       return (Builder) super.logger(logger);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @deprecated use {@link #encoders(Encoder...)} or {@link #encoders(List)} instead
-     * @param encoder {@inheritDoc}
-     * @return {@inheritDoc}
-     */
     @Override
-    @Deprecated(since = "14", forRemoval = true)
     public Builder encoder(Encoder encoder) {
       return (Builder) super.encoder(encoder);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(Encoder... encoders) {
-      return (Builder) super.encoders(encoders);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param encoders {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Builder encoders(List<Encoder> encoders) {
-      return (Builder) super.encoders(encoders);
     }
 
     @Override

@@ -36,7 +36,7 @@ class Issue63Test {
     try (var server = UndertowServer.builder().callback(this::handleRequest).start()) {
       var client =
           Feign.builder()
-              .encoders(new FormEncoder(new JacksonEncoder()))
+              .encoder(new FormEncoder(new JacksonEncoder()))
               .target(Client.class, server.getConnectUrl());
 
       var data = new HashMap<String, String>();

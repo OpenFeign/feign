@@ -133,12 +133,8 @@ public class FeignUnderAsyncTest {
             .encoder(
                 new DefaultEncoder() {
                   @Override
-                  public void encode(Object object, Type bodyType, RequestTemplate template) {
+                  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
-                  }
-
-                  @Override
-                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
                     return true;
                   }
                 })
@@ -633,17 +629,8 @@ public class FeignUnderAsyncTest {
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
-                new Encoder() {
-                  @Override
-                  public void encode(Object object, Type bodyType, RequestTemplate template)
-                      throws EncodeException {
-                    throw new RuntimeException();
-                  }
-
-                  @Override
-                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-                    return true;
-                  }
+                (_, _, _) -> {
+                  throw new RuntimeException();
                 })
             .target("http://localhost:" + server.getPort());
 
@@ -979,22 +966,14 @@ public class FeignUnderAsyncTest {
     private final AsyncFeign.AsyncBuilder<Void> delegate =
         AsyncFeign.<Void>builder()
             .decoder(new DefaultDecoder())
-            .encoders(
-                new Encoder() {
-                  @Override
-                  public void encode(Object object, Type bodyType, RequestTemplate template)
-                      throws EncodeException {
-                    if (object instanceof Map) {
-                      template.body(Request.Body.of(new Gson().toJson(object)));
-                    } else {
-                      template.body(Request.Body.of(object.toString()));
-                    }
+            .encoder(
+                (object, _, template) -> {
+                  if (object instanceof Map) {
+                    template.body(Request.Body.of(new Gson().toJson(object)));
+                  } else {
+                    template.body(Request.Body.of(object.toString()));
                   }
-
-                  @Override
-                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-                    return true;
-                  }
+                  return true;
                 });
 
     TestInterfaceBuilder requestInterceptor(RequestInterceptor requestInterceptor) {
@@ -1003,7 +982,7 @@ public class FeignUnderAsyncTest {
     }
 
     TestInterfaceBuilder encoder(Encoder encoder) {
-      delegate.encoders(encoder);
+      delegate.encoder(encoder);
       return this;
     }
 

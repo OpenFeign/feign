@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import feign.Feign;
 import feign.Param;
 import feign.Request;
-import feign.RequestTemplate;
 import feign.Response;
 import feign.ResponseMapper;
 import feign.jackson.JacksonDecoder;
@@ -90,13 +89,7 @@ class SpringContractTest {
     resource =
         Feign.builder()
             .contract(new SpringContract())
-            .encoders(
-                new JacksonEncoder() {
-                  @Override
-                  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-                    return true;
-                  }
-                })
+            .encoder(new JacksonEncoder())
             .mapAndDecode(new TextResponseMapper(), new JacksonDecoder())
             .client(mockClient)
             .target(new MockTarget<>(HealthResource.class));
@@ -355,7 +348,10 @@ class SpringContractTest {
     @RequestMapping(value = "/withRequiredRequestBody", method = RequestMethod.POST)
     void checkWithRequiredRequestBody(@RequestBody() UserObject obj);
 
-    @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
+    @RequestMapping(
+        value = "/part/{id}",
+        method = RequestMethod.POST,
+        consumes = MediaType.APPLICATION_JSON_VALUE)
     void checkRequestPart(
         @PathVariable(name = "id") String campaignId,
         @RequestPart(name = "name1") String name,

@@ -90,7 +90,7 @@ class ConnectionsLeakTests {
         VertxFeign.builder()
             .vertx(vertx)
             .webClient(webClient)
-            .encoders(new JacksonEncoder())
+            .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
             .target(HelloServiceAPI.class, "http://localhost:8091");
 
@@ -118,7 +118,7 @@ class ConnectionsLeakTests {
         VertxFeign.builder()
             .vertx(vertx)
             .webClient(webClient)
-            .encoders(new JacksonEncoder())
+            .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
             .target(HelloServiceAPI.class, "http://localhost:8091");
 

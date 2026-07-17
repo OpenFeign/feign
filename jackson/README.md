@@ -28,7 +28,7 @@ You can also configure the encoder and decoder separately:
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new JacksonEncoder())
+                     .encoder(new JacksonEncoder())
                      .decoder(new JacksonDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```

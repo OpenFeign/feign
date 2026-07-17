@@ -20,6 +20,7 @@ import static java.lang.String.format;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
+import feign.codec.Encoder;
 import java.lang.reflect.Type;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,7 +42,7 @@ import org.json.JSONObject;
  *
  *   GitHub github = Feign.builder()
  *                      .decoder(new JsonDecoder())
- *                      .encoders(new JsonEncoder())
+ *                      .encoder(new JsonEncoder())
  *                      .target(GitHub.class, "https://api.github.com");
  *
  *   JSONObject contributor = new JSONObject();
@@ -51,14 +52,15 @@ import org.json.JSONObject;
  *   github.create("openfeign", "feign", contributor);
  * </pre>
  */
-public class JsonEncoder implements feign.codec.JsonEncoder {
+public class JsonEncoder implements Encoder {
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    if (object == null) return;
+    if (object == null) return true;
     if (object instanceof JSONArray || object instanceof JSONObject) {
       template.body(Request.Body.of(object.toString()));
+      return true;
     } else {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
     }

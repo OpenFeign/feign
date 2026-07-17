@@ -19,26 +19,14 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class MultipartBoundaryTest {
 
-  private static final Encoder NOOP_DELEGATE =
-      new Encoder() {
-        @Override
-        public void encode(Object object, Type bodyType, RequestTemplate template)
-            throws EncodeException {}
-
-        @Override
-        public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-          return true;
-        }
-      };
+  private static final Encoder NOOP_DELEGATE = (object, bodyType, template) -> true;
 
   @Test
   void boundaryIsNotDerivedFromTheClock() {

@@ -48,8 +48,8 @@ class BasicClientTest {
 
     API =
         Feign.builder()
+            .encoder(new FormEncoder(new JacksonEncoder()))
             .logger(new JavaLogger(BasicClientTest.class).appendToFile(logFile))
-            .encoders(new FormEncoder(), new JacksonEncoder())
             .logLevel(FULL)
             .target(TestClient.class, "http://localhost:8080");
   }

@@ -39,15 +39,16 @@ public class MeteredEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
+    boolean isEncoded;
     try (final Timer.Context classTimer =
         metricRegistry
             .timer(
                 metricName.metricName(template.methodMetadata(), template.feignTarget()),
                 metricSuppliers.timers())
             .time()) {
-      encoder.encode(object, bodyType, template);
+      isEncoded = encoder.encode(object, bodyType, template);
     }
 
     template
@@ -60,18 +61,6 @@ public class MeteredEncoder implements Encoder {
                             template.methodMetadata(), template.feignTarget(), "request_size"),
                         metricSuppliers.histograms())
                     .update(body.contentLength()));
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @param object {@inheritDoc}
-   * @param bodyType {@inheritDoc}
-   * @param template {@inheritDoc}
-   * @return {@inheritDoc}
-   */
-  @Override
-  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return encoder.canEncode(object, bodyType, template);
+    return isEncoded;
   }
 }

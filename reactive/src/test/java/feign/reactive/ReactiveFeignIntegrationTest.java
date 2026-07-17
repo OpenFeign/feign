@@ -113,7 +113,7 @@ public class ReactiveFeignIntegrationTest {
 
     TestReactorService service =
         ReactorFeign.builder()
-            .encoders(new JacksonEncoder())
+            .encoder(new JacksonEncoder())
             .decoder(new ReactorDecoder(new JacksonDecoder()))
             .logger(new ConsoleLogger())
             .dismiss404()
@@ -154,7 +154,7 @@ public class ReactiveFeignIntegrationTest {
 
     TestReactiveXService service =
         RxJavaFeign.builder()
-            .encoders(new JacksonEncoder())
+            .encoder(new JacksonEncoder())
             .decoder(new RxJavaDecoder(new JacksonDecoder()))
             .logger(new ConsoleLogger())
             .logLevel(Level.FULL)

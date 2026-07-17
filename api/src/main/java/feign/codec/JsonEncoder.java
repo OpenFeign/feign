@@ -15,29 +15,7 @@
  */
 package feign.codec;
 
-import feign.RequestTemplate;
-import java.lang.reflect.Type;
-import java.util.List;
+import feign.Experimental;
 
-/** An encoder that encodes objects to JSON. */
-@FunctionalInterface
-public interface JsonEncoder extends Encoder {
-  /**
-   * Checks if the given object can be encoded to JSON based on the {@code Content-Type} header in
-   * the {@link RequestTemplate}.
-   *
-   * @param object {@inheritDoc}
-   * @param bodyType {@inheritDoc}
-   * @param template {@inheritDoc}
-   * @return {@code true} if the given {@code Content-Type} header is compatible with JSON, {@code
-   *     false} otherwise
-   */
-  @Override
-  default boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return template.headers().getOrDefault("Content-Type", List.of()).stream()
-        .anyMatch(
-            contentType ->
-                contentType != null
-                    && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?json.*"));
-  }
-}
+@Experimental
+public interface JsonEncoder extends Encoder {}

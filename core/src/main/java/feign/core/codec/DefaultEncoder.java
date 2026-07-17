@@ -15,11 +15,8 @@
  */
 package feign.core.codec;
 
-import static java.lang.String.format;
-
 import feign.Request;
 import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.File;
 import java.io.InputStream;
@@ -29,7 +26,7 @@ import java.nio.file.Path;
 public class DefaultEncoder implements Encoder {
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     if (bodyType == String.class) {
       template.body(Request.Body.of(object.toString()));
     } else if (bodyType == byte[].class) {
@@ -42,28 +39,9 @@ public class DefaultEncoder implements Encoder {
       template.body(new Request.InputStreamBody((InputStream) object));
     } else if (object instanceof Request.Body) {
       template.body((Request.Body) object);
-    } else if (object != null) {
-      throw new EncodeException(
-          format("%s is not a type supported by this encoder.", object.getClass()));
+    } else {
+      return object == null;
     }
-  }
-
-  /**
-   * {@inheritDoc}
-   *
-   * @param object {@inheritDoc}
-   * @param bodyType {@inheritDoc}
-   * @param template {@inheritDoc}
-   * @return {@inheritDoc}
-   */
-  @Override
-  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return object == null
-        || bodyType == String.class
-        || bodyType == byte[].class
-        || object instanceof File
-        || object instanceof Path
-        || object instanceof InputStream
-        || object instanceof Request.Body;
+    return true;
   }
 }

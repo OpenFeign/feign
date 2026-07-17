@@ -355,10 +355,10 @@ VertxFeign.builder()
 
 ---
 
-### 14. `Encoder.canEncode()` — new required method (https://github.com/OpenFeign/feign/pull/3476)
+### 14. `Encoder.encode()` now returns `boolean` (https://github.com/OpenFeign/feign/pull/3476)
 
-`Encoder` now requires a `canEncode(Object, Type, RequestTemplate)` method. There is **no default
-implementation** — every custom `Encoder` must implement it.
+`Encoder.encode()` now returns `boolean` instead of `void`. Return `true` when the encoder
+handles the object, `false` otherwise. This replaces the separate `canEncode()` method.
 
 **Before:**
 
@@ -376,20 +376,26 @@ public class MyEncoder implements Encoder {
 ```java
 public class MyEncoder implements Encoder {
     @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template) {
+    public boolean encode(Object object, Type bodyType, RequestTemplate template) {
         template.body(Request.Body.of(serialize(object)));
-    }
-
-    @Override
-    public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-        return true; // or implement content-type / type-based logic
+        return true; // or return false if the encoder does not handle this type
     }
 }
 ```
 
-Built-in encoders (`DefaultEncoder`, `FormEncoder`, `MeteredEncoder`, `GraphqlEncoder`, and all
-`JsonEncoder`/`XmlEncoder` subtypes) already implement this method. If your encoder returns `true`
-from `canEncode()`, it may still throw `EncodeException` from `encode()` if encoding fails.
+Built-in encoders (`DefaultEncoder`, `FormEncoder`, `MeteredEncoder`, `GraphqlEncoder`, etc.) already return `boolean`
+from `encode()`. If your encoder returns `false`, the `DelegatingEncoder` (see section 18) will try the next encoder. If
+no encoder returns `true`, an `EncodeException` is thrown.
+
+**Built-in JSON and XML encoders now gate on the `Content-Type` header:**
+- JSON encoders (Jackson, Gson, Moshi, Fastjson2, Jackson-Jr, Jackson-Jaxb) check
+  `Util.isJsonContentType(template)` and return `false` when it does not match
+  (e.g., `application/json`, `application/ld+json`).
+- XML encoders (JAXB, SOAP) check `Util.isXmlContentType(template)` and return
+  `false` when it does not match (e.g., `text/xml`, `application/xml`).
+
+When using `Encoder.of()` (section 18), this means a JSON or XML encoder will
+only claim the request if a matching `Content-Type` header is present.
 
 ---
 
@@ -419,10 +425,10 @@ new feign.core.codec.DefaultEncoder()
 
 ---
 
-### 17. `BaseBuilder.encoder()` deprecated — use `encoders()` (https://github.com/OpenFeign/feign/pull/3476)
+### 17. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3476)
 
-The single-encoder setter `encoder(Encoder)` is deprecated (`forRemoval = true`) and replaced by
-variadic `encoders(Encoder...)` and `encoders(List<Encoder>)`.
+Use `Encoder.of(...)` to compose multiple encoders into a single `DelegatingEncoder`, which
+delegates to the first encoder whose `encode()` returns `true`.
 
 **Before:**
 
@@ -432,23 +438,36 @@ Feign.builder()
     .target(MyApi.class, "https://api.example.com");
 ```
 
-**After:**
+**After (multiple encoders):**
 
 ```java
 Feign.builder()
-    .encoders(new JacksonEncoder())
+    .encoder(Encoder.of(
+        new FormEncoder(),
+        new JacksonEncoder(),
+        new JAXBEncoder(factory)
+    ))
     .target(MyApi.class, "https://api.example.com");
 ```
 
-The new methods wrap the supplied encoders in a `DelegatingEncoder`, which delegates to the first
-encoder whose `canEncode()` returns `true`.
+**After (single encoder is unchanged):**
+
+```java
+Feign.builder()
+    .encoder(new JacksonEncoder())
+    .target(MyApi.class, "https://api.example.com");
+```
+
+The `Encoder.of()` factory wraps the supplied encoders in a `DelegatingEncoder`, which tries
+each encoder's `encode()` and uses the first one that returns `true`.
 
 ---
 
-### 18. Multi-encoder support — `DelegatingEncoder`, `JsonEncoder`, `XmlEncoder` (https://github.com/OpenFeign/feign/pull/3476)
+### 18. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3476)
 
-You can now register multiple encoders, and Feign will pick the right one at request time based on
-`canEncode()`. This is especially useful for APIs that mix JSON, XML, and other content types:
+You can now compose multiple encoders via `Encoder.of()`, and Feign will pick the right one at
+request time based on the return value of `encode()`. This is especially useful for APIs that mix
+JSON, XML, and other content types:
 
 **Before:**
 
@@ -463,18 +482,13 @@ Feign.builder()
 
 ```java
 Feign.builder()
-    .encoders(
+    .encoder(Encoder.of(
         new FormEncoder(),          // handles multipart/form-urlencoded by Content-Type
-        new JacksonEncoder(),       // auto-detects JSON via Content-Type (implements JsonEncoder)
-        new JAXBEncoder(factory)    // auto-detects XML via Content-Type (implements XmlEncoder)
-    )
+        new JacksonEncoder(),       // implements JsonEncoder marker interface
+        new JAXBEncoder(factory)    // handles XML
+    ))
     .target(MyApi.class, "https://api.example.com");
 ```
-
-Marker interfaces `JsonEncoder` and `XmlEncoder` provide default `canEncode()` implementations
-that check the `Content-Type` request header. All existing JSON/XMl encoders (Jackson, Gson, Moshi,
-JAXB, SOAP, Fastjson2, Jackson-Jr) now implement the appropriate interface. You can also use
-`DelegatingEncoder` directly to compose custom encoder chains.
 
 ---
 

@@ -42,7 +42,7 @@ class Http2ClientReconnectTest extends AbstractClientReconnectTest {
     client =
         VertxFeign.builder()
             .webClient(webClient)
-            .encoders(new JacksonEncoder())
+            .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
             .target(HelloServiceAPI.class, baseUrl);
   }

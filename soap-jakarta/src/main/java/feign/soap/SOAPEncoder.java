@@ -17,8 +17,9 @@ package feign.soap;
 
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
-import feign.codec.XmlEncoder;
+import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
@@ -68,7 +69,7 @@ import org.w3c.dom.Document;
  *     .build();
  *
  * api = Feign.builder()
- *     .encoders(new SOAPEncoder(jaxbFactory))
+ *     .encoder(new SOAPEncoder(jaxbFactory))
  *     .target(MyApi.class, "http://api");
  *
  * ...
@@ -83,7 +84,7 @@ import org.w3c.dom.Document;
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
  * contexts.
  */
-public class SOAPEncoder implements XmlEncoder {
+public class SOAPEncoder implements Encoder {
 
   private static final String DEFAULT_SOAP_PROTOCOL = SOAPConstants.SOAP_1_1_PROTOCOL;
 
@@ -110,7 +111,10 @@ public class SOAPEncoder implements XmlEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isXmlContentType(template)) {
+      return false;
+    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "SOAP only supports encoding raw types. Found " + bodyType);
@@ -137,6 +141,7 @@ public class SOAPEncoder implements XmlEncoder {
         soapMessage.writeTo(bos);
       }
       template.body(Request.Body.of(bos.toByteArray()));
+      return true;
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

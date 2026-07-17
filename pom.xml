@@ -1005,6 +1005,36 @@
               <exclude>feign.mock.RequestKey</exclude>
               <!-- TODO: remove -->
               <exclude>feign.vertx.VertxHttpClient</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.moshi.MoshiEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.gson.GsonEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.jackson.jaxb.JacksonJaxbJsonEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.jackson.jr.JacksonJrEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.jackson3.Jackson3Encoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.jackson.JacksonEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.jaxb.JAXBEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.fastjson2.Fastjson2Encoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.soap.SOAPEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.form.FormEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.json.JsonEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.micrometer.MeteredEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.metrics4.MeteredEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.metrics5.MeteredEncoder</exclude>
+              <!-- TODO: remove -->
+              <exclude>feign.form.spring.SpringFormEncoder</exclude>
             </excludes>
             <accessModifier>public</accessModifier>
           </parameter>

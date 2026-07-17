@@ -46,8 +46,8 @@ class ByteArrayClientTest {
 
     API =
         Feign.builder()
+            .encoder(encoder)
             .logger(new JavaLogger(ByteArrayClientTest.class).appendToFile(logFile))
-            .encoders(encoder)
             .logLevel(FULL)
             .target(CustomClient.class, "http://localhost:8080");
   }

@@ -232,11 +232,10 @@ final class RequestTemplateFactoryResolver {
           formVariables.put(entry.getKey(), entry.getValue());
         }
       }
-      if (!encoder.canEncode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable)) {
-        throw new EncodeException("This encoder does not support form encoding: " + encoder);
-      }
       try {
-        encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable);
+        if (!encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable)) {
+          throw new EncodeException("This encoder does not support form encoding: " + encoder);
+        }
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
@@ -287,7 +286,7 @@ final class RequestTemplateFactoryResolver {
 
     private void encode(Object object, Type bodyType, RequestTemplate mutable)
         throws EncodeException {
-      if (!encoder.canEncode(object, bodyType, mutable)) {
+      if (!encoder.encode(object, bodyType, mutable)) {
         throw new EncodeException(
             "This encoder does not support encoding of type: "
                 + bodyType
@@ -296,8 +295,6 @@ final class RequestTemplateFactoryResolver {
                 + ", encoder: "
                 + encoder);
       }
-
-      encoder.encode(object, bodyType, mutable);
     }
   }
 }

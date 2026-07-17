@@ -18,6 +18,8 @@ package feign.codec;
 import feign.RequestTemplate;
 import feign.Util;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
@@ -71,27 +73,38 @@ public interface Encoder {
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
 
   /**
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(Encoder... encoders) {
+    return of(Arrays.asList(encoders));
+  }
+
+  /**
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(List<Encoder> encoders) {
+    return new DelegatingEncoder(encoders);
+  }
+
+  /**
    * Converts objects to an appropriate representation in the template.
    *
    * @param object what to encode as the request body.
    * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
    *     indicates form encoding.
    * @param template the request template to populate.
+   * @return {@code true} if the encoder handled the object, {@code false} otherwise.
    * @throws EncodeException when encoding failed due to a checked exception.
    */
-  void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
-
-  /**
-   * Checks if the encoder can encode the given object.
-   *
-   * @param object what to encode as the request body
-   * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
-   *     indicates form encoding
-   * @param template the request template to populate
-   * @return {@code true} if the encoder can encode the object, {@code false} otherwise
-   * @since 14
-   * @apiNote when this method returns {@code true}, the {@link EncodeException} may still be thrown
-   *     by {@link #encode(Object, Type, RequestTemplate)} if the encoding fails.
-   */
-  boolean canEncode(Object object, Type bodyType, RequestTemplate template);
+  boolean encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
 }

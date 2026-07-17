@@ -9,7 +9,7 @@ Add `JacksonJrEncoder` and/or `JacksonJrDecoder` to your `Feign.Builder` like so
 
 ```java
 GitHub github = Feign.builder()
-                     .encoders(new JacksonJrEncoder())
+                     .encoder(new JacksonJrEncoder())
                      .decoder(new JacksonJrDecoder())
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -24,7 +24,7 @@ JSON json = Json.builder()
                 .build();
 
 GitHub github = Feign.builder()
-                     .encoders(new JacksonJrEncoder(json))
+                     .encoder(new JacksonJrEncoder(json))
                      .decoder(new JacksonJrDecoder(json))
                      .target(GitHub.class, "https://api.github.com");
 ```
@@ -37,7 +37,7 @@ List<JacksonJrExtension> extensions = singletonList(JacksonAnnotationExtension.b
         .withVisibility(JsonAutoDetect.Value.defaultVisibility())
         .build());
 GitHub github = Feign.builder()
-                     .encoders(new JacksonJrEncoder(extensions))
+                     .encoder(new JacksonJrEncoder(extensions))
                      .decoder(new JacksonJrDecoder(extensions))
                      .target(GitHub.class, "https://api.github.com");
 ```
