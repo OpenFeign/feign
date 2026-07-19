@@ -348,7 +348,10 @@ class SpringContractTest {
     @RequestMapping(value = "/withRequiredRequestBody", method = RequestMethod.POST)
     void checkWithRequiredRequestBody(@RequestBody() UserObject obj);
 
-    @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
+    @RequestMapping(
+        value = "/part/{id}",
+        method = RequestMethod.POST,
+        consumes = MediaType.APPLICATION_JSON_VALUE)
     void checkRequestPart(
         @PathVariable(name = "id") String campaignId,
         @RequestPart(name = "name1") String name,

@@ -53,16 +53,18 @@ public class MeteredEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    createTimer(object, bodyType, template)
-        .record(() -> encoder.encode(object, bodyType, template));
+    boolean isEncoded =
+        createTimer(object, bodyType, template)
+            .record(() -> encoder.encode(object, bodyType, template));
 
     template.headers().getOrDefault(CONTENT_LENGTH, Collections.emptySet()).stream()
         .findFirst()
         .ifPresent(
             contentLength ->
                 createSummary(object, bodyType, template).record(Long.parseLong(contentLength)));
+    return isEncoded;
   }
 
   protected Timer createTimer(Object object, Type bodyType, RequestTemplate template) {

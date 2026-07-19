@@ -19,6 +19,7 @@ import com.fasterxml.jackson.jr.ob.JSON;
 import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.IOException;
@@ -51,13 +52,17 @@ public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isJsonContentType(template)) {
+      return false;
+    }
     try {
       if (bodyType == byte[].class) {
         template.body(Request.Body.of(mapper.asBytes(object)));
       } else {
         template.body(Request.Body.of(mapper.asString(object)));
       }
+      return true;
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }

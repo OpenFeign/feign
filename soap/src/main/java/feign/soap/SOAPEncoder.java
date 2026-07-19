@@ -17,6 +17,7 @@ package feign.soap;
 
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
@@ -110,7 +111,10 @@ public class SOAPEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isXmlContentType(template)) {
+      return false;
+    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "SOAP only supports encoding raw types. Found " + bodyType);
@@ -137,6 +141,7 @@ public class SOAPEncoder implements Encoder {
         soapMessage.writeTo(bos);
       }
       template.body(Request.Body.of(bos.toByteArray()));
+      return true;
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

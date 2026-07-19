@@ -16,13 +16,11 @@
 package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import feign.Request;
 import feign.RequestTemplate;
-import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -74,11 +72,7 @@ class DefaultEncoderTest {
 
   @Test
   void refusesToEncodeOtherTypes() throws Exception {
-    Throwable exception =
-        assertThatExceptionOfType(EncodeException.class)
-            .isThrownBy(() -> encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate()))
-            .actual();
-    assertThat(exception.getMessage()).contains("is not a type supported by this encoder.");
+    assertThat(encoder.encode(Clock.systemUTC(), Clock.class, new RequestTemplate())).isFalse();
   }
 
   @Test

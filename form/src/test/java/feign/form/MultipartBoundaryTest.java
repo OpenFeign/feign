@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 class MultipartBoundaryTest {
 
-  private static final Encoder NOOP_DELEGATE = (object, bodyType, template) -> {};
+  private static final Encoder NOOP_DELEGATE = (object, bodyType, template) -> true;
 
   @Test
   void boundaryIsNotDerivedFromTheClock() {

@@ -18,6 +18,8 @@ package feign.codec;
 import feign.RequestTemplate;
 import feign.Util;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
@@ -71,13 +73,39 @@ public interface Encoder {
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
 
   /**
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(Encoder... encoders) {
+    return of(Arrays.asList(encoders));
+  }
+
+  /**
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(List<Encoder> encoders) {
+    return new DelegatingEncoder(encoders);
+  }
+
+  /**
    * Converts objects to an appropriate representation in the template.
    *
    * @param object what to encode as the request body.
    * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
    *     indicates form encoding.
    * @param template the request template to populate.
-   * @throws EncodeException when encoding failed due to a checked exception.
+   * @return {@code true} if the encoder is able to handle the encode request, {@code false} if the
+   *     encoder cannot encode the request
+   * @throws EncodeException if this encoder should be able to encode the request but encoding fails
    */
-  void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
+  boolean encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
 }

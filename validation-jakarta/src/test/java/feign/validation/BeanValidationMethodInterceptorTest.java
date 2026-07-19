@@ -84,7 +84,11 @@ class BeanValidationMethodInterceptorTest {
 
   private Api api() {
     return Feign.builder()
-        .encoder((object, _, template) -> template.body(Request.Body.of(String.valueOf(object))))
+        .encoder(
+            (object, _, template) -> {
+              template.body(Request.Body.of(String.valueOf(object)));
+              return true;
+            })
         .methodInterceptor(BeanValidationMethodInterceptor.usingDefaultFactory())
         .target(Api.class, "http://localhost:" + server.getPort());
   }

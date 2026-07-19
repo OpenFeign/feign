@@ -73,6 +73,7 @@ class GraphqlEncoderTest {
   @Test
   void encodesBodyWithVariables() throws Exception {
     var template = templateFor(MutationApi.class);
+    template.header("Content-Type", "application/json");
     var body = Map.of("name", "John", "email", "john@example.com");
     encoder.encode(body, Map.class, template);
 
@@ -87,6 +88,7 @@ class GraphqlEncoderTest {
   @Test
   void delegatesToWrappedEncoderForNonGraphql() {
     var template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode("plain body", String.class, template);
     assertThat(template.requestBody()).isPresent();
   }
@@ -94,6 +96,7 @@ class GraphqlEncoderTest {
   @Test
   void interceptorSetsBodyForNoVariableQuery() throws Exception {
     var template = templateFor(NoVariableApi.class);
+    template.header("Content-Type", "application/json");
     interceptor.apply(template);
 
     var result = mapper.readTree(requestBodyBytes(template));

@@ -34,12 +34,11 @@ public class GraphqlEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     var meta = contract.lookupMetadata(template);
     if (meta == null) {
-      delegate.encode(object, bodyType, template);
-      return;
+      return delegate.encode(object, bodyType, template);
     }
 
     var graphqlBody = new LinkedHashMap<String, Object>();
@@ -52,5 +51,6 @@ public class GraphqlEncoder implements Encoder {
     }
 
     delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
+    return true;
   }
 }
