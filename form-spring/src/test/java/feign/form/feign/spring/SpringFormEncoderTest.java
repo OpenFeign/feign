@@ -77,8 +77,8 @@ class SpringFormEncoderTest {
         .isEqualTo(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder);
   }
 
-  // TODO: enable when Spring Cloud OpenFiegn migrates to Feign 14
-  @Disabled("Disabled util Spring Cloud OpenFiegn migrates to Feign 14")
+  // TODO: enable when Spring Cloud OpenFeign migrates to Feign 14
+  @Disabled("Disabled until Spring Cloud OpenFeign migrates to Feign 14")
   @Test
   void upload4Test() throws Exception {
     var map = new HashMap<Object, Object>();
