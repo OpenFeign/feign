@@ -15,15 +15,16 @@
  */
 package feign.jackson.jr;
 
-import com.fasterxml.jackson.jr.ob.JSON;
-import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Util;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
+
+import com.fasterxml.jackson.jr.ob.JSON;
+import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
+
+import feign.Request;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 
 /** A {@link Encoder} that uses Jackson Jr to convert objects to String or byte representation. */
 public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
@@ -53,9 +54,6 @@ public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
 
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template) {
-    if (!Util.isJsonContentType(template)) {
-      return false;
-    }
     try {
       if (bodyType == byte[].class) {
         template.body(Request.Body.of(mapper.asBytes(object)));

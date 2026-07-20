@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -35,9 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import feign.codec.Decoder;
 
 class UtilTest {
 
@@ -314,27 +316,6 @@ class UtilTest {
     Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(null);
     // Assert result
     assertThat(actualMap).isEmpty();
-  }
-
-  @ParameterizedTest
-  @CsvSource(
-      textBlock =
-          """
-                         application/json, true
-                         application/json;charset=UTF-8, true
-                         application/ld+json, true
-                         application/json-patch+json, true
-                         application/vnd.api+json, true
-                         application/manifest+json, true
-                         text/json, true
-                         text/xml, false
-                         application/xml, false
-                         """)
-  void testIsJsonContentType(String contentType, boolean expected) {
-    var template = new RequestTemplate().header("Content-Type", contentType);
-    var actual = Util.isJsonContentType(template);
-
-    assertEquals(expected, actual);
   }
 
   @ParameterizedTest
