@@ -171,12 +171,12 @@
     <gson.version>2.14.0</gson.version>
     <moshi.version>1.15.2</moshi.version>
     <slf4j.version>2.0.18</slf4j.version>
-    <json.version>20260522</json.version>
+    <json.version>20260719</json.version>
     <springboot.version>4.1.0</springboot.version>
 
-    <junit5.version>6.1.1</junit5.version>
+    <junit5.version>6.1.2</junit5.version>
     <jackson.version>2.22.1</jackson.version>
-    <jackson3.version>3.2.0</jackson3.version>
+    <jackson3.version>3.2.1</jackson3.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
     <fastjson2.version>2.0.61.android8</fastjson2.version>
@@ -206,9 +206,9 @@
     <maven-toolchains-plugin.version>3.2.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <rewrite-maven-plugin.version>6.43.0</rewrite-maven-plugin.version>
-    <rewrite-testing-frameworks.version>3.41.0</rewrite-testing-frameworks.version>
-    <rewrite-migrate-java.version>3.39.0</rewrite-migrate-java.version>
+    <rewrite-maven-plugin.version>6.44.0</rewrite-maven-plugin.version>
+    <rewrite-testing-frameworks.version>3.42.0</rewrite-testing-frameworks.version>
+    <rewrite-migrate-java.version>3.40.0</rewrite-migrate-java.version>
     <japicmp-maven-plugin.version>0.26.1</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
