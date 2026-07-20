@@ -15,15 +15,16 @@
  */
 package feign.jaxb;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Util;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+
+import feign.Request;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 
 /**
  * Encodes requests using JAXB. <br>
@@ -54,9 +55,6 @@ public class JAXBEncoder implements Encoder {
 
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template) {
-    if (!Util.isXmlContentType(template)) {
-      return false;
-    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports encoding raw types. Found " + bodyType);

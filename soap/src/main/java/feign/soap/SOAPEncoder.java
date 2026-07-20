@@ -15,17 +15,12 @@
  */
 package feign.soap;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Util;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.jaxb.JAXBContextFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -41,7 +36,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Document;
+
+import feign.Request;
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.jaxb.JAXBContextFactory;
 
 /**
  * Encodes requests using SOAPMessage and JAXB for the body part. <br>
@@ -112,9 +114,6 @@ public class SOAPEncoder implements Encoder {
 
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template) {
-    if (!Util.isXmlContentType(template)) {
-      return false;
-    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "SOAP only supports encoding raw types. Found " + bodyType);

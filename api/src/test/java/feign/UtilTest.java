@@ -318,27 +318,6 @@ class UtilTest {
     assertThat(actualMap).isEmpty();
   }
 
-  @ParameterizedTest
-  @CsvSource(
-      textBlock =
-          """
-                         application/xml, true
-                         application/xml;charset=UTF-8, true
-                         application/atom+xml, true
-                         application/rss+xml, true
-                         application/soap+xml, true
-                         text/xml, true
-                         text/xml;charset=UTF-8, true
-                         application/json, false
-                         text/json, false
-                         """)
-  void testIsXmlContentType(String contentType, boolean expected) {
-    var template = new RequestTemplate().header("Content-Type", contentType);
-    var actual = Util.isXmlContentType(template);
-
-    assertEquals(expected, actual);
-  }
-
   interface LastTypeParameter {
     List<String> LIST_STRING = null;
     Parameterized<List<String>> PARAMETERIZED_LIST_STRING = null;
