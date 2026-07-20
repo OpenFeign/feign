@@ -355,7 +355,7 @@ VertxFeign.builder()
 
 ---
 
-### 14. `Encoder.encode()` now returns `boolean` (https://github.com/OpenFeign/feign/pull/3476)
+### 14. `Encoder.encode()` now returns `boolean` (https://github.com/OpenFeign/feign/pull/3485)
 
 `Encoder.encode()` now returns `boolean` instead of `void`. Return `true` when the encoder
 handles the object, `false` otherwise. This replaces the separate `canEncode()` method.
@@ -415,7 +415,7 @@ new feign.core.codec.DefaultEncoder()
 
 ---
 
-### 17. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3476)
+### 17. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3485)
 
 Use `Encoder.of(...)` to compose multiple encoders into a single `DelegatingEncoder`, which
 delegates to the first encoder whose `encode()` returns `true`.
@@ -453,7 +453,7 @@ each encoder's `encode()` and uses the first one that returns `true`.
 
 ---
 
-### 18. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3476)
+### 18. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3485)
 
 You can now compose multiple encoders via `Encoder.of()`, and Feign will pick the right one at
 request time based on the return value of `encode()`. This is especially useful for APIs that mix
