@@ -389,46 +389,7 @@ no encoder returns `true`, an `EncodeException` is thrown.
 
 ---
 
-### 15. JSON and XML encoders require `Content-Type` header (https://github.com/OpenFeign/feign/pull/3476)
-
-Built-in JSON and XML encoders now gate on the `Content-Type` header and return
-`false` from `encode()` when it does not match:
-
-- JSON encoders (Jackson, Gson, Moshi, Fastjson2, Jackson-Jr, Jackson-Jaxb) check
-  `Util.isJsonContentType(template)` and return `false` when it does not match
-  (e.g., `application/json`, `application/ld+json`).
-- XML encoders (JAXB, SOAP) check `Util.isXmlContentType(template)` and return
-  `false` when it does not match (e.g., `text/xml`, `application/xml`).
-
-When using `Encoder.of()` (see section 18), a JSON or XML encoder will only claim
-the request if a matching `Content-Type` header is present.
-
-**You must ensure a `Content-Type` header is set** before the encoder runs. If
-your interface does not set the `Content-Type` header via annotations (e.g.,
-`@Headers("Content-Type: application/json")`), add it in one of the following ways:
-
-```java
-// 1. Add the header via @Headers on the interface or method:
-@Headers("Content-Type: application/json")
-public interface MyApi {
-    @RequestLine("POST /data")
-    void post(Data data);
-}
-
-// 2. Add the header globally via a RequestInterceptor:
-Feign.builder()
-    .requestInterceptor(template ->
-        template.header("Content-Type", "application/json"))
-    .target(MyApi.class, "https://api.example.com");
-```
-
-> [!NOTE]
-> Spring Cloud OpenFeign automatically sets `Content-Type: application/json` for `@RequestBody`-annotated parameters, so
-> Spring Feign users are not affected by this change.
-
----
-
-### 16. `Encoder` moved from `core` to `api` module
+### 15. `Encoder` moved from `core` to `api` module
 
 `feign.codec.Encoder` has been relocated from the `feign-core` module to the new `feign-api`
 module. The package name (`feign.codec`) is unchanged. If you have a direct dependency on
@@ -436,7 +397,7 @@ module. The package name (`feign.codec`) is unchanged. If you have a direct depe
 
 ---
 
-### 17. `Encoder.Default` removed
+### 16. `Encoder.Default` removed
 
 The deprecated inner class `Encoder.Default` (which extended `DefaultEncoder`) has been removed.
 
@@ -454,7 +415,7 @@ new feign.core.codec.DefaultEncoder()
 
 ---
 
-### 18. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3476)
+### 17. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3476)
 
 Use `Encoder.of(...)` to compose multiple encoders into a single `DelegatingEncoder`, which
 delegates to the first encoder whose `encode()` returns `true`.
@@ -492,7 +453,7 @@ each encoder's `encode()` and uses the first one that returns `true`.
 
 ---
 
-### 19. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3476)
+### 18. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3476)
 
 You can now compose multiple encoders via `Encoder.of()`, and Feign will pick the right one at
 request time based on the return value of `encode()`. This is especially useful for APIs that mix
