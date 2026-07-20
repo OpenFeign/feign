@@ -17,6 +17,7 @@ package feign.json;
 
 import static java.lang.String.format;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -54,11 +55,12 @@ import org.json.JSONObject;
 public class JsonEncoder implements Encoder {
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    if (object == null) return;
+    if (object == null) return true;
     if (object instanceof JSONArray || object instanceof JSONObject) {
-      template.body(object.toString());
+      template.body(Request.Body.of(object.toString()));
+      return true;
     } else {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
     }

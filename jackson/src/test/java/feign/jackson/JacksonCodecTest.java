@@ -32,7 +32,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -78,6 +77,7 @@ class JacksonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new JacksonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
@@ -97,6 +97,7 @@ class JacksonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new JacksonEncoder().encode(form, new TypeReference<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template)
@@ -121,8 +122,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -136,8 +136,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat(new JacksonDecoder().decode(response, String.class)).isNull();
@@ -149,8 +148,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -171,8 +169,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -191,6 +188,7 @@ class JacksonCodecTest {
     zones.add(new Zone("denominator.io.", "abcd"));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode(zones, new TypeReference<List<Zone>>() {}.getType(), template);
 
     assertThat(template)
@@ -210,7 +208,7 @@ class JacksonCodecTest {
   }
 
   @Test
-  void decoderCharset() throws IOException {
+  void decoderCharset() throws Exception {
     Zone zone = new Zone("denominator.io.", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
 
     Map<String, Collection<String>> headers = new HashMap<>();
@@ -220,8 +218,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(headers)
             .body(
                 new String(
@@ -250,8 +247,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(zonesJson, UTF_8)
             .build();
@@ -277,8 +273,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();
@@ -290,8 +285,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(204)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(new byte[0])
             .build();
@@ -364,8 +358,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) new JacksonDecoder().decode(response, byte[].class)).isEmpty();
@@ -378,8 +371,7 @@ class JacksonCodecTest {
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat((byte[]) JacksonIteratorDecoder.create().decode(response, byte[].class)).isEmpty();

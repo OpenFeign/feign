@@ -16,14 +16,15 @@
 package feign;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -50,23 +51,28 @@ class OptionsTest {
   }
 
   @Test
-  void socketTimeoutTest() {
+  void socketTimeoutTest() throws IOException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(3, TimeUnit.SECONDS).build());
 
     final OptionsInterface api =
         Feign.builder()
             .options(new Request.Options(1000, 1000))
             .target(OptionsInterface.class, server.url("/").toString());
 
-    FeignException exception = assertThrows(FeignException.class, () -> api.get());
+    FeignException exception =
+        assertThatExceptionOfType(FeignException.class).isThrownBy(() -> api.get()).actual();
     assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test
-  void normalResponseTest() {
+  void normalResponseTest() throws IOException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(3, TimeUnit.SECONDS).build());
 
     final OptionsInterface api =
         Feign.builder()
@@ -77,9 +83,11 @@ class OptionsTest {
   }
 
   @Test
-  void normalResponseForChildOptionsTest() {
+  void normalResponseForChildOptionsTest() throws IOException {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(3, TimeUnit.SECONDS).build());
 
     final OptionsInterface api =
         Feign.builder()
@@ -92,7 +100,9 @@ class OptionsTest {
   @Test
   void socketTimeoutWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(2, TimeUnit.SECONDS).build());
     Request.Options options = new Request.Options(1000, 3000);
     final OptionsInterface api =
         Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());
@@ -112,14 +122,17 @@ class OptionsTest {
     thread.join();
 
     Exception exception = exceptionAtomicReference.get();
-    assertThat(exception).isInstanceOf(FeignException.class);
-    assertThat(exception).hasCauseInstanceOf(SocketTimeoutException.class);
+    assertThat(exception)
+        .isInstanceOf(FeignException.class)
+        .hasCauseInstanceOf(SocketTimeoutException.class);
   }
 
   @Test
   void normalResponseWithMethodOptionsTest() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(2, TimeUnit.SECONDS));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(2, TimeUnit.SECONDS).build());
     Request.Options options = new Request.Options(1000, 1000);
     final OptionsInterface api =
         Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());

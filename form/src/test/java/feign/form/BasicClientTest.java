@@ -55,17 +55,17 @@ class BasicClientTest {
   }
 
   @Test
-  void testForm() {
+  void form() {
     assertThat(API.form("1", "1")).isNotNull().extracting(Response::status).isEqualTo(200);
   }
 
   @Test
-  void testFormException() {
+  void formException() {
     assertThat(API.form("1", "2")).isNotNull().extracting(Response::status).isEqualTo(400);
   }
 
   @Test
-  void testUpload() throws Exception {
+  void upload() throws Exception {
     var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
@@ -74,7 +74,7 @@ class BasicClientTest {
   }
 
   @Test
-  void testUploadWithParam() throws Exception {
+  void uploadWithParam() throws Exception {
     var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path).exists();
@@ -83,14 +83,14 @@ class BasicClientTest {
   }
 
   @Test
-  void testJson() {
+  void json() {
     var dto = new Dto("Artem", 11);
 
     assertThat(API.json(dto)).isEqualTo("ok");
   }
 
   @Test
-  void testQueryMap() {
+  void queryMap() {
     Map<String, Object> value =
         singletonMap("filter", (Object) asList("one", "two", "three", "four"));
 
@@ -98,7 +98,7 @@ class BasicClientTest {
   }
 
   @Test
-  void testMultipleFilesArray() throws Exception {
+  void multipleFilesArray() throws Exception {
     var path1 =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
@@ -114,7 +114,7 @@ class BasicClientTest {
   }
 
   @Test
-  void testMultipleFilesList() throws Exception {
+  void multipleFilesList() throws Exception {
     var path1 =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.txt").toURI());
     assertThat(path1).exists();
@@ -130,7 +130,7 @@ class BasicClientTest {
   }
 
   @Test
-  void testUploadWithDto() throws Exception {
+  void uploadWithDto() throws Exception {
     var dto = new Dto("Artem", 11);
 
     var path =
@@ -144,7 +144,7 @@ class BasicClientTest {
   }
 
   @Test
-  void testUnknownTypeFile() throws Exception {
+  void unknownTypeFile() throws Exception {
     var path =
         Path.of(Thread.currentThread().getContextClassLoader().getResource("file.abc").toURI());
     assertThat(path).exists();
@@ -153,21 +153,21 @@ class BasicClientTest {
   }
 
   @Test
-  void testFormData() throws Exception {
+  void formData() throws Exception {
     var formData = new FormData("application/custom-type", "popa.txt", "Allo".getBytes("UTF-8"));
 
     assertThat(API.uploadFormData(formData)).isEqualTo("popa.txt:application/custom-type");
   }
 
   @Test
-  void testSubmitRepeatableQueryParam() throws Exception {
+  void submitRepeatableQueryParam() throws Exception {
     var names = new String[] {"Milada", "Thais"};
     var stringResponse = API.submitRepeatableQueryParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");
   }
 
   @Test
-  void testSubmitRepeatableFormParam() throws Exception {
+  void submitRepeatableFormParam() throws Exception {
     var names = Arrays.asList("Milada", "Thais");
     var stringResponse = API.submitRepeatableFormParam(names);
     assertThat(stringResponse).isEqualTo("Milada and Thais");

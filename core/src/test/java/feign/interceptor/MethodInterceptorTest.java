@@ -24,21 +24,28 @@ import feign.RequestInterceptor;
 import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class MethodInterceptorTest {
 
   private final MockWebServer server = new MockWebServer();
 
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
+  }
+
   @AfterEach
   void tearDown() throws Exception {
-    server.shutdown();
+    server.close();
   }
 
   interface Api {
@@ -51,7 +58,7 @@ class MethodInterceptorTest {
 
   @Test
   void interceptorRunsAfterContractAndBeforeRequestInterceptor() throws Exception {
-    server.enqueue(new MockResponse().setBody("ok"));
+    server.enqueue(new MockResponse.Builder().body("ok").build());
 
     AtomicReference<RequestTemplate> seenByMethodInterceptor = new AtomicReference<>();
     AtomicReference<RequestTemplate> seenByRequestInterceptor = new AtomicReference<>();
@@ -80,12 +87,12 @@ class MethodInterceptorTest {
 
     assertThat(seenByMethodInterceptor.get()).isNotNull();
     assertThat(seenByRequestInterceptor.get()).isNotNull();
-    assertThat(server.takeRequest().getHeader("X-From-Method")).isEqualTo("yes");
+    assertThat(server.takeRequest().getHeaders().get("X-From-Method")).isEqualTo("yes");
   }
 
   @Test
   void interceptorCanShortCircuit() throws Exception {
-    MethodInterceptor methodInterceptor = (invocation, chain) -> "short-circuited";
+    MethodInterceptor methodInterceptor = (_, _) -> "short-circuited";
 
     Api api =
         Feign.builder()
@@ -102,7 +109,7 @@ class MethodInterceptorTest {
   void interceptorExceptionSurfacesToCaller() {
     RuntimeException boom = new IllegalStateException("nope");
     MethodInterceptor methodInterceptor =
-        (invocation, chain) -> {
+        (_, _) -> {
           throw boom;
         };
 
@@ -117,7 +124,7 @@ class MethodInterceptorTest {
 
   @Test
   void interceptorSeesResponseAfterChainCompletes() throws Exception {
-    server.enqueue(new MockResponse().setHeader("ETag", "v1").setBody("payload"));
+    server.enqueue(new MockResponse.Builder().setHeader("ETag", "v1").body("payload").build());
 
     AtomicReference<Response> captured = new AtomicReference<>();
     MethodInterceptor methodInterceptor =
@@ -143,7 +150,7 @@ class MethodInterceptorTest {
 
   @Test
   void chainOrderIsRegistrationOrder() throws Exception {
-    server.enqueue(new MockResponse().setBody("ok"));
+    server.enqueue(new MockResponse.Builder().body("ok").build());
 
     List<String> visited = new ArrayList<>();
     MethodInterceptor first =
@@ -174,7 +181,7 @@ class MethodInterceptorTest {
 
   @Test
   void invocationExposesArguments() throws Exception {
-    server.enqueue(new MockResponse().setBody("ok"));
+    server.enqueue(new MockResponse.Builder().body("ok").build());
 
     AtomicReference<Object[]> seenArgs = new AtomicReference<>();
     MethodInterceptor methodInterceptor =

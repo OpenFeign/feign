@@ -16,12 +16,13 @@
 package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 import feign.codec.Decoder;
 import feign.codec.Encoder;
+import feign.core.DefaultClient;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -39,10 +40,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FeignBuilderTest {
@@ -51,7 +54,7 @@ public class FeignBuilderTest {
 
   @Test
   void defaults() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -65,18 +68,18 @@ public class FeignBuilderTest {
   /** Shows exception handling isn't required to coerce 404 to null or empty */
   @Test
   void dismiss404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setResponseCode(400));
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().code(400).build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().dismiss404().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
-    assertThat(api.decodedLazyPost().hasNext()).isFalse(); // empty, not null!
+    Assertions.assertThat(api.decodedLazyPost()).isExhausted(); // empty, not null!
     assertThat(api.optionalContent()).isEmpty(); // empty, not null!
     assertThat(api.streamPost()).isEmpty(); // empty, not null!
     assertThat(api.decodedPost()).isNull(); // null, not empty!
@@ -92,18 +95,18 @@ public class FeignBuilderTest {
   /** Shows exception handling isn't required to coerce 204 to null or empty */
   @Test
   void decode204() {
-    server.enqueue(new MockResponse().setResponseCode(204));
-    server.enqueue(new MockResponse().setResponseCode(204));
-    server.enqueue(new MockResponse().setResponseCode(204));
-    server.enqueue(new MockResponse().setResponseCode(204));
-    server.enqueue(new MockResponse().setResponseCode(204));
-    server.enqueue(new MockResponse().setResponseCode(400));
+    server.enqueue(new MockResponse.Builder().code(204).build());
+    server.enqueue(new MockResponse.Builder().code(204).build());
+    server.enqueue(new MockResponse.Builder().code(204).build());
+    server.enqueue(new MockResponse.Builder().code(204).build());
+    server.enqueue(new MockResponse.Builder().code(204).build());
+    server.enqueue(new MockResponse.Builder().code(400).build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().target(TestInterface.class, url);
 
     assertThat(api.getQueues("/")).isEmpty(); // empty, not null!
-    assertThat(api.decodedLazyPost().hasNext()).isFalse(); // empty, not null!
+    Assertions.assertThat(api.decodedLazyPost()).isExhausted(); // empty, not null!
     assertThat(api.optionalContent()).isEmpty(); // empty, not null!
     assertThat(api.streamPost()).isEmpty(); // empty, not null!
     assertThat(api.decodedPost()).isNull(); // null, not empty!
@@ -118,7 +121,7 @@ public class FeignBuilderTest {
 
   @Test
   void noFollowRedirect() {
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", "/"));
+    server.enqueue(new MockResponse.Builder().code(302).addHeader("Location", "/").build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface noFollowApi =
@@ -136,8 +139,8 @@ public class FeignBuilderTest {
               assertThat(value).contains("/");
             });
 
-    server.enqueue(new MockResponse().setResponseCode(302).addHeader("Location", "/"));
-    server.enqueue(new MockResponse().setResponseCode(200));
+    server.enqueue(new MockResponse.Builder().code(302).addHeader("Location", "/").build());
+    server.enqueue(new MockResponse.Builder().code(200).build());
     TestInterface defaultApi =
         Feign.builder()
             .options(
@@ -148,7 +151,7 @@ public class FeignBuilderTest {
 
   @Test
   void urlPathConcatUrlTrailingSlash() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort() + "/";
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -159,7 +162,7 @@ public class FeignBuilderTest {
 
   @Test
   void urlPathConcatNoPathOnRequestLine() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort() + "/";
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -170,7 +173,7 @@ public class FeignBuilderTest {
 
   @Test
   void httpNotFoundError() {
-    server.enqueue(new MockResponse().setResponseCode(404));
+    server.enqueue(new MockResponse.Builder().code(404).build());
 
     String url = "http://localhost:" + server.getPort() + "/";
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -185,7 +188,7 @@ public class FeignBuilderTest {
 
   @Test
   void urlPathConcatNoInitialSlashOnPath() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort() + "/";
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -196,7 +199,7 @@ public class FeignBuilderTest {
 
   @Test
   void urlPathConcatNoInitialSlashOnPathNoTrailingSlashOnUrl() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -207,10 +210,14 @@ public class FeignBuilderTest {
 
   @Test
   void overrideEncoder() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
-    Encoder encoder = (object, _, template) -> template.body(object.toString());
+    Encoder encoder =
+        (object, _, template) -> {
+          template.body(Request.Body.of(object.toString()));
+          return true;
+        };
 
     TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
     api.encodedPost(Arrays.asList("This", "is", "my", "request"));
@@ -220,7 +227,7 @@ public class FeignBuilderTest {
 
   @Test
   void overrideDecoder() {
-    server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse.Builder().body("success!").build());
 
     String url = "http://localhost:" + server.getPort();
     Decoder decoder = (_, _) -> "fail";
@@ -228,12 +235,12 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().decoder(decoder).target(TestInterface.class, url);
     assertThat(api.decodedPost()).isEqualTo("fail");
 
-    assertThat(server.getRequestCount()).isEqualTo(1);
+    assertThat(server.getRequestCount()).isOne();
   }
 
   @Test
   void overrideQueryMapEncoder() throws Exception {
-    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse.Builder().build());
 
     String url = "http://localhost:" + server.getPort();
     QueryMapEncoder customMapEncoder =
@@ -249,12 +256,12 @@ public class FeignBuilderTest {
     api.queryMapEncoded("ignored");
 
     assertThat(server.takeRequest()).hasQueryParams(Arrays.asList("key1=value1", "key2=value2"));
-    assertThat(server.getRequestCount()).isEqualTo(1);
+    assertThat(server.getRequestCount()).isOne();
   }
 
   @Test
   void provideRequestInterceptors() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
     RequestInterceptor requestInterceptor =
@@ -272,7 +279,7 @@ public class FeignBuilderTest {
 
   @Test
   void provideInvocationHandlerFactory() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
 
@@ -280,7 +287,8 @@ public class FeignBuilderTest {
     // noinspection rawtypes
     InvocationHandlerFactory factory =
         new InvocationHandlerFactory() {
-          private final InvocationHandlerFactory delegate = new Default();
+          private final InvocationHandlerFactory delegate =
+              new feign.core.DefaultInvocationHandlerFactory();
 
           @Override
           public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
@@ -293,14 +301,14 @@ public class FeignBuilderTest {
         Feign.builder().invocationHandlerFactory(factory).target(TestInterface.class, url);
     Response response = api.codecPost("request data");
     assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
-    assertThat(callCount.get()).isEqualTo(1);
+    assertThat(callCount.get()).isOne();
 
     assertThat(server.takeRequest()).hasBody("request data");
   }
 
   @Test
   void slashIsEncodedInPathParams() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
 
@@ -317,12 +325,12 @@ public class FeignBuilderTest {
     TestInterface api = Feign.builder().target(TestInterface.class, url);
     String result = api.independentDefaultMethod();
 
-    assertThat(result.equals("default result")).isTrue();
+    Assertions.assertThat(result).isEqualTo("default result");
   }
 
   @Test
   void defaultCallingProxiedMethod() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
     TestInterface api = Feign.builder().target(TestInterface.class, url);
@@ -343,7 +351,7 @@ public class FeignBuilderTest {
    */
   @Test
   void doNotCloseAfterDecode() {
-    server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse.Builder().body("success!").build());
 
     String url = "http://localhost:" + server.getPort();
     Decoder decoder =
@@ -374,11 +382,11 @@ public class FeignBuilderTest {
         Feign.builder().decoder(decoder).doNotCloseAfterDecode().target(TestInterface.class, url);
     Iterator<String> iterator = api.decodedLazyPost();
 
-    assertThat(iterator.hasNext()).isTrue();
+    Assertions.assertThat(iterator).hasNext();
     assertThat(iterator.next()).isEqualTo("success!");
-    assertThat(iterator.hasNext()).isFalse();
+    Assertions.assertThat(iterator).isExhausted();
 
-    assertThat(server.getRequestCount()).isEqualTo(1);
+    assertThat(server.getRequestCount()).isOne();
   }
 
   /**
@@ -387,7 +395,7 @@ public class FeignBuilderTest {
    */
   @Test
   void doNotCloseAfterDecodeDecoderFailure() {
-    server.enqueue(new MockResponse().setBody("success!"));
+    server.enqueue(new MockResponse.Builder().body("success!").build());
 
     String url = "http://localhost:" + server.getPort();
     Decoder angryDecoder =
@@ -451,11 +459,7 @@ public class FeignBuilderTest {
             .decoder(angryDecoder)
             .doNotCloseAfterDecode()
             .target(TestInterface.class, url);
-    try {
-      api.decodedLazyPost();
-      fail("Expected an exception");
-    } catch (FeignException _) {
-    }
+    assertThatThrownBy(() -> api.decodedLazyPost()).isInstanceOf(FeignException.class);
     assertThat(closed.get()).as("Responses must be closed when the decoder fails").isTrue();
   }
 
@@ -500,6 +504,11 @@ public class FeignBuilderTest {
     default Response defaultMethodPassthrough() {
       return getNoPath();
     }
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

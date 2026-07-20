@@ -51,7 +51,7 @@ public final class UndertowServer implements AutoCloseable {
    * @return listining server's url.
    */
   public String getConnectUrl() {
-    var listenerInfo = undertow.getListenerInfo().iterator().next();
+    var listenerInfo = undertow.getListenerInfo().getFirst();
 
     var address = (InetSocketAddress) listenerInfo.getAddress();
 

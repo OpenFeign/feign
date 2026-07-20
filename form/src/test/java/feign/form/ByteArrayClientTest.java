@@ -53,7 +53,7 @@ class ByteArrayClientTest {
   }
 
   @Test
-  void testNotTreatedAsFileUpload() {
+  void notTreatedAsFileUpload() {
     byte[] bytes = "Hello World".getBytes();
 
     assertThat(API.uploadByteArray(bytes)).isNotNull().extracting(Response::status).isEqualTo(200);

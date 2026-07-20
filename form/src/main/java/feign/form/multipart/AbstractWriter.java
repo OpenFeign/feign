@@ -19,7 +19,6 @@ import static feign.form.ContentProcessor.CRLF;
 
 import feign.codec.EncodeException;
 import java.net.URLConnection;
-import lombok.val;
 
 /**
  * A base writer class.
@@ -61,7 +60,7 @@ public abstract class AbstractWriter implements Writer {
    */
   protected void writeFileMetadata(
       Output output, String name, String fileName, String contentType) {
-    val contentDespositionBuilder =
+    final var contentDespositionBuilder =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
             .append(escapeHeaderParameter(name))
@@ -84,7 +83,7 @@ public abstract class AbstractWriter implements Writer {
       }
     }
 
-    val string =
+    final var string =
         new StringBuilder()
             .append(contentDespositionBuilder.toString())
             .append(CRLF)

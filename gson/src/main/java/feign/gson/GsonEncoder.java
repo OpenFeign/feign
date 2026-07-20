@@ -17,7 +17,9 @@ package feign.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
+import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
 import java.lang.reflect.Type;
@@ -40,7 +42,11 @@ public class GsonEncoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
-    template.body(gson.toJson(object, bodyType));
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isJsonContentType(template)) {
+      return false;
+    }
+    template.body(Request.Body.of(gson.toJson(object, bodyType)));
+    return true;
   }
 }

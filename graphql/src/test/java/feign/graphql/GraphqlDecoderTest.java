@@ -240,7 +240,7 @@ class GraphqlDecoderTest {
 
     assertThat(result.id()).isEqualTo("1");
     assertThat(result.email()).isPresent();
-    assertThat(result.email().get()).isEqualTo("alice@test.com");
+    assertThat(result.email()).hasValue("alice@test.com");
   }
 
   @Test
@@ -332,11 +332,7 @@ class GraphqlDecoderTest {
 
   private Request buildRequest() {
     return Request.create(
-        HttpMethod.POST,
-        "http://localhost/graphql",
-        Collections.emptyMap(),
-        Request.Body.empty(),
-        null);
+        HttpMethod.POST, "http://localhost/graphql", Collections.emptyMap(), null, null);
   }
 
   private static ParameterizedType optionalOf(Type inner) {

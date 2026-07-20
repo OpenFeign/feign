@@ -64,6 +64,7 @@ class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
     IcecreamServiceApi client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .logger(new Slf4jLogger())
@@ -85,6 +86,7 @@ class VertxHttpOptionsTest extends AbstractFeignVertxTest {
 
     IcecreamServiceApi client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(webClient)
             .decoder(new JacksonDecoder(TestUtils.MAPPER))
             .logger(new Slf4jLogger())
@@ -103,7 +105,7 @@ class VertxHttpOptionsTest extends AbstractFeignVertxTest {
                 Collection<Flavor> flavors = res.result();
 
                 assertThat(flavors)
-                    .hasSize(Flavor.values().length)
+                    .hasSameSizeAs(Flavor.values())
                     .containsAll(Arrays.asList(Flavor.values()));
                 testContext.completeNow();
               } else {

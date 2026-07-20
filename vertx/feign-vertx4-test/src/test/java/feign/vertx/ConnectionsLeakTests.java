@@ -51,6 +51,7 @@ class ConnectionsLeakTests {
       new HttpServerOptions().setLogActivity(true).setPort(8091).setSsl(false);
 
   HttpServer httpServer;
+  WebClient webClient;
 
   private final Set<HttpConnection> connections = Collections.synchronizedSet(new HashSet<>());
 
@@ -69,6 +70,9 @@ class ConnectionsLeakTests {
 
   @AfterEach
   void shutdownServer() {
+    if (webClient != null) {
+      webClient.close();
+    }
     httpServer.close();
     connections.clear();
   }
@@ -80,10 +84,11 @@ class ConnectionsLeakTests {
     int nbRequests = 100;
 
     WebClientOptions options = new WebClientOptions().setMaxPoolSize(poolSize);
-    WebClient webClient = WebClient.create(vertx, options);
+    webClient = WebClient.create(vertx, options);
 
     HelloServiceAPI client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(webClient)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
@@ -107,10 +112,11 @@ class ConnectionsLeakTests {
             .setProtocolVersion(HttpVersion.HTTP_2)
             .setHttp2MaxPoolSize(1)
             .setHttp2ClearTextUpgrade(false);
-    WebClient webClient = WebClient.create(vertx, options);
+    webClient = WebClient.create(vertx, options);
 
     HelloServiceAPI client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(webClient)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())

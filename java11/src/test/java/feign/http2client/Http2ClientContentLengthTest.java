@@ -27,7 +27,6 @@ import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -86,12 +85,7 @@ class Http2ClientContentLengthTest {
   private static Response decode(String contentLength) {
     final Request request =
         Request.create(
-            HttpMethod.GET,
-            "http://localhost",
-            Collections.emptyMap(),
-            null,
-            StandardCharsets.UTF_8,
-            null);
+            HttpMethod.GET, "http://localhost", Collections.emptyMap(), (Request.Body) null, null);
     return new Http2Client().toFeignResponse(request, responseWithContentLength(contentLength));
   }
 

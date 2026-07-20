@@ -15,7 +15,9 @@
  */
 package feign.jaxb;
 
+import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import jakarta.xml.bind.JAXBException;
@@ -51,7 +53,10 @@ public class JAXBEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isXmlContentType(template)) {
+      return false;
+    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports encoding raw types. Found " + bodyType);
@@ -60,7 +65,8 @@ public class JAXBEncoder implements Encoder {
       Marshaller marshaller = jaxbContextFactory.createMarshaller((Class<?>) bodyType);
       StringWriter stringWriter = new StringWriter();
       marshaller.marshal(object, stringWriter);
-      template.body(stringWriter.toString());
+      template.body(Request.Body.of(stringWriter.toString()));
+      return true;
     } catch (JAXBException e) {
       throw new EncodeException(e.toString(), e);
     }

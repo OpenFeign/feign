@@ -42,6 +42,6 @@ class WikipediaExampleIT {
     final CommandLine cmdLine = CommandLine.parse(line);
     final int exitValue = new DefaultExecutor().execute(cmdLine);
 
-    assertThat(exitValue).isEqualTo(0);
+    assertThat(exitValue).isZero();
   }
 }

@@ -24,7 +24,6 @@ import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestLine;
 import feign.Response;
-import feign.Util;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,8 +32,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -71,9 +70,10 @@ class StreamDecoderTest {
       """;
 
   @Test
-  void simpleStreamTest() {
+  void simpleStreamTest() throws IOException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo\nbar"));
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo\nbar").build());
 
     StreamInterface api =
         Feign.builder()
@@ -85,14 +85,15 @@ class StreamDecoderTest {
             .target(StreamInterface.class, server.url("/").toString());
 
     try (Stream<String> stream = api.get()) {
-      assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
+      assertThat(stream).containsExactlyElementsOf(Arrays.asList("foo", "bar"));
     }
   }
 
   @Test
-  void simpleDefaultStreamTest() {
+  void simpleDefaultStreamTest() throws IOException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo\nbar"));
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo\nbar").build());
 
     StreamInterface api =
         Feign.builder()
@@ -106,14 +107,15 @@ class StreamDecoderTest {
             .target(StreamInterface.class, server.url("/").toString());
 
     try (Stream<String> stream = api.get()) {
-      assertThat(stream.collect(Collectors.toList())).isEqualTo(Arrays.asList("foo", "bar"));
+      assertThat(stream).containsExactlyElementsOf(Arrays.asList("foo", "bar"));
     }
   }
 
   @Test
-  void simpleDeleteDecoderTest() {
+  void simpleDeleteDecoderTest() throws IOException {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("foo\nbar"));
+    server.start();
+    server.enqueue(new MockResponse.Builder().body("foo\nbar").build());
 
     StreamInterface api =
         Feign.builder()
@@ -132,14 +134,13 @@ class StreamDecoderTest {
   }
 
   @Test
-  void shouldCloseIteratorWhenStreamClosed() throws IOException {
+  void shouldCloseIteratorWhenStreamClosed() throws Exception {
     Response response =
         Response.builder()
             .status(200)
             .reason("OK")
             .headers(Collections.emptyMap())
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body("", UTF_8)
             .build();
 

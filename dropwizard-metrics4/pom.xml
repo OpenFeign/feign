@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>14.0-alpha1-SNAPSHOT</version>
   </parent>
   <artifactId>feign-dropwizard-metrics4</artifactId>
   <name>Feign Dropwizard Metrics4</name>
@@ -30,7 +30,12 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>feign-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

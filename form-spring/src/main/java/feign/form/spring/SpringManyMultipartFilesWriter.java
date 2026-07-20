@@ -21,7 +21,6 @@ import feign.codec.EncodeException;
 import feign.form.multipart.AbstractWriter;
 import feign.form.multipart.Output;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -42,8 +41,8 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
     if (!(value instanceof Iterable)) {
       return false;
     }
-    val iterable = (Iterable<?>) value;
-    val iterator = iterable.iterator();
+    final var iterable = (Iterable<?>) value;
+    final var iterator = iterable.iterator();
     return iterator.hasNext() && iterator.next() instanceof MultipartFile;
   }
 
@@ -51,13 +50,13 @@ public class SpringManyMultipartFilesWriter extends AbstractWriter {
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
     if (value instanceof MultipartFile[]) {
-      val files = (MultipartFile[]) value;
-      for (val file : files) {
+      final var files = (MultipartFile[]) value;
+      for (var file : files) {
         fileWriter.write(output, boundary, key, file);
       }
     } else if (value instanceof Iterable) {
-      val iterable = (Iterable<?>) value;
-      for (val file : iterable) {
+      final var iterable = (Iterable<?>) value;
+      for (var file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
     } else {

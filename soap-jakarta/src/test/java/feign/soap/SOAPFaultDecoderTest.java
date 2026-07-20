@@ -17,13 +17,12 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.FeignException;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.Response;
-import feign.Util;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.soap.SOAPConstants;
 import jakarta.xml.ws.soap.SOAPFaultException;
@@ -44,14 +43,13 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void soapDecoderThrowsSOAPFaultException() throws IOException {
+  void soapDecoderThrowsSOAPFaultException() throws Exception {
 
     Response response =
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(getResourceBytes("/samples/SOAP_1_2_FAULT.xml"))
             .build();
@@ -63,18 +61,19 @@ class SOAPFaultDecoderTest {
             .build();
 
     Throwable exception =
-        assertThrows(SOAPFaultException.class, () -> decoder.decode(response, Object.class));
+        assertThatExceptionOfType(SOAPFaultException.class)
+            .isThrownBy(() -> decoder.decode(response, Object.class))
+            .actual();
     assertThat(exception.getMessage()).contains("Processing error");
   }
 
   @Test
-  void errorDecoderReturnsSOAPFaultException() throws IOException {
+  void errorDecoderReturnsSOAPFaultException() throws Exception {
     Response response =
         Response.builder()
             .status(400)
             .reason("BAD REQUEST")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(getResourceBytes("/samples/SOAP_1_1_FAULT.xml"))
             .build();
@@ -86,13 +85,12 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void errorDecoderReturnsFeignExceptionOn503Status() throws IOException {
+  void errorDecoderReturnsFeignExceptionOn503Status() throws Exception {
     Response response =
         Response.builder()
             .status(503)
             .reason("Service Unavailable")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body("Service Unavailable", UTF_8)
             .build();
@@ -107,7 +105,7 @@ class SOAPFaultDecoderTest {
   }
 
   @Test
-  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws IOException {
+  void errorDecoderReturnsFeignExceptionOnEmptyFault() throws Exception {
     String responseBody =
         """
         <?xml version = '1.0' encoding = 'UTF-8'?>
@@ -123,8 +121,7 @@ class SOAPFaultDecoderTest {
         Response.builder()
             .status(500)
             .reason("Internal Server Error")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(responseBody, UTF_8)
             .build();

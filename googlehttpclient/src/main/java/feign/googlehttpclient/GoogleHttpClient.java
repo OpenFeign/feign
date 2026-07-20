@@ -15,7 +15,6 @@
  */
 package feign.googlehttpclient;
 
-import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpHeaders;
@@ -28,6 +27,7 @@ import feign.Client;
 import feign.Request;
 import feign.Response;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,18 +66,7 @@ public class GoogleHttpClient implements Client {
 
   private final HttpRequest convertRequest(
       final Request inputRequest, final Request.Options options) throws IOException {
-    // Setup the request body
-    HttpContent content = null;
-    if (inputRequest.length() > 0) {
-      final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
-      String contentType = null;
-      if (contentTypeValues != null && contentTypeValues.size() > 0) {
-        contentType = contentTypeValues.iterator().next();
-      } else {
-        contentType = "application/octet-stream";
-      }
-      content = new ByteArrayContent(contentType, inputRequest.body());
-    }
+    final HttpContent content = toHttpContent(inputRequest);
 
     // Build the request
     final HttpRequest request =
@@ -108,6 +97,21 @@ public class GoogleHttpClient implements Client {
     return request;
   }
 
+  private HttpContent toHttpContent(final Request inputRequest) {
+    if (!inputRequest.httpMethod().isWithBody() || inputRequest.body().isEmpty()) {
+      return null;
+    }
+
+    final Request.Body requestBody = inputRequest.body().get();
+    final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
+    final String contentType =
+        contentTypeValues != null && !contentTypeValues.isEmpty()
+            ? contentTypeValues.stream().findFirst().get()
+            : "application/octet-stream";
+
+    return new FeignBodyContent(requestBody, contentType);
+  }
+
   private final Response convertResponse(
       final Request inputRequest, final HttpResponse inputResponse) throws IOException {
     final HttpHeaders headers = inputResponse.getHeaders();
@@ -130,5 +134,35 @@ public class GoogleHttpClient implements Client {
       map.put(header, headers.getHeaderStringValues(header));
     }
     return map;
+  }
+
+  private static final class FeignBodyContent implements HttpContent {
+    private final Request.Body body;
+    private final String contentType;
+
+    private FeignBodyContent(Request.Body body, String contentType) {
+      this.body = body;
+      this.contentType = contentType;
+    }
+
+    @Override
+    public long getLength() {
+      return body.contentLength();
+    }
+
+    @Override
+    public String getType() {
+      return contentType;
+    }
+
+    @Override
+    public boolean retrySupported() {
+      return body.isRepeatable();
+    }
+
+    @Override
+    public void writeTo(OutputStream outputStream) throws IOException {
+      body.writeTo(outputStream);
+    }
   }
 }

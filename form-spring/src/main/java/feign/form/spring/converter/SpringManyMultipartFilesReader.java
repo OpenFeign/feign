@@ -27,7 +27,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 import org.apache.commons.fileupload.MultipartStream;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -84,7 +83,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
   @Override
   protected MultipartFile[] readInternal(
       Class<? extends MultipartFile[]> clazz, HttpInputMessage inputMessage) throws IOException {
-    val headers = inputMessage.getHeaders();
+    final var headers = inputMessage.getHeaders();
     if (headers == null) {
       throw new HttpMessageNotReadableException("There are no headers at all.", inputMessage);
     }
@@ -94,11 +93,11 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
       throw new HttpMessageNotReadableException("Content-Type is missing.", inputMessage);
     }
 
-    val boundaryBytes = getMultiPartBoundary(contentType);
+    final var boundaryBytes = getMultiPartBoundary(contentType);
     MultipartStream multipartStream =
         new MultipartStream(inputMessage.getBody(), boundaryBytes, bufSize, null);
 
-    val multiparts = new LinkedList<ByteArrayMultipartFile>();
+    final var multiparts = new LinkedList<ByteArrayMultipartFile>();
     for (boolean nextPart = multipartStream.skipPreamble();
         nextPart;
         nextPart = multipartStream.readBoundary()) {
@@ -122,7 +121,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
   }
 
   private byte[] getMultiPartBoundary(MediaType contentType) {
-    val boundaryString = unquote(contentType.getParameter("boundary"));
+    final var boundaryString = unquote(contentType.getParameter("boundary"));
     if (StringUtils.hasLength(boundaryString) == false) {
       throw new HttpMessageConversionException("Content-Type missing boundary information.");
     }
@@ -130,11 +129,11 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
   }
 
   private ByteArrayMultipartFile readMultiPart(MultipartStream multipartStream) throws IOException {
-    val multiPartHeaders =
+    final var multiPartHeaders =
         splitIntoKeyValuePairs(
             multipartStream.readHeaders(), NEWLINES_PATTERN, COLON_PATTERN, false);
 
-    val contentDisposition =
+    final var contentDisposition =
         splitIntoKeyValuePairs(
             multiPartHeaders.get(CONTENT_DISPOSITION),
             SEMICOLON_PATTERN,
@@ -145,7 +144,7 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
       throw new HttpMessageConversionException("Content-Disposition is not of type form-data.");
     }
 
-    val bodyStream = new ByteArrayOutputStream();
+    final var bodyStream = new ByteArrayOutputStream();
     multipartStream.readBodyData(bodyStream);
     return new ByteArrayMultipartFile(
         contentDisposition.get("name"),
@@ -159,13 +158,13 @@ public class SpringManyMultipartFilesReader extends AbstractHttpMessageConverter
       Pattern entriesSeparatorPattern,
       Pattern keyValueSeparatorPattern,
       boolean unquoteValue) {
-    val keyValuePairs = new IgnoreKeyCaseMap();
+    final var keyValuePairs = new IgnoreKeyCaseMap();
     if (StringUtils.hasLength(str)) {
-      val tokens = entriesSeparatorPattern.split(str);
-      for (val token : tokens) {
-        val pair = keyValueSeparatorPattern.split(token.trim(), 2);
-        val key = pair[0].trim();
-        val value = pair.length > 1 ? pair[1].trim() : "";
+      final var tokens = entriesSeparatorPattern.split(str);
+      for (var token : tokens) {
+        final var pair = keyValueSeparatorPattern.split(token.trim(), 2);
+        final var key = pair[0].trim();
+        final var value = pair.length > 1 ? pair[1].trim() : "";
 
         keyValuePairs.put(key, unquoteValue ? unquote(value) : value);
       }

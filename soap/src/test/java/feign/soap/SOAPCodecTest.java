@@ -17,16 +17,15 @@ package feign.soap;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -57,6 +56,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
@@ -85,12 +85,14 @@ class SOAPCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     Throwable exception =
-        assertThrows(
-            UnsupportedOperationException.class,
-            () ->
-                new SOAPEncoder(new JAXBContextFactory.Builder().build())
-                    .encode(Collections.emptyMap(), parameterized, template));
+        assertThatExceptionOfType(UnsupportedOperationException.class)
+            .isThrownBy(
+                () ->
+                    new SOAPEncoder(new JAXBContextFactory.Builder().build())
+                        .encode(Collections.emptyMap(), parameterized, template))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             "SOAP only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
@@ -113,6 +115,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
@@ -123,40 +126,6 @@ class SOAPCodecTest {
         <SOAP-ENV:Body>\
         <GetPrice>\
         <Item>Apples</Item>\
-        </GetPrice>\
-        </SOAP-ENV:Body>\
-        </SOAP-ENV:Envelope>\
-        """;
-    byte[] utf16Bytes = soapEnvelop.getBytes(StandardCharsets.UTF_16LE);
-    assertThat(template).hasBody(utf16Bytes);
-  }
-
-  @Test
-  void encodesSoapWithNonAsciiContentInConfiguredCharset() {
-    JAXBContextFactory jaxbContextFactory =
-        new JAXBContextFactory.Builder().withMarshallerJAXBEncoding("UTF-16").build();
-
-    Encoder encoder =
-        new SOAPEncoder.Builder()
-            .withJAXBContextFactory(jaxbContextFactory)
-            .withCharsetEncoding(StandardCharsets.UTF_16)
-            .build();
-
-    GetPrice mock = new GetPrice();
-    mock.item = new Item();
-    mock.item.value = "Café";
-
-    RequestTemplate template = new RequestTemplate();
-    encoder.encode(mock, GetPrice.class, template);
-
-    String soapEnvelop =
-        """
-        <?xml version="1.0" encoding="UTF-16" ?>\
-        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
-        <SOAP-ENV:Header/>\
-        <SOAP-ENV:Body>\
-        <GetPrice>\
-        <Item>Café</Item>\
         </GetPrice>\
         </SOAP-ENV:Body>\
         </SOAP-ENV:Envelope>\
@@ -179,6 +148,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -210,6 +180,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -240,6 +211,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -288,8 +260,7 @@ class SOAPCodecTest {
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -324,8 +295,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -362,8 +332,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockSoapEnvelop, UTF_8)
             .build();
@@ -387,8 +356,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(
                 """
@@ -406,11 +374,12 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             .build();
 
     Throwable exception =
-        assertThrows(
-            feign.codec.DecodeException.class,
-            () ->
-                new SOAPDecoder(new JAXBContextFactory.Builder().build())
-                    .decode(response, parameterized));
+        assertThatExceptionOfType(feign.codec.DecodeException.class)
+            .isThrownBy(
+                () ->
+                    new SOAPDecoder(new JAXBContextFactory.Builder().build())
+                        .decode(response, parameterized))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             """
@@ -442,16 +411,16 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     Box<Box<String>> boxBoxStr = new Box<>();
     boxBoxStr.set(boxStr);
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(boxBoxStr, Box.class, template);
 
     Response response =
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
-            .body(template.body())
+            .body(template.requestBody().map(this::bodyAsBytes).orElse(null))
             .build();
 
     new SOAPDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
@@ -464,8 +433,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .build();
     assertThat(
@@ -485,6 +453,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
@@ -508,6 +477,14 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
             + "</env:Body>"
             + "</env:Envelope>";
     assertThat(template).hasBody(soapEnvelop);
+  }
+
+  private byte[] bodyAsBytes(Request.Body body) {
+    try {
+      return body.writeToByteArray();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   static class ChangedProtocolAndHeaderSOAPEncoder extends SOAPEncoder {

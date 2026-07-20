@@ -17,6 +17,7 @@ package feign.form.multipart;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.Request;
 import feign.codec.Encoder;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,8 @@ class DelegateWriterTest {
     Encoder delegate =
         (object, bodyType, template) -> {
           template.header("Content-Type", "application/json");
-          template.body("{\"hash\":\"somehash\"}");
+          template.body(Request.Body.of("{\"hash\":\"somehash\"}"));
+          return true;
         };
 
     assertThat(write(delegate))
@@ -42,7 +44,11 @@ class DelegateWriterTest {
 
   @Test
   void fallsBackToTextPlainWhenDelegateSetsNoContentType() throws Exception {
-    Encoder delegate = (object, bodyType, template) -> template.body("plain");
+    Encoder delegate =
+        (object, bodyType, template) -> {
+          template.body(Request.Body.of("plain"));
+          return true;
+        };
 
     assertThat(write(delegate)).contains("Content-Type: text/plain; charset=UTF-8");
   }

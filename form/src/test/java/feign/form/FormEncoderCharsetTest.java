@@ -17,7 +17,9 @@ package feign.form;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import feign.Request;
 import feign.RequestTemplate;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +37,7 @@ class FormEncoderCharsetTest {
 
     new FormEncoder().encode(data, Map.class, template);
 
-    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("foo=bar");
+    assertThat(bodyAsUtf8String(template)).isEqualTo("foo=bar");
   }
 
   @Test
@@ -48,6 +50,15 @@ class FormEncoderCharsetTest {
 
     new FormEncoder().encode(data, Map.class, template);
 
-    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("foo=bar");
+    assertThat(bodyAsUtf8String(template)).isEqualTo("foo=bar");
+  }
+
+  private static String bodyAsUtf8String(RequestTemplate template) {
+    Request.Body body = template.requestBody().orElseThrow();
+    try {
+      return body.writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to read request body", e);
+    }
   }
 }

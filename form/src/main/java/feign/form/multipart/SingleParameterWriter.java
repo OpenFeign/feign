@@ -18,7 +18,6 @@ package feign.form.multipart;
 import static feign.form.ContentProcessor.CRLF;
 
 import feign.codec.EncodeException;
-import lombok.val;
 
 /**
  * A writer for a single parameter.
@@ -49,9 +48,9 @@ public class SingleParameterWriter extends AbstractWriter {
    */
   protected void writeWithContentType(Output output, String key, Object value, String contentType)
       throws EncodeException {
-    val contentTypeHeader =
+    final var contentTypeHeader =
         contentType != null ? contentType : "text/plain; charset=" + output.getCharset().name();
-    val string =
+    final var string =
         new StringBuilder()
             .append("Content-Disposition: form-data; name=\"")
             .append(escapeHeaderParameter(key))

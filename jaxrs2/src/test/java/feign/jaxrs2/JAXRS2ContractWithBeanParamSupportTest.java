@@ -66,7 +66,7 @@ class JAXRS2ContractWithBeanParamSupportTest extends JAXRSContractTest {
     assertThat(methodMetadata.template())
         .hasHeaders(entry("X-Custom-Header", asList("{X-Custom-Header}")));
     assertThat(methodMetadata.template()).hasQueries(entry("query", asList("{query}")));
-    assertThat(methodMetadata.formParams()).isNotEmpty().containsExactly("form");
+    assertThat(methodMetadata.formParams()).containsExactly("form");
   }
 
   public interface Jaxrs2Internals {

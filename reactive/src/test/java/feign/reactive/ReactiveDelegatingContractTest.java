@@ -15,12 +15,12 @@
  */
 package feign.reactive;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Contract;
-import feign.DefaultContract;
 import feign.Param;
 import feign.RequestLine;
+import feign.core.DefaultContract;
 import io.reactivex.Flowable;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -31,12 +31,12 @@ class ReactiveDelegatingContractTest {
 
   @Test
   void onlyReactiveReturnTypesSupported() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
+    assertThatThrownBy(
             () -> {
               Contract contract = new ReactiveDelegatingContract(new DefaultContract());
               contract.parseAndValidateMetadata(TestSynchronousService.class);
-            });
+            })
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -53,12 +53,12 @@ class ReactiveDelegatingContractTest {
 
   @Test
   void streamsAreNotSupported() {
-    assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(
+    assertThatThrownBy(
             () -> {
               Contract contract = new ReactiveDelegatingContract(new DefaultContract());
               contract.parseAndValidateMetadata(StreamsService.class);
-            });
+            })
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   public interface TestSynchronousService {

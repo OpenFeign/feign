@@ -22,9 +22,9 @@ import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.RequestTemplate;
-import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.core.codec.DefaultEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A Feign's form encoder.
@@ -70,7 +69,7 @@ public class FormEncoder implements Encoder {
   public FormEncoder(Encoder delegate) {
     this.delegate = delegate;
 
-    val list =
+    final var list =
         asList(new MultipartFormContentProcessor(delegate), new UrlencodedFormContentProcessor());
 
     processors = new HashMap<ContentType, ContentProcessor>(list.size(), 1.F);
@@ -81,13 +80,12 @@ public class FormEncoder implements Encoder {
 
   @Override
   @SuppressWarnings("unchecked")
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     String contentTypeValue = getContentTypeValue(template.headers());
-    val contentType = ContentType.of(contentTypeValue);
+    final var contentType = ContentType.of(contentTypeValue);
     if (processors.containsKey(contentType) == false) {
-      delegate.encode(object, bodyType, template);
-      return;
+      return delegate.encode(object, bodyType, template);
     }
 
     Map<String, Object> data;
@@ -96,12 +94,12 @@ public class FormEncoder implements Encoder {
     } else if (isUserPojo(bodyType)) {
       data = toMap(object);
     } else {
-      delegate.encode(object, bodyType, template);
-      return;
+      return delegate.encode(object, bodyType, template);
     }
 
-    val charset = getCharset(contentTypeValue);
+    final var charset = getCharset(contentTypeValue);
     processors.get(contentType).process(template, charset, data);
+    return true;
   }
 
   /**
@@ -116,11 +114,11 @@ public class FormEncoder implements Encoder {
 
   @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
   private String getContentTypeValue(Map<String, Collection<String>> headers) {
-    for (val entry : headers.entrySet()) {
+    for (var entry : headers.entrySet()) {
       if (!entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)) {
         continue;
       }
-      for (val contentTypeValue : entry.getValue()) {
+      for (var contentTypeValue : entry.getValue()) {
         if (contentTypeValue == null) {
           continue;
         }
@@ -131,7 +129,7 @@ public class FormEncoder implements Encoder {
   }
 
   private Charset getCharset(String contentTypeValue) {
-    val matcher = CHARSET_PATTERN.matcher(contentTypeValue);
+    final var matcher = CHARSET_PATTERN.matcher(contentTypeValue);
     if (!matcher.find()) {
       return UTF_8;
     }

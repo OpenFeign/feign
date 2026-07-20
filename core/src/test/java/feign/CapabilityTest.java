@@ -18,6 +18,7 @@ package feign;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.Options;
+import feign.core.DefaultClient;
 import java.io.IOException;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;

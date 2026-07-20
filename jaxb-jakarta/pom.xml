@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>14.0-alpha1-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-jaxb-jakarta</artifactId>
@@ -33,12 +33,18 @@
     <main.java.version>11</main.java.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <moditect.skip>true</moditect.skip>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>feign-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -55,10 +61,10 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
       <version>${jaxb-impl-4.version}</version>
-      <scope>test</scope>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 

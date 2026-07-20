@@ -20,9 +20,10 @@ import static feign.assertj.MockWebServerAssertions.assertThat;
 import feign.Target.HardCodedTarget;
 import java.io.IOException;
 import java.net.URI;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -37,8 +38,8 @@ public class TargetTest {
   }
 
   @Test
-  void baseCaseQueryParamsArePercentEncoded() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void baseCaseQueryParamsArePercentEncoded() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     String baseUrl = server.url("/default").toString();
 
@@ -52,8 +53,8 @@ public class TargetTest {
    * percent encoding. Here's how.
    */
   @Test
-  void targetCanCreateCustomRequest() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void targetCanCreateCustomRequest() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     String baseUrl = server.url("/default").toString();
     Target<TestQuery> custom =
@@ -66,8 +67,8 @@ public class TargetTest {
                 urlEncoded.httpMethod(),
                 urlEncoded.url().replace("%2F", "/"),
                 urlEncoded.headers(),
-                urlEncoded.body(),
-                urlEncoded.charset());
+                urlEncoded.body().orElse(null),
+                null);
           }
         };
 
@@ -83,8 +84,8 @@ public class TargetTest {
   }
 
   @Test
-  void emptyTarget() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void emptyTarget() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     UriTarget uriTarget = Feign.builder().target(Target.EmptyTarget.create(UriTarget.class));
 
@@ -97,8 +98,8 @@ public class TargetTest {
   }
 
   @Test
-  void hardCodedTargetWithURI() throws InterruptedException {
-    server.enqueue(new MockResponse());
+  void hardCodedTargetWithURI() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     String host = server.getHostName();
     int port = server.getPort();
@@ -109,6 +110,11 @@ public class TargetTest {
     uriTarget.get(URI.create("http://" + host + ":" + port + "/path?query=param"));
 
     assertThat(server.takeRequest()).hasPath("/path?query=param").hasQueryParams("query=param");
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

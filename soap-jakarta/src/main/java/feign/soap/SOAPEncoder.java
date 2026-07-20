@@ -15,7 +15,9 @@
  */
 package feign.soap;
 
+import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
@@ -32,7 +34,11 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
@@ -105,7 +111,10 @@ public class SOAPEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isXmlContentType(template)) {
+      return false;
+    }
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "SOAP only supports encoding raw types. Found " + bodyType);
@@ -131,7 +140,8 @@ public class SOAPEncoder implements Encoder {
       } else {
         soapMessage.writeTo(bos);
       }
-      template.body(bos.toByteArray(), charsetEncoding);
+      template.body(Request.Body.of(bos.toByteArray()));
+      return true;
     } catch (SOAPException
         | JAXBException
         | ParserConfigurationException

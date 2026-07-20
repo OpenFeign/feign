@@ -40,6 +40,6 @@ class HttpProtocolVersionTest {
     Response response = remote.test();
 
     assertThat(response.protocolVersion()).isNotNull();
-    assertThat(response.protocolVersion().toString()).isEqualTo("MOCK");
+    assertThat(response.protocolVersion()).hasToString("MOCK");
   }
 }

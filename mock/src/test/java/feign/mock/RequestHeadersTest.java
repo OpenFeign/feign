@@ -28,13 +28,13 @@ class RequestHeadersTest {
   @Test
   void shouldCreateEmptyRequestHeaders() {
     RequestHeaders headers = RequestHeaders.builder().build();
-    assertThat(headers.size()).isEqualTo(0);
+    assertThat(headers.size()).isZero();
   }
 
   @Test
   void shouldReturnZeroSizeForUnknownKey() {
     RequestHeaders headers = RequestHeaders.builder().build();
-    assertThat(headers.sizeOf("unknown")).isEqualTo(0);
+    assertThat(headers.sizeOf("unknown")).isZero();
   }
 
   @Test
@@ -43,9 +43,9 @@ class RequestHeadersTest {
         RequestHeaders.builder().add("header", "val").add("other header", "val2").build();
 
     assertThat(headers.fetch("header")).contains("val");
-    assertThat(headers.sizeOf("header")).isEqualTo(1);
+    assertThat(headers.sizeOf("header")).isOne();
     assertThat(headers.fetch("other header")).contains("val2");
-    assertThat(headers.sizeOf("other header")).isEqualTo(1);
+    assertThat(headers.sizeOf("other header")).isOne();
   }
 
   @Test
@@ -60,7 +60,7 @@ class RequestHeadersTest {
     assertThat(headers.fetch("header")).contains("val", "val3", "val4");
     assertThat(headers.sizeOf("header")).isEqualTo(3);
     assertThat(headers.fetch("other header")).contains("val2");
-    assertThat(headers.sizeOf("other header")).isEqualTo(1);
+    assertThat(headers.sizeOf("other header")).isOne();
   }
 
   @Test
@@ -68,7 +68,7 @@ class RequestHeadersTest {
     Map<String, Collection<String>> map = new HashMap<>();
     map.put("header", Arrays.asList("val", "val2"));
     RequestHeaders headers = RequestHeaders.of(map);
-    assertThat(headers.size()).isEqualTo(1);
+    assertThat(headers.size()).isOne();
   }
 
   @Test
@@ -79,6 +79,6 @@ class RequestHeadersTest {
             .add("other header", "val2")
             .add("header", Arrays.asList("val3", "val4"))
             .build();
-    assertThat(headers.toString()).isEqualTo("header=[val, val3, val4], other header=[val2]");
+    assertThat(headers).hasToString("header=[val, val3, val4], other header=[val2]");
   }
 }

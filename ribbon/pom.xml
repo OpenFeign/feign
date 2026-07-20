@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>14.0-alpha1-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-ribbon</artifactId>
@@ -78,7 +78,7 @@
 
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>mockwebserver</artifactId>
+      <artifactId>mockwebserver3</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

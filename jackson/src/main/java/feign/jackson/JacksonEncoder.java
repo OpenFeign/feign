@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Util;
 import feign.codec.EncodeException;
@@ -50,10 +51,14 @@ public class JacksonEncoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+    if (!Util.isJsonContentType(template)) {
+      return false;
+    }
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
-      template.body(mapper.writerFor(javaType).writeValueAsBytes(object), Util.UTF_8);
+      template.body(Request.Body.of(mapper.writerFor(javaType).writeValueAsBytes(object)));
+      return true;
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }

@@ -15,8 +15,7 @@
  */
 package feign.spring;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.*;
 
 import feign.Feign;
 import feign.Param;
@@ -171,8 +170,9 @@ class SpringContractTest {
   @Test
   void requiredRequestBodyIsNull() {
     Throwable exception =
-        assertThrows(
-            IllegalArgumentException.class, () -> resource.checkWithRequiredRequestBody(null));
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> resource.checkWithRequiredRequestBody(null))
+            .actual();
     assertThat(exception.getMessage()).contains("Body parameter 0 was null");
   }
 
@@ -181,7 +181,8 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(null);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().body()).asString().isEqualTo("null");
+    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String))
+        .hasValue("null");
   }
 
   @Test
@@ -191,7 +192,8 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(object);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().body()).asString().contains("\"name\" : \"hello\"");
+    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String).orElse(null))
+        .contains("\"name\" : \"hello\"");
   }
 
   @Test
@@ -269,7 +271,9 @@ class SpringContractTest {
   @Test
   void notAHttpMethod() {
     Throwable exception =
-        assertThrows(Exception.class, () -> resource.missingResourceExceptionHandler());
+        assertThatExceptionOfType(Exception.class)
+            .isThrownBy(() -> resource.missingResourceExceptionHandler())
+            .actual();
     assertThat(exception.getMessage()).contains("is not a method handled by feign");
   }
 
@@ -279,6 +283,14 @@ class SpringContractTest {
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/text");
     assertThat(request.headers()).containsEntry("Content-Type", Arrays.asList("application/json"));
     assertThat(request.headers()).containsEntry("Accept", Arrays.asList("text/plain"));
+  }
+
+  private String bodyAsUtf8String(Request.Body body) {
+    try {
+      return body.writeToString(StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   interface GenericResource<DTO> {
@@ -336,7 +348,10 @@ class SpringContractTest {
     @RequestMapping(value = "/withRequiredRequestBody", method = RequestMethod.POST)
     void checkWithRequiredRequestBody(@RequestBody() UserObject obj);
 
-    @RequestMapping(value = "/part/{id}", method = RequestMethod.POST)
+    @RequestMapping(
+        value = "/part/{id}",
+        method = RequestMethod.POST,
+        consumes = MediaType.APPLICATION_JSON_VALUE)
     void checkRequestPart(
         @PathVariable(name = "id") String campaignId,
         @RequestPart(name = "name1") String name,

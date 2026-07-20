@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>14.0-alpha1-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-soap-jakarta</artifactId>
@@ -61,6 +61,12 @@
       <version>${jakarta.xml.ws-api.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.sun.xml.ws</groupId>
+      <artifactId>jaxws-rt</artifactId>
+      <version>2.3.7</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>jakarta.xml.soap</groupId>
       <artifactId>jakarta.xml.soap-api</artifactId>
       <version>${jakarta.xml.soap-api.version}</version>
@@ -76,8 +82,8 @@
       <version>${saaj-impl-3.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.sun.xml.bind</groupId>
-      <artifactId>jaxb-impl</artifactId>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
       <version>${jaxb-impl-4.version}</version>
       <scope>runtime</scope>
     </dependency>

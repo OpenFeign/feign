@@ -22,10 +22,10 @@ import static feign.vertx.testcase.domain.Flavor.FLAVORS_JSON;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.DefaultRetryer;
 import feign.Logger;
 import feign.RetryableException;
 import feign.VertxFeign;
+import feign.core.DefaultRetryer;
 import feign.jackson.JacksonDecoder;
 import feign.slf4j.Slf4jLogger;
 import feign.vertx.testcase.IcecreamServiceApi;
@@ -48,6 +48,7 @@ class RetryingTest extends AbstractFeignVertxTest {
   static void createClient(Vertx vertx) {
     client =
         VertxFeign.builder()
+            .vertx(vertx)
             .webClient(WebClient.create(vertx))
             .decoder(new JacksonDecoder(MAPPER))
             .retryer(new DefaultRetryer(100, SECONDS.toMillis(1), 5))
@@ -100,7 +101,7 @@ class RetryingTest extends AbstractFeignVertxTest {
                 () -> {
                   if (res.succeeded()) {
                     assertThat(res.result())
-                        .hasSize(Flavor.values().length)
+                        .hasSameSizeAs(Flavor.values())
                         .containsAll(Arrays.asList(Flavor.values()));
                     testContext.completeNow();
                   } else {

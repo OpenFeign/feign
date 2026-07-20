@@ -22,7 +22,6 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import feign.Request;
 import feign.Response;
-import feign.Util;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -60,8 +59,7 @@ class MoshiDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(zonesJson, UTF_8)
             .build();
 
@@ -106,8 +104,7 @@ class MoshiDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .build();
     assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
   }
@@ -120,8 +117,7 @@ class MoshiDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(new byte[0])
             .build();
     assertThat(new MoshiDecoder().decode(response, String.class)).isNull();
@@ -136,8 +132,7 @@ class MoshiDecoderTest {
             .reason("NOT FOUND")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .build();
     assertThat((byte[]) new MoshiDecoder().decode(response, byte[].class)).isEmpty();
   }
@@ -158,8 +153,7 @@ class MoshiDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(zonesJson, UTF_8)
             .build();
 
@@ -181,8 +175,7 @@ class MoshiDecoderTest {
             .reason("OK")
             .headers(Collections.emptyMap())
             .request(
-                Request.create(
-                    Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+                Request.create(Request.HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .body(videoGamesJson, UTF_8)
             .build();
 

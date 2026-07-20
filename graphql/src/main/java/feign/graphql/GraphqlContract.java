@@ -15,10 +15,10 @@
  */
 package feign.graphql;
 
-import feign.DefaultContract;
 import feign.Experimental;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
+import feign.core.DefaultContract;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;

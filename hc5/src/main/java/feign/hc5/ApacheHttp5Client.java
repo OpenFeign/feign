@@ -49,7 +49,6 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.URLEncodedUtils;
@@ -157,22 +156,8 @@ public final class ApacheHttp5Client implements Client {
     }
 
     // request body
-    // final Body requestBody = request.requestBody();
-    byte[] data = request.body();
-    if (data != null) {
-      HttpEntity entity;
-      if (request.isBinary()) {
-        entity = new ByteArrayEntity(data, null);
-      } else {
-        final ContentType contentType = getContentType(request);
-        String content;
-        if (request.charset() != null) {
-          content = new String(data, request.charset());
-        } else {
-          content = new String(data);
-        }
-        entity = new StringEntity(content, contentType);
-      }
+    if (request.body().isPresent()) {
+      HttpEntity entity = new FeignBodyEntity(request.body().get(), getContentType(request));
       if (isGzip) {
         entity = new GzipCompressingEntity(entity);
       }
@@ -191,9 +176,6 @@ public final class ApacheHttp5Client implements Client {
         final Collection<String> values = entry.getValue();
         if (values != null && !values.isEmpty()) {
           contentType = ContentType.parse(values.iterator().next());
-          if (contentType.getCharset() == null) {
-            contentType = contentType.withCharset(request.charset());
-          }
           break;
         }
       }

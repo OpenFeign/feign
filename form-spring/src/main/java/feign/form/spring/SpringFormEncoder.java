@@ -19,14 +19,13 @@ import static feign.form.ContentType.MULTIPART;
 import static java.util.Collections.singletonMap;
 
 import feign.RequestTemplate;
-import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.core.codec.DefaultEncoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import lombok.val;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -50,35 +49,35 @@ public class SpringFormEncoder extends FormEncoder {
   public SpringFormEncoder(Encoder delegate) {
     super(delegate);
 
-    val processor = (MultipartFormContentProcessor) getContentProcessor(MULTIPART);
+    final var processor = (MultipartFormContentProcessor) getContentProcessor(MULTIPART);
     processor.addFirstWriter(new SpringSingleMultipartFileWriter());
     processor.addFirstWriter(new SpringManyMultipartFilesWriter());
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     if (bodyType.equals(MultipartFile[].class)) {
-      val files = (MultipartFile[]) object;
-      val data = new HashMap<String, Object>(files.length, 1.F);
-      for (val file : files) {
+      final var files = (MultipartFile[]) object;
+      final var data = new HashMap<String, Object>(files.length, 1.F);
+      for (var file : files) {
         data.put(file.getName(), file);
       }
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else if (bodyType.equals(MultipartFile.class)) {
-      val file = (MultipartFile) object;
-      val data = singletonMap(file.getName(), object);
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      final var file = (MultipartFile) object;
+      final var data = singletonMap(file.getName(), object);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else if (isMultipartFileCollection(object)) {
-      val iterable = (Iterable<?>) object;
-      val data = new HashMap<String, Object>();
-      for (val item : iterable) {
-        val file = (MultipartFile) item;
+      final var iterable = (Iterable<?>) object;
+      final var data = new HashMap<String, Object>();
+      for (var item : iterable) {
+        final var file = (MultipartFile) item;
         data.put(file.getName(), file);
       }
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else {
-      super.encode(object, bodyType, template);
+      return super.encode(object, bodyType, template);
     }
   }
 
@@ -86,8 +85,8 @@ public class SpringFormEncoder extends FormEncoder {
     if (!(object instanceof Iterable)) {
       return false;
     }
-    val iterable = (Iterable<?>) object;
-    val iterator = iterable.iterator();
+    final var iterable = (Iterable<?>) object;
+    final var iterator = iterable.iterator();
     return iterator.hasNext() && iterator.next() instanceof MultipartFile;
   }
 }

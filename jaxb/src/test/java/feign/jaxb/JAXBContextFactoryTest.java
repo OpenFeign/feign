@@ -149,8 +149,7 @@ class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertThat(internalCache.isEmpty()).isFalse();
-    assertThat(internalCache.size() == classes.size()).isTrue();
+    assertThat(internalCache).isNotEmpty().hasSize(classes.size());
     assertThat(internalCache.get(new JAXBContextClassCacheKey(String.class))).isNotNull();
     assertThat(internalCache.get(new JAXBContextClassCacheKey(Integer.class))).isNotNull();
   }
@@ -167,7 +166,7 @@ class JAXBContextFactoryTest {
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
     Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertThat(internalCache.isEmpty()).isFalse();
+    assertThat(internalCache).isNotEmpty();
     assertThat(classes).hasSize(internalCache.size());
     assertThat(internalCache.get(new JAXBContextClassCacheKey(String.class))).isNotNull();
     assertThat(internalCache.get(new JAXBContextClassCacheKey(Integer.class))).isNotNull();
@@ -183,9 +182,11 @@ class JAXBContextFactoryTest {
 
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
-    Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertThat(internalCache.isEmpty()).isFalse();
-    assertThat(internalCache).hasSize(1);
+    Map internalCache = (Map) f.get(factory);
+    assertThat(internalCache)
+        // IllegalAccessException
+        .isNotEmpty()
+        .hasSize(1);
     assertThat(
             internalCache.get(
                 new JAXBContextPackageCacheKey(
@@ -205,9 +206,11 @@ class JAXBContextFactoryTest {
 
     Field f = factory.getClass().getDeclaredField("jaxbContexts"); // NoSuchFieldException
     f.setAccessible(true);
-    Map internalCache = (Map) f.get(factory); // IllegalAccessException
-    assertThat(internalCache.isEmpty()).isFalse();
-    assertThat(internalCache).hasSize(2);
+    Map internalCache = (Map) f.get(factory);
+    assertThat(internalCache)
+        // IllegalAccessException
+        .isNotEmpty()
+        .hasSize(2);
     assertThat(
             internalCache.get(
                 new JAXBContextPackageCacheKey(

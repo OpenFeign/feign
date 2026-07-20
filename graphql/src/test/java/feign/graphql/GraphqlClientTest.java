@@ -26,8 +26,8 @@ import feign.Param;
 import feign.jackson.JacksonCodec;
 import java.util.List;
 import java.util.Optional;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -88,7 +88,7 @@ class GraphqlClientTest {
 
   @AfterEach
   void tearDown() throws Exception {
-    server.shutdown();
+    server.close();
   }
 
   private TestApi buildClient() {
@@ -100,9 +100,10 @@ class GraphqlClientTest {
   @Test
   void mutationWithVariables() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody("{\"data\":{\"createUser\":{\"id\":\"42\",\"name\":\"Alice\"}}}")
-            .addHeader("Content-Type", "application/json"));
+        new MockResponse.Builder()
+            .body("{\"data\":{\"createUser\":{\"id\":\"42\",\"name\":\"Alice\"}}}")
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var input = new CreateUserInput();
     input.name = "Alice";
@@ -115,7 +116,7 @@ class GraphqlClientTest {
 
     var recorded = server.takeRequest();
     assertThat(recorded.getMethod()).isEqualTo("POST");
-    var body = mapper.readTree(recorded.getBody().readUtf8());
+    var body = mapper.readTree(recorded.getBody().utf8());
     assertThat(body.get("query").asText()).contains("createUser");
     assertThat(body.get("variables").get("input").get("name").asText()).isEqualTo("Alice");
   }
@@ -123,10 +124,11 @@ class GraphqlClientTest {
   @Test
   void queryWithStringVariable() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody(
+        new MockResponse.Builder()
+            .body(
                 "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
-            .addHeader("Content-Type", "application/json"));
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var user = buildClient().getUser("1");
 
@@ -135,17 +137,18 @@ class GraphqlClientTest {
     assertThat(user.email).isEqualTo("bob@test.com");
 
     var recorded = server.takeRequest();
-    var body = mapper.readTree(recorded.getBody().readUtf8());
+    var body = mapper.readTree(recorded.getBody().utf8());
     assertThat(body.get("variables").get("id").asText()).isEqualTo("1");
   }
 
   @Test
   void noVariableQuerySetsBodyViaInterceptor() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody(
+        new MockResponse.Builder()
+            .body(
                 "{\"data\":{\"listPending\":[{\"id\":\"1\",\"name\":\"A\"},{\"id\":\"2\",\"name\":\"B\"}]}}")
-            .addHeader("Content-Type", "application/json"));
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var users = buildClient().listPending();
 
@@ -153,7 +156,7 @@ class GraphqlClientTest {
     assertThat(users.getFirst().name).isEqualTo("A");
 
     var recorded = server.takeRequest();
-    var body = mapper.readTree(recorded.getBody().readUtf8());
+    var body = mapper.readTree(recorded.getBody().utf8());
     assertThat(body.get("query").asText()).contains("listPending");
     assertThat(body.has("variables")).isFalse();
   }
@@ -161,9 +164,10 @@ class GraphqlClientTest {
   @Test
   void graphqlErrorsThrowException() {
     server.enqueue(
-        new MockResponse()
-            .setBody("{\"errors\":[{\"message\":\"Something went wrong\"}],\"data\":null}")
-            .addHeader("Content-Type", "application/json"));
+        new MockResponse.Builder()
+            .body("{\"errors\":[{\"message\":\"Something went wrong\"}],\"data\":null}")
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var input = new CreateUserInput();
     input.name = "Alice";
@@ -177,10 +181,11 @@ class GraphqlClientTest {
   @Test
   void singleResultFromArrayResponse() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody(
+        new MockResponse.Builder()
+            .body(
                 "{\"data\":{\"topUsers\":[{\"id\":\"1\",\"name\":\"Alice\",\"email\":\"a@test.com\"}]}}")
-            .addHeader("Content-Type", "application/json"));
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var user = buildClient().topUser(1);
 
@@ -191,10 +196,11 @@ class GraphqlClientTest {
   @Test
   void optionalReturnType() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody(
+        new MockResponse.Builder()
+            .body(
                 "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
-            .addHeader("Content-Type", "application/json"));
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var user = buildClient().findUser("1");
 
@@ -206,9 +212,10 @@ class GraphqlClientTest {
   @Test
   void optionalReturnTypeEmptyWhenNull() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody("{\"data\":{\"getUser\":null}}")
-            .addHeader("Content-Type", "application/json"));
+        new MockResponse.Builder()
+            .body("{\"data\":{\"getUser\":null}}")
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var user = buildClient().findUser("999");
 
@@ -218,16 +225,17 @@ class GraphqlClientTest {
   @Test
   void authHeaderPassedThrough() throws Exception {
     server.enqueue(
-        new MockResponse()
-            .setBody(
+        new MockResponse.Builder()
+            .body(
                 "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Bob\",\"email\":\"bob@test.com\"}}}")
-            .addHeader("Content-Type", "application/json"));
+            .addHeader("Content-Type", "application/json")
+            .build());
 
     var user = buildClient().getUserWithAuth("Bearer mytoken", "1");
 
     assertThat(user.id).isEqualTo("1");
 
     var recorded = server.takeRequest();
-    assertThat(recorded.getHeader("Authorization")).isEqualTo("Bearer mytoken");
+    assertThat(recorded.getHeaders().get("Authorization")).isEqualTo("Bearer mytoken");
   }
 }

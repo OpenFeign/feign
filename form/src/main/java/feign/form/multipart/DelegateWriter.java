@@ -17,12 +17,14 @@ package feign.form.multipart;
 
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A delegate writer.
@@ -44,17 +46,24 @@ public class DelegateWriter extends AbstractWriter {
 
   @Override
   protected void write(Output output, String key, Object value) throws EncodeException {
-    val fake = new RequestTemplate();
+    final var fake = new RequestTemplate();
     delegate.encode(value, value.getClass(), fake);
-    val bytes = fake.body();
-    val string = new String(bytes, output.getCharset()).replaceAll("\n", "");
-    parameterWriter.writeWithContentType(output, key, string, contentType(fake));
+    fake.requestBody().ifPresent(body -> write(output, key, body, contentType(fake)));
+  }
+
+  private void write(Output output, String key, Request.Body body, String contentType) {
+    try {
+      final var encoded = body.writeToString(StandardCharsets.UTF_8).replaceAll("\n", "");
+      parameterWriter.writeWithContentType(output, key, encoded, contentType);
+    } catch (IOException e) {
+      throw new EncodeException("Failed to write request body for key: " + key, e);
+    }
   }
 
   private static String contentType(RequestTemplate template) {
-    val headers = template.headers().get("Content-Type");
+    final var headers = template.headers().get("Content-Type");
     if (headers != null) {
-      for (val header : headers) {
+      for (var header : headers) {
         if (header != null && !header.isEmpty()) {
           return header;
         }

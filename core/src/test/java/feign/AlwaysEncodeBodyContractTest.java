@@ -17,6 +17,7 @@ package feign;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -60,27 +61,37 @@ class AlwaysEncodeBodyContractTest {
 
   private static class AllParametersSampleEncoder implements Encoder {
     @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template)
+    public boolean encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
       Object[] methodParameters = (Object[]) object;
       String body =
           Arrays.stream(methodParameters).map(String::valueOf).collect(Collectors.joining());
-      template.body(body);
+      template.body(Request.Body.of(body));
+      return true;
     }
   }
 
   private static class BodyParameterSampleEncoder implements Encoder {
     @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template)
+    public boolean encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
-      template.body(String.valueOf(object));
+      template.body(Request.Body.of(String.valueOf(object)));
+      return true;
     }
   }
 
   private static class SampleClient implements Client {
     @Override
     public Response execute(Request request, Request.Options options) throws IOException {
-      return Response.builder().status(200).request(request).body(request.body()).build();
+      return Response.builder()
+          .status(200)
+          .request(request)
+          .body(request.body().map(this::bodyAsBytes).orElse(null))
+          .build();
+    }
+
+    private byte[] bodyAsBytes(Request.Body body) {
+      return assertDoesNotThrow(body::writeToByteArray);
     }
   }
 
@@ -104,7 +115,7 @@ class AlwaysEncodeBodyContractTest {
             .encoder(new AllParametersSampleEncoder())
             .client(new SampleClient())
             .target(SampleTargetNoParameters.class, "http://localhost");
-    assertThat(sampleClient2.concatenate()).isEqualTo("");
+    assertThat(sampleClient2.concatenate()).isEmpty();
 
     SampleTargetOneParameter sampleClient3 =
         Feign.builder()

@@ -17,9 +17,9 @@ package example.github;
 
 import feign.*;
 import feign.codec.Decoder;
-import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.core.codec.DefaultErrorDecoder;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import java.io.IOException;

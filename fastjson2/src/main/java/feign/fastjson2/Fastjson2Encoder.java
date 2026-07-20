@@ -17,6 +17,7 @@ package feign.fastjson2;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Util;
 import feign.codec.EncodeException;
@@ -40,8 +41,12 @@ public class Fastjson2Encoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    template.body(JSON.toJSONBytes(object, features), Util.UTF_8);
+    if (!Util.isJsonContentType(template)) {
+      return false;
+    }
+    template.body(Request.Body.of(JSON.toJSONBytes(object, features)));
+    return true;
   }
 }

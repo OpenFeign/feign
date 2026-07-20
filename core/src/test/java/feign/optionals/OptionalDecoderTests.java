@@ -19,11 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Feign;
 import feign.RequestLine;
-import feign.codec.DefaultDecoder;
-import java.io.IOException;
+import feign.core.codec.DefaultDecoder;
 import java.util.Optional;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.Test;
 
 class OptionalDecoderTests {
@@ -37,10 +36,12 @@ class OptionalDecoderTests {
   }
 
   @Test
-  void simple404OptionalTest() throws IOException, InterruptedException {
+  void simple404OptionalTest() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(404));
-    server.enqueue(new MockResponse().setBody("foo"));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().code(404).build());
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     final OptionalInterface api =
         Feign.builder()
@@ -48,27 +49,31 @@ class OptionalDecoderTests {
             .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
-    assertThat(api.getAsOptional().isPresent()).isFalse();
-    assertThat(api.getAsOptional()).contains("foo");
+    assertThat(api.getAsOptional()).isEmpty();
+    assertThat(api.getAsOptional()).hasValue("foo");
   }
 
   @Test
-  void simple204OptionalTest() throws IOException, InterruptedException {
+  void simple204OptionalTest() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(204));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().code(204).build());
 
     final OptionalInterface api =
         Feign.builder()
             .decoder(new OptionalDecoder(new DefaultDecoder()))
             .target(OptionalInterface.class, server.url("/").toString());
 
-    assertThat(api.getAsOptional().isPresent()).isFalse();
+    assertThat(api.getAsOptional()).isEmpty();
   }
 
   @Test
-  void test200WithOptionalString() throws IOException, InterruptedException {
+  void test200WithOptionalString() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().code(200).body("foo").build());
 
     final OptionalInterface api =
         Feign.builder()
@@ -77,27 +82,30 @@ class OptionalDecoderTests {
 
     Optional<String> response = api.getAsOptional();
 
-    assertThat(response).isPresent();
-    assertThat(response).isEqualTo(Optional.of("foo"));
+    assertThat(response).hasValue("foo");
   }
 
   @Test
-  void test200WhenResponseBodyIsNull() throws IOException, InterruptedException {
+  void test200WhenResponseBodyIsNull() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().code(200).build());
 
     final OptionalInterface api =
         Feign.builder()
             .decoder(new OptionalDecoder(((_, _) -> null)))
             .target(OptionalInterface.class, server.url("/").toString());
 
-    assertThat(api.getAsOptional().isPresent()).isFalse();
+    assertThat(api.getAsOptional()).isEmpty();
   }
 
   @Test
-  void test200WhenDecodingNoOptional() throws IOException, InterruptedException {
+  void test200WhenDecodingNoOptional() throws Exception {
     final MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setResponseCode(200).setBody("foo"));
+
+    server.start();
+    server.enqueue(new MockResponse.Builder().code(200).body("foo").build());
 
     final OptionalInterface api =
         Feign.builder()

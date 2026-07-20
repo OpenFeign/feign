@@ -17,15 +17,16 @@ package feign;
 
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import feign.FeignBuilderTest.TestInterface;
-import feign.codec.DefaultDecoder;
-import feign.codec.DefaultEncoder;
+import feign.core.DefaultClient;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultEncoder;
 import java.io.IOException;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class MethodMetadataPresenceTest {
@@ -34,16 +35,16 @@ public class MethodMetadataPresenceTest {
 
   @Test
   void client() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     final String url = "http://localhost:" + server.getPort();
     final TestInterface api =
         Feign.builder()
             .client(
                 (request, options) -> {
-                  assertNotNull(request.requestTemplate());
-                  assertNotNull(request.requestTemplate().methodMetadata());
-                  assertNotNull(request.requestTemplate().feignTarget());
+                  assertThat(request.requestTemplate()).isNotNull();
+                  assertThat(request.requestTemplate().methodMetadata()).isNotNull();
+                  assertThat(request.requestTemplate().feignTarget()).isNotNull();
                   return new DefaultClient(null, null).execute(request, options);
                 })
             .target(TestInterface.class, url);
@@ -56,17 +57,17 @@ public class MethodMetadataPresenceTest {
 
   @Test
   void encoder() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     final String url = "http://localhost:" + server.getPort();
     final TestInterface api =
         Feign.builder()
             .encoder(
                 (object, bodyType, template) -> {
-                  assertNotNull(template);
-                  assertNotNull(template.methodMetadata());
-                  assertNotNull(template.feignTarget());
-                  new DefaultEncoder().encode(object, bodyType, template);
+                  assertThat(template).isNotNull();
+                  assertThat(template.methodMetadata()).isNotNull();
+                  assertThat(template.feignTarget()).isNotNull();
+                  return new DefaultEncoder().encode(object, bodyType, template);
                 })
             .target(TestInterface.class, url);
 
@@ -78,7 +79,7 @@ public class MethodMetadataPresenceTest {
 
   @Test
   void decoder() throws Exception {
-    server.enqueue(new MockResponse().setBody("response data"));
+    server.enqueue(new MockResponse.Builder().body("response data").build());
 
     final String url = "http://localhost:" + server.getPort();
     final TestInterface api =
@@ -86,9 +87,9 @@ public class MethodMetadataPresenceTest {
             .decoder(
                 (response, type) -> {
                   final RequestTemplate template = response.request().requestTemplate();
-                  assertNotNull(template);
-                  assertNotNull(template.methodMetadata());
-                  assertNotNull(template.feignTarget());
+                  assertThat(template).isNotNull();
+                  assertThat(template.methodMetadata()).isNotNull();
+                  assertThat(template.feignTarget()).isNotNull();
                   return new DefaultDecoder().decode(response, type);
                 })
             .target(TestInterface.class, url);
@@ -97,6 +98,11 @@ public class MethodMetadataPresenceTest {
     assertThat(Util.toString(response.body().asReader(Util.UTF_8))).isEqualTo("response data");
 
     assertThat(server.takeRequest()).hasBody("request data");
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

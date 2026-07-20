@@ -20,7 +20,6 @@ import static lombok.AccessLevel.PRIVATE;
 import feign.codec.EncodeException;
 import java.io.File;
 import lombok.experimental.FieldDefaults;
-import lombok.val;
 
 /**
  * A writer for multiple files.
@@ -40,8 +39,8 @@ public class ManyFilesWriter extends AbstractWriter {
     if (!(value instanceof Iterable)) {
       return false;
     }
-    val iterable = (Iterable<?>) value;
-    val iterator = iterable.iterator();
+    final var iterable = (Iterable<?>) value;
+    final var iterator = iterable.iterator();
     return iterator.hasNext() && iterator.next() instanceof File;
   }
 
@@ -49,13 +48,13 @@ public class ManyFilesWriter extends AbstractWriter {
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
     if (value instanceof File[]) {
-      val files = (File[]) value;
-      for (val file : files) {
+      final var files = (File[]) value;
+      for (var file : files) {
         fileWriter.write(output, boundary, key, file);
       }
     } else if (value instanceof Iterable) {
-      val iterable = (Iterable<?>) value;
-      for (val file : iterable) {
+      final var iterable = (Iterable<?>) value;
+      for (var file : iterable) {
         fileWriter.write(output, boundary, key, file);
       }
     } else {

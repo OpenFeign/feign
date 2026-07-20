@@ -17,6 +17,7 @@ package feign.json;
 
 import static feign.Util.toByteArray;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import feign.Feign;
 import feign.Param;
@@ -25,8 +26,8 @@ import feign.RequestLine;
 import feign.mock.HttpMethod;
 import feign.mock.MockClient;
 import feign.mock.MockTarget;
-import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,7 @@ class JsonCodecTest {
   }
 
   @Test
-  void decodes() throws IOException {
+  void decodes() throws Exception {
     try (InputStream input = getClass().getResourceAsStream("/fixtures/contributors.json")) {
       byte[] response = toByteArray(input);
       mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign/contributors", response);
@@ -80,11 +81,12 @@ class JsonCodecTest {
         "{\"login\":\"radio-rogal\",\"contributions\":0}");
     JSONObject response = github.create("openfeign", "feign", contributor);
     Request request = mockClient.verifyOne(HttpMethod.POST, "/repos/openfeign/feign/contributors");
-    assertThat(request.body()).isNotNull();
-    String json = new String(request.body());
+    assertThat(request.body()).isPresent();
+    String json =
+        assertDoesNotThrow(() -> request.body().get().writeToString(StandardCharsets.UTF_8));
     assertThat(json).contains("\"login\":\"radio-rogal\"");
     assertThat(json).contains("\"contributions\":0");
     assertThat(response.getString("login")).isEqualTo("radio-rogal");
-    assertThat(response.getInt("contributions")).isEqualTo(0);
+    assertThat(response.getInt("contributions")).isZero();
   }
 }

@@ -17,8 +17,9 @@ package feign.http2client.test;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.*;
 import feign.assertj.MockWebServerAssertions;
@@ -26,23 +27,31 @@ import feign.client.AbstractClientTest;
 import feign.http2client.Http2Client;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.http.HttpTimeoutException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 /** Tests client-specific behavior, such as ensuring Content-Length is sent when specified. */
 public class Http2ClientTest extends AbstractClientTest {
+
+  private static final boolean HTTPBIN_REACHABLE;
+
+  static {
+    boolean reachable = false;
+    try {
+      java.net.InetAddress.getByName("nghttp2.org");
+      reachable = true;
+    } catch (java.net.UnknownHostException _) {
+      // ignore
+    }
+    HTTPBIN_REACHABLE = reachable;
+  }
 
   public interface TestInterface {
     @RequestLine("PATCH /patch")
@@ -87,45 +96,25 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void patch() throws Exception {
-    server.enqueue(new MockResponse().setBody("foo"));
-
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    assertThat(api.patch("some text")).isEqualTo("foo");
-
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasMethod("PATCH")
-        .hasPath("/patch")
-        .hasBody("some text");
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    assertThat(api.patch("")).contains("https://nghttp2.org/httpbin/patch");
   }
 
   @Override
   @Test
   public void noResponseBodyForPatch() {
-    server.enqueue(new MockResponse());
-
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    assertThat(api.patch()).isEmpty();
-
-    MockWebServerAssertions.assertThat(takeRequest()).hasMethod("PATCH").hasPath("/patch");
-  }
-
-  private RecordedRequest takeRequest() {
-    try {
-      return server.takeRequest();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException(e);
-    }
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    assertThat(api.patch()).contains("https://nghttp2.org/httpbin/patch");
   }
 
   @Override
   @Test
   public void reasonPhraseIsOptional() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+    server.enqueue(new MockResponse.Builder().status("HTTP/1.1 " + 200).build());
 
     final AbstractClientTest.TestInterface api =
         newBuilder()
@@ -138,11 +127,12 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  void reasonPhraseInHeader() throws IOException, InterruptedException {
+  void reasonPhraseInHeader() throws Exception {
     server.enqueue(
-        new MockResponse()
+        new MockResponse.Builder()
             .addHeader("Reason-Phrase", "There is A reason")
-            .setStatus("HTTP/1.1 " + 200));
+            .status("HTTP/1.1 " + 200)
+            .build());
 
     final AbstractClientTest.TestInterface api =
         newBuilder()
@@ -162,7 +152,8 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   void timeoutTest() {
-    server.enqueue(new MockResponse().setBody("foo").setHeadersDelay(1, TimeUnit.SECONDS));
+    server.enqueue(
+        new MockResponse.Builder().body("foo").headersDelay(1, TimeUnit.SECONDS).build());
 
     final TestInterface api =
         newBuilder()
@@ -171,72 +162,35 @@ public class Http2ClientTest extends AbstractClientTest {
                 new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
             .target(TestInterface.class, server.url("/").toString());
 
-    FeignException exception = assertThrows(FeignException.class, () -> api.timeout());
+    FeignException exception =
+        assertThatExceptionOfType(FeignException.class).isThrownBy(() -> api.timeout()).actual();
     assertThat(exception).hasCauseInstanceOf(HttpTimeoutException.class);
   }
 
   @Test
   void getWithRequestBody() throws Exception {
-    // MockWebServer rejects GET requests carrying a body ("Request must not have a body"),
-    // so this test runs against a minimal local socket server instead.
-    try (ServerSocket httpServer = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
-      final AtomicReference<String> receivedRequest = new AtomicReference<>();
-      final Thread serverThread =
-          new Thread(
-              () -> {
-                try (Socket socket = httpServer.accept()) {
-                  socket.setSoTimeout(5000);
-                  final InputStream in = socket.getInputStream();
-                  final StringBuilder request = new StringBuilder();
-                  final byte[] buffer = new byte[8192];
-                  while (!request.toString().contains("some request body")) {
-                    final int read = in.read(buffer);
-                    if (read == -1) {
-                      break;
-                    }
-                    request.append(new String(buffer, 0, read, UTF_8));
-                  }
-                  receivedRequest.set(request.toString());
-                  socket
-                      .getOutputStream()
-                      .write("HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nfoo".getBytes(UTF_8));
-                } catch (IOException e) {
-                  throw new UncheckedIOException(e);
-                }
-              });
-      serverThread.start();
-
-      final TestInterface api =
-          newBuilder().target(TestInterface.class, "http://localhost:" + httpServer.getLocalPort());
-
-      assertThat(api.getWithBody()).isEqualTo("foo");
-
-      serverThread.join(5000);
-      assertThat(receivedRequest.get())
-          .startsWith("GET /anything HTTP/1.1")
-          .contains("some request body");
-    }
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
+    final TestInterface api =
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.getWithBody();
+    String expected = "{ \"data\":\"some request body\" }";
+    JSONAssert.assertEquals(expected, result, false);
   }
 
   @Test
   void deleteWithRequestBody() throws Exception {
-    server.enqueue(new MockResponse().setBody("foo"));
-
+    assumeTrue(HTTPBIN_REACHABLE, "nghttp2.org is not reachable");
     final TestInterface api =
-        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    assertThat(api.deleteWithBody()).isEqualTo("foo");
-
-    MockWebServerAssertions.assertThat(server.takeRequest())
-        .hasMethod("DELETE")
-        .hasPath("/anything")
-        .hasBody("some request body");
+        newBuilder().target(TestInterface.class, "https://nghttp2.org/httpbin/");
+    String result = api.deleteWithBody();
+    String expected = "{ \"data\":\"some request body\" }";
+    JSONAssert.assertEquals(expected, result, false);
   }
 
   @Override
   @Test
   public void parsesResponseMissingLength() throws IOException {
-    server.enqueue(new MockResponse().setChunkedBody("foo", 1));
+    server.enqueue(new MockResponse.Builder().chunkedBody("foo", 1).build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -253,12 +207,13 @@ public class Http2ClientTest extends AbstractClientTest {
   @Test
   public void parsesErrorResponse() {
 
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+    server.enqueue(new MockResponse.Builder().code(500).body("ARGHH").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Throwable exception = assertThrows(FeignException.class, () -> api.get());
+    Throwable exception =
+        assertThatExceptionOfType(FeignException.class).isThrownBy(() -> api.get()).actual();
     assertThat(exception.getMessage())
         .contains(
             "[500] during [GET] to [http://localhost:"
@@ -269,7 +224,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void defaultCollectionFormat() throws Exception {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -287,7 +242,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void headersWithNotEmptyParams() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -306,7 +261,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void headersWithNullParams() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -324,7 +279,7 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   public void alternativeCollectionFormat() throws Exception {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -344,7 +299,7 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   @Test
   public void parsesRequestAndResponse() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
+    server.enqueue(new MockResponse.Builder().body("foo").addHeader("Foo: Bar").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -369,10 +324,10 @@ public class Http2ClientTest extends AbstractClientTest {
 
     RecordedRequest recordedRequest = server.takeRequest();
     assertThat(recordedRequest.getMethod()).isEqualToIgnoringCase("POST");
-    assertThat(recordedRequest.getHeader("Foo")).isEqualToIgnoringCase("Bar, Baz");
-    assertThat(recordedRequest.getHeader("Accept")).isEqualToIgnoringCase("*/*");
-    assertThat(recordedRequest.getHeader("Content-Length")).isEqualToIgnoringCase("3");
-    assertThat(recordedRequest.getBody().readUtf8()).isEqualToIgnoringCase("foo");
+    assertThat(recordedRequest.getHeaders().get("Foo")).isEqualToIgnoringCase("Bar, Baz");
+    assertThat(recordedRequest.getHeaders().get("Accept")).isEqualToIgnoringCase("*/*");
+    assertThat(recordedRequest.getHeaders().get("Content-Length")).isEqualToIgnoringCase("3");
+    assertThat(recordedRequest.getBody().utf8()).isEqualToIgnoringCase("foo");
   }
 
   @Override

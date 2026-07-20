@@ -17,9 +17,9 @@ package feign.client;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Client;
 import feign.CollectionFormat;
@@ -41,11 +41,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import okio.Buffer;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -64,8 +65,8 @@ public abstract class AbstractClientTest {
    */
   @Test
   public void patch() throws Exception {
-    server.enqueue(new MockResponse().setBody("foo"));
-    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -81,8 +82,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesRequestAndResponse() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo").addHeader("Foo: Bar"));
+  public void parsesRequestAndResponse() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").addHeader("Foo: Bar").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -107,15 +108,15 @@ public abstract class AbstractClientTest {
 
     RecordedRequest recordedRequest = server.takeRequest();
     assertThat(recordedRequest.getMethod()).isEqualToIgnoringCase("POST");
-    assertThat(recordedRequest.getHeader("Foo")).isEqualToIgnoringCase("Bar, Baz");
-    assertThat(recordedRequest.getHeader("Accept")).isEqualToIgnoringCase("*/*");
-    assertThat(recordedRequest.getHeader("Content-Length")).isEqualToIgnoringCase("3");
-    assertThat(recordedRequest.getBody().readUtf8()).isEqualToIgnoringCase("foo");
+    assertThat(recordedRequest.getHeaders().get("Foo")).isEqualToIgnoringCase("Bar, Baz");
+    assertThat(recordedRequest.getHeaders().get("Accept")).isEqualToIgnoringCase("*/*");
+    assertThat(recordedRequest.getHeaders().get("Content-Length")).isEqualToIgnoringCase("3");
+    assertThat(recordedRequest.getBody().utf8()).isEqualToIgnoringCase("foo");
   }
 
   @Test
-  public void reasonPhraseIsOptional() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setStatus("HTTP/1.1 " + 200));
+  public void reasonPhraseIsOptional() throws Exception {
+    server.enqueue(new MockResponse.Builder().status("HTTP/1.1 " + 200).build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -129,12 +130,13 @@ public abstract class AbstractClientTest {
   @Test
   public void parsesErrorResponse() {
 
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+    server.enqueue(new MockResponse.Builder().code(500).body("ARGHH").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
-    Throwable exception = assertThrows(FeignException.class, () -> api.get());
+    Throwable exception =
+        assertThatExceptionOfType(FeignException.class).isThrownBy(() -> api.get()).actual();
     assertThat(exception.getMessage())
         .contains(
             "[500 Server Error] during [GET] to [http://localhost:"
@@ -146,7 +148,7 @@ public abstract class AbstractClientTest {
   void parsesErrorResponseBody() {
     String expectedResponseBody = "ARGHH";
 
-    server.enqueue(new MockResponse().setResponseCode(500).setBody("ARGHH"));
+    server.enqueue(new MockResponse.Builder().code(500).body("ARGHH").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -162,7 +164,7 @@ public abstract class AbstractClientTest {
   public void parsesUnauthorizedResponseBody() {
     String expectedResponseBody = "ARGHH";
 
-    server.enqueue(new MockResponse().setResponseCode(401).setBody("ARGHH"));
+    server.enqueue(new MockResponse.Builder().code(401).body("ARGHH").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -176,7 +178,7 @@ public abstract class AbstractClientTest {
 
   @Test
   void safeRebuffering() {
-    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     TestInterface api =
         newBuilder()
@@ -194,7 +196,7 @@ public abstract class AbstractClientTest {
   /** This shows that is a no-op or otherwise doesn't cause an NPE when there's no content. */
   @Test
   void safeRebuffering_noContent() {
-    server.enqueue(new MockResponse().setResponseCode(204));
+    server.enqueue(new MockResponse.Builder().code(204).build());
 
     TestInterface api =
         newBuilder()
@@ -210,8 +212,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void noResponseBodyForPost() throws Exception {
-    server.enqueue(new MockResponse());
+  public void noResponseBodyForPost() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -221,7 +223,7 @@ public abstract class AbstractClientTest {
 
   @Test
   public void noResponseBodyForPut() throws Exception {
-    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -235,7 +237,7 @@ public abstract class AbstractClientTest {
    */
   @Test
   public void noResponseBodyForPatch() {
-    server.enqueue(new MockResponse());
+    server.enqueue(new MockResponse.Builder().build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -244,8 +246,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void parsesResponseMissingLength() throws IOException {
-    server.enqueue(new MockResponse().setChunkedBody("foo", 1));
+  public void parsesResponseMissingLength() throws Exception {
+    server.enqueue(new MockResponse.Builder().chunkedBody("foo", 1).build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -259,8 +261,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  void postWithSpacesInPath() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("foo"));
+  void postWithSpacesInPath() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -275,7 +277,10 @@ public abstract class AbstractClientTest {
   @Test
   public void veryLongResponseNullLength() {
     server.enqueue(
-        new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
+        new MockResponse.Builder()
+            .body("AAAAAAAA")
+            .addHeader("Content-Length", Long.MAX_VALUE)
+            .build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -286,7 +291,7 @@ public abstract class AbstractClientTest {
 
   @Test
   void responseLength() {
-    server.enqueue(new MockResponse().setBody("test"));
+    server.enqueue(new MockResponse.Builder().body("test").build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -298,7 +303,7 @@ public abstract class AbstractClientTest {
 
   @Test
   void contentTypeWithCharset() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -309,7 +314,7 @@ public abstract class AbstractClientTest {
 
   @Test
   void contentTypeWithoutCharset() throws Exception {
-    server.enqueue(new MockResponse().setBody("AAAAAAAA"));
+    server.enqueue(new MockResponse.Builder().body("AAAAAAAA").build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -320,20 +325,20 @@ public abstract class AbstractClientTest {
 
   @Test
   public void contentTypeDefaultsToRequestCharset() throws Exception {
-    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse.Builder().body("foo").build());
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     // should use utf-8 encoding by default
     api.postWithContentType("àáâãäåèéêë", "text/plain; charset=UTF-8");
 
-    String body = server.takeRequest().getBody().readUtf8();
+    String body = server.takeRequest().getBody().utf8();
     assertThat(body).isEqualToIgnoringCase("àáâãäåèéêë");
   }
 
   @Test
   public void defaultCollectionFormat() throws Exception {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -349,8 +354,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void headersWithNullParams() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("body"));
+  public void headersWithNullParams() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -367,8 +372,8 @@ public abstract class AbstractClientTest {
   }
 
   @Test
-  public void headersWithNotEmptyParams() throws InterruptedException {
-    server.enqueue(new MockResponse().setBody("body"));
+  public void headersWithNotEmptyParams() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -386,7 +391,7 @@ public abstract class AbstractClientTest {
 
   @Test
   public void alternativeCollectionFormat() throws Exception {
-    server.enqueue(new MockResponse().setBody("body"));
+    server.enqueue(new MockResponse.Builder().body("body").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -408,9 +413,10 @@ public abstract class AbstractClientTest {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
     server.enqueue(
-        new MockResponse()
+        new MockResponse.Builder()
             .addHeader("Content-Encoding", "gzip")
-            .setBody(new Buffer().write(compress(responseData))));
+            .body(new Buffer().write(compress(responseData)))
+            .build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -418,7 +424,7 @@ public abstract class AbstractClientTest {
     String result = api.get();
 
     /* verify that the response is unzipped */
-    assertThat(result).isNotNull().isEqualToIgnoringCase(responseData);
+    assertThat(result).isEqualToIgnoringCase(responseData);
   }
 
   @Test
@@ -426,10 +432,11 @@ public abstract class AbstractClientTest {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
     server.enqueue(
-        new MockResponse()
-            .setResponseCode(400)
+        new MockResponse.Builder()
+            .code(400)
             .addHeader("Content-Encoding", "gzip")
-            .setBody(new Buffer().write(compress(responseData))));
+            .body(new Buffer().write(compress(responseData)))
+            .build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -440,16 +447,16 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody())
-          .isNotEmpty()
+          .isPresent()
           .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-          .get()
-          .isEqualTo(responseData);
+          .hasValue(responseData);
     }
   }
 
   @Test
   public void canSupportGzipOnErrorWithoutBody() throws Exception {
-    server.enqueue(new MockResponse().setResponseCode(400).addHeader("Content-Encoding", "gzip"));
+    server.enqueue(
+        new MockResponse.Builder().code(400).addHeader("Content-Encoding", "gzip").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -460,10 +467,9 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody())
-          .isNotEmpty()
+          .isPresent()
           .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-          .get()
-          .isEqualTo("");
+          .hasValue("");
     }
   }
 
@@ -472,9 +478,10 @@ public abstract class AbstractClientTest {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
     server.enqueue(
-        new MockResponse()
+        new MockResponse.Builder()
             .addHeader("Content-Encoding", "deflate")
-            .setBody(new Buffer().write(deflate(responseData))));
+            .body(new Buffer().write(deflate(responseData)))
+            .build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -482,7 +489,7 @@ public abstract class AbstractClientTest {
     String result = api.get();
 
     /* verify that the response is unzipped */
-    assertThat(result).isNotNull().isEqualToIgnoringCase(responseData);
+    assertThat(result).isEqualToIgnoringCase(responseData);
   }
 
   @Test
@@ -490,10 +497,11 @@ public abstract class AbstractClientTest {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
     server.enqueue(
-        new MockResponse()
-            .setResponseCode(400)
+        new MockResponse.Builder()
+            .code(400)
             .addHeader("Content-Encoding", "deflate")
-            .setBody(new Buffer().write(deflate(responseData))));
+            .body(new Buffer().write(deflate(responseData)))
+            .build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -504,17 +512,16 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody())
-          .isNotEmpty()
+          .isPresent()
           .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-          .get()
-          .isEqualTo(responseData);
+          .hasValue(responseData);
     }
   }
 
   @Test
   public void canSupportDeflateOnErrorWithoutBody() throws Exception {
     server.enqueue(
-        new MockResponse().setResponseCode(400).addHeader("Content-Encoding", "deflate"));
+        new MockResponse.Builder().code(400).addHeader("Content-Encoding", "deflate").build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -525,10 +532,9 @@ public abstract class AbstractClientTest {
     } catch (FeignException e) {
       /* verify that the response is unzipped */
       assertThat(e.responseBody())
-          .isNotEmpty()
+          .isPresent()
           .map(body -> new String(body.array(), StandardCharsets.UTF_8))
-          .get()
-          .isEqualTo("");
+          .hasValue("");
     }
   }
 
@@ -537,9 +543,10 @@ public abstract class AbstractClientTest {
     /* enqueue a zipped response */
     final String responseData = "Compressed Data";
     server.enqueue(
-        new MockResponse()
+        new MockResponse.Builder()
             .addHeader("content-encoding", "gzip")
-            .setBody(new Buffer().write(compress(responseData))));
+            .body(new Buffer().write(compress(responseData)))
+            .build());
 
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
@@ -547,7 +554,7 @@ public abstract class AbstractClientTest {
     String result = api.get();
 
     /* verify that the response is unzipped */
-    assertThat(result).isNotNull().isEqualToIgnoringCase(responseData);
+    assertThat(result).isEqualToIgnoringCase(responseData);
   }
 
   @SuppressWarnings("UnusedReturnValue")
@@ -613,6 +620,11 @@ public abstract class AbstractClientTest {
       deflaterOutputStream.close();
       return bos.toByteArray();
     }
+  }
+
+  @BeforeEach
+  void setUp() throws IOException {
+    server.start();
   }
 
   @AfterEach

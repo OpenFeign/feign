@@ -1,0 +1,248 @@
+/*
+ * Copyright © 2012 The Feign Authors (feign@commonhaus.dev)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package feign;
+
+import static feign.Util.checkState;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/** Defines what annotations and values are valid on interfaces. */
+public interface Contract {
+
+  /**
+   * Called to parse the methods in the class that are linked to HTTP requests.
+   *
+   * @param targetType {@link feign.Target#type() type} of the Feign interface.
+   */
+  List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType);
+
+  abstract class BaseContract implements Contract {
+
+    /**
+     * @param targetType {@link feign.Target#type() type} of the Feign interface.
+     * @see #parseAndValidateMetadata(Class)
+     */
+    @Override
+    public List<MethodMetadata> parseAndValidateMetadata(Class<?> targetType) {
+      checkState(
+          targetType.getTypeParameters().length == 0,
+          "Parameterized types unsupported: %s",
+          targetType.getSimpleName());
+      checkState(
+          targetType.getInterfaces().length <= 1,
+          "Only single inheritance supported: %s",
+          targetType.getSimpleName());
+      final Map<String, MethodMetadata> result = new LinkedHashMap<String, MethodMetadata>();
+      for (final Method method : targetType.getMethods()) {
+        if (method.getDeclaringClass() == Object.class
+            || (method.getModifiers() & Modifier.STATIC) != 0
+            || Util.isDefault(method)
+            || method.isAnnotationPresent(FeignIgnore.class)) {
+          continue;
+        }
+        final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);
+        if (result.containsKey(metadata.configKey())) {
+          MethodMetadata existingMetadata = result.get(metadata.configKey());
+          Type existingReturnType = existingMetadata.returnType();
+          Type overridingReturnType = metadata.returnType();
+          Type resolvedType = Types.resolveReturnType(existingReturnType, overridingReturnType);
+          if (resolvedType.equals(overridingReturnType)) {
+            result.put(metadata.configKey(), metadata);
+          }
+          continue;
+        }
+        result.put(metadata.configKey(), metadata);
+      }
+      return new ArrayList<>(result.values());
+    }
+
+    /**
+     * @deprecated use {@link #parseAndValidateMetadata(Class, Method)} instead.
+     */
+    @Deprecated
+    public MethodMetadata parseAndValidateMetadata(Method method) {
+      return parseAndValidateMetadata(method.getDeclaringClass(), method);
+    }
+
+    /** Called indirectly by {@link #parseAndValidateMetadata(Class)}. */
+    protected MethodMetadata parseAndValidateMetadata(Class<?> targetType, Method method) {
+      final MethodMetadata data = new MethodMetadata();
+      data.targetType(targetType);
+      data.method(method);
+      data.returnType(Types.resolve(targetType, targetType, method.getGenericReturnType()));
+      data.configKey(Feign.configKey(targetType, method));
+      if (AlwaysEncodeBodyContract.class.isAssignableFrom(this.getClass())) {
+        data.alwaysEncodeBody(true);
+      }
+
+      if (targetType.getInterfaces().length == 1) {
+        processAnnotationOnClass(data, targetType.getInterfaces()[0]);
+      }
+      processAnnotationOnClass(data, targetType);
+
+      for (final Annotation methodAnnotation : method.getAnnotations()) {
+        processAnnotationOnMethod(data, methodAnnotation, method);
+      }
+      if (data.isIgnored()) {
+        return data;
+      }
+      checkState(
+          data.template().method() != null,
+          "Method %s not annotated with HTTP method type (ex. GET, POST)%s",
+          data.configKey(),
+          data.warnings());
+      final Class<?>[] parameterTypes = method.getParameterTypes();
+      final Type[] genericParameterTypes = method.getGenericParameterTypes();
+
+      final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+      final int count = parameterAnnotations.length;
+      for (int i = 0; i < count; i++) {
+        boolean isHttpAnnotation = false;
+        if (parameterAnnotations[i] != null) {
+          isHttpAnnotation = processAnnotationsOnParameter(data, parameterAnnotations[i], i);
+        }
+
+        if (isHttpAnnotation) {
+          data.ignoreParamater(i);
+        }
+
+        if ("kotlin.coroutines.Continuation".equals(parameterTypes[i].getName())) {
+          data.ignoreParamater(i);
+        }
+
+        if (parameterTypes[i] == URI.class) {
+          data.urlIndex(i);
+        } else if (!isHttpAnnotation
+            && !Request.Options.class.isAssignableFrom(parameterTypes[i])) {
+          if (data.isAlreadyProcessed(i)) {
+            checkState(
+                data.formParams().isEmpty() || data.bodyIndex() == null,
+                "Body parameters cannot be used with form parameters.%s",
+                data.warnings());
+          } else if (!data.alwaysEncodeBody()) {
+            checkState(
+                data.formParams().isEmpty(),
+                "Body parameters cannot be used with form parameters.%s",
+                data.warnings());
+            checkState(
+                data.bodyIndex() == null,
+                "Method has too many Body parameters: %s%s",
+                method,
+                data.warnings());
+            data.bodyIndex(i);
+            data.bodyType(Types.resolve(targetType, targetType, genericParameterTypes[i]));
+          }
+        }
+      }
+
+      if (data.headerMapIndex() != null) {
+        // check header map parameter for map type
+        if (Map.class.isAssignableFrom(parameterTypes[data.headerMapIndex()])) {
+          checkMapKeys("HeaderMap", genericParameterTypes[data.headerMapIndex()]);
+        }
+      }
+
+      if (data.queryMapIndex() != null) {
+        if (Map.class.isAssignableFrom(parameterTypes[data.queryMapIndex()])) {
+          checkMapKeys("QueryMap", genericParameterTypes[data.queryMapIndex()]);
+        }
+      }
+
+      return data;
+    }
+
+    private static void checkMapString(String name, Class<?> type, Type genericType) {
+      checkState(Map.class.isAssignableFrom(type), "%s parameter must be a Map: %s", name, type);
+      checkMapKeys(name, genericType);
+    }
+
+    private static void checkMapKeys(String name, Type genericType) {
+      Class<?> keyClass = null;
+
+      // assume our type parameterized
+      if (ParameterizedType.class.isAssignableFrom(genericType.getClass())) {
+        final Type[] parameterTypes = ((ParameterizedType) genericType).getActualTypeArguments();
+        keyClass = (Class<?>) parameterTypes[0];
+      } else if (genericType instanceof Class<?>) {
+        // raw class, type parameters cannot be inferred directly, but we can scan any extended
+        // interfaces looking for any explict types
+        final Type[] interfaces = ((Class<?>) genericType).getGenericInterfaces();
+        for (final Type extended : interfaces) {
+          if (ParameterizedType.class.isAssignableFrom(extended.getClass())) {
+            // use the first extended interface we find.
+            final Type[] parameterTypes = ((ParameterizedType) extended).getActualTypeArguments();
+            keyClass = (Class<?>) parameterTypes[0];
+            break;
+          }
+        }
+      }
+
+      if (keyClass != null) {
+        checkState(
+            String.class.equals(keyClass),
+            "%s key must be a String: %s",
+            name,
+            keyClass.getSimpleName());
+      }
+    }
+
+    /**
+     * Called by parseAndValidateMetadata twice, first on the declaring class, then on the target
+     * type (unless they are the same).
+     *
+     * @param data metadata collected so far relating to the current java method.
+     * @param clz the class to process
+     */
+    protected abstract void processAnnotationOnClass(MethodMetadata data, Class<?> clz);
+
+    /**
+     * @param data metadata collected so far relating to the current java method.
+     * @param annotation annotations present on the current method annotation.
+     * @param method method currently being processed.
+     */
+    protected abstract void processAnnotationOnMethod(
+        MethodMetadata data, Annotation annotation, Method method);
+
+    /**
+     * @param data metadata collected so far relating to the current java method.
+     * @param annotations annotations present on the current parameter annotation.
+     * @param paramIndex if you find a name in {@code annotations}, call {@link
+     *     #nameParam(MethodMetadata, String, int)} with this as the last parameter.
+     * @return true if you called {@link #nameParam(MethodMetadata, String, int)} after finding an
+     *     http-relevant annotation.
+     */
+    protected abstract boolean processAnnotationsOnParameter(
+        MethodMetadata data, Annotation[] annotations, int paramIndex);
+
+    /** links a parameter name to its index in the method signature. */
+    protected void nameParam(MethodMetadata data, String name, int i) {
+      final Collection<String> names =
+          data.indexToName().containsKey(i) ? data.indexToName().get(i) : new ArrayList<String>();
+      names.add(name);
+      data.indexToName().put(i, names);
+    }
+  }
+}

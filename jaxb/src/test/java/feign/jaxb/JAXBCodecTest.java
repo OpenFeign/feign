@@ -17,17 +17,16 @@ package feign.jaxb;
 
 import static feign.Util.UTF_8;
 import static feign.assertj.FeignAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
-import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -55,6 +54,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     new JAXBEncoder(new JAXBContextFactory.Builder().build())
         .encode(mock, MockObject.class, template);
 
@@ -74,12 +74,14 @@ class JAXBCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     Throwable exception =
-        assertThrows(
-            UnsupportedOperationException.class,
-            () ->
-                new JAXBEncoder(new JAXBContextFactory.Builder().build())
-                    .encode(Collections.emptyMap(), parameterized, template));
+        assertThatExceptionOfType(UnsupportedOperationException.class)
+            .isThrownBy(
+                () ->
+                    new JAXBEncoder(new JAXBContextFactory.Builder().build())
+                        .encode(Collections.emptyMap(), parameterized, template))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             "JAXB only supports encoding raw types. Found java.util.Map<java.lang.String, ?>");
@@ -96,6 +98,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -119,6 +122,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -144,6 +148,7 @@ class JAXBCodecTest {
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     assertThat(template)
@@ -167,6 +172,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     mock.value = "Test";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, MockObject.class, template);
 
     // RequestTemplate always expects a UNIX style newline.
@@ -199,8 +205,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -223,18 +228,18 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .body("<foo/>", UTF_8)
             .build();
 
     Throwable exception =
-        assertThrows(
-            DecodeException.class,
-            () ->
-                new JAXBDecoder(new JAXBContextFactory.Builder().build())
-                    .decode(response, parameterized));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(
+                () ->
+                    new JAXBDecoder(new JAXBContextFactory.Builder().build())
+                        .decode(response, parameterized))
+            .actual();
     assertThat(exception.getMessage())
         .contains(
             """
@@ -272,10 +277,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
-            .body(template.body())
+            .body(template.requestBody().map(this::bodyAsBytes).orElse(null))
             .build();
 
     new JAXBDecoder(new JAXBContextFactory.Builder().build()).decode(response, Box.class);
@@ -288,8 +292,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(404)
             .reason("NOT FOUND")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.<String, Collection<String>>emptyMap())
             .build();
     assertThat(
@@ -312,8 +315,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -321,9 +323,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBContextFactory factory =
         new JAXBContextFactory.Builder().withUnmarshallerSchema(getMockIntObjSchema()).build();
     DecodeException exception =
-        assertThrows(
-            DecodeException.class,
-            () -> new JAXBDecoder(factory).decode(response, MockIntObject.class));
+        assertThatExceptionOfType(DecodeException.class)
+            .isThrownBy(() -> new JAXBDecoder(factory).decode(response, MockIntObject.class))
+            .actual();
     assertThat(exception)
         .hasCauseInstanceOf(UnmarshalException.class)
         .hasMessageContaining("'Test' is not a valid value for 'integer'.");
@@ -341,8 +343,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
         Response.builder()
             .status(200)
             .reason("OK")
-            .request(
-                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
             .headers(Collections.emptyMap())
             .body(mockXml, UTF_8)
             .build();
@@ -365,10 +366,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     EncodeException exception =
-        assertThrows(
-            EncodeException.class,
-            () -> encoder.encode(new MockIntObject(), MockIntObject.class, template));
+        assertThatExceptionOfType(EncodeException.class)
+            .isThrownBy(() -> encoder.encode(new MockIntObject(), MockIntObject.class, template))
+            .actual();
     assertThat(exception)
         .hasCauseInstanceOf(MarshalException.class)
         .hasMessageContaining("The content of element 'mockIntObject' is not complete.");
@@ -385,6 +387,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     Encoder encoder = new JAXBEncoder(jaxbContextFactory);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(new MockIntObject(), MockIntObject.class, template);
     assertThat(template)
         .hasBody(
@@ -392,6 +395,14 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
             <?xml version="1.0" encoding="UTF-8"\
              standalone="yes"?><mockIntObject/>\
             """);
+  }
+
+  private byte[] bodyAsBytes(Request.Body body) {
+    try {
+      return body.writeToByteArray();
+    } catch (IOException e) {
+      throw new AssertionError("Failed to write body", e);
+    }
   }
 
   @XmlRootElement
