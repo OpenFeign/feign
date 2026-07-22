@@ -158,7 +158,7 @@
     <jvm.options>-Duser.language=en</jvm.options>
 
     <!-- default bytecode version for src/main -->
-    <main.java.version>25</main.java.version>
+    <main.java.version>11</main.java.version>
     <latest.java.version>25</latest.java.version>
 
     <!-- default bytecode version for src/test -->
