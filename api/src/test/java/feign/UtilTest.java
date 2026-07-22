@@ -21,7 +21,6 @@ import static feign.Util.removeValues;
 import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -36,8 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 import feign.codec.Decoder;
 
