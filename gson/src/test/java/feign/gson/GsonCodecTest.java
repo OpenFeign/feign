@@ -45,6 +45,7 @@ class GsonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new GsonEncoder().encode(map, map.getClass(), template);
 
     assertThat(template)
@@ -82,6 +83,7 @@ class GsonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new GsonEncoder().encode(form, new TypeToken<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template)
@@ -226,6 +228,7 @@ class GsonCodecTest {
     zones.add(new Zone("denominator.io.", "abcd"));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode(zones, new TypeToken<List<Zone>>() {}.getType(), template);
 
     assertThat(template)

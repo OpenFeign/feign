@@ -21,6 +21,7 @@ import static feign.Util.checkNotNull;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.template.UriUtils;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -232,7 +233,9 @@ final class RequestTemplateFactoryResolver {
         }
       }
       try {
-        encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable);
+        if (!encoder.encode(formVariables, Encoder.MAP_STRING_WILDCARD, mutable)) {
+          throw new EncodeException("This encoder does not support form encoding: " + encoder);
+        }
       } catch (EncodeException e) {
         throw e;
       } catch (RuntimeException e) {
@@ -269,9 +272,9 @@ final class RequestTemplateFactoryResolver {
       try {
         if (alwaysEncodeBody) {
           body = argv == null ? new Object[0] : argv;
-          encoder.encode(body, Object[].class, mutable);
+          encode(body, Object[].class, mutable);
         } else {
-          encoder.encode(body, metadata.bodyType(), mutable);
+          encode(body, metadata.bodyType(), mutable);
         }
       } catch (EncodeException e) {
         throw e;
@@ -279,6 +282,19 @@ final class RequestTemplateFactoryResolver {
         throw new EncodeException(e.getMessage(), e);
       }
       return super.resolve(argv, mutable, variables);
+    }
+
+    private void encode(Object object, Type bodyType, RequestTemplate mutable)
+        throws EncodeException {
+      if (!encoder.encode(object, bodyType, mutable)) {
+        throw new EncodeException(
+            "This encoder does not support encoding of type: "
+                + bodyType
+                + " with object: "
+                + object
+                + ", encoder: "
+                + encoder);
+      }
     }
   }
 }

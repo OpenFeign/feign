@@ -53,6 +53,7 @@ class JacksonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new JacksonJrEncoder().encode(map, map.getClass(), template);
 
     assertThat(template).hasBody("{\"foo\":1}");
@@ -64,6 +65,7 @@ class JacksonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new JacksonJrEncoder().encode(map, byte[].class, template);
 
     assertThat(template).hasBody("{\"foo\":1}");
@@ -76,6 +78,7 @@ class JacksonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new JacksonJrEncoder().encode(form, new TypeReference<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template).hasBody("{\"foo\":1,\"bar\":[2,3]}");
@@ -178,6 +181,7 @@ class JacksonCodecTest {
     dates.add(LocalDate.of(2021, 2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode(dates, new TypeReference<List<LocalDate>>() {}.getType(), template);
 
     assertThat(template).hasBody(DATES_JSON);

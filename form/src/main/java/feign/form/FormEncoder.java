@@ -80,13 +80,12 @@ public class FormEncoder implements Encoder {
 
   @Override
   @SuppressWarnings("unchecked")
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     String contentTypeValue = getContentTypeValue(template.headers());
     final var contentType = ContentType.of(contentTypeValue);
     if (processors.containsKey(contentType) == false) {
-      delegate.encode(object, bodyType, template);
-      return;
+      return delegate.encode(object, bodyType, template);
     }
 
     Map<String, Object> data;
@@ -95,12 +94,12 @@ public class FormEncoder implements Encoder {
     } else if (isUserPojo(bodyType)) {
       data = toMap(object);
     } else {
-      delegate.encode(object, bodyType, template);
-      return;
+      return delegate.encode(object, bodyType, template);
     }
 
     final var charset = getCharset(contentTypeValue);
     processors.get(contentType).process(template, charset, data);
+    return true;
   }
 
   /**

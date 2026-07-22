@@ -371,4 +371,34 @@ public class Util {
         + "_"
         + currentThread.getId();
   }
+
+  /**
+   * Checks if the request template has a content type header that is JSON.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is JSON, {@code false} otherwise
+   * @since 14
+   */
+  public static boolean isJsonContentType(RequestTemplate template) {
+    return template.headers().getOrDefault("Content-Type", List.of()).stream()
+        .anyMatch(
+            contentType ->
+                contentType != null
+                    && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?json.*"));
+  }
+
+  /**
+   * Checks if the request template has a content type header that is XML.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is XML, {@code false} otherwise
+   * @since 14
+   */
+  public static boolean isXmlContentType(RequestTemplate template) {
+    return template.headers().getOrDefault("Content-Type", List.of()).stream()
+        .anyMatch(
+            contentType ->
+                contentType != null
+                    && contentType.trim().matches("(?i)\\w+/(?:[\\w._-]+\\+)?xml.*"));
+  }
 }

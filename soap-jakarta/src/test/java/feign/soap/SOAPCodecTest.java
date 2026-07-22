@@ -56,6 +56,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
@@ -84,6 +85,7 @@ class SOAPCodecTest {
     Type parameterized = ParameterizedHolder.class.getDeclaredField("field").getGenericType();
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     Throwable exception =
         assertThatExceptionOfType(UnsupportedOperationException.class)
             .isThrownBy(
@@ -113,6 +115,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =
@@ -145,6 +148,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -176,6 +180,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -206,6 +211,7 @@ class SOAPCodecTest {
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     assertThat(template)
@@ -395,6 +401,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     Box<Box<String>> boxBoxStr = new Box<>();
     boxBoxStr.set(boxStr);
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(boxBoxStr, Box.class, template);
 
     Response response =
@@ -436,6 +443,7 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     mock.item.value = "Apples";
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "text/xml");
     encoder.encode(mock, GetPrice.class, template);
 
     String soapEnvelop =

@@ -18,15 +18,17 @@ package feign.jackson.jaxb;
 import static com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Type;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.lang.reflect.Type;
 
 public final class JacksonJaxbJsonEncoder implements Encoder {
   private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
@@ -40,13 +42,14 @@ public final class JacksonJaxbJsonEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       jacksonJaxbJsonProvider.writeTo(
           object, bodyType.getClass(), null, null, APPLICATION_JSON_TYPE, null, outputStream);
       template.body(Request.Body.of(outputStream.toByteArray()));
+      return true;
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }

@@ -15,14 +15,16 @@
  */
 package feign.jackson3;
 
+import java.lang.reflect.Type;
+import java.util.Collections;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
-import java.lang.reflect.Type;
-import java.util.Collections;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.JavaType;
@@ -52,10 +54,11 @@ public class Jackson3Encoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
       template.body(Request.Body.of(mapper.writerFor(javaType).writeValueAsBytes(object)));
+      return true;
     } catch (JacksonException e) {
       throw new EncodeException(e.getMessage(), e);
     }

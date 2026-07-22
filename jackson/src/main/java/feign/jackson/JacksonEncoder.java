@@ -15,19 +15,21 @@
  */
 package feign.jackson;
 
+import java.lang.reflect.Type;
+import java.util.Collections;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
-import java.lang.reflect.Type;
-import java.util.Collections;
 
 public class JacksonEncoder implements Encoder, JsonEncoder {
 
@@ -50,10 +52,11 @@ public class JacksonEncoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
       template.body(Request.Body.of(mapper.writerFor(javaType).writeValueAsBytes(object)));
+      return true;
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }

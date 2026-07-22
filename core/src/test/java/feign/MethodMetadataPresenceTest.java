@@ -67,7 +67,7 @@ public class MethodMetadataPresenceTest {
                   assertThat(template).isNotNull();
                   assertThat(template.methodMetadata()).isNotNull();
                   assertThat(template.feignTarget()).isNotNull();
-                  new DefaultEncoder().encode(object, bodyType, template);
+                  return new DefaultEncoder().encode(object, bodyType, template);
                 })
             .target(TestInterface.class, url);
 

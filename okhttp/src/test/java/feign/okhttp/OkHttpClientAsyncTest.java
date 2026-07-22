@@ -168,8 +168,9 @@ public class OkHttpClientAsyncTest {
             .encoder(
                 new DefaultEncoder() {
                   @Override
-                  public void encode(Object object, Type bodyType, RequestTemplate template) {
+                  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
                     encodedType.set(bodyType);
+                    return true;
                   }
                 })
             .target("http://localhost:" + server.getPort());
@@ -1035,6 +1036,7 @@ public class OkHttpClientAsyncTest {
                   } else {
                     template.body(Request.Body.of(object.toString()));
                   }
+                  return true;
                 });
 
     TestInterfaceAsyncBuilder requestInterceptor(RequestInterceptor requestInterceptor) {
