@@ -24,6 +24,8 @@ import feign.Client.Proxied;
 import feign.DefaultClient;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
 import java.io.IOException;
@@ -99,6 +101,22 @@ public class DefaultClientTest extends AbstractClientTest {
         .hasMethod("POST")
         .hasNoHeaderNamed("Content-Type")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
+  }
+
+  @Test
+  void emptyBodyDoesNotConvertGetToPost() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    Request request =
+        Request.create(
+            HttpMethod.GET,
+            "http://localhost:" + server.getPort() + "/",
+            Collections.emptyMap(),
+            new byte[0],
+            null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET");
   }
 
   @Test
