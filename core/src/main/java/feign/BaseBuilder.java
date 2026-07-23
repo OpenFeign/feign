@@ -40,8 +40,6 @@ import java.util.stream.Collectors;
 
 public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
 
-  private final B thisB;
-
   protected List<RequestInterceptor> requestInterceptors = new ArrayList<>();
   protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected List<MethodInterceptor> methodInterceptors = new ArrayList<>();
@@ -64,43 +62,47 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   public BaseBuilder() {
     super();
-    thisB = (B) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  private B thisB() {
+    return (B) this;
   }
 
   public B logLevel(Logger.Level logLevel) {
     this.logLevel = logLevel;
-    return thisB;
+    return thisB();
   }
 
   public B contract(Contract contract) {
     this.contract = contract;
-    return thisB;
+    return thisB();
   }
 
   public B retryer(Retryer retryer) {
     this.retryer = retryer;
-    return thisB;
+    return thisB();
   }
 
   public B logger(Logger logger) {
     this.logger = logger;
-    return thisB;
+    return thisB();
   }
 
   public B encoder(Encoder encoder) {
     this.encoder = encoder;
-    return thisB;
+    return thisB();
   }
 
   public B decoder(Decoder decoder) {
     this.decoder = decoder;
-    return thisB;
+    return thisB();
   }
 
   public B codec(Codec codec) {
     this.encoder = codec.encoder();
     this.decoder = codec.decoder();
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -115,23 +117,23 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    */
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
-    return thisB;
+    return thisB();
   }
 
   public B decodeVoid() {
     this.decodeVoid = true;
-    return thisB;
+    return thisB();
   }
 
   public B queryMapEncoder(QueryMapEncoder queryMapEncoder) {
     this.queryMapEncoder = queryMapEncoder;
-    return thisB;
+    return thisB();
   }
 
   /** Allows to map the response before passing it to the decoder. */
   public B mapAndDecode(ResponseMapper mapper, Decoder decoder) {
     this.decoder = new ResponseMappingDecoder(mapper, decoder);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -151,7 +153,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    */
   public B dismiss404() {
     this.dismiss404 = true;
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -173,23 +175,23 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Deprecated
   public B decode404() {
     this.dismiss404 = true;
-    return thisB;
+    return thisB();
   }
 
   public B errorDecoder(ErrorDecoder errorDecoder) {
     this.errorDecoder = errorDecoder;
-    return thisB;
+    return thisB();
   }
 
   public B options(Options options) {
     this.options = options;
-    return thisB;
+    return thisB();
   }
 
   /** Adds a single request interceptor to the builder. */
   public B requestInterceptor(RequestInterceptor requestInterceptor) {
     this.requestInterceptors.add(requestInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -201,7 +203,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (RequestInterceptor requestInterceptor : requestInterceptors) {
       this.requestInterceptors.add(requestInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -213,13 +215,13 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (ResponseInterceptor responseInterceptor : responseInterceptors) {
       this.responseInterceptors.add(responseInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /** Adds a single response interceptor to the builder. */
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
     this.responseInterceptors.add(responseInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -230,7 +232,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Experimental
   public B methodInterceptor(MethodInterceptor methodInterceptor) {
     this.methodInterceptors.add(methodInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /** Sets the full set of method interceptors, overwriting any previously configured. */
@@ -240,33 +242,33 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (MethodInterceptor methodInterceptor : methodInterceptors) {
       this.methodInterceptors.add(methodInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /** Allows you to override how reflective dispatch works inside of Feign. */
   public B invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
     this.invocationHandlerFactory = invocationHandlerFactory;
-    return thisB;
+    return thisB();
   }
 
   public B exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
     this.propagationPolicy = propagationPolicy;
-    return thisB;
+    return thisB();
   }
 
   public B addCapability(Capability capability) {
     this.capabilities.add(capability);
-    return thisB;
+    return thisB();
   }
 
   @SuppressWarnings("unchecked")
   B enrich() {
     if (capabilities.isEmpty()) {
-      return thisB;
+      return thisB();
     }
 
     try {
-      B clone = (B) thisB.clone();
+      B clone = (B) thisB().clone();
 
       getFieldsToEnrich()
           .forEach(
@@ -356,8 +358,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
         .filter(field -> !field.isSynthetic())
         // and capabilities itself
         .filter(field -> !Objects.equals(field.getName(), "capabilities"))
-        // and thisB helper field
-        .filter(field -> !Objects.equals(field.getName(), "thisB"))
         // interceptor lists are enriched per-element then as a whole via custom types
         .filter(field -> !Objects.equals(field.getName(), "requestInterceptors"))
         .filter(field -> !Objects.equals(field.getName(), "responseInterceptors"))
