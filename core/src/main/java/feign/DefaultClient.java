@@ -122,8 +122,11 @@ public class DefaultClient implements Client {
     }
     if (stream != null && this.isGzip(headers.get(CONTENT_ENCODING))) {
       stream = new GZIPInputStream(stream);
+      // the body is now decompressed, the Content-Length described the compressed bytes
+      length = null;
     } else if (stream != null && this.isDeflate(headers.get(CONTENT_ENCODING))) {
       stream = new InflaterInputStream(stream);
+      length = null;
     }
     return Response.builder()
         .status(status)
