@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -31,8 +32,16 @@ import feign.jackson.JacksonIteratorDecoder.JacksonIterator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
@@ -161,6 +170,29 @@ class JacksonIteratorTest {
         () -> assertThat(iterator(Boolean.class, response)).toIterable().hasSize(1));
 
     assertThat(closed.get()).isTrue();
+  }
+
+  @Test
+  void decodeUsesResponseCharset() throws IOException {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .body("[{\"login\":\"ÁÉÍÓÚ\"}]".getBytes(StandardCharsets.ISO_8859_1))
+            .build();
+    Object decoded =
+        JacksonIteratorDecoder.create()
+            .decode(response, new TypeReference<Iterator<User>>() {}.getType());
+    List<Object> users = new ArrayList<>();
+    ((Iterator<?>) decoded).forEachRemaining(users::add);
+    assertThat(users).hasSize(1);
+    assertThat((User) users.get(0)).containsEntry("login", "ÁÉÍÓÚ");
   }
 
   static class User extends LinkedHashMap<String, Object> {
