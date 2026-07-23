@@ -141,7 +141,10 @@ public final class HeaderTemplate {
 
   public Collection<String> getValues() {
     return Collections.unmodifiableList(
-        this.values.stream().map(Template::toString).collect(Collectors.toList()));
+        this.values.stream()
+            .map(Template::toString)
+            .map(HeaderTemplate::stripCrlf)
+            .collect(Collectors.toList()));
   }
 
   public List<String> getVariables() {
@@ -167,7 +170,7 @@ public final class HeaderTemplate {
           continue;
         }
 
-        expanded.add(result);
+        expanded.add(stripCrlf(result));
       }
     }
 
@@ -177,5 +180,17 @@ public final class HeaderTemplate {
     }
 
     return result.toString();
+  }
+
+  /**
+   * Removes carriage return and line feed characters from a resolved header value. Values are
+   * written to the header verbatim, so a CR or LF in a value would terminate the header line and
+   * inject additional headers.
+   *
+   * @param value to sanitise.
+   * @return the value without CR or LF characters.
+   */
+  private static String stripCrlf(String value) {
+    return value.replace("\r", "").replace("\n", "");
   }
 }
