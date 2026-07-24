@@ -25,13 +25,13 @@ import feign.client.AbstractClientTest;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.Test;
 
-/** Tests that 'Content-Encoding: gzip' is handled correctly */
-public class GzipHttp5ClientTest extends AbstractClientTest {
+/** Tests that 'Content-Encoding: deflate' is handled correctly */
+public class DeflateHttp5ClientTest extends AbstractClientTest {
 
   @Override
   public Builder newBuilder() {
@@ -47,32 +47,31 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
     assertEquals("foo", testInterface.withBody("bar"));
     final RecordedRequest request1 = server.takeRequest();
     assertEquals("/test", request1.getPath());
+    assertEquals("deflate", request1.getHeader("Content-Encoding"));
 
     ByteArrayInputStream bodyContentIs =
         new ByteArrayInputStream(request1.getBody().readByteArray());
-    byte[] uncompressed = new GZIPInputStream(bodyContentIs).readAllBytes();
+    byte[] uncompressed = new InflaterInputStream(bodyContentIs).readAllBytes();
 
     assertEquals("bar", new String(uncompressed, StandardCharsets.UTF_8));
   }
 
   @Test
-  public void testWithGzipAndDeflateHeaders() throws InterruptedException, IOException {
-    final TestInterface testInterface =
-        newBuilder()
-            .requestInterceptor(req -> req.header("Content-Encoding", "gzip", "deflate"))
-            .target(TestInterface.class, "http://localhost:" + server.getPort());
+  public void testWithEmptyCompressedBody() throws InterruptedException, IOException {
+    final TestInterface testInterface = buildTestInterface(true);
 
     server.enqueue(new MockResponse().setBody("foo"));
 
-    assertEquals("foo", testInterface.withBody("bar"));
+    assertEquals("foo", testInterface.withBody(""));
     final RecordedRequest request1 = server.takeRequest();
     assertEquals("/test", request1.getPath());
+    assertEquals("deflate", request1.getHeader("Content-Encoding"));
 
     ByteArrayInputStream bodyContentIs =
         new ByteArrayInputStream(request1.getBody().readByteArray());
-    byte[] uncompressed = new GZIPInputStream(bodyContentIs).readAllBytes();
+    byte[] uncompressed = new InflaterInputStream(bodyContentIs).readAllBytes();
 
-    assertEquals("bar", new String(uncompressed, StandardCharsets.UTF_8));
+    assertEquals(0, uncompressed.length);
   }
 
   @Test
@@ -90,7 +89,7 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
 
   private TestInterface buildTestInterface(boolean compress) {
     return newBuilder()
-        .requestInterceptor(req -> req.header("Content-Encoding", compress ? "gzip" : ""))
+        .requestInterceptor(req -> req.header("Content-Encoding", compress ? "deflate" : ""))
         .target(TestInterface.class, "http://localhost:" + server.getPort());
   }
 
