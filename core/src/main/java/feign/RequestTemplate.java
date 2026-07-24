@@ -262,22 +262,6 @@ public final class RequestTemplate implements Serializable {
   }
 
   /**
-   * Resolves all expressions, using the variables provided. Values not present in the {@code
-   * alreadyEncoded} map are pct-encoded.
-   *
-   * @param unencoded variable values to substitute.
-   * @param alreadyEncoded variable names.
-   * @return a resolved Request Template
-   * @deprecated use {@link RequestTemplate#resolve(Map)}. Values already encoded are recognized as
-   *     such and skipped.
-   */
-  @SuppressWarnings("unused")
-  @Deprecated
-  RequestTemplate resolve(Map<String, ?> unencoded, Map<String, Boolean> alreadyEncoded) {
-    return this.resolve(unencoded);
-  }
-
-  /**
    * Creates a {@link Request} from this template. The template must be resolved before calling this
    * method, or an {@link IllegalStateException} will be thrown.
    *

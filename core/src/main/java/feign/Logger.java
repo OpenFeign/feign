@@ -68,7 +68,7 @@ public abstract class Logger {
   protected void logRequest(String configKey, Level logLevel, Request request) {
     String protocolVersion = resolveProtocolVersion(request.protocolVersion());
     log(configKey, "---> %s %s %s", request.httpMethod().name(), request.url(), protocolVersion);
-    if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
+    if (logLevel.atLeast(Level.HEADERS)) {
 
       for (String field : request.headers().keySet()) {
         if (shouldLogRequestHeader(field)) {
@@ -81,7 +81,7 @@ public abstract class Logger {
       int bodyLength = 0;
       if (request.body() != null) {
         bodyLength = request.length();
-        if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+        if (logLevel.atLeast(Level.FULL)) {
           String bodyText =
               request.charset() != null ? new String(request.body(), request.charset()) : null;
           log(configKey, ""); // CRLF
@@ -105,27 +105,22 @@ public abstract class Logger {
             : "";
     int status = response.status();
     log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
-    if (logLevel.ordinal() >= Level.HEADERS.ordinal()) {
+    if (logLevel.atLeast(Level.HEADERS)) {
 
-      for (String field : response.headers().keySet()) {
-        if (shouldLogResponseHeader(field)) {
-          for (String value : valuesOrEmpty(response.headers(), field)) {
-            log(configKey, "%s: %s", field, value);
-          }
-        }
-      }
+      logResponseHeaders(configKey, logLevel, response);
 
       int bodyLength = 0;
-      if (response.body() != null && !(status == 204 || status == 205)) {
+      if (response.body() != null
+          && status != HttpStatus.NO_CONTENT.code()
+          && status != HttpStatus.RESET_CONTENT.code()) {
         // HTTP 204 No Content "...response MUST NOT include a message-body"
         // HTTP 205 Reset Content "...response MUST NOT include an entity"
-        if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+        if (logLevel.atLeast(Level.FULL)) {
           log(configKey, ""); // CRLF
         }
-        byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-        ensureClosed(response.body());
+        byte[] bodyData = rebufferBody(response);
         bodyLength = bodyData.length;
-        if (logLevel.ordinal() >= Level.FULL.ordinal() && bodyLength > 0) {
+        if (logLevel.atLeast(Level.FULL) && bodyLength > 0) {
           log(configKey, "%s", decodeOrDefault(bodyData, UTF_8, "Binary data"));
         }
         log(configKey, "<--- END HTTP (%s-byte body)", bodyLength);
@@ -137,6 +132,22 @@ public abstract class Logger {
     return response;
   }
 
+  private void logResponseHeaders(String configKey, Level logLevel, Response response) {
+    for (String field : response.headers().keySet()) {
+      if (shouldLogResponseHeader(field)) {
+        for (String value : valuesOrEmpty(response.headers(), field)) {
+          log(configKey, "%s: %s", field, value);
+        }
+      }
+    }
+  }
+
+  private byte[] rebufferBody(Response response) throws IOException {
+    byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+    ensureClosed(response.body());
+    return bodyData;
+  }
+
   protected IOException logIOException(
       String configKey, Level logLevel, IOException ioe, long elapsedTime) {
     log(
@@ -145,7 +156,7 @@ public abstract class Logger {
         ioe.getClass().getSimpleName(),
         ioe.getMessage(),
         elapsedTime);
-    if (logLevel.ordinal() >= Level.FULL.ordinal()) {
+    if (logLevel.atLeast(Level.FULL)) {
       StringWriter sw = new StringWriter();
       ioe.printStackTrace(new PrintWriter(sw));
       log(configKey, "%s", sw.toString());
@@ -170,7 +181,12 @@ public abstract class Logger {
     /** Log the basic information along with request and response headers. */
     HEADERS,
     /** Log the headers, body, and metadata for both requests and responses. */
-    FULL
+    FULL;
+
+    /** Returns {@code true} if this level is at least as verbose as {@code other}. */
+    public boolean atLeast(Level other) {
+      return ordinal() >= other.ordinal();
+    }
   }
 
   /** Logs to System.err. */

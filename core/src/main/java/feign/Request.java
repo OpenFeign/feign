@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -335,9 +334,12 @@ public final class Request implements Serializable {
      */
     @Experimental
     public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions =
-          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
-      return methodOptions.getOrDefault(methodName, this);
+      Map<String, Options> methodOptions = threadToMethodOptions.get(getThreadIdentifier());
+      if (methodOptions == null) {
+        return this;
+      }
+      Options options = methodOptions.get(methodName);
+      return options != null ? options : this;
     }
 
     /**
@@ -349,10 +351,9 @@ public final class Request implements Serializable {
     @Experimental
     public void setMethodOptions(String methodName, Options options) {
       String threadIdentifier = getThreadIdentifier();
-      Map<String, Request.Options> methodOptions =
-          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
-      threadToMethodOptions.put(threadIdentifier, methodOptions);
-      methodOptions.put(methodName, options);
+      threadToMethodOptions
+          .computeIfAbsent(threadIdentifier, key -> new ConcurrentHashMap<>())
+          .put(methodName, options);
     }
 
     /**
@@ -517,10 +518,10 @@ public final class Request implements Serializable {
 
     private transient Charset encoding;
 
-    private byte[] data;
+    private final byte[] data;
 
     private Body() {
-      super();
+      this(null);
     }
 
     private Body(byte[] data) {
