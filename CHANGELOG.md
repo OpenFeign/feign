@@ -4,13 +4,10 @@
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 * `Encoder.encode()` now returns `boolean` — return `true` when encoding succeeds, `false` if
-  the encoder does not handle the type. The `Encoder.of()` factory method composes multiple encoders
-  into a `DelegatingEncoder` that tries each delegate's `encode()` in order. Built-in JSON encoders (Jackson, Gson,
-  Moshi, Fastjson2, Jackson-Jr) and XML encoders (JAXB, SOAP) now check the request's
-  `Content-Type` header via `Util.isJsonContentType()` / `Util.isXmlContentType()` and return
-  `false` when it does not match. Existing custom `Encoder` implementations
-  must update the `encode()` return type from `void` to `boolean`.
-  (https://github.com/OpenFeign/feign/pull/3476)
+  the encoder does not handle the type. The `MultiEncoder.of()` factory method composes multiple encoders
+  into a `MultiEncoder` that tries each delegate's `encode()` in order. Existing custom `Encoder` implementations
+  must update the `encode()` return type from `void` to `boolean` and throw EncodeException for true encoding failures.
+  (https://github.com/OpenFeign/feign/pull/3485)
 
 ### Version 13.12
 
