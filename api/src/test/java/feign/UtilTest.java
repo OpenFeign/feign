@@ -22,6 +22,7 @@ import static feign.Util.resolveLastTypeParameter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -33,10 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.junit.jupiter.api.Test;
-
-import feign.codec.Decoder;
 
 class UtilTest {
 
