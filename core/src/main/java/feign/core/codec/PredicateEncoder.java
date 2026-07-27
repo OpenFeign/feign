@@ -26,8 +26,8 @@ public class PredicateEncoder implements Encoder {
   private final EncoderPredicate predicate;
 
   public PredicateEncoder(Encoder delegate, EncoderPredicate predicate) {
-	this.delegate = delegate;
-	this.predicate = predicate;
+    this.delegate = delegate;
+    this.predicate = predicate;
   }
 
   @Override
