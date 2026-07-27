@@ -24,6 +24,8 @@ import feign.Client.Proxied;
 import feign.DefaultClient;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Headers;
+import feign.RequestLine;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
 import java.io.IOException;
@@ -99,6 +101,25 @@ public class DefaultClientTest extends AbstractClientTest {
         .hasMethod("POST")
         .hasNoHeaderNamed("Content-Type")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void contentLengthHeaderIsNotDuplicatedForBodylessRequest() throws Exception {
+    server.enqueue(new MockResponse());
+
+    ContentLengthInterface api =
+        newBuilder().target(ContentLengthInterface.class, "http://localhost:" + server.getPort());
+
+    api.postEmpty();
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Length")).containsExactly("0");
+  }
+
+  interface ContentLengthInterface {
+    @RequestLine("POST /")
+    @Headers("Content-Length: 0")
+    void postEmpty();
   }
 
   @Test
