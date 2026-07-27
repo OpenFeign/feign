@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.core.codec;
 
 import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,16 +30,40 @@ import java.util.Objects;
  *
  * @since 14
  */
-class DelegatingEncoder implements Encoder {
+class MultiEncoder implements Encoder {
   private final List<Encoder> delegates;
 
   /**
-   * Creates a new {@link DelegatingEncoder} with the given list of delegates.
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(Encoder... encoders) {
+    return of(Arrays.asList(encoders));
+  }
+
+  /**
+   * Creates a delegating encoder that will try each of the provided encoders in order until one
+   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   *
+   * @param encoders the encoders to delegate to
+   * @return a delegating encoder
+   * @since 14
+   */
+  static Encoder of(List<Encoder> encoders) {
+    return new MultiEncoder(encoders);
+  }
+  
+  /**
+   * Creates a new {@link MultiEncoder} with the given list of delegates.
    *
    * @param delegates the list of delegates to use for encoding. Both list and its elements must not
    *     be {@code null}.
    */
-  DelegatingEncoder(List<Encoder> delegates) {
+  MultiEncoder(List<Encoder> delegates) {
     this.delegates = Objects.requireNonNull(delegates, "delegates cannot be null");
   }
 
@@ -55,13 +83,8 @@ class DelegatingEncoder implements Encoder {
         .map(encoder -> encoder.encode(object, bodyType, template))
         .filter(Boolean::booleanValue)
         .findFirst()
-        .orElseThrow(
-            () ->
-                new EncodeException(
-                    "No suitable encoder found for object encoding: "
-                        + object
-                        + ", encoders: "
-                        + delegates));
+        .orElse(false)
+        ;
   }
 
   /**

@@ -13,29 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.codec;
+package feign.core.codec;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import feign.RequestTemplate;
 import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+
 @ExtendWith(MockitoExtension.class)
-class DelegatingEncoderTest {
+class MultiEncoderTest {
   @Mock private Encoder delegate;
   private Encoder encoder;
 
   @BeforeEach
   void setUp() {
-    encoder = new DelegatingEncoder(List.of(delegate));
+    encoder = MultiEncoder.of(List.of(delegate));
   }
 
   @Test
@@ -50,13 +55,28 @@ class DelegatingEncoderTest {
 
     verify(delegate).encode(object, bodyType, requestTemplate);
   }
-
+  
   @Test
-  void shouldThrowEncodeExceptionWhenNoSuitableEncoderFound() {
+  void shouldNotEncode() {
     var object = "Hello, World!";
     var bodyType = String.class;
     var requestTemplate = mock(RequestTemplate.class);
 
+    when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(false);
+
+    assertThat(encoder.encode(object, bodyType, requestTemplate)).isFalse();
+
+  }
+
+
+  @Test
+  void shouldThrowEncodeExceptionWhenDelegateThrows() {
+    var object = "Hello, World!";
+    var bodyType = String.class;
+    var requestTemplate = mock(RequestTemplate.class);
+
+    when(delegate.encode(object, bodyType, requestTemplate)).thenThrow(EncodeException.class);
+    
     assertThrows(EncodeException.class, () -> encoder.encode(object, bodyType, requestTemplate));
   }
 }
