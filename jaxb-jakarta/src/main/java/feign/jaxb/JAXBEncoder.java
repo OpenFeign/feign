@@ -15,15 +15,14 @@
  */
 package feign.jaxb;
 
-import java.io.StringWriter;
-import java.lang.reflect.Type;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
+import java.io.StringWriter;
+import java.lang.reflect.Type;
 
 /**
  * Encodes requests using JAXB with Jakarta Api. <br>

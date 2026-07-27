@@ -15,16 +15,14 @@
  */
 package feign.jackson3;
 
-import java.lang.reflect.Type;
-import java.util.Collections;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import java.lang.reflect.Type;
+import java.util.Collections;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.JavaType;

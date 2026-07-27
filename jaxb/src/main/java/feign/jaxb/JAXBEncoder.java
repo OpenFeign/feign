@@ -15,16 +15,14 @@
  */
 package feign.jaxb;
 
-import java.io.StringWriter;
-import java.lang.reflect.Type;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import java.io.StringWriter;
+import java.lang.reflect.Type;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 /**
  * Encodes requests using JAXB. <br>

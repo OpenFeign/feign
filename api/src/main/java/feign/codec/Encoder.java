@@ -15,10 +15,9 @@
  */
 package feign.codec;
 
-import java.lang.reflect.Type;
-
 import feign.RequestTemplate;
 import feign.Util;
+import java.lang.reflect.Type;
 
 /**
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code

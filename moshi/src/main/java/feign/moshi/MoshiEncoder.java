@@ -15,15 +15,13 @@
  */
 package feign.moshi;
 
-import java.lang.reflect.Type;
-
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import java.lang.reflect.Type;
 
 public class MoshiEncoder implements Encoder, JsonEncoder {
 
