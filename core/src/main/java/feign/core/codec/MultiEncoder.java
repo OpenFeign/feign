@@ -18,7 +18,6 @@ package feign.core.codec;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
@@ -56,7 +55,7 @@ class MultiEncoder implements Encoder {
   static Encoder of(List<Encoder> encoders) {
     return new MultiEncoder(encoders);
   }
-  
+
   /**
    * Creates a new {@link MultiEncoder} with the given list of delegates.
    *
@@ -83,8 +82,7 @@ class MultiEncoder implements Encoder {
         .map(encoder -> encoder.encode(object, bodyType, template))
         .filter(Boolean::booleanValue)
         .findFirst()
-        .orElse(false)
-        ;
+        .orElse(false);
   }
 
   /**

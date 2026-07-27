@@ -21,17 +21,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import feign.RequestTemplate;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import feign.RequestTemplate;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
 
 @ExtendWith(MockitoExtension.class)
 class MultiEncoderTest {
@@ -55,7 +53,7 @@ class MultiEncoderTest {
 
     verify(delegate).encode(object, bodyType, requestTemplate);
   }
-  
+
   @Test
   void shouldNotEncode() {
     var object = "Hello, World!";
@@ -65,9 +63,7 @@ class MultiEncoderTest {
     when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(false);
 
     assertThat(encoder.encode(object, bodyType, requestTemplate)).isFalse();
-
   }
-
 
   @Test
   void shouldThrowEncodeExceptionWhenDelegateThrows() {
@@ -76,7 +72,7 @@ class MultiEncoderTest {
     var requestTemplate = mock(RequestTemplate.class);
 
     when(delegate.encode(object, bodyType, requestTemplate)).thenThrow(EncodeException.class);
-    
+
     assertThrows(EncodeException.class, () -> encoder.encode(object, bodyType, requestTemplate));
   }
 }

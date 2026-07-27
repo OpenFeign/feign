@@ -21,49 +21,43 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import feign.RequestTemplate;
+import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import feign.RequestTemplate;
-import feign.codec.Encoder;
-import feign.codec.EncoderPredicate;
-
 @ExtendWith(MockitoExtension.class)
 class PredicateEncoderTest {
-	
+
   String object = "Hello, World!";
   Class<String> bodyType = String.class;
   RequestTemplate requestTemplate = mock(RequestTemplate.class);
-	
-	
+
   @Mock private Encoder delegate;
   private final EncoderPredicate truePredicate = (o, t, tt) -> true;
   private final EncoderPredicate falsePredicate = (o, t, tt) -> false;
-  
+
   @Test
   void shouldEncode() {
 
-	when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
-	
+    when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
+
     PredicateEncoder predicateEncoder = new PredicateEncoder(delegate, truePredicate);
-    
+
     assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isTrue();
 
     verify(delegate).encode(object, bodyType, requestTemplate);
   }
-  
+
   @Test
   void shouldNotEncode() {
-	PredicateEncoder predicateEncoder = new PredicateEncoder(delegate, falsePredicate);
+    PredicateEncoder predicateEncoder = new PredicateEncoder(delegate, falsePredicate);
 
-	assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isFalse();
+    assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isFalse();
 
-	verify(delegate, never()).encode(object, bodyType, requestTemplate);
-
+    verify(delegate, never()).encode(object, bodyType, requestTemplate);
   }
-
-
-
 }
