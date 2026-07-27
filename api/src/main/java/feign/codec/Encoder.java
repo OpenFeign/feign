@@ -15,11 +15,10 @@
  */
 package feign.codec;
 
+import java.lang.reflect.Type;
+
 import feign.RequestTemplate;
 import feign.Util;
-import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Encodes an object into an HTTP request body. Like {@code javax.websocket.Encoder}. {@code
@@ -71,30 +70,6 @@ import java.util.List;
 public interface Encoder {
   /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */
   Type MAP_STRING_WILDCARD = Util.MAP_STRING_WILDCARD;
-
-  /**
-   * Creates a delegating encoder that will try each of the provided encoders in order until one
-   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
-   *
-   * @param encoders the encoders to delegate to
-   * @return a delegating encoder
-   * @since 14
-   */
-  static Encoder of(Encoder... encoders) {
-    return of(Arrays.asList(encoders));
-  }
-
-  /**
-   * Creates a delegating encoder that will try each of the provided encoders in order until one
-   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
-   *
-   * @param encoders the encoders to delegate to
-   * @return a delegating encoder
-   * @since 14
-   */
-  static Encoder of(List<Encoder> encoders) {
-    return new DelegatingEncoder(encoders);
-  }
 
   /**
    * Converts objects to an appropriate representation in the template.
