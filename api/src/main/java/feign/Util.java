@@ -59,6 +59,9 @@ public class Util {
   /** The HTTP Content-Length header field name. */
   public static final String CONTENT_LENGTH = "Content-Length";
 
+  /** The HTTP Content-Type header field name. */
+  public static final String CONTENT_TYPE = "Content-Type";
+  
   /** The HTTP Content-Encoding header field name. */
   public static final String CONTENT_ENCODING = "Content-Encoding";
 

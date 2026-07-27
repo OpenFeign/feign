@@ -21,6 +21,8 @@ import static feign.Util.ensureClosed;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -68,9 +70,11 @@ public class InvocationContext {
 
   public Object proceed() throws Exception {
     if (returnType == Response.class) {
-      return disconnectResponseBodyIfNeeded(response);
+      return response;
     }
 
+    boolean noClose = false;
+    
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
@@ -86,6 +90,11 @@ public class InvocationContext {
       }
 
       Class<?> rawType = Types.getRawType(returnType);
+      
+      if(Closeable.class.isAssignableFrom(rawType)) {
+    	  	noClose = true;
+      }
+      
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
         return TypedResponse.builder(response).body(decode(response, bodyType)).build();
@@ -93,28 +102,28 @@ public class InvocationContext {
 
       return decode(response, returnType);
     } finally {
-      if (closeAfterDecode) {
+      if (closeAfterDecode && !noClose) {
         ensureClosed(response.body());
       }
     }
   }
-
-  private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
-    final boolean shouldDisconnectResponseBody =
-        response.body() != null
-            && response.body().length() != null
-            && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
-    if (!shouldDisconnectResponseBody) {
-      return response;
-    }
-
-    try {
-      final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-      return response.toBuilder().body(bodyData).build();
-    } finally {
-      ensureClosed(response.body());
-    }
-  }
+//
+//  private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
+//    final boolean shouldDisconnectResponseBody =
+//        response.body() != null
+//            && response.body().length() != null
+//            && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
+//    if (!shouldDisconnectResponseBody) {
+//      return response;
+//    }
+//
+//    try {
+//      final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+//      return response.toBuilder().body(bodyData).build();
+//    } finally {
+//      ensureClosed(response.body());
+//    }
+//  }
 
   private Object decode(Response response, Type returnType) {
     try {
