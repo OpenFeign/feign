@@ -20,12 +20,15 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.EncoderPredicate;
 import java.lang.reflect.Type;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 public class PredicateEncoder implements Encoder {
   private final Encoder delegate;
   private final EncoderPredicate predicate;
+
+  public PredicateEncoder(Encoder delegate, EncoderPredicate predicate) {
+	this.delegate = delegate;
+	this.predicate = predicate;
+  }
 
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template)
