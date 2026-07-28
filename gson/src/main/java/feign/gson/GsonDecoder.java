@@ -15,7 +15,6 @@
  */
 package feign.gson;
 
-import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 import com.google.gson.Gson;
@@ -50,7 +49,7 @@ public class GsonDecoder implements Decoder, JsonDecoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) return Util.emptyValueOf(type);
     if (response.body() == null) return null;
-    Reader reader = response.body().asReader(UTF_8);
+    Reader reader = response.body().asReader(response.charset());
     try {
       return gson.fromJson(reader, type);
     } catch (JsonIOException e) {
