@@ -69,7 +69,7 @@ public class InvocationContext {
 
   public Object proceed() throws Exception {
     if (returnType == Response.class) {
-      return response;
+      return disconnectResponseBodyIfNeeded(response);
     }
 
     boolean noClose = false;
@@ -107,23 +107,23 @@ public class InvocationContext {
     }
   }
 
-  //
-  //  private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
-  //    final boolean shouldDisconnectResponseBody =
-  //        response.body() != null
-  //            && response.body().length() != null
-  //            && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
-  //    if (!shouldDisconnectResponseBody) {
-  //      return response;
-  //    }
-  //
-  //    try {
-  //      final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
-  //      return response.toBuilder().body(bodyData).build();
-  //    } finally {
-  //      ensureClosed(response.body());
-  //    }
-  //  }
+  
+    private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
+      final boolean shouldDisconnectResponseBody =
+          response.body() != null
+              && response.body().length() != null
+              && response.body().length() <= MAX_RESPONSE_BUFFER_SIZE;
+      if (!shouldDisconnectResponseBody) {
+        return response;
+      }
+  
+      try {
+        final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+        return response.toBuilder().body(bodyData).build();
+      } finally {
+        ensureClosed(response.body());
+      }
+    }
 
   private Object decode(Response response, Type returnType) {
     try {
