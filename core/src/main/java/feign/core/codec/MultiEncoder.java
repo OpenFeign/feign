@@ -29,7 +29,7 @@ import java.util.Objects;
  *
  * @since 14
  */
-class MultiEncoder implements Encoder {
+public class MultiEncoder implements Encoder {
   private final List<Encoder> delegates;
 
   /**
