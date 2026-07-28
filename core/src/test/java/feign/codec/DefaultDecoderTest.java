@@ -25,6 +25,7 @@ import feign.Response;
 import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,6 +44,24 @@ class DefaultDecoderTest {
     Object decodedObject = decoder.decode(response, String.class);
     assertThat(decodedObject.getClass()).isEqualTo(String.class);
     assertThat(decodedObject.toString()).isEqualTo("response body");
+  }
+
+  @Test
+  void decodesToStringHonouringContentTypeCharset() throws Exception {
+    String content = "él pingüino";
+    byte[] body = content.getBytes(StandardCharsets.ISO_8859_1);
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("Content-Type", Collections.singleton("text/plain; charset=ISO-8859-1"));
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(headers)
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, UTF_8))
+            .body(new ByteArrayInputStream(body), body.length)
+            .build();
+    Object decodedObject = decoder.decode(response, String.class);
+    assertThat(decodedObject).isEqualTo(content);
   }
 
   @Test
