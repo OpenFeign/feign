@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.mock;
+package feign;
 
-public enum HttpMethod {
-  GET,
-  HEAD,
-  POST,
-  PUT,
-  DELETE,
-  TRACE,
-  OPTIONS,
-  CONNECT,
-  PATCH,
-  QUERY
+import static feign.Util.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import feign.Request.Body;
+import org.junit.jupiter.api.Test;
+
+public class RequestTest {
+
+  @Test
+  void stringBodyIsEncodedWithUtf8NotThePlatformDefault() {
+    String content = "spécial-çhars-€";
+
+    Body body = Body.create(content);
+
+    assertThat(body.asBytes()).isEqualTo(content.getBytes(UTF_8));
+    assertThat(body.getEncoding()).hasValue(UTF_8);
+    assertThat(body.isBinary()).isFalse();
+    assertThat(body.asString()).isEqualTo(content);
+  }
 }

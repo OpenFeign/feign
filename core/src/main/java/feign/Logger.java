@@ -21,10 +21,14 @@ import static feign.Util.ensureClosed;
 import static feign.Util.valuesOrEmpty;
 import static java.util.Objects.nonNull;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
@@ -182,9 +186,10 @@ public abstract class Logger {
   }
 
   /** Logs to the category {@link Logger} at {@link java.util.logging.Level#FINE}, if loggable. */
-  public static class JavaLogger extends Logger {
+  public static class JavaLogger extends Logger implements Closeable {
 
     final java.util.logging.Logger logger;
+    private final List<Handler> handlers = new ArrayList<>();
 
     /**
      * @deprecated Use {@link #JavaLogger(String)} or {@link #JavaLogger(Class)} instead.
@@ -256,10 +261,20 @@ public abstract class Logger {
               }
             });
         logger.addHandler(handler);
+        handlers.add(handler);
       } catch (IOException e) {
         throw new IllegalStateException("Could not add file handler.", e);
       }
       return this;
+    }
+
+    @Override
+    public void close() {
+      for (Handler handler : handlers) {
+        logger.removeHandler(handler);
+        handler.close();
+      }
+      handlers.clear();
     }
   }
 

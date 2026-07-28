@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -121,6 +122,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     // request headers
     boolean hasAcceptHeader = false;
     boolean isGzip = false;
+    boolean isDeflate = false;
     for (final Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       final String headerName = headerEntry.getKey();
       if (headerName.equalsIgnoreCase(ACCEPT_HEADER_NAME)) {
@@ -134,13 +136,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
       }
       if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
         isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
-        boolean isDeflate =
+        isDeflate =
             headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
-        if (isDeflate) {
-          // DeflateCompressingEntity not available in hc5 yet
-          throw new IllegalArgumentException(
-              "Deflate Content-Encoding is not supported by feign-hc5");
-        }
       }
 
       for (final String headerValue : headerEntry.getValue()) {
@@ -155,21 +152,38 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     // request body
     // final Body requestBody = request.requestBody();
     byte[] data = request.body();
-    if (isGzip && data != null && data.length > 0) {
-      // compress if needed
-      try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-          GZIPOutputStream gzipOs = new GZIPOutputStream(baos, true)) {
-        gzipOs.write(data);
-        gzipOs.flush();
-        data = baos.toByteArray();
-      } catch (IOException suppressed) { // NOPMD
-      }
+    if (isGzip && data != null) {
+      data = gzip(data);
+    } else if (isDeflate && data != null) {
+      data = deflate(data);
     }
     if (data != null) {
       httpRequest.setBody(data, getContentType(request));
     }
 
     return httpRequest;
+  }
+
+  private static byte[] gzip(byte[] data) {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+      gzip.write(data);
+      gzip.finish();
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to gzip request body", e);
+    }
+  }
+
+  private static byte[] deflate(byte[] data) {
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DeflaterOutputStream deflater = new DeflaterOutputStream(baos)) {
+      deflater.write(data);
+      deflater.finish();
+      return baos.toByteArray();
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to deflate request body", e);
+    }
   }
 
   private ContentType getContentType(Request request) {
