@@ -21,6 +21,7 @@ import static org.mockito.Mockito.RETURNS_MOCKS;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -61,5 +62,26 @@ class BaseBuilderTest {
       throws IllegalArgumentException, IllegalAccessException {
     test(
         Feign.builder().requestInterceptor(_ -> {}).responseInterceptor((ic, c) -> c.next(ic)), 10);
+  }
+
+  @Test
+  void capabilityCanProvideResponseInterceptorWhenNoneConfigured() {
+    AtomicInteger enrichCalls = new AtomicInteger();
+    ResponseInterceptor capabilityInterceptor = (context, chain) -> chain.next(context);
+
+    Feign.Builder enrichedBuilder =
+        Feign.builder()
+            .addCapability(
+                new Capability() {
+                  @Override
+                  public ResponseInterceptor enrich(ResponseInterceptor responseInterceptor) {
+                    enrichCalls.incrementAndGet();
+                    return capabilityInterceptor;
+                  }
+                })
+            .enrich();
+
+    assertThat(enrichCalls).hasValue(1);
+    assertThat(enrichedBuilder.responseInterceptors).containsExactly(capabilityInterceptor);
   }
 }
