@@ -17,35 +17,36 @@ package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import feign.RequestTemplate;
 import feign.codec.Encoder;
 import feign.codec.EncoderPredicate;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PredicateEncoderTest {
 
-  String object = "Hello, World!";
-  Class<String> bodyType = String.class;
-  RequestTemplate requestTemplate = mock(RequestTemplate.class);
-
   @Mock private Encoder delegate;
-  private final EncoderPredicate truePredicate = (o, t, tt) -> true;
-  private final EncoderPredicate falsePredicate = (o, t, tt) -> false;
+  @Mock private EncoderPredicate encoderPredicate;
+  @InjectMocks private PredicateEncoder predicateEncoder;
 
   @Test
   void shouldEncode() {
 
+	String object = "Hello, World!";
+	Class<String> bodyType = String.class;
+	RequestTemplate requestTemplate = mock(RequestTemplate.class);
+	  
+	when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(true);
     when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
-
-    PredicateEncoder predicateEncoder = new PredicateEncoder(delegate, truePredicate);
 
     assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isTrue();
 
@@ -54,10 +55,14 @@ class PredicateEncoderTest {
 
   @Test
   void shouldNotEncode() {
-    PredicateEncoder predicateEncoder = new PredicateEncoder(delegate, falsePredicate);
+    var object = "Hello, World!";
+    var bodyType = String.class;
+    var requestTemplate = mock(RequestTemplate.class);
+	  
+    when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(false);
 
     assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isFalse();
 
-    verify(delegate, never()).encode(object, bodyType, requestTemplate);
+    verifyNoInteractions(delegate);
   }
 }
