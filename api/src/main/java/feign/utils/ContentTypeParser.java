@@ -15,12 +15,14 @@
  */
 package feign.utils;
 
-import feign.Util;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+
+import feign.Util;
 
 public final class ContentTypeParser {
 
@@ -70,9 +72,18 @@ public final class ContentTypeParser {
       }
     }
 
-    return new ContentTypeResult(contentType, Charset.forName(charsetString, null));
+    return new ContentTypeResult(contentType, charsetOrNull(charsetString));
   }
 
+  private static Charset charsetOrNull(String charsetStr) {
+	  
+	  try {
+		return Charset.forName(charsetStr);
+	  } catch (Exception e) {
+		return null;
+	  }
+  }
+  
   /** Represents the parsed results of a Content-Type header */
   public static class ContentTypeResult {
     public static final ContentTypeResult MISSING = new ContentTypeResult("", null);
