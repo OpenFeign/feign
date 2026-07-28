@@ -24,6 +24,8 @@ import feign.Client.Proxied;
 import feign.DefaultClient;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RetryableException;
 import feign.assertj.MockWebServerAssertions;
 import java.io.IOException;
@@ -102,6 +104,22 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
+  void emptyBodyDoesNotConvertGetToPost() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    Request request =
+        Request.create(
+            HttpMethod.GET,
+            "http://localhost:" + server.getPort() + "/",
+            Collections.emptyMap(),
+            new byte[0],
+            null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET");
+  }
+
+  @Test
   @Override
   public void noResponseBodyForPut() throws Exception {
     super.noResponseBodyForPut();
@@ -125,6 +143,18 @@ public class DefaultClientTest extends AbstractClientTest {
   public void noResponseBodyForPatch() {
     RetryableException exception =
         assertThrows(RetryableException.class, super::noResponseBodyForPatch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
+  }
+
+  /**
+   * {@link java.net.HttpURLConnection} does not support the QUERY method. For now, prefer okhttp.
+   *
+   * @see java.net.HttpURLConnection#setRequestMethod
+   */
+  @Test
+  @Override
+  public void query() throws Exception {
+    RetryableException exception = assertThrows(RetryableException.class, super::query);
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
