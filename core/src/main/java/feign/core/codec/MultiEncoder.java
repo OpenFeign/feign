@@ -62,7 +62,7 @@ class MultiEncoder implements Encoder {
    * @param delegates the list of delegates to use for encoding. Both list and its elements must not
    *     be {@code null}.
    */
-  MultiEncoder(List<Encoder> delegates) {
+  private MultiEncoder(List<Encoder> delegates) {
     this.delegates = Objects.requireNonNull(delegates, "delegates cannot be null");
   }
 
