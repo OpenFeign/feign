@@ -23,7 +23,8 @@ import org.junit.jupiter.api.io.TempDirDeletionStrategy.IgnoreFailures;
 
 public class MultipleLoggerTest {
 
-  @TempDir(deletionStrategy = IgnoreFailures.class) public File tmp;
+  @TempDir(deletionStrategy = IgnoreFailures.class)
+  public File tmp;
 
   private static java.util.logging.Logger getInnerLogger(Logger.JavaLogger logger)
       throws Exception {
