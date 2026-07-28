@@ -111,7 +111,9 @@ public class DefaultClient implements Client {
     }
 
     Integer length = connection.getContentLength();
-    if (length == -1) {
+    if (length < 0) {
+      // -1 signals unknown or above Integer.MAX_VALUE; any other negative value is a malformed
+      // header that HttpURLConnection surfaces verbatim
       length = null;
     }
     InputStream stream;
