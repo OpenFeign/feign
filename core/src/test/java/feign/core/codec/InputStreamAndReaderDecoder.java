@@ -1,15 +1,16 @@
 package feign.core.codec;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.lang.reflect.Type;
+
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.utils.ContentTypeParser;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.lang.reflect.Type;
 
 public class InputStreamAndReaderDecoder implements Decoder {
   private final Decoder delegateDecoder;
@@ -28,9 +29,10 @@ public class InputStreamAndReaderDecoder implements Decoder {
       return response
           .body()
           .asReader(
-              ContentTypeParser.parseContentTypeFromHeaders(response.headers(), "UTF-8")
-                  .getCharset()
-                  .orElse(Util.UTF_8));
+              ContentTypeParser.parseContentTypeFromHeaders(response.headers())
+              	.map(ctr -> ctr.getCharset().orElse(Util.UTF_8) )
+              	.orElse(Util.UTF_8)
+             );
 
     if (delegateDecoder == null) return null;
 

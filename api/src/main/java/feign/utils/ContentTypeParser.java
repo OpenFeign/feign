@@ -39,15 +39,25 @@ public final class ContentTypeParser {
 	private ContentTypeParser() {
 	}
 
-	public static ContentTypeResult parseContentTypeFromHeaders(Map<String, Collection<String>> headers, String ifMissing) {
+	/**
+	 * Parses and returns information about the Content-Type header 
+	 * @param headers the headers to parse
+	 * @return a ContentTypeResult that has the content-type information (or Optional.empty() if the Content-Type header is not in the headers) 
+	 */
+	public static Optional<ContentTypeResult> parseContentTypeFromHeaders(Map<String, Collection<String>> headers) {
 		// The header map *should* be a case insensitive treemap
 		for (String val : headers.getOrDefault(Util.CONTENT_TYPE, Collections.emptyList())) {
-			return parseContentTypeHeader(val);
+			return Optional.of(parseContentTypeHeader(val));
 		}
 
-		return new ContentTypeResult(ifMissing, null);
+		return Optional.empty();
 	}
 
+	/**
+	 * Parses and returns information about a string that is a valid formatting Content-Type header value
+	 * @param contentTypeHeader the Content-Type header value to parse
+	 * @return a ContentTypeResult that has the content-type information (or Optional.empty() if the Content-Type header is not in the headers) 
+	 */
 	public static ContentTypeResult parseContentTypeHeader(String contentTypeHeader) {
 
       String[] contentTypeParmeters = contentTypeHeader.split(";");
@@ -66,10 +76,20 @@ public final class ContentTypeParser {
       return new ContentTypeResult(contentType, Charset.forName(charsetString, null));
 	}
 
+	/**
+	 * Represents the parsed results of a Content-Type header
+	 */
 	public static class ContentTypeResult{
 		public static final ContentTypeResult MISSING = new ContentTypeResult("", null);
 
+		/**
+		 * The content type portion of the header string
+		 */
 		private String contentType;
+		
+		/**
+		 * The charset portion of the header string (if specified)
+		 */
 		private Optional<Charset> charset;
 
 		public ContentTypeResult(String contentType, Charset charset) {
