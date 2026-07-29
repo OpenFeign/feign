@@ -384,7 +384,7 @@ public class MyEncoder implements Encoder {
 ```
 
 Built-in encoders (`DefaultEncoder`, `FormEncoder`, `MeteredEncoder`, `GraphqlEncoder`, etc.) already return `boolean`
-from `encode()`. If your encoder returns `false`, the `DelegatingEncoder` (see section 19) will try the next encoder. If
+from `encode()`. If your encoder returns `false`, the `MultiEncoder` (see section 19) will try the next encoder. If
 no encoder returns `true`, an `EncodeException` is thrown.
 
 ---
@@ -415,9 +415,9 @@ new feign.core.codec.DefaultEncoder()
 
 ---
 
-### 17. Composing multiple encoders with `Encoder.of()` (https://github.com/OpenFeign/feign/pull/3485)
+### 17. Composing multiple encoders with `MultiEncoder.of()` (https://github.com/OpenFeign/feign/pull/3485)
 
-Use `Encoder.of(...)` to compose multiple encoders into a single `DelegatingEncoder`, which
+Use `MultiEncoder.of(...)` to compose multiple encoders into a single `MultiEncoder`, which
 delegates to the first encoder whose `encode()` returns `true`.
 
 **Before:**
@@ -432,7 +432,7 @@ Feign.builder()
 
 ```java
 Feign.builder()
-    .encoder(Encoder.of(
+    .encoder(MultiEncoder.of(
         new FormEncoder(),
         new JacksonEncoder(),
         new JAXBEncoder(factory)
@@ -448,37 +448,8 @@ Feign.builder()
     .target(MyApi.class, "https://api.example.com");
 ```
 
-The `Encoder.of()` factory wraps the supplied encoders in a `DelegatingEncoder`, which tries
+The `MultiEncoder.of()` factory returns a `MultiEncoder`, which tries
 each encoder's `encode()` and uses the first one that returns `true`.
-
----
-
-### 18. Multi-encoder support — `DelegatingEncoder` (https://github.com/OpenFeign/feign/pull/3485)
-
-You can now compose multiple encoders via `Encoder.of()`, and Feign will pick the right one at
-request time based on the return value of `encode()`. This is especially useful for APIs that mix
-JSON, XML, and other content types:
-
-**Before:**
-
-```java
-// Only one encoder — had to manually choose or wrap
-Feign.builder()
-    .encoder(new FormEncoder(new JacksonEncoder()))
-    .target(MyApi.class, "https://api.example.com");
-```
-
-**After:**
-
-```java
-Feign.builder()
-    .encoder(Encoder.of(
-        new FormEncoder(),          // handles multipart/form-urlencoded by Content-Type
-        new JacksonEncoder(),       // implements JsonEncoder marker interface
-        new JAXBEncoder(factory)    // handles XML
-    ))
-    .target(MyApi.class, "https://api.example.com");
-```
 
 ---
 
@@ -543,6 +514,26 @@ public class FileBody implements Request.Body {
         }
     }
 }
+```
+
+---
+
+## Selecting Encoder Based on a Predicate
+
+TODO: Once we have specialized EncoderPredicate factory methods (i.e. for xml content types), update this example to use those factory methods
+
+The new `PredicateEncoder` and `EncoderPredicate` classes can be used in conjunction with `MultiEncoder` to fine tune which Encoder
+handles different types of encode requests.
+
+```java
+Feign.builder()
+    .encoder(MultiEncoder.of(
+    	new DefaultEncoder(),
+    	new PredicateEncoder((obj, type, templ) -> templ.headers().get("Content-Type").contains("application/xml"), new JAXBEncoder(factory), // handle xml requests
+    	new JacksonEncoder() // handle everything else
+    ))
+    .target(MyApi.class, "https://api.example.com");
+
 ```
 
 ---
