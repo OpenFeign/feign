@@ -3,6 +3,11 @@
 * `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
+* `Encoder.encode()` now returns `boolean` — return `true` when encoding succeeds, `false` if
+  the encoder does not handle the type. The `MultiEncoder.of()` factory method composes multiple encoders
+  into a `MultiEncoder` that tries each delegate's `encode()` in order. Existing custom `Encoder` implementations
+  must update the `encode()` return type from `void` to `boolean` and throw EncodeException for true encoding failures.
+  (https://github.com/OpenFeign/feign/pull/3485)
 
 ### Version 13.12
 

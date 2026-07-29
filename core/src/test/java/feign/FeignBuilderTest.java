@@ -213,7 +213,11 @@ public class FeignBuilderTest {
     server.enqueue(new MockResponse.Builder().body("response data").build());
 
     String url = "http://localhost:" + server.getPort();
-    Encoder encoder = (object, _, template) -> template.body(Request.Body.of(object.toString()));
+    Encoder encoder =
+        (object, _, template) -> {
+          template.body(Request.Body.of(object.toString()));
+          return true;
+        };
 
     TestInterface api = Feign.builder().encoder(encoder).target(TestInterface.class, url);
     api.encodedPost(Arrays.asList("This", "is", "my", "request"));

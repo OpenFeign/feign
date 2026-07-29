@@ -13,44 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package feign.graphql;
+package feign.core.codec;
 
-import feign.Experimental;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
 
-@Experimental
-public class GraphqlEncoder implements Encoder {
+/**
+ * An encoder that wraps another (delegate) encoder but blocks encoding if a predicate isn't met.
+ * For example, this is useful for restricting the usage of a given Encoder to a given content type
+ * header.
+ */
+public class PredicateEncoder implements Encoder {
 
+  /** The delegate that the encoding request will be passed to if the predicate is met. */
   private final Encoder delegate;
-  private final GraphqlContract contract;
 
-  public GraphqlEncoder(Encoder delegate, GraphqlContract contract) {
+  private final EncoderPredicate predicate;
+
+  public PredicateEncoder(EncoderPredicate predicate, Encoder delegate) {
     this.delegate = delegate;
-    this.contract = contract;
+    this.predicate = predicate;
   }
 
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    var meta = contract.lookupMetadata(template);
-    if (meta == null) {
+    if (predicate.test(object, bodyType, template))
       return delegate.encode(object, bodyType, template);
-    }
 
-    var graphqlBody = new LinkedHashMap<String, Object>();
-    graphqlBody.put("query", meta.query);
-
-    if (object != null && meta.variableName != null) {
-      var variables = new LinkedHashMap<String, Object>();
-      variables.put(meta.variableName, object);
-      graphqlBody.put("variables", variables);
-    }
-
-    delegate.encode(graphqlBody, MAP_STRING_WILDCARD, template);
-    return true;
+    return false;
   }
 }

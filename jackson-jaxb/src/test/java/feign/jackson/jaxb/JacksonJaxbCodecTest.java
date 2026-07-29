@@ -37,6 +37,7 @@ class JacksonJaxbCodecTest {
   void encodeTest() {
     JacksonJaxbJsonEncoder encoder = new JacksonJaxbJsonEncoder();
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
 
     encoder.encode(new MockObject("Test"), MockObject.class, template);
 

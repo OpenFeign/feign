@@ -40,13 +40,14 @@ public final class JacksonJaxbJsonEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     try {
       jacksonJaxbJsonProvider.writeTo(
           object, bodyType.getClass(), null, null, APPLICATION_JSON_TYPE, null, outputStream);
       template.body(Request.Body.of(outputStream.toByteArray()));
+      return true;
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }

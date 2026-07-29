@@ -355,6 +355,104 @@ VertxFeign.builder()
 
 ---
 
+### 14. `Encoder.encode()` now returns `boolean` (https://github.com/OpenFeign/feign/pull/3485)
+
+`Encoder.encode()` now returns `boolean` instead of `void`. Return `true` when the encoder
+handles the object, `false` otherwise. This replaces the separate `canEncode()` method.
+
+**Before:**
+
+```java
+public class MyEncoder implements Encoder {
+    @Override
+    public void encode(Object object, Type bodyType, RequestTemplate template) {
+        template.body(Request.Body.of(serialize(object)));
+    }
+}
+```
+
+**After:**
+
+```java
+public class MyEncoder implements Encoder {
+    @Override
+    public boolean encode(Object object, Type bodyType, RequestTemplate template) {
+        template.body(Request.Body.of(serialize(object)));
+        return true; // or return false if the encoder does not handle this type
+    }
+}
+```
+
+Built-in encoders (`DefaultEncoder`, `FormEncoder`, `MeteredEncoder`, `GraphqlEncoder`, etc.) already return `boolean`
+from `encode()`. If your encoder returns `false`, the `MultiEncoder` (see section 19) will try the next encoder. If
+no encoder returns `true`, an `EncodeException` is thrown.
+
+---
+
+### 15. `Encoder` moved from `core` to `api` module
+
+`feign.codec.Encoder` has been relocated from the `feign-core` module to the new `feign-api`
+module. The package name (`feign.codec`) is unchanged. If you have a direct dependency on
+`feign-core` without `feign-api`, you need to add `feign-api` to your classpath.
+
+---
+
+### 16. `Encoder.Default` removed
+
+The deprecated inner class `Encoder.Default` (which extended `DefaultEncoder`) has been removed.
+
+**Before:**
+
+```java
+new Encoder.Default()
+```
+
+**After:**
+
+```java
+new feign.core.codec.DefaultEncoder()
+```
+
+---
+
+### 17. Composing multiple encoders with `MultiEncoder.of()` (https://github.com/OpenFeign/feign/pull/3485)
+
+Use `MultiEncoder.of(...)` to compose multiple encoders into a single `MultiEncoder`, which
+delegates to the first encoder whose `encode()` returns `true`.
+
+**Before:**
+
+```java
+Feign.builder()
+    .encoder(new JacksonEncoder())
+    .target(MyApi.class, "https://api.example.com");
+```
+
+**After (multiple encoders):**
+
+```java
+Feign.builder()
+    .encoder(MultiEncoder.of(
+        new FormEncoder(),
+        new JacksonEncoder(),
+        new JAXBEncoder(factory)
+    ))
+    .target(MyApi.class, "https://api.example.com");
+```
+
+**After (single encoder is unchanged):**
+
+```java
+Feign.builder()
+    .encoder(new JacksonEncoder())
+    .target(MyApi.class, "https://api.example.com");
+```
+
+The `MultiEncoder.of()` factory returns a `MultiEncoder`, which tries
+each encoder's `encode()` and uses the first one that returns `true`.
+
+---
+
 ## Implementing a Custom Streaming Body
 
 If you want to stream a body (e.g., from a file or `InputStream`), implement `Request.Body` directly. Because
@@ -416,6 +514,26 @@ public class FileBody implements Request.Body {
         }
     }
 }
+```
+
+---
+
+## Selecting Encoder Based on a Predicate
+
+TODO: Once we have specialized EncoderPredicate factory methods (i.e. for xml content types), update this example to use those factory methods
+
+The new `PredicateEncoder` and `EncoderPredicate` classes can be used in conjunction with `MultiEncoder` to fine tune which Encoder
+handles different types of encode requests.
+
+```java
+Feign.builder()
+    .encoder(MultiEncoder.of(
+    	new DefaultEncoder(),
+    	new PredicateEncoder((obj, type, templ) -> templ.headers().get("Content-Type").contains("application/xml"), new JAXBEncoder(factory), // handle xml requests
+    	new JacksonEncoder() // handle everything else
+    ))
+    .target(MyApi.class, "https://api.example.com");
+
 ```
 
 ---

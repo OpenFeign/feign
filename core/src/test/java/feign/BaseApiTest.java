@@ -84,8 +84,10 @@ public class BaseApiTest {
 
     Feign.builder()
         .encoder(
-            (_, bodyType, _) ->
-                assertThat(bodyType).isEqualTo(new TypeToken<Keys<String>>() {}.getType()))
+            (_, bodyType, _) -> {
+              assertThat(bodyType).isEqualTo(new TypeToken<Keys<String>>() {}.getType());
+              return true;
+            })
         .decoder(
             (_, type) -> {
               assertThat(type).isEqualTo(new TypeToken<Entities<String, Long>>() {}.getType());

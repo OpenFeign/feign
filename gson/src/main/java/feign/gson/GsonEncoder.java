@@ -41,7 +41,8 @@ public class GsonEncoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     template.body(Request.Body.of(gson.toJson(object, bodyType)));
+    return true;
   }
 }

@@ -61,20 +61,22 @@ class AlwaysEncodeBodyContractTest {
 
   private static class AllParametersSampleEncoder implements Encoder {
     @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template)
+    public boolean encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
       Object[] methodParameters = (Object[]) object;
       String body =
           Arrays.stream(methodParameters).map(String::valueOf).collect(Collectors.joining());
       template.body(Request.Body.of(body));
+      return true;
     }
   }
 
   private static class BodyParameterSampleEncoder implements Encoder {
     @Override
-    public void encode(Object object, Type bodyType, RequestTemplate template)
+    public boolean encode(Object object, Type bodyType, RequestTemplate template)
         throws EncodeException {
       template.body(Request.Body.of(String.valueOf(object)));
+      return true;
     }
   }
 

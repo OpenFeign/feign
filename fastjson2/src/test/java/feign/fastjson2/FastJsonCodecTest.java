@@ -66,6 +66,7 @@ class FastJsonCodecTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new Fastjson2Encoder().encode(map, map.getClass(), template);
 
     assertThat(template)
@@ -83,6 +84,7 @@ class FastJsonCodecTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new Fastjson2Encoder().encode(form, new TypeReference<Map<String, ?>>() {}.getType(), template);
 
     assertThat(template)

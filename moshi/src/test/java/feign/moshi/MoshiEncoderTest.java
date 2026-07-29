@@ -36,6 +36,7 @@ class MoshiEncoderTest {
     map.put("foo", 1);
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     new MoshiEncoder().encode(map, Map.class, template);
 
     assertThat(template)
@@ -55,6 +56,7 @@ class MoshiEncoderTest {
     form.put("bar", Arrays.asList(2, 3));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
 
     new MoshiEncoder().encode(form, Map.class, template);
 
@@ -82,6 +84,7 @@ class MoshiEncoderTest {
     zones.add(new Zone("denominator.io.", "abcd"));
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode(zones, UpperZoneJSONAdapter.class, template);
 
     assertThat(template)
@@ -107,6 +110,7 @@ class MoshiEncoderTest {
     VideoGame videoGame = new VideoGame("Super Mario", "Luigi", "Bowser");
 
     RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
     encoder.encode(videoGame, videoGameJsonAdapter.getClass(), template);
 
     assertThat(template)

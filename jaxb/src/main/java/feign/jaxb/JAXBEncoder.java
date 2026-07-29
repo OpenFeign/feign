@@ -52,7 +52,7 @@ public class JAXBEncoder implements Encoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     if (!(bodyType instanceof Class)) {
       throw new UnsupportedOperationException(
           "JAXB only supports encoding raw types. Found " + bodyType);
@@ -62,6 +62,7 @@ public class JAXBEncoder implements Encoder {
       StringWriter stringWriter = new StringWriter();
       marshaller.marshal(object, stringWriter);
       template.body(Request.Body.of(stringWriter.toString()));
+      return true;
     } catch (JAXBException e) {
       throw new EncodeException(e.toString(), e);
     }

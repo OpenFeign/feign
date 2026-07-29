@@ -52,10 +52,11 @@ public class Jackson3Encoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template) {
+  public boolean encode(Object object, Type bodyType, RequestTemplate template) {
     try {
       JavaType javaType = mapper.getTypeFactory().constructType(bodyType);
       template.body(Request.Body.of(mapper.writerFor(javaType).writeValueAsBytes(object)));
+      return true;
     } catch (JacksonException e) {
       throw new EncodeException(e.getMessage(), e);
     }

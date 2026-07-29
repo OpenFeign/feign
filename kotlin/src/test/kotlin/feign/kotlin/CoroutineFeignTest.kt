@@ -190,11 +190,12 @@ class CoroutineFeignTest {
     internal class TestInterfaceAsyncBuilder {
         private val delegate = CoroutineFeign.builder<Void>()
             .decoder(DefaultDecoder()).encoder { `object`, bodyType, template ->
-                if (`object` is Map<*, *>) {
-                    template.body(Request.Body.of(Gson().toJson(`object`)))
-                } else {
-                    template.body(Request.Body.of(`object`.toString()))
-                }
+                    if (`object` is Map<*, *>) {
+                        template.body(Request.Body.of(Gson().toJson(`object`)));
+                    } else {
+                        template.body(Request.Body.of(`object`.toString()));
+                    }
+                return@encoder true;
             }
 
         fun requestInterceptor(requestInterceptor: RequestInterceptor?): TestInterfaceAsyncBuilder {

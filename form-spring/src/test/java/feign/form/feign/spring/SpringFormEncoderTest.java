@@ -23,6 +23,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import feign.Response;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,6 +77,8 @@ class SpringFormEncoderTest {
         .isEqualTo(file.getOriginalFilename() + ':' + file.getContentType() + ':' + folder);
   }
 
+  // TODO: enable when Spring Cloud OpenFeign migrates to Feign 14
+  @Disabled("Disabled until Spring Cloud OpenFeign migrates to Feign 14")
   @Test
   void upload4Test() throws Exception {
     var map = new HashMap<Object, Object>();

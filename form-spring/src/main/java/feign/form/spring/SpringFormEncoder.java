@@ -55,7 +55,7 @@ public class SpringFormEncoder extends FormEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     if (bodyType.equals(MultipartFile[].class)) {
       final var files = (MultipartFile[]) object;
@@ -63,11 +63,11 @@ public class SpringFormEncoder extends FormEncoder {
       for (var file : files) {
         data.put(file.getName(), file);
       }
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else if (bodyType.equals(MultipartFile.class)) {
       final var file = (MultipartFile) object;
       final var data = singletonMap(file.getName(), object);
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else if (isMultipartFileCollection(object)) {
       final var iterable = (Iterable<?>) object;
       final var data = new HashMap<String, Object>();
@@ -75,9 +75,9 @@ public class SpringFormEncoder extends FormEncoder {
         final var file = (MultipartFile) item;
         data.put(file.getName(), file);
       }
-      super.encode(data, MAP_STRING_WILDCARD, template);
+      return super.encode(data, MAP_STRING_WILDCARD, template);
     } else {
-      super.encode(object, bodyType, template);
+      return super.encode(object, bodyType, template);
     }
   }
 

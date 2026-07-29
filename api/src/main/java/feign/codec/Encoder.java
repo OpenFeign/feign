@@ -77,7 +77,9 @@ public interface Encoder {
    * @param bodyType the type the object should be encoded as. {@link #MAP_STRING_WILDCARD}
    *     indicates form encoding.
    * @param template the request template to populate.
-   * @throws EncodeException when encoding failed due to a checked exception.
+   * @return {@code true} if the encoder is able to handle the encode request, {@code false} if the
+   *     encoder cannot encode the request
+   * @throws EncodeException if this encoder should be able to encode the request but encoding fails
    */
-  void encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
+  boolean encode(Object object, Type bodyType, RequestTemplate template) throws EncodeException;
 }

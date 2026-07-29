@@ -40,8 +40,9 @@ public class Fastjson2Encoder implements Encoder, JsonEncoder {
   }
 
   @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
+  public boolean encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     template.body(Request.Body.of(JSON.toJSONBytes(object, features)));
+    return true;
   }
 }
