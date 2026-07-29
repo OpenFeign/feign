@@ -92,6 +92,6 @@ public class MultiEncoder implements Encoder {
    */
   @Override
   public String toString() {
-    return "DelegatingEncoder{" + "delegates=" + delegates + '}';
+    return "MultiEncoder{" + "delegates=" + delegates + '}';
   }
 }
