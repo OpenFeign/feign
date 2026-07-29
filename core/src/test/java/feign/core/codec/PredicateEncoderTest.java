@@ -21,15 +21,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import feign.RequestTemplate;
+import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import feign.RequestTemplate;
-import feign.codec.Encoder;
-import feign.codec.EncoderPredicate;
 
 @ExtendWith(MockitoExtension.class)
 class PredicateEncoderTest {
@@ -41,11 +40,11 @@ class PredicateEncoderTest {
   @Test
   void shouldEncode() {
 
-	String object = "Hello, World!";
-	Class<String> bodyType = String.class;
-	RequestTemplate requestTemplate = mock(RequestTemplate.class);
-	  
-	when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(true);
+    String object = "Hello, World!";
+    Class<String> bodyType = String.class;
+    RequestTemplate requestTemplate = mock(RequestTemplate.class);
+
+    when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(true);
     when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
 
     assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isTrue();
@@ -58,7 +57,7 @@ class PredicateEncoderTest {
     var object = "Hello, World!";
     var bodyType = String.class;
     var requestTemplate = mock(RequestTemplate.class);
-	  
+
     when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(false);
 
     assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isFalse();

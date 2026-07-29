@@ -23,14 +23,14 @@ import java.lang.reflect.Type;
 
 /**
  * An encoder that wraps another (delegate) encoder but blocks encoding if a predicate isn't met.
- * For example, this is useful for restricting the usage of a given Encoder to a given content type header. 
+ * For example, this is useful for restricting the usage of a given Encoder to a given content type
+ * header.
  */
 public class PredicateEncoder implements Encoder {
-	
-  /**
-   * The delegate that the encoding request will be passed to if the predicate is met.
-   */
+
+  /** The delegate that the encoding request will be passed to if the predicate is met. */
   private final Encoder delegate;
+
   private final EncoderPredicate predicate;
 
   public PredicateEncoder(EncoderPredicate predicate, Encoder delegate) {
