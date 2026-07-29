@@ -33,7 +33,7 @@ public class PredicateEncoder implements Encoder {
   private final Encoder delegate;
   private final EncoderPredicate predicate;
 
-  public PredicateEncoder(Encoder delegate, EncoderPredicate predicate) {
+  public PredicateEncoder(EncoderPredicate predicate, Encoder delegate) {
     this.delegate = delegate;
     this.predicate = predicate;
   }
