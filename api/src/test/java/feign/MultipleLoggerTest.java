@@ -22,10 +22,12 @@ import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.io.TempDirDeletionStrategy.IgnoreFailures;
 
 public class MultipleLoggerTest {
 
-  @TempDir public File tmp;
+  @TempDir(deletionStrategy = IgnoreFailures.class)
+  public File tmp;
 
   private static java.util.logging.Logger getInnerLogger(Logger.JavaLogger logger)
       throws Exception {
