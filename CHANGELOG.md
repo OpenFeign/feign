@@ -4,6 +4,12 @@
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 
+### Version 13.14
+
+* Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
+  request body. `HttpCacheInterceptor` includes QUERY in its default cacheable set and
+  incorporates a body hash into the cache key to reduce cross-body collisions.
+
 ### Version 13.12
 
 * `UrlencodedFormContentProcessor` now honors `CollectionFormat` from `@RequestLine`/`RequestTemplate` for array and

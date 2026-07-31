@@ -120,7 +120,9 @@ public class DefaultClient implements Client {
     }
 
     Integer length = connection.getContentLength();
-    if (length == -1) {
+    if (length < 0) {
+      // -1 signals unknown or above Integer.MAX_VALUE; any other negative value is a malformed
+      // header that HttpURLConnection surfaces verbatim
       length = null;
     }
     InputStream stream;
@@ -131,8 +133,11 @@ public class DefaultClient implements Client {
     }
     if (stream != null && this.isGzip(headers.get(CONTENT_ENCODING))) {
       stream = new GZIPInputStream(stream);
+      // the body is now decompressed, the Content-Length described the compressed bytes
+      length = null;
     } else if (stream != null && this.isDeflate(headers.get(CONTENT_ENCODING))) {
       stream = new InflaterInputStream(stream);
+      length = null;
     }
     return Response.builder()
         .status(status)
@@ -179,7 +184,6 @@ public class DefaultClient implements Client {
         if (field.equals(CONTENT_LENGTH)) {
           if (!gzipEncodedRequest && !deflateEncodedRequest) {
             contentLength = Integer.valueOf(value);
-            connection.addRequestProperty(field, value);
           }
         }
         // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
@@ -198,7 +202,8 @@ public class DefaultClient implements Client {
 
     Optional<Request.Body> body = request.body();
 
-    if (body.isPresent()) {
+    if (body.isPresent()
+        && (body.get().contentLength() != 0 || request.httpMethod() != Request.HttpMethod.GET)) {
       /*
        * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
        * retry logic applies to such requests.

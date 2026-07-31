@@ -28,7 +28,9 @@ import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.Response;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -70,6 +72,27 @@ class GsonCodecTest {
             .body("{\"foo\": 1}", UTF_8)
             .build();
     assertThat(map)
+        .isEqualTo(
+            new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()));
+  }
+
+  @Test
+  void decodesUsingResponseCharset() throws Exception {
+    Map<String, Object> expected = new LinkedHashMap<>();
+    expected.put("name", "ÁÉÍÓÚ");
+
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .headers(headers)
+            .body("{\"name\":\"ÁÉÍÓÚ\"}".getBytes(StandardCharsets.ISO_8859_1))
+            .build();
+    assertThat(expected)
         .isEqualTo(
             new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()));
   }

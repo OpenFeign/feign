@@ -46,6 +46,10 @@ public class GoogleHttpClientTest extends AbstractClientTest {
   @Test
   public void patch() {}
 
+  // NetHttpTransport is backed by HttpURLConnection, which does not support QUERY.
+  @Override
+  public void query() throws Exception {}
+
   @Override
   @Test
   public void parsesUnauthorizedResponseBody() {}

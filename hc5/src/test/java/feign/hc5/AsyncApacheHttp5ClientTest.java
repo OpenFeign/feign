@@ -148,6 +148,83 @@ public class AsyncApacheHttp5ClientTest {
     checkCFCompletedSoon(cf);
   }
 
+  @Test
+  void postGZIPEncodedBodyParam() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf =
+        api.gzipBody(Arrays.asList("netflix", "denominator", "password"));
+
+    assertThat(server.takeRequest())
+        .hasGzippedBody("[netflix, denominator, password]".getBytes(Util.UTF_8));
+
+    checkCFCompletedSoon(cf);
+  }
+
+  @Test
+  void postGZIPEncodedEmptyBodyParam() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf = api.gzipBody("");
+
+    assertThat(server.takeRequest()).hasGzippedBody(new byte[0]);
+
+    checkCFCompletedSoon(cf);
+  }
+
+  @Test
+  void postGZIPAndDeflateEncodedBodyParam() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder()
+            .requestInterceptor(req -> req.header("Content-Encoding", "gzip", "deflate"))
+            .target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf = api.body(Arrays.asList("netflix", "denominator", "password"));
+
+    assertThat(server.takeRequest())
+        .hasGzippedBody("[netflix, denominator, password]".getBytes(Util.UTF_8));
+
+    checkCFCompletedSoon(cf);
+  }
+
+  @Test
+  void postDeflateEncodedBodyParam() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf =
+        api.deflateBody(Arrays.asList("netflix", "denominator", "password"));
+
+    assertThat(server.takeRequest())
+        .hasDeflatedBody("[netflix, denominator, password]".getBytes(Util.UTF_8));
+
+    checkCFCompletedSoon(cf);
+  }
+
+  @Test
+  void postDeflateEncodedEmptyBodyParam() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    final TestInterfaceAsync api =
+        new TestInterfaceAsyncBuilder().target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf = api.deflateBody("");
+
+    assertThat(server.takeRequest()).hasDeflatedBody(new byte[0]);
+
+    checkCFCompletedSoon(cf);
+  }
+
   /**
    * The type of a parameter value may not be the desired type to encode as. Prefer the interface
    * type.
@@ -954,8 +1031,16 @@ public class AsyncApacheHttp5ClientTest {
     CompletableFuture<Void> gzipBody(List<String> contents);
 
     @RequestLine("POST /")
+    @Headers("Content-Encoding: gzip")
+    CompletableFuture<Void> gzipBody(String contents);
+
+    @RequestLine("POST /")
     @Headers("Content-Encoding: deflate")
     CompletableFuture<Void> deflateBody(List<String> contents);
+
+    @RequestLine("POST /")
+    @Headers("Content-Encoding: deflate")
+    CompletableFuture<Void> deflateBody(String contents);
 
     @RequestLine("POST /")
     CompletableFuture<Void> form(

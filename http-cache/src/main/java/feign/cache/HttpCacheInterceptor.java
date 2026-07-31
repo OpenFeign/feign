@@ -17,14 +17,19 @@ package feign.cache;
 
 import feign.Experimental;
 import feign.FeignException;
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
 import feign.interceptor.Invocation;
 import feign.interceptor.MethodInterceptor;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -36,7 +41,8 @@ import java.util.regex.Pattern;
  * <p>Successful responses (2xx) carrying an {@code ETag} or {@code Last-Modified} header are
  * stored. Responses with {@code Cache-Control: no-store} are skipped.
  *
- * <p>Default scope is HTTP {@code GET} and {@code HEAD}; override via {@link #cacheable(Function)}.
+ * <p>Default scope is HTTP {@code GET}, {@code HEAD}, and {@code QUERY}; override via {@link
+ * #cacheable(Function)}.
  *
  * <p><b>Important:</b> 304 detection relies on the configured {@link feign.codec.ErrorDecoder}
  * raising a {@link FeignException} for non-2xx responses (the default behaviour). If a custom error
@@ -129,12 +135,28 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
 
   private static String defaultKey(Invocation invocation) {
     RequestTemplate template = invocation.requestTemplate();
-    return invocation.methodMetadata().configKey() + "|" + template.method() + " " + template.url();
+    String base =
+        invocation.methodMetadata().configKey() + "|" + template.method() + " " + template.url();
+    Optional<Request.Body> body = template.requestBody();
+    if (body.isEmpty()) {
+      return base;
+    }
+    try {
+      return base + "|" + Arrays.hashCode(body.get().writeToByteArray());
+    } catch (IOException e) {
+      throw new UncheckedIOException("Unable to read request body to build the cache key", e);
+    }
   }
 
   private static Boolean defaultCacheable(RequestTemplate template) {
     String method = template.method();
-    return "GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method);
+    if (!"GET".equalsIgnoreCase(method)
+        && !"HEAD".equalsIgnoreCase(method)
+        && !"QUERY".equalsIgnoreCase(method)) {
+      return false;
+    }
+    // a body that can only be read once cannot be hashed into the cache key
+    return template.requestBody().map(Request.Body::isRepeatable).orElse(true);
   }
 
   private static boolean containsNoStore(Map<String, Collection<String>> headers) {

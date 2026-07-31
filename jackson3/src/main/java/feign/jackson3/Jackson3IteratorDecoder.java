@@ -15,7 +15,6 @@
  */
 package feign.jackson3;
 
-import static feign.Util.UTF_8;
 import static feign.Util.ensureClosed;
 
 import feign.Response;
@@ -75,7 +74,7 @@ public final class Jackson3IteratorDecoder implements Decoder {
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) return Util.emptyValueOf(type);
     if (response.body() == null) return null;
-    Reader reader = response.body().asReader(UTF_8);
+    Reader reader = response.body().asReader(response.charset());
     if (!reader.markSupported()) {
       reader = new BufferedReader(reader, 1);
     }

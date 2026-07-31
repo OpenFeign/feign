@@ -245,6 +245,28 @@ public abstract class AbstractClientTest {
     api.noPatchBody();
   }
 
+  /**
+   * Some client implementation tests should override this test if the QUERY operation is
+   * unsupported.
+   */
+  @Test
+  public void query() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+    server.enqueue(new MockResponse.Builder().build());
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.query("body")).isEqualTo("foo");
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasHeaders(
+            entry("Accept", Collections.singletonList("text/plain")),
+            entry("Content-Type", Collections.singletonList("application/json")),
+            entry("Content-Length", Collections.singletonList("4")))
+        .hasMethod("QUERY");
+  }
+
   @Test
   public void parsesResponseMissingLength() throws Exception {
     server.enqueue(new MockResponse.Builder().chunkedBody("foo", 1).build());
@@ -589,6 +611,10 @@ public abstract class AbstractClientTest {
     @RequestLine("PATCH /")
     @Headers("Accept: text/plain")
     String patch(String body);
+
+    @RequestLine("QUERY /")
+    @Headers({"Accept: text/plain", "Content-Type: application/json"})
+    String query(String body);
 
     @RequestLine("POST")
     String noPostBody();

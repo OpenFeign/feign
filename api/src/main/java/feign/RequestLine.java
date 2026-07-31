@@ -35,9 +35,10 @@ public @interface RequestLine {
    *
    * <p>The string must begin with a valid {@linkplain feign.Request.HttpMethod HTTP method name}
    * (e.g. {@linkplain feign.Request.HttpMethod#GET GET}, {@linkplain feign.Request.HttpMethod#POST
-   * POST}, {@linkplain feign.Request.HttpMethod#PUT PUT}), followed by a space and a URI template.
-   * If only the HTTP method is specified (e.g. {@code "DELETE"}), the request will use the base URL
-   * defined for the client.
+   * POST}, {@linkplain feign.Request.HttpMethod#PUT PUT}, {@linkplain
+   * feign.Request.HttpMethod#QUERY QUERY}), followed by a space and a URI template. If only the
+   * HTTP method is specified (e.g. {@code "DELETE"}), the request will use the base URL defined for
+   * the client.
    *
    * <p>Example:
    *

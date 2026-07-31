@@ -39,6 +39,7 @@ import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.async.methods.SimpleResponseConsumer;
 import org.apache.hc.client5.http.config.Configurable;
 import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.entity.DeflateCompressingEntity;
 import org.apache.hc.client5.http.entity.GzipCompressingEntity;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
@@ -194,6 +195,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     // request headers
     boolean hasAcceptHeader = false;
     boolean isGzip = false;
+    boolean isDeflate = false;
     for (final Map.Entry<String, Collection<String>> headerEntry : request.headers().entrySet()) {
       final String headerName = headerEntry.getKey();
       if (headerName.equalsIgnoreCase(ACCEPT_HEADER_NAME)) {
@@ -207,13 +209,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
       }
       if (headerName.equalsIgnoreCase(Util.CONTENT_ENCODING)) {
         isGzip = headerEntry.getValue().stream().anyMatch(Util.ENCODING_GZIP::equalsIgnoreCase);
-        boolean isDeflate =
+        isDeflate =
             headerEntry.getValue().stream().anyMatch(Util.ENCODING_DEFLATE::equalsIgnoreCase);
-        if (isDeflate) {
-          // DeflateCompressingEntity not available in hc5 yet
-          throw new IllegalArgumentException(
-              "Deflate Content-Encoding is not supported by feign-hc5");
-        }
       }
       for (final String headerValue : headerEntry.getValue()) {
         requestBuilder.addHeader(headerName, headerValue);
@@ -229,6 +226,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
       HttpEntity entity = new FeignBodyEntity(request.body().get(), getContentType(request));
       if (isGzip) {
         entity = new GzipCompressingEntity(entity);
+      } else if (isDeflate) {
+        entity = new DeflateCompressingEntity(entity);
       }
       requestBuilder.setEntity(entity);
     } else {
