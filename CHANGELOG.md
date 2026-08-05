@@ -1,5 +1,7 @@
 ### Version 14.0
 
+* `Http2ClientTest` no longer depends on live `nghttp2.org/httpbin` calls; patch/delete use MockWebServer and GET-with-body uses a local socket server so CI does not hang or fail when the external host is down. (https://github.com/OpenFeign/feign/issues/3483)
+
 * `DefaultEncoder` now supports streaming request bodies for `File`, `Path`, `InputStream`, and `Request.Body` types,
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
