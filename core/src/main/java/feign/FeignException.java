@@ -226,17 +226,13 @@ public class FeignException extends RuntimeException {
       Request request,
       byte[] body,
       Map<String, Collection<String>> headers) {
-    if (isClientError(status)) {
+    if (status >= 400 && status < 500) {
       return clientErrorStatus(status, message, request, body, headers);
     }
-    if (isServerError(status)) {
+    if (status >= 500 && status <= 599) {
       return serverErrorStatus(status, message, request, body, headers);
     }
     return new FeignException(status, message, request, body, headers);
-  }
-
-  private static boolean isClientError(int status) {
-    return status >= 400 && status < 500;
   }
 
   private static FeignClientException clientErrorStatus(
@@ -245,36 +241,36 @@ public class FeignException extends RuntimeException {
       Request request,
       byte[] body,
       Map<String, Collection<String>> headers) {
-    switch (status) {
-      case 400:
+    HttpStatus httpStatus = HttpStatus.from(status);
+    if (httpStatus == null) {
+      return new FeignClientException(status, message, request, body, headers);
+    }
+    switch (httpStatus) {
+      case BAD_REQUEST:
         return new BadRequest(message, request, body, headers);
-      case 401:
+      case UNAUTHORIZED:
         return new Unauthorized(message, request, body, headers);
-      case 403:
+      case FORBIDDEN:
         return new Forbidden(message, request, body, headers);
-      case 404:
+      case NOT_FOUND:
         return new NotFound(message, request, body, headers);
-      case 405:
+      case METHOD_NOT_ALLOWED:
         return new MethodNotAllowed(message, request, body, headers);
-      case 406:
+      case NOT_ACCEPTABLE:
         return new NotAcceptable(message, request, body, headers);
-      case 409:
+      case CONFLICT:
         return new Conflict(message, request, body, headers);
-      case 410:
+      case GONE:
         return new Gone(message, request, body, headers);
-      case 415:
+      case UNSUPPORTED_MEDIA_TYPE:
         return new UnsupportedMediaType(message, request, body, headers);
-      case 429:
+      case TOO_MANY_REQUESTS:
         return new TooManyRequests(message, request, body, headers);
-      case 422:
+      case UNPROCESSABLE_ENTITY:
         return new UnprocessableEntity(message, request, body, headers);
       default:
         return new FeignClientException(status, message, request, body, headers);
     }
-  }
-
-  private static boolean isServerError(int status) {
-    return status >= 500 && status <= 599;
   }
 
   private static FeignServerException serverErrorStatus(
@@ -283,16 +279,20 @@ public class FeignException extends RuntimeException {
       Request request,
       byte[] body,
       Map<String, Collection<String>> headers) {
-    switch (status) {
-      case 500:
+    HttpStatus httpStatus = HttpStatus.from(status);
+    if (httpStatus == null) {
+      return new FeignServerException(status, message, request, body, headers);
+    }
+    switch (httpStatus) {
+      case INTERNAL_SERVER_ERROR:
         return new InternalServerError(message, request, body, headers);
-      case 501:
+      case NOT_IMPLEMENTED:
         return new NotImplemented(message, request, body, headers);
-      case 502:
+      case BAD_GATEWAY:
         return new BadGateway(message, request, body, headers);
-      case 503:
+      case SERVICE_UNAVAILABLE:
         return new ServiceUnavailable(message, request, body, headers);
-      case 504:
+      case GATEWAY_TIMEOUT:
         return new GatewayTimeout(message, request, body, headers);
       default:
         return new FeignServerException(status, message, request, body, headers);
@@ -324,77 +324,77 @@ public class FeignException extends RuntimeException {
   public static class BadRequest extends FeignClientException {
     public BadRequest(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(400, message, request, body, headers);
+      super(HttpStatus.BAD_REQUEST.code(), message, request, body, headers);
     }
   }
 
   public static class Unauthorized extends FeignClientException {
     public Unauthorized(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(401, message, request, body, headers);
+      super(HttpStatus.UNAUTHORIZED.code(), message, request, body, headers);
     }
   }
 
   public static class Forbidden extends FeignClientException {
     public Forbidden(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(403, message, request, body, headers);
+      super(HttpStatus.FORBIDDEN.code(), message, request, body, headers);
     }
   }
 
   public static class NotFound extends FeignClientException {
     public NotFound(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(404, message, request, body, headers);
+      super(HttpStatus.NOT_FOUND.code(), message, request, body, headers);
     }
   }
 
   public static class MethodNotAllowed extends FeignClientException {
     public MethodNotAllowed(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(405, message, request, body, headers);
+      super(HttpStatus.METHOD_NOT_ALLOWED.code(), message, request, body, headers);
     }
   }
 
   public static class NotAcceptable extends FeignClientException {
     public NotAcceptable(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(406, message, request, body, headers);
+      super(HttpStatus.NOT_ACCEPTABLE.code(), message, request, body, headers);
     }
   }
 
   public static class Conflict extends FeignClientException {
     public Conflict(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(409, message, request, body, headers);
+      super(HttpStatus.CONFLICT.code(), message, request, body, headers);
     }
   }
 
   public static class Gone extends FeignClientException {
     public Gone(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(410, message, request, body, headers);
+      super(HttpStatus.GONE.code(), message, request, body, headers);
     }
   }
 
   public static class UnsupportedMediaType extends FeignClientException {
     public UnsupportedMediaType(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(415, message, request, body, headers);
+      super(HttpStatus.UNSUPPORTED_MEDIA_TYPE.code(), message, request, body, headers);
     }
   }
 
   public static class TooManyRequests extends FeignClientException {
     public TooManyRequests(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(429, message, request, body, headers);
+      super(HttpStatus.TOO_MANY_REQUESTS.code(), message, request, body, headers);
     }
   }
 
   public static class UnprocessableEntity extends FeignClientException {
     public UnprocessableEntity(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(422, message, request, body, headers);
+      super(HttpStatus.UNPROCESSABLE_ENTITY.code(), message, request, body, headers);
     }
   }
 
@@ -412,35 +412,35 @@ public class FeignException extends RuntimeException {
   public static class InternalServerError extends FeignServerException {
     public InternalServerError(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(500, message, request, body, headers);
+      super(HttpStatus.INTERNAL_SERVER_ERROR.code(), message, request, body, headers);
     }
   }
 
   public static class NotImplemented extends FeignServerException {
     public NotImplemented(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(501, message, request, body, headers);
+      super(HttpStatus.NOT_IMPLEMENTED.code(), message, request, body, headers);
     }
   }
 
   public static class BadGateway extends FeignServerException {
     public BadGateway(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(502, message, request, body, headers);
+      super(HttpStatus.BAD_GATEWAY.code(), message, request, body, headers);
     }
   }
 
   public static class ServiceUnavailable extends FeignServerException {
     public ServiceUnavailable(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(503, message, request, body, headers);
+      super(HttpStatus.SERVICE_UNAVAILABLE.code(), message, request, body, headers);
     }
   }
 
   public static class GatewayTimeout extends FeignServerException {
     public GatewayTimeout(
         String message, Request request, byte[] body, Map<String, Collection<String>> headers) {
-      super(504, message, request, body, headers);
+      super(HttpStatus.GATEWAY_TIMEOUT.code(), message, request, body, headers);
     }
   }
 
