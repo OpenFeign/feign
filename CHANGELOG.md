@@ -3,6 +3,8 @@
 * Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
   request body. `HttpCacheInterceptor` includes QUERY in its default cacheable set and
   incorporates a body hash into the cache key to reduce cross-body collisions.
+* Flatten `feign-bom` on install/deploy so importing the BOM does not pull `feign-parent`
+  dependency management (for example Jackson) into consumer projects such as Spring Boot.
 
 ### Version 13.12
 
