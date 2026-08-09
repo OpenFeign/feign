@@ -167,6 +167,15 @@ public class DefaultClientTest extends AbstractClientTest {
 
   @Test
   @Override
+  void emptyStringBodyForPost() throws Exception {
+    super.emptyStringBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasNoHeaderNamed("Content-Type");
+  }
+
+  @Test
+  @Override
   public void noResponseBodyForPut() throws Exception {
     super.noResponseBodyForPut();
     MockWebServerAssertions.assertThat(server.takeRequest())
