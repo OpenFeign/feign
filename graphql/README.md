@@ -100,6 +100,78 @@ The processor generates a record for the input type as well:
 public record CreateUserInput(String name, String email) {}
 ```
 
+## Subscriptions
+
+`subscription` operations are detected from the query text and executed over the
+[graphql-transport-ws](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md) WebSocket
+protocol instead of HTTP. The endpoint is the target URL with its scheme swapped to `ws`/`wss`, and
+one connection is opened per call.
+
+Queries, mutations and subscriptions can live on the same interface: only subscriptions are routed
+to a WebSocket, everything else goes over the regular Feign client — including whichever one you
+configured with `.client(...)` — with its own timeouts, retryer and interceptors unchanged.
+
+The return type decides how many events you get and whether the call blocks:
+
+| Return type | Events | Behaviour |
+| --- | --- | --- |
+| `T` | first only | blocks until the first event, then unsubscribes |
+| `Optional<T>` | first only | as above, empty if the server completes without one |
+| `CompletableFuture<T>` | first only | returns immediately, completes with the first event |
+| `Stream<T>` | all | returns once subscribed, then blocks on each element |
+| `Flow.Publisher<T>` | all | returns immediately, elements are pushed to the subscriber |
+
+```java
+@GraphqlSchema("my-schema.graphql")
+interface StockApi {
+
+  @GraphqlQuery("subscription($symbol: String!) { priceChanged(symbol: $symbol) { symbol price } }")
+  Price nextPrice(@Param("symbol") String symbol);
+
+  @GraphqlQuery("subscription($symbol: String!) { priceChanged(symbol: $symbol) { symbol price } }")
+  Stream<Price> onPrice(@Param("symbol") String symbol);
+
+  @GraphqlQuery("subscription($symbol: String!) { priceChanged(symbol: $symbol) { symbol price } }")
+  Flow.Publisher<Price> publishPrice(@Param("symbol") String symbol);
+}
+```
+
+The single-event forms close the subscription as soon as they have their event. The multi-event
+forms hand you the lifecycle: closing the `Stream` — or cancelling the `Flow.Subscription` — sends
+`complete` and closes the WebSocket, so consume a `Stream` with try-with-resources:
+
+```java
+try (var prices = api.onPrice("ACME")) {
+  prices.forEach(System.out::println);
+}
+```
+
+`Stream` here is the ordinary `java.util.stream.Stream`: synchronous and pull-based, with no timeout
+facilities of its own. So the blocking forms — `T`, `Optional<T>` and `Stream<T>` — are bounded by
+an event timeout, which defaults to **60 seconds** and applies to each event rather than to the
+subscription as a whole. Override it when creating the capability:
+
+```java
+Feign.builder()
+    // wait at most 5s for each event; Duration.ZERO waits indefinitely
+    .addCapability(new GraphqlCapability(new JacksonCodec(), Duration.ofSeconds(5)))
+    .target(StockApi.class, "https://example.com/graphql");
+```
+
+Exceeding it raises `SocketTimeoutException` from the blocking call or the stream element. A
+subscription that can legitimately sit idle for longer needs `Duration.ZERO`.
+
+`Flow.Publisher<T>` and `CompletableFuture<T>` are deliberately *not* bounded by it — their caller
+already owns the deadline, via cancelling the subscription or
+`get(timeout, unit)`/`orTimeout(...)`.
+
+`Flow.Publisher` is `java.util.concurrent.Flow.Publisher`, so it plugs into Reactor
+(`JdkFlowAdapter.flowPublisherToFlux`) or RxJava (`Flowable.fromPublisher`) without extra
+dependencies here.
+
+A server `error` message, or `errors` inside a payload, is raised as `GraphqlErrorException`.
+Request headers (for example `Authorization`) are forwarded to the WebSocket handshake.
+
 ## Custom Scalars
 
 When your schema defines custom scalars, map them to Java types using `@Scalar` on default methods:
