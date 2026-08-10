@@ -398,6 +398,49 @@ class GraphqlSubscriptionTest {
   }
 
   @Test
+  void slowConsumerStillReceivesEveryEvent() {
+    var received = new CopyOnWriteArrayList<String>();
+    enqueueServer(
+        received,
+        String.format(NEXT, "ACME", "1"),
+        String.format(NEXT, "ACME", "2"),
+        String.format(NEXT, "ACME", "3"),
+        String.format(NEXT, "ACME", "4"),
+        String.format(NEXT, "ACME", "5"),
+        "{\"id\":\"{id}\",\"type\":\"complete\"}");
+
+    // Reads are demand-driven, so a consumer that lags must still be handed every event in order.
+    // Broken demand accounting stalls here until the event timeout instead.
+    List<Price> prices;
+    try (var stream = buildClient().onPrice("ACME")) {
+      prices =
+          stream
+              .peek(
+                  price -> {
+                    try {
+                      Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                    }
+                  })
+              .toList();
+    }
+
+    assertThat(prices).extracting(price -> price.price).containsExactly(1.0, 2.0, 3.0, 4.0, 5.0);
+  }
+
+  @Test
+  void cancellingTheFutureClosesTheSubscription() {
+    var received = new CopyOnWriteArrayList<String>();
+    enqueueServer(received);
+
+    var future = buildClient().futurePrice("ACME");
+    assertThat(future.cancel(true)).isTrue();
+
+    // tearDown asserts the web socket was closed rather than left hanging on a cancelled future
+  }
+
+  @Test
   void defaultEventTimeoutIsOneMinute() {
     assertThat(GraphqlDecoder.DEFAULT_EVENT_TIMEOUT).isEqualTo(Duration.ofMinutes(1));
   }

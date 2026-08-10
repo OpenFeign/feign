@@ -32,8 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 @Experimental
@@ -44,17 +46,19 @@ public class GraphqlDecoder implements Decoder {
 
   private final JsonDecoder jsonDecoder;
   private final long eventTimeoutMillis;
+  private final Executor executor;
 
   public GraphqlDecoder(JsonDecoder jsonDecoder) {
-    this(jsonDecoder, DEFAULT_EVENT_TIMEOUT);
+    this(jsonDecoder, DEFAULT_EVENT_TIMEOUT, Runnable::run);
   }
 
-  public GraphqlDecoder(JsonDecoder jsonDecoder, Duration eventTimeout) {
+  public GraphqlDecoder(JsonDecoder jsonDecoder, Duration eventTimeout, Executor executor) {
     if (eventTimeout.isNegative()) {
       throw new IllegalArgumentException("eventTimeout must not be negative: " + eventTimeout);
     }
     this.jsonDecoder = jsonDecoder;
     this.eventTimeoutMillis = eventTimeout.toMillis();
+    this.executor = executor;
   }
 
   @Override
@@ -199,7 +203,14 @@ public class GraphqlDecoder implements Decoder {
 
   private CompletableFuture<Object> futureOf(Subscription subscription, Type elementType) {
     var future = new CompletableFuture<>();
-    pump(
+    // Cancelling must reach the socket, or a cancelled future leaks the connection and its worker.
+    future.whenComplete(
+        (ignored, error) -> {
+          if (future.isCancelled()) {
+            subscription.unsubscribe();
+          }
+        });
+    executor.execute(
         () -> {
           try {
             future.complete(first(subscription, elementType, 0).orElse(null));
@@ -224,33 +235,28 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private Flow.Publisher<Object> publish(Subscription subscription, Type elementType) {
-    var publisher = new SubmissionPublisher<Object>();
-    pump(
-        () -> {
-          try (var elements = elements(subscription, elementType, 0)) {
-            var iterator = elements.iterator();
-            var subscribed = false;
-            while (iterator.hasNext()) {
-              publisher.submit(iterator.next());
-              // hasSubscribers() is also false before the first subscribe arrives, hence the
-              // latch — buffered elements hold until then.
-              if (subscribed && !publisher.hasSubscribers()) {
-                break;
+    var publisher = new SubmissionPublisher<>(executor, Flow.defaultBufferSize());
+    var started = new AtomicBoolean();
+    // Pumping starts on the first subscribe, so hasSubscribers() is meaningful from the first
+    // element onwards and there is no pre-subscribe window to latch around.
+    return subscriber -> {
+      publisher.subscribe(subscriber);
+      if (!started.compareAndSet(false, true)) {
+        return;
+      }
+      executor.execute(
+          () -> {
+            try (var elements = elements(subscription, elementType, 0)) {
+              var iterator = elements.iterator();
+              while (iterator.hasNext() && publisher.hasSubscribers()) {
+                publisher.submit(iterator.next());
               }
-              subscribed |= publisher.hasSubscribers();
+              publisher.close();
+            } catch (Throwable e) {
+              publisher.closeExceptionally(e);
             }
-            publisher.close();
-          } catch (Throwable e) {
-            publisher.closeExceptionally(e);
-          }
-        });
-    return publisher;
-  }
-
-  private static void pump(Runnable task) {
-    var thread = new Thread(task, "feign-graphql-subscription");
-    thread.setDaemon(true);
-    thread.start();
+          });
+    };
   }
 
   private static boolean isRawType(Type type, Class<?> raw) {

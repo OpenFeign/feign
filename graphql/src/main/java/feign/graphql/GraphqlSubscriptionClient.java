@@ -27,6 +27,7 @@ import feign.codec.JsonDecoder;
 import feign.codec.JsonEncoder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
@@ -204,7 +205,9 @@ public class GraphqlSubscriptionClient implements Client {
      */
     private final String operationId = UUID.randomUUID().toString();
 
-    private final BlockingQueue<Object> events = new LinkedBlockingQueue<>();
+    /** Bounded: demand-driven reads keep this near empty, the capacity is a safety net. */
+    private final BlockingQueue<Object> events = new LinkedBlockingQueue<>(1024);
+
     private final StringBuilder partial = new StringBuilder();
     private final Request request;
     private final GraphqlContract.QueryMetadata meta;
@@ -217,6 +220,7 @@ public class GraphqlSubscriptionClient implements Client {
     private final Operation operation;
 
     private final AtomicBoolean detached = new AtomicBoolean();
+    private final AtomicBoolean unsubscribed = new AtomicBoolean();
 
     private volatile WebSocket webSocket;
     private CompletableFuture<?> sends = CompletableFuture.completedFuture(null);
@@ -277,53 +281,74 @@ public class GraphqlSubscriptionClient implements Client {
     @Override
     public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
       partial.append(data);
-      if (last) {
-        var text = partial.toString();
-        partial.setLength(0);
-        handle(ws, text);
+      if (!last) {
+        ws.request(1);
+        return null;
       }
-      ws.request(1);
+      var text = partial.toString();
+      partial.setLength(0);
+      // Only control frames pull the next one eagerly. A queued payload waits for the consumer to
+      // take it, which is what bounds the queue.
+      if (!handle(ws, text)) {
+        ws.request(1);
+      }
       return null;
     }
 
     @Override
     public void onError(WebSocket ws, Throwable error) {
-      events.add(error);
+      publish(error);
     }
 
     @Override
     public CompletionStage<?> onClose(WebSocket ws, int statusCode, String reason) {
-      events.add(DONE);
+      publish(DONE);
       return null;
     }
 
-    private void handle(WebSocket ws, String text) {
+    /**
+     * @return true when this message queued an event, so the next frame waits for the consumer.
+     */
+    private boolean handle(WebSocket ws, String text) {
       ServerMessage message;
       try {
         message = decode(text, ServerMessage.class);
       } catch (IOException | RuntimeException e) {
-        events.add(e);
-        return;
+        return publish(e);
       }
       if (message == null || (message.id() != null && !message.id().equals(operationId))) {
-        return;
+        return false;
       }
 
-      switch (message.type()) {
-        case "connection_ack" ->
-            send(ws, new ClientMessage.Subscribe(operationId, "subscribe", operation));
-        case "next" -> events.add(message.payloadFields());
+      return switch (message.type()) {
+        case "connection_ack" -> {
+          send(ws, new ClientMessage.Subscribe(operationId, "subscribe", operation));
+          yield false;
+        }
+        case "next" -> publish(message.payloadFields());
         case "error" ->
-            events.add(
+            publish(
                 new GraphqlErrorException(
                     HttpURLConnection.HTTP_OK,
                     GraphqlContract.extractOperationField(meta.query),
                     String.valueOf(message.payload()),
                     request));
-        case "complete" -> events.add(DONE);
-        case "ping" -> send(ws, new ClientMessage.Control("pong"));
-        default -> {}
+        case "complete" -> publish(DONE);
+        case "ping" -> {
+          send(ws, new ClientMessage.Control("pong"));
+          yield false;
+        }
+        default -> false;
+      };
+    }
+
+    private boolean publish(Object event) {
+      if (!events.offer(event)) {
+        // Unreachable while reads are demand-driven; failing loudly beats growing without bound.
+        events.clear();
+        events.offer(new IllegalStateException("GraphQL subscription event queue overflowed"));
       }
+      return true;
     }
 
     private <T> T decode(String json, Class<T> type) throws IOException {
@@ -337,10 +362,22 @@ public class GraphqlSubscriptionClient implements Client {
       return type.cast(jsonDecoder.decode(envelope, type));
     }
 
-    /** Sends are serialized: the JDK rejects a send while another is still in flight. */
+    /**
+     * Sends are serialized: the JDK rejects a send while another is still in flight. A failure is
+     * surfaced to the consumer and the chain reset, so it cannot silently swallow later sends.
+     */
     private synchronized void send(WebSocket ws, ClientMessage message) {
       var json = toJson(message);
-      sends = sends.thenCompose(ignored -> ws.sendText(json, true)).thenApply(ignored -> null);
+      sends =
+          sends
+              .thenCompose(ignored -> ws.sendText(json, true))
+              .handle(
+                  (ignored, error) -> {
+                    if (error != null) {
+                      publish(error);
+                    }
+                    return null;
+                  });
     }
 
     private String toJson(ClientMessage message) {
@@ -350,13 +387,17 @@ public class GraphqlSubscriptionClient implements Client {
     }
 
     void unsubscribe() {
+      if (!unsubscribed.compareAndSet(false, true)) {
+        return;
+      }
       var ws = webSocket;
-      events.add(DONE);
+      publish(DONE);
       if (ws == null) {
         return;
       }
-      send(ws, new ClientMessage.Complete(operationId, "complete"));
+      ws.request(1); // let the closing handshake be delivered
       synchronized (this) {
+        send(ws, new ClientMessage.Complete(operationId, "complete"));
         // whenComplete, not thenRun: the socket must close even if an earlier send failed.
         sends.whenComplete((ignored, error) -> ws.sendClose(WebSocket.NORMAL_CLOSURE, ""));
       }
@@ -430,17 +471,24 @@ public class GraphqlSubscriptionClient implements Client {
 
       private Object take() {
         try {
-          if (timeoutMillis <= 0) {
-            return events.take();
+          var event =
+              timeoutMillis <= 0
+                  ? events.take()
+                  : events.poll(timeoutMillis, TimeUnit.MILLISECONDS);
+          if (event == null) {
+            return new SocketTimeoutException(
+                "no GraphQL subscription event within " + timeoutMillis + "ms");
           }
-          var event = events.poll(timeoutMillis, TimeUnit.MILLISECONDS);
-          return event != null
-              ? event
-              : new SocketTimeoutException(
-                  "no GraphQL subscription event within " + timeoutMillis + "ms");
+          if (event != DONE) {
+            var ws = webSocket;
+            if (ws != null) {
+              ws.request(1); // consuming an event is what authorises the next read
+            }
+          }
+          return event;
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
-          return DONE;
+          return new InterruptedIOException("interrupted awaiting a GraphQL subscription event");
         }
       }
     }

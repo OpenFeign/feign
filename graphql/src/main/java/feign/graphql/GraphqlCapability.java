@@ -27,6 +27,11 @@ import feign.codec.JsonDecoder;
 import feign.codec.JsonEncoder;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Experimental
 public class GraphqlCapability implements Capability {
@@ -52,6 +57,15 @@ public class GraphqlCapability implements Capability {
     this(codec.encoder(), codec.decoder(), eventTimeout);
   }
 
+  /**
+   * @param executor runs the worker behind each {@code Flow.Publisher} and {@code
+   *     CompletableFuture} subscription, and delivers to their subscribers. Supply your own to own
+   *     the lifecycle; the default is bounded and daemon, and is never shut down.
+   */
+  public GraphqlCapability(JsonCodec codec, Duration eventTimeout, Executor executor) {
+    this(codec.encoder(), codec.decoder(), eventTimeout, executor);
+  }
+
   public GraphqlCapability(JsonEncoder encoder, JsonDecoder decoder) {
     this(encoder, decoder, GraphqlDecoder.DEFAULT_EVENT_TIMEOUT);
   }
@@ -60,11 +74,40 @@ public class GraphqlCapability implements Capability {
    * @param eventTimeout see {@link #GraphqlCapability(JsonCodec, Duration)}
    */
   public GraphqlCapability(JsonEncoder encoder, JsonDecoder decoder, Duration eventTimeout) {
+    this(encoder, decoder, eventTimeout, defaultExecutor());
+  }
+
+  /**
+   * @param executor see {@link #GraphqlCapability(JsonCodec, Duration, Executor)}
+   */
+  public GraphqlCapability(
+      JsonEncoder encoder, JsonDecoder decoder, Duration eventTimeout, Executor executor) {
     this.graphqlEncoder = new GraphqlEncoder(encoder, contract);
-    this.graphqlDecoder = new GraphqlDecoder(decoder, eventTimeout);
+    this.graphqlDecoder = new GraphqlDecoder(decoder, eventTimeout, executor);
     this.interceptor = new GraphqlRequestInterceptor(encoder, contract);
     this.jsonEncoder = encoder;
     this.jsonDecoder = decoder;
+  }
+
+  /**
+   * Bounded and daemon, so a runaway subscription count fails fast rather than exhausting threads.
+   * A synchronous handoff queue is deliberate: subscription workers are long-lived, so queueing
+   * them would hide exhaustion until the heap gave out.
+   */
+  private static Executor defaultExecutor() {
+    var threads = new AtomicLong();
+    return new ThreadPoolExecutor(
+        0,
+        Math.max(8, Runtime.getRuntime().availableProcessors() * 4),
+        60L,
+        TimeUnit.SECONDS,
+        new SynchronousQueue<>(),
+        runnable -> {
+          var thread =
+              new Thread(runnable, "feign-graphql-subscription-" + threads.incrementAndGet());
+          thread.setDaemon(true);
+          return thread;
+        });
   }
 
   @Override

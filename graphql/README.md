@@ -163,7 +163,18 @@ subscription that can legitimately sit idle for longer needs `Duration.ZERO`.
 
 `Flow.Publisher<T>` and `CompletableFuture<T>` are deliberately *not* bounded by it — their caller
 already owns the deadline, via cancelling the subscription or
-`get(timeout, unit)`/`orTimeout(...)`.
+`get(timeout, unit)`/`orTimeout(...)`. Cancelling either one closes the underlying WebSocket.
+
+Those two asynchronous forms each need a worker for as long as the subscription is open. They run on
+a bounded daemon pool by default; pass your own to own the lifecycle:
+
+```java
+new GraphqlCapability(new JacksonCodec(), Duration.ofSeconds(5), myExecutor)
+```
+
+Reads are demand-driven — the client asks the socket for another frame only once the consumer has
+taken the previous event — so a slow consumer applies backpressure to the server instead of growing
+a queue in memory.
 
 `Flow.Publisher` is `java.util.concurrent.Flow.Publisher`, so it plugs into Reactor
 (`JdkFlowAdapter.flowPublisherToFlux`) or RxJava (`Flowable.fromPublisher`) without extra
