@@ -72,7 +72,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
-        <version>1.7.3</version>
+        <version>${flatten-maven-plugin.version}</version>
         <configuration>
           <flattenMode>bom</flattenMode>
           <pomElements>
@@ -82,19 +82,28 @@
         <executions>
           <execution>
             <id>flatten</id>
-            <phase>process-resources</phase>
             <goals>
               <goal>flatten</goal>
             </goals>
+            <phase>process-resources</phase>
           </execution>
           <execution>
             <id>flatten.clean</id>
-            <phase>clean</phase>
             <goals>
               <goal>clean</goal>
             </goals>
+            <phase>clean</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.ekryd.sortpom</groupId>
+        <artifactId>sortpom-maven-plugin</artifactId>
+        <!-- flatten swaps project.file for .flattened-pom.xml, so point sortpom back at
+             the committed POM to keep it under format enforcement. -->
+        <configuration>
+          <pomFile>${project.basedir}/pom.xml</pomFile>
+        </configuration>
       </plugin>
     </plugins>
   </build>
