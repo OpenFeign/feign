@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -210,14 +211,19 @@ public class GraphqlDecoder implements Decoder {
             subscription.unsubscribe();
           }
         });
-    executor.execute(
-        () -> {
-          try {
-            future.complete(first(subscription, elementType, 0).orElse(null));
-          } catch (Throwable e) {
-            future.completeExceptionally(e);
-          }
-        });
+    try {
+      executor.execute(
+          () -> {
+            try {
+              future.complete(first(subscription, elementType, 0).orElse(null));
+            } catch (Throwable e) {
+              future.completeExceptionally(e);
+            }
+          });
+    } catch (RejectedExecutionException e) {
+      subscription.unsubscribe();
+      future.completeExceptionally(e);
+    }
     return future;
   }
 
@@ -235,7 +241,9 @@ public class GraphqlDecoder implements Decoder {
   }
 
   private Flow.Publisher<Object> publish(Subscription subscription, Type elementType) {
-    var publisher = new SubmissionPublisher<>(executor, Flow.defaultBufferSize());
+    // Runnable::run delivers on the pump thread: one worker per subscription in total, delivery can
+    // never be rejected by a busy pool, and onNext is inherently ordered.
+    var publisher = new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
     var started = new AtomicBoolean();
     // Pumping starts on the first subscribe, so hasSubscribers() is meaningful from the first
     // element onwards and there is no pre-subscribe window to latch around.
@@ -244,18 +252,24 @@ public class GraphqlDecoder implements Decoder {
       if (!started.compareAndSet(false, true)) {
         return;
       }
-      executor.execute(
-          () -> {
-            try (var elements = elements(subscription, elementType, 0)) {
-              var iterator = elements.iterator();
-              while (iterator.hasNext() && publisher.hasSubscribers()) {
-                publisher.submit(iterator.next());
+      try {
+        executor.execute(
+            () -> {
+              try (var elements = elements(subscription, elementType, 0)) {
+                var iterator = elements.iterator();
+                while (iterator.hasNext() && publisher.hasSubscribers()) {
+                  publisher.submit(iterator.next());
+                }
+                publisher.close();
+              } catch (Throwable e) {
+                publisher.closeExceptionally(e);
               }
-              publisher.close();
-            } catch (Throwable e) {
-              publisher.closeExceptionally(e);
-            }
-          });
+            });
+      } catch (RejectedExecutionException e) {
+        // A subscriber must always get a terminal signal; stranding it is worse than failing it.
+        subscription.unsubscribe();
+        publisher.closeExceptionally(e);
+      }
     };
   }
 

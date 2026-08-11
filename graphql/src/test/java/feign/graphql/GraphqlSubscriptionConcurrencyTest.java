@@ -24,10 +24,14 @@ import feign.jackson.JacksonCodec;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Flow;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -62,6 +66,11 @@ class GraphqlSubscriptionConcurrencyTest {
 
   private final AtomicInteger openSockets = new AtomicInteger();
 
+  /**
+   * When false the server acknowledges the subscribe and then stays quiet, as a real feed would.
+   */
+  private volatile boolean emitEvents = true;
+
   public static class Price {
     public String symbol;
     public double price;
@@ -78,6 +87,11 @@ class GraphqlSubscriptionConcurrencyTest {
         "subscription onPrice($symbol: String!) {"
             + " priceChanged(symbol: $symbol) { symbol price } }")
     Flow.Publisher<Price> publishPrice(String symbol);
+
+    @GraphqlQuery(
+        "subscription onPrice($symbol: String!) {"
+            + " priceChanged(symbol: $symbol) { symbol price } }")
+    CompletableFuture<Price> futurePrice(String symbol);
   }
 
   @BeforeEach
@@ -120,6 +134,9 @@ class GraphqlSubscriptionConcurrencyTest {
         if (!"subscribe".equals(type)) {
           return;
         }
+        if (!emitEvents) {
+          return;
+        }
         var id = message.get("id").asText();
         var symbol = message.get("payload").get("variables").get("symbol").asText();
         for (var i = 0; i < EVENTS_EACH; i++) {
@@ -154,6 +171,42 @@ class GraphqlSubscriptionConcurrencyTest {
     return Feign.builder()
         .addCapability(new GraphqlCapability(new JacksonCodec(mapper), Duration.ofSeconds(30)))
         .target(StockApi.class, server.url("/graphql").toString());
+  }
+
+  private StockApi buildClient(Executor executor) {
+    return Feign.builder()
+        .addCapability(
+            new GraphqlCapability(new JacksonCodec(mapper), Duration.ofSeconds(30), executor))
+        .target(StockApi.class, server.url("/graphql").toString());
+  }
+
+  private int drain(Flow.Publisher<Price> publisher) throws Exception {
+    var delivered = new AtomicInteger();
+    var done = new CountDownLatch(1);
+    publisher.subscribe(
+        new Flow.Subscriber<Price>() {
+          @Override
+          public void onSubscribe(Flow.Subscription subscription) {
+            subscription.request(Long.MAX_VALUE);
+          }
+
+          @Override
+          public void onNext(Price item) {
+            delivered.incrementAndGet();
+          }
+
+          @Override
+          public void onError(Throwable throwable) {
+            done.countDown();
+          }
+
+          @Override
+          public void onComplete() {
+            done.countDown();
+          }
+        });
+    assertThat(done.await(60, TimeUnit.SECONDS)).isTrue();
+    return delivered.get();
   }
 
   private <T> List<T> runAllAtOnce(List<Callable<T>> tasks) throws Exception {
@@ -254,6 +307,62 @@ class GraphqlSubscriptionConcurrencyTest {
             .toList();
 
     assertThat(runAllAtOnce(tasks)).containsOnly(EVENTS_EACH);
+    assertThat(closed.await(30, TimeUnit.SECONDS)).isTrue();
+  }
+
+  @Test
+  void aPoolSizedForTheSubscriptionsIsEnough() throws Exception {
+    // One worker per open subscription is the documented cost. Needing a second thread per
+    // subscription for delivery would starve this pool and hang instead.
+    var pool = Executors.newFixedThreadPool(SUBSCRIPTIONS);
+    try {
+      var api = buildClient(pool);
+      List<Callable<Integer>> tasks =
+          IntStream.range(0, SUBSCRIPTIONS)
+              .<Callable<Integer>>mapToObj(index -> () -> drain(api.publishPrice("SYM" + index)))
+              .toList();
+
+      assertThat(runAllAtOnce(tasks)).containsOnly(EVENTS_EACH);
+    } finally {
+      pool.shutdownNow();
+    }
+  }
+
+  @Test
+  void aPoolTooSmallRefusesRatherThanStranding() throws Exception {
+    var pool = new ThreadPoolExecutor(0, 4, 60L, TimeUnit.SECONDS, new SynchronousQueue<>());
+    try {
+      var api = buildClient(pool);
+      List<Callable<Integer>> tasks =
+          IntStream.range(0, SUBSCRIPTIONS)
+              .<Callable<Integer>>mapToObj(index -> () -> drain(api.publishPrice("SYM" + index)))
+              .toList();
+
+      // Far more subscriptions than workers. Some are refused, but every subscriber must reach a
+      // terminal signal — drain() asserts that. Leaving one waiting forever is the failure mode.
+      assertThat(runAllAtOnce(tasks)).hasSize(SUBSCRIPTIONS);
+    } finally {
+      pool.shutdownNow();
+    }
+  }
+
+  @Test
+  void longLivedSubscriptionsAreNotCappedByCoreCount() throws Exception {
+    emitEvents = false;
+    var api = buildClient();
+
+    // Each of these holds its worker parked on the queue for as long as it is open, which is what a
+    // real feed does. A pool sized from the core count would refuse the excess synchronously.
+    var futures =
+        IntStream.range(0, SUBSCRIPTIONS)
+            .mapToObj(index -> api.futurePrice("SYM" + index))
+            .toList();
+
+    assertThat(futures)
+        .as("no subscription should have been refused a worker")
+        .allSatisfy(future -> assertThat(future).isNotCompleted());
+
+    futures.forEach(future -> future.cancel(true));
     assertThat(closed.await(30, TimeUnit.SECONDS)).isTrue();
   }
 

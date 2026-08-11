@@ -28,9 +28,7 @@ import feign.codec.JsonEncoder;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Experimental
@@ -90,18 +88,14 @@ public class GraphqlCapability implements Capability {
   }
 
   /**
-   * Bounded and daemon, so a runaway subscription count fails fast rather than exhausting threads.
-   * A synchronous handoff queue is deliberate: subscription workers are long-lived, so queueing
-   * them would hide exhaustion until the heap gave out.
+   * Each open {@code Flow.Publisher} or {@code CompletableFuture} subscription holds one worker for
+   * its lifetime, so the default pool grows on demand and reaps idle threads rather than capping
+   * concurrent subscriptions at a guess. Supply a bounded executor to cap them deliberately: the
+   * excess is refused with {@code RejectedExecutionException} rather than left hanging.
    */
   private static Executor defaultExecutor() {
     var threads = new AtomicLong();
-    return new ThreadPoolExecutor(
-        0,
-        Math.max(8, Runtime.getRuntime().availableProcessors() * 4),
-        60L,
-        TimeUnit.SECONDS,
-        new SynchronousQueue<>(),
+    return Executors.newCachedThreadPool(
         runnable -> {
           var thread =
               new Thread(runnable, "feign-graphql-subscription-" + threads.incrementAndGet());
