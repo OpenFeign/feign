@@ -33,11 +33,11 @@ public class MultiEncoder implements Encoder {
   private final List<Encoder> delegates;
 
   /**
-   * Creates a delegating encoder that will try each of the provided encoders in order until one
-   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   * Creates an encoder that will try each of the provided encoders in order until one returns
+   * {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
    *
-   * @param encoders the encoders to delegate to
-   * @return a delegating encoder
+   * @param encoders the list of encoders that will be tried in sequence
+   * @return the multi-encoder
    * @since 14
    */
   public static Encoder of(Encoder... encoders) {
@@ -45,11 +45,11 @@ public class MultiEncoder implements Encoder {
   }
 
   /**
-   * Creates a delegating encoder that will try each of the provided encoders in order until one
-   * returns {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
+   * Creates an encoder that will try each of the provided encoders in order until one returns
+   * {@code true} from {@link #encode(Object, Type, RequestTemplate)}.
    *
    * @param encoders the encoders to delegate to
-   * @return a delegating encoder
+   * @return the multi-encoder
    * @since 14
    */
   public static Encoder of(List<Encoder> encoders) {
@@ -68,12 +68,14 @@ public class MultiEncoder implements Encoder {
 
   /**
    * Encodes the given object using the first delegate that can encode it. If no delegate can encode
-   * the object, an {@link EncodeException} is thrown.
+   * the object, returns false.
    *
    * @param object {@inheritDoc}
    * @param bodyType {@inheritDoc}
    * @param template {@inheritDoc}
    * @throws EncodeException {@inheritDoc}
+   * @return true if encoding happened, false if no delegate was available that could handle the
+   *     encode request
    */
   @Override
   public boolean encode(Object object, Type bodyType, RequestTemplate template)
