@@ -358,7 +358,7 @@ VertxFeign.builder()
 ### 14. `Encoder.encode()` now returns `boolean` (https://github.com/OpenFeign/feign/pull/3485)
 
 `Encoder.encode()` now returns `boolean` instead of `void`. Return `true` when the encoder
-handles the object, `false` otherwise. This replaces the separate `canEncode()` method.
+handles the object, `false` otherwise.
 
 **Before:**
 
@@ -366,6 +366,7 @@ handles the object, `false` otherwise. This replaces the separate `canEncode()` 
 public class MyEncoder implements Encoder {
     @Override
     public void encode(Object object, Type bodyType, RequestTemplate template) {
+        if(bodyType != String.class) throw new EncodeException("Encoding not supported");
         template.body(Request.Body.of(serialize(object)));
     }
 }
@@ -378,7 +379,7 @@ public class MyEncoder implements Encoder {
     @Override
     public boolean encode(Object object, Type bodyType, RequestTemplate template) {
         template.body(Request.Body.of(serialize(object)));
-        return true; // or return false if the encoder does not handle this type
+        return true; // or return false if the encoder does not handle this type. Do NOT throw EncodeException unless a problem actually happens during encoding.
     }
 }
 ```
