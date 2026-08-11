@@ -358,12 +358,15 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return JAVA_BUILT_INS.contains(typeName);
   }
 
+  /** Wrappers that carry the operation result rather than being it. */
+  private static final Set<String> RESULT_CONTAINERS = Set.of("List", "Stream", "Publisher");
+
   private String getSimpleTypeName(TypeMirror typeMirror) {
     if (typeMirror instanceof DeclaredType declaredType) {
       var typeElement = declaredType.asElement();
       var simpleName = typeElement.getSimpleName().toString();
 
-      if ("List".equals(simpleName)) {
+      if (RESULT_CONTAINERS.contains(simpleName)) {
         var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
           return getSimpleTypeName(typeArgs.get(0));
@@ -376,7 +379,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private boolean isExistingExternalType(TypeMirror typeMirror, String targetPackage) {
-    var unwrapped = unwrapListTypeMirror(typeMirror);
+    var unwrapped = unwrapContainerTypeMirror(typeMirror);
     if (unwrapped.getKind() == TypeKind.ERROR) {
       return false;
     }
@@ -392,13 +395,13 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return false;
   }
 
-  private TypeMirror unwrapListTypeMirror(TypeMirror typeMirror) {
+  private TypeMirror unwrapContainerTypeMirror(TypeMirror typeMirror) {
     if (typeMirror instanceof DeclaredType declaredType) {
       var simpleName = declaredType.asElement().getSimpleName().toString();
-      if ("List".equals(simpleName)) {
+      if (RESULT_CONTAINERS.contains(simpleName)) {
         var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
-          return typeArgs.get(0);
+          return unwrapContainerTypeMirror(typeArgs.get(0));
         }
       }
     }
