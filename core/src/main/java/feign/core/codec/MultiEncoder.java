@@ -40,7 +40,7 @@ public class MultiEncoder implements Encoder {
    * @return a delegating encoder
    * @since 14
    */
-  static public Encoder of(Encoder... encoders) {
+  public static Encoder of(Encoder... encoders) {
     return of(Arrays.asList(encoders));
   }
 
@@ -52,7 +52,7 @@ public class MultiEncoder implements Encoder {
    * @return a delegating encoder
    * @since 14
    */
-  static public Encoder of(List<Encoder> encoders) {
+  public static Encoder of(List<Encoder> encoders) {
     return new MultiEncoder(encoders);
   }
 
