@@ -26,14 +26,14 @@ import java.lang.reflect.Type;
  * For example, this is useful for restricting the usage of a given Encoder to a given content type
  * header.
  */
-public class PredicateEncoder implements Encoder {
+public class PredicatingEncoder implements Encoder {
 
   /** The delegate that the encoding request will be passed to if the predicate is met. */
   private final Encoder delegate;
 
   private final EncoderPredicate predicate;
 
-  public PredicateEncoder(EncoderPredicate predicate, Encoder delegate) {
+  public PredicatingEncoder(EncoderPredicate predicate, Encoder delegate) {
     this.delegate = delegate;
     this.predicate = predicate;
   }

@@ -31,11 +31,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class PredicateEncoderTest {
+class PredicatingEncoderTest {
 
   @Mock private Encoder delegate;
   @Mock private EncoderPredicate encoderPredicate;
-  @InjectMocks private PredicateEncoder predicateEncoder;
+  @InjectMocks private PredicatingEncoder predicatingEncoder;
 
   @Test
   void shouldEncode() {
@@ -47,7 +47,7 @@ class PredicateEncoderTest {
     when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(true);
     when(delegate.encode(object, bodyType, requestTemplate)).thenReturn(true);
 
-    assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isTrue();
+    assertThat(predicatingEncoder.encode(object, bodyType, requestTemplate)).isTrue();
 
     verify(delegate).encode(object, bodyType, requestTemplate);
   }
@@ -60,7 +60,7 @@ class PredicateEncoderTest {
 
     when(encoderPredicate.test(object, bodyType, requestTemplate)).thenReturn(false);
 
-    assertThat(predicateEncoder.encode(object, bodyType, requestTemplate)).isFalse();
+    assertThat(predicatingEncoder.encode(object, bodyType, requestTemplate)).isFalse();
 
     verifyNoInteractions(delegate);
   }

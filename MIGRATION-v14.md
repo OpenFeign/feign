@@ -523,14 +523,14 @@ public class FileBody implements Request.Body {
 
 TODO: Once we have specialized EncoderPredicate factory methods (i.e. for xml content types), update this example to use those factory methods
 
-The new `PredicateEncoder` and `EncoderPredicate` classes can be used in conjunction with `MultiEncoder` to fine tune which Encoder
+The new `PredicatingEncoder` and `EncoderPredicate` classes can be used in conjunction with `MultiEncoder` to fine tune which Encoder
 handles different types of encode requests.
 
 ```java
 Feign.builder()
     .encoder(MultiEncoder.of(
     	new DefaultEncoder(),
-    	new PredicateEncoder((obj, type, templ) -> templ.headers().get("Content-Type").contains("application/xml"), new JAXBEncoder(factory), // handle xml requests
+    	new PredicatingEncoder((obj, type, templ) -> templ.headers().get("Content-Type").contains("application/xml"), new JAXBEncoder(factory), // handle xml requests
     	new JacksonEncoder() // handle everything else
     ))
     .target(MyApi.class, "https://api.example.com");
