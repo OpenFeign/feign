@@ -37,8 +37,7 @@ class BridgeMethodTest {
 
   @Test
   void contractSkipsBridgeMethodsFromGenericOverride() {
-    List<MethodMetadata> metadata =
-        new Contract.Default().parseAndValidateMetadata(UserApi.class);
+    List<MethodMetadata> metadata = new Contract.Default().parseAndValidateMetadata(UserApi.class);
 
     assertThat(metadata).hasSize(1);
     assertThat(metadata.get(0).configKey()).isEqualTo("UserApi#get(String)");
