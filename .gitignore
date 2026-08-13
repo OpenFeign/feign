@@ -76,3 +76,6 @@ release.properties
 pom.xml.releaseBackup
 .mvn/.develocity/develocity-workspace-id
 .sdkmanrc
+
+# flatten-maven-plugin
+.flattened-pom.xml
