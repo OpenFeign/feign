@@ -45,6 +45,7 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.ResponseMapper;
+import feign.Retryer;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.Util;
@@ -517,6 +518,7 @@ public class Http2ClientAsyncTest {
 
     final TestInterfaceAsync api =
         newAsyncBuilder()
+            .retryer(Retryer.NEVER_RETRY)
             .options(
                 new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
             .target("http://localhost:" + server.getPort());
@@ -1080,6 +1082,11 @@ public class Http2ClientAsyncTest {
 
     TestInterfaceAsyncBuilder options(Request.Options options) {
       delegate.options(options);
+      return this;
+    }
+
+    TestInterfaceAsyncBuilder retryer(Retryer retryer) {
+      delegate.retryer(retryer);
       return this;
     }
 

@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
@@ -57,14 +58,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import javax.net.ssl.SSLSession;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
+  // Shared by all clients so response-body deadlines do not create one thread per client.
   private static final ScheduledExecutorService BODY_READ_TIMEOUT_EXECUTOR =
       Executors.newSingleThreadScheduledExecutor(
           runnable -> {
@@ -143,18 +145,13 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
-    return toFeignResponse(request, httpResponse, null);
-  }
-
-  private Response toFeignResponse(
-      Request request, HttpResponse<InputStream> httpResponse, Options options) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
     Integer contentLength =
         length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
             ? (int) length.getAsLong()
             : null;
 
-    InputStream body = withReadTimeout(httpResponse.body(), options);
+    InputStream body = httpResponse.body();
 
     if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_GZIP)) {
       try {
@@ -178,6 +175,15 @@ public class Http2Client implements Client, AsyncClient<Object> {
         .build();
   }
 
+  protected Response toFeignResponse(
+      Request request, HttpResponse<InputStream> httpResponse, Options options) {
+    final InputStream body = httpResponse.body();
+    final InputStream timedBody = withReadTimeout(body, options);
+    return toFeignResponse(
+        request,
+        body == timedBody ? httpResponse : new TimeoutHttpResponse(httpResponse, timedBody));
+  }
+
   private static InputStream withReadTimeout(InputStream body, Options options) {
     if (body == null || options == null || options.readTimeout() <= 0) {
       return body;
@@ -188,23 +194,51 @@ public class Http2Client implements Client, AsyncClient<Object> {
   private static final class TimeoutInputStream extends InputStream {
 
     private final InputStream delegate;
-    private final long timeout;
-    private final TimeUnit timeoutUnit;
+    private final ScheduledFuture<?> timeoutFuture;
+    private volatile boolean timedOut;
 
     private TimeoutInputStream(InputStream delegate, long timeout, TimeUnit timeoutUnit) {
       this.delegate = delegate;
-      this.timeout = timeout;
-      this.timeoutUnit = timeoutUnit;
+      this.timeoutFuture =
+          BODY_READ_TIMEOUT_EXECUTOR.schedule(
+              () -> {
+                timedOut = true;
+                try {
+                  delegate.close();
+                } catch (IOException ignored) {
+                }
+              },
+              timeout,
+              timeoutUnit);
     }
 
     @Override
     public int read() throws IOException {
-      return readWithTimeout(delegate::read);
+      try {
+        return afterRead(delegate.read());
+      } catch (IOException e) {
+        throw translateException(e);
+      }
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-      return readWithTimeout(() -> delegate.read(b, off, len));
+      try {
+        return afterRead(delegate.read(b, off, len));
+      } catch (IOException e) {
+        throw translateException(e);
+      }
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+      try {
+        final long skipped = delegate.skip(n);
+        checkTimedOut();
+        return skipped;
+      } catch (IOException e) {
+        throw translateException(e);
+      }
     }
 
     @Override
@@ -213,49 +247,49 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
 
     @Override
+    public synchronized void mark(int readLimit) {
+      delegate.mark(readLimit);
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+      delegate.reset();
+    }
+
+    @Override
+    public boolean markSupported() {
+      return delegate.markSupported();
+    }
+
+    @Override
     public void close() throws IOException {
+      timeoutFuture.cancel(false);
       delegate.close();
     }
 
-    private int readWithTimeout(BodyRead read) throws IOException {
-      final AtomicBoolean completed = new AtomicBoolean(false);
-      final AtomicBoolean timedOut = new AtomicBoolean(false);
-      final ScheduledFuture<?> timeoutFuture =
-          BODY_READ_TIMEOUT_EXECUTOR.schedule(
-              () -> {
-                if (completed.compareAndSet(false, true)) {
-                  timedOut.set(true);
-                  try {
-                    delegate.close();
-                  } catch (IOException ignored) {
-                  }
-                }
-              },
-              timeout,
-              timeoutUnit);
-
-      try {
-        final int result = read.read();
-        if (completed.compareAndSet(false, true)) {
-          timeoutFuture.cancel(false);
-          return result;
-        }
-        throw timeoutException(null);
-      } catch (IOException e) {
-        if (completed.compareAndSet(false, true)) {
-          timeoutFuture.cancel(false);
-        }
-        final HttpTimeoutException timeoutException = findTimeoutException(e);
-        if (timedOut.get() || timeoutException != null) {
-          throw timeoutException == null ? timeoutException(e) : timeoutException;
-        }
-        throw e;
-      } catch (RuntimeException e) {
-        if (completed.compareAndSet(false, true)) {
-          timeoutFuture.cancel(false);
-        }
-        throw e;
+    private int afterRead(int result) throws HttpTimeoutException {
+      checkTimedOut();
+      if (result == -1) {
+        timeoutFuture.cancel(false);
       }
+      return result;
+    }
+
+    private void checkTimedOut() throws HttpTimeoutException {
+      if (timedOut) {
+        throw timeoutException(null);
+      }
+    }
+
+    private IOException translateException(IOException exception) {
+      final HttpTimeoutException timeoutException = findTimeoutException(exception);
+      if (timeoutException != null) {
+        return timeoutException;
+      }
+      if (timedOut) {
+        return timeoutException(exception);
+      }
+      return exception;
     }
 
     private static HttpTimeoutException timeoutException(IOException cause) {
@@ -278,8 +312,55 @@ public class Http2Client implements Client, AsyncClient<Object> {
     }
   }
 
-  private interface BodyRead {
-    int read() throws IOException;
+  private static final class TimeoutHttpResponse implements HttpResponse<InputStream> {
+
+    private final HttpResponse<InputStream> delegate;
+    private final InputStream body;
+
+    private TimeoutHttpResponse(HttpResponse<InputStream> delegate, InputStream body) {
+      this.delegate = delegate;
+      this.body = body;
+    }
+
+    @Override
+    public int statusCode() {
+      return delegate.statusCode();
+    }
+
+    @Override
+    public HttpRequest request() {
+      return delegate.request();
+    }
+
+    @Override
+    public Optional<HttpResponse<InputStream>> previousResponse() {
+      return delegate.previousResponse();
+    }
+
+    @Override
+    public HttpHeaders headers() {
+      return delegate.headers();
+    }
+
+    @Override
+    public InputStream body() {
+      return body;
+    }
+
+    @Override
+    public Optional<SSLSession> sslSession() {
+      return delegate.sslSession();
+    }
+
+    @Override
+    public URI uri() {
+      return delegate.uri();
+    }
+
+    @Override
+    public Version version() {
+      return delegate.version();
+    }
   }
 
   private HttpClient getOrCreateClient(Options options) {
