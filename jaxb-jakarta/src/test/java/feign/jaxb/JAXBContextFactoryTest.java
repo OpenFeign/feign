@@ -26,9 +26,11 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import javax.xml.XMLConstants;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.glassfish.jaxb.runtime.IDResolver;
 import org.junit.jupiter.api.Test;
 
 class JAXBContextFactoryTest {
@@ -92,6 +94,34 @@ class JAXBContextFactoryTest {
 
     Marshaller marshaller = factory.createMarshaller(Object.class);
     assertThat(marshaller.getSchema()).isSameAs(schema);
+  }
+
+  @Test
+  void buildsUnmarshallerWithProperty() throws Exception {
+    IDResolver resolver =
+        new IDResolver() {
+          @Override
+          public void bind(String id, Object obj) {}
+
+          @Override
+          public Callable<?> resolve(String id, Class targetType) {
+            return () -> null;
+          }
+        };
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withProperty(IDResolver.class.getName(), resolver).build();
+
+    Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
+    assertThat(unmarshaller.getProperty(IDResolver.class.getName())).isSameAs(resolver);
+  }
+
+  @Test
+  void buildsUnmarshallerWhenFactoryHasMarshallerProperties() throws Exception {
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder().withMarshallerFormattedOutput(true).build();
+
+    Unmarshaller unmarshaller = factory.createUnmarshaller(Object.class);
+    assertThat(unmarshaller).isNotNull();
   }
 
   @Test
