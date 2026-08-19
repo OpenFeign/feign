@@ -1,5 +1,7 @@
 ### Version 13.14
 
+* `JAXBContextFactory.withProperty` is now applied when creating Unmarshallers, not only
+  Marshallers. Marshaller-only properties are skipped on unmarshal (#3056).
 * Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
   request body. `HttpCacheInterceptor` includes QUERY in its default cacheable set and
   incorporates a body hash into the cache key to reduce cross-body collisions.

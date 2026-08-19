@@ -20,6 +20,7 @@ import static feign.assertj.FeignAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.sun.xml.bind.IDResolver;
 import feign.Request;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
@@ -34,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.xml.XMLConstants;
 import javax.xml.bind.MarshalException;
 import javax.xml.bind.UnmarshalException;
@@ -208,6 +210,54 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
     assertThat(decoder.decode(response, MockObject.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void decodesXmlUsingFactoryProperty() throws Exception {
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    String mockXml =
+        """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?><mockObject>\
+        <value>Test</value></mockObject>\
+        """;
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .body(mockXml, UTF_8)
+            .build();
+
+    AtomicBoolean started = new AtomicBoolean();
+    IDResolver resolver =
+        new IDResolver() {
+          @Override
+          public void startDocument(javax.xml.bind.ValidationEventHandler eventHandler) {
+            started.set(true);
+          }
+
+          @Override
+          public void bind(String id, Object obj) {}
+
+          @Override
+          public java.util.concurrent.Callable<?> resolve(String id, Class targetType) {
+            return () -> null;
+          }
+        };
+
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder()
+            .withMarshallerFormattedOutput(true)
+            .withProperty(IDResolver.class.getName(), resolver)
+            .build();
+
+    assertThat(new JAXBDecoder(factory).decode(response, MockObject.class)).isEqualTo(mock);
+    assertThat(started).isTrue();
   }
 
   @Test
