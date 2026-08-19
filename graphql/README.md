@@ -215,6 +215,40 @@ The processor maps `DateTime` fields to `java.time.Instant` in the generated rec
 public record Event(String id, String name, Instant startTime) {}
 ```
 
+## Multiple Root Fields
+
+A single operation can select more than one root field, and all of them are decoded — one round trip instead of one call per field:
+
+```java
+@GraphqlQuery("""
+    query authorPage($authorId: ID!) {
+      books(authorId: $authorId) { id title }
+      reviews(authorId: $authorId) { id rating }
+    }
+    """)
+AuthorPage authorPage(String authorId);
+```
+
+The processor generates a record with one component per root field, each with its own inner record:
+
+```java
+public record AuthorPage(Optional<List<Books>> books, Optional<List<Reviews>> reviews) {
+
+  public record Books(String id, String title) {}
+
+  public record Reviews(String id, Integer rating) {}
+
+}
+```
+
+When the response carries several root fields the whole `data` map binds to the return type, so every field lands on its matching component:
+
+```json
+{"data": {"books": [...], "reviews": [...]}}
+```
+
+Operations with a single root field are unaffected: that field is still unwrapped and decoded into the return type directly.
+
 ## Single Result from Array Queries
 
 When a GraphQL query returns an array type (e.g. `[User!]`) but the Java method declares a single return type, the decoder automatically unwraps the first element:
