@@ -19,6 +19,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -48,7 +49,7 @@ import org.xml.sax.SAXException;
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
  * contexts.
  */
-public class JAXBDecoder implements Decoder {
+public class JAXBDecoder implements Decoder, PredicatedDecoder {
 
   private final JAXBContextFactory jaxbContextFactory;
   private final boolean namespaceAware;
@@ -122,5 +123,10 @@ public class JAXBDecoder implements Decoder {
       }
       return new JAXBDecoder(this);
     }
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isXmlContentType(response);
   }
 }

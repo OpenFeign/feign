@@ -22,11 +22,12 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
 /** Warp feign {@link Decoder} with metrics. */
-public class MeteredDecoder implements Decoder {
+public class MeteredDecoder implements Decoder, PredicatedDecoder {
 
   private final Decoder decoder;
   private final MetricRegistry metricRegistry;
@@ -72,5 +73,11 @@ public class MeteredDecoder implements Decoder {
     }
 
     return decoded;
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return !(decoder instanceof PredicatedDecoder)
+        || ((PredicatedDecoder) decoder).canDecode(response, type);
   }
 }

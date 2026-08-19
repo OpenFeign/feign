@@ -24,6 +24,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -53,7 +54,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *     .target(MyApi.class, "http://api");
  * </pre>
  */
-public class SAXDecoder implements Decoder {
+public class SAXDecoder implements Decoder, PredicatedDecoder {
 
   private final Map<Type, ContentHandlerWithResult.Factory<?>> handlerFactories;
 
@@ -175,5 +176,10 @@ public class SAXDecoder implements Decoder {
         }
       }
     }
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isXmlContentType(response);
   }
 }

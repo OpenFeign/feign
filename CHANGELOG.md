@@ -1,5 +1,14 @@
 ### Version 13.14
 
+* Add `@Experimental` `MultiDecoder`, `PredicatedDecoder` and `DecoderPredicate`, letting a single
+  client route each response to the right decoder. Decoders declare what they can handle by
+  implementing `PredicatedDecoder`; anything else is paired with a predicate via
+  `MultiDecoder.builder(defaultDecoder)`. The first-party JSON decoders (Gson, Jackson, Jackson 3,
+  Jackson Jr, Jackson JAXB, Moshi, Fastjson2, JSON-java) and XML decoders (JAXB, JAXB Jakarta, SAX,
+  SOAP, SOAP Jakarta) now declare themselves, and `OptionalDecoder` and the metrics modules'
+  `MeteredDecoder` forward `canDecode` to the decoder they wrap. The `Decoder` interface is
+  unchanged, so existing decoders keep working.
+
 * `JAXBContextFactory.withProperty` is now applied when creating Unmarshallers, not only
   Marshallers. Marshaller-only properties are skipped on unmarshal (#3056).
 * Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
