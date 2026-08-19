@@ -17,79 +17,47 @@ package feign.codec;
 
 import feign.Experimental;
 import feign.RequestTemplate;
-import feign.Util;
 import java.lang.reflect.Type;
-import java.util.Objects;
 
 /**
- * Pairs an {@link EncoderPredicate} with the {@link Encoder} it guards, so that a {@link
- * MultiEncoder} can pick the right encoder per request.
+ * An {@link Encoder} that knows which requests it can handle.
  *
- * <p>Encoding through a {@code PredicatedEncoder} directly is allowed but strict: a request its
- * predicate rejects raises {@link EncodeException} rather than silently doing nothing. Inside a
- * {@link MultiEncoder} a rejected request simply moves on to the next candidate.
+ * <p>Encoders implement this to declare their own applicability, so a {@link MultiEncoder} can
+ * route each request to the right one without the call site having to wrap anything:
  *
  * <pre>
- * Feign.builder()
- *     .encoder(
- *         new DefaultEncoder(),
- *         PredicatedEncoder.forJsonContentType(new JacksonEncoder()),
- *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
+ * public class JacksonEncoder implements Encoder, PredicatedEncoder {
+ *
+ *   &#064;Override
+ *   public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+ *     return EncoderPredicate.jsonContentType().canEncode(object, bodyType, template);
+ *   }
+ * }
  * </pre>
+ *
+ * <p>{@link Encoder#encode(Object, Type, RequestTemplate) encode} remains the only abstract method,
+ * so this stays a functional interface and a bare lambda is an encoder that accepts everything.
+ *
+ * <p>Encoders that wrap another encoder should forward {@code canEncode} to their delegate, so that
+ * wrapping does not discard the delegate's applicability.
+ *
+ * @see MultiEncoder
+ * @see EncoderPredicate
  */
 @Experimental
-public class PredicatedEncoder implements Encoder {
-
-  private final EncoderPredicate predicate;
-
-  private final Encoder delegate;
-
-  public PredicatedEncoder(EncoderPredicate predicate, Encoder delegate) {
-    this.predicate = Objects.requireNonNull(predicate, "predicate cannot be null");
-    this.delegate = Objects.requireNonNull(delegate, "delegate cannot be null");
-  }
-
-  /** Restricts the delegate to requests whose {@code Content-Type} header denotes JSON. */
-  public static PredicatedEncoder forJsonContentType(Encoder delegate) {
-    return new PredicatedEncoder(
-        (object, bodyType, template) -> Util.isJsonContentType(template), delegate);
-  }
-
-  /** Restricts the delegate to requests whose {@code Content-Type} header denotes XML. */
-  public static PredicatedEncoder forXmlContentType(Encoder delegate) {
-    return new PredicatedEncoder(
-        (object, bodyType, template) -> Util.isXmlContentType(template), delegate);
-  }
-
-  /** Restricts the delegate to requests carrying no body. */
-  public static PredicatedEncoder forEmptyBody(Encoder delegate) {
-    return new PredicatedEncoder((object, bodyType, template) -> object == null, delegate);
-  }
+@FunctionalInterface
+public interface PredicatedEncoder extends Encoder {
 
   /**
-   * Whether the guarded encoder accepts this request.
+   * Whether this encoder can handle the request. Defaults to accepting everything.
    *
    * @param object what to encode as the request body
-   * @param bodyType the type the object should be encoded as
+   * @param bodyType the type the object should be encoded as. {@link Encoder#MAP_STRING_WILDCARD}
+   *     indicates form encoding.
    * @param template the request template to populate
-   * @return {@code true} if the delegate should handle this request
+   * @return {@code true} if this encoder can encode the request, {@code false} otherwise
    */
-  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return predicate.test(object, bodyType, template);
-  }
-
-  @Override
-  public void encode(Object object, Type bodyType, RequestTemplate template)
-      throws EncodeException {
-    if (!canEncode(object, bodyType, template)) {
-      throw new EncodeException(
-          "Predicate of " + this + " rejected the request, so " + delegate + " was not invoked");
-    }
-    delegate.encode(object, bodyType, template);
-  }
-
-  @Override
-  public String toString() {
-    return "PredicatedEncoder{predicate=" + predicate + ", delegate=" + delegate + '}';
+  default boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return true;
   }
 }

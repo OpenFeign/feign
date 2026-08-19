@@ -97,25 +97,29 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   }
 
   /**
-   * Configures a {@link MultiEncoder} that picks an encoder per request.
+   * Configures a {@link MultiEncoder} built from encoders that declare their own applicability.
    *
    * <p>Each {@link PredicatedEncoder} is consulted in the order given; {@code defaultEncoder} is
-   * the fallback used when no predicate accepts the request.
+   * the fallback used when none accepts the request.
    *
    * <pre>
    * Feign.builder()
-   *     .encoder(
-   *         new DefaultEncoder(),
-   *         PredicatedEncoder.forJsonContentType(new JacksonEncoder()),
-   *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
+   *     .encoder(new DefaultEncoder(), new JacksonEncoder(), new JAXBEncoder())
    * </pre>
    *
-   * @param defaultEncoder the encoder used when no predicate accepts the request
+   * <p>To pair a predicate with an encoder that does not implement {@link PredicatedEncoder}, use
+   * {@link MultiEncoder#builder(Encoder)} instead.
+   *
+   * @param defaultEncoder the encoder used when no delegate accepts the request
    * @param encoders the predicated encoders, consulted in the order given
    */
   @Experimental
   public B encoder(Encoder defaultEncoder, PredicatedEncoder... encoders) {
-    return encoder(MultiEncoder.of(defaultEncoder, encoders));
+    MultiEncoder.Builder builder = MultiEncoder.builder(defaultEncoder);
+    for (PredicatedEncoder encoder : encoders) {
+      builder.add(encoder);
+    }
+    return encoder(builder.build());
   }
 
   public B decoder(Decoder decoder) {

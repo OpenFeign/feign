@@ -19,69 +19,58 @@ import feign.Experimental;
 import feign.RequestTemplate;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * An encoder that delegates to a list of {@link PredicatedEncoder}s, using the first one whose
- * predicate accepts the request, and falling back to a default encoder when none do.
+ * An {@link Encoder} that selects a delegate per request, falling back to a default encoder when no
+ * delegate accepts it.
  *
- * <p>The default encoder is declared first so the predicated ones can be supplied as varargs, but
- * it is consulted <em>last</em> — it is the fallback, not the first choice.
+ * <p>Delegates come from two places. An encoder that implements {@link PredicatedEncoder} declares
+ * its own applicability and can simply be added; any other encoder is paired with an {@link
+ * EncoderPredicate} at the call site:
  *
  * <pre>
- * Encoder encoder =
- *     MultiEncoder.of(
- *         new DefaultEncoder(),
- *         PredicatedEncoder.forJsonContentType(new JacksonEncoder()),
- *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()));
+ * Feign.builder()
+ *     .encoder(
+ *         MultiEncoder.builder(new DefaultEncoder())
+ *             .add(new JacksonEncoder())
+ *             .add(EncoderPredicate.xmlContentType(), new JAXBEncoder())
+ *             .add((object, bodyType, template) -&gt; bodyType == byte[].class, new BinaryEncoder())
+ *             .build());
  * </pre>
+ *
+ * <p>Delegates are consulted in the order they were added, so the narrowest predicate should come
+ * first. The default encoder is consulted last.
+ *
+ * @see PredicatedEncoder
+ * @see EncoderPredicate
  */
 @Experimental
 public class MultiEncoder implements Encoder {
 
   private final Encoder defaultEncoder;
 
-  private final List<PredicatedEncoder> delegates;
+  private final List<Delegate> delegates;
 
-  /**
-   * Creates an encoder that tries each predicated encoder in order and falls back to {@code
-   * defaultEncoder}.
-   *
-   * @param defaultEncoder the encoder used when no predicate accepts the request
-   * @param encoders the predicated encoders, consulted in the order given
-   * @return the multi-encoder
-   */
-  public static Encoder of(Encoder defaultEncoder, PredicatedEncoder... encoders) {
-    return of(defaultEncoder, Arrays.asList(encoders));
-  }
-
-  /**
-   * Creates an encoder that tries each predicated encoder in order and falls back to {@code
-   * defaultEncoder}.
-   *
-   * @param defaultEncoder the encoder used when no predicate accepts the request
-   * @param encoders the predicated encoders, consulted in the order given
-   * @return the multi-encoder
-   */
-  public static Encoder of(Encoder defaultEncoder, List<PredicatedEncoder> encoders) {
-    return new MultiEncoder(defaultEncoder, encoders);
-  }
-
-  private MultiEncoder(Encoder defaultEncoder, List<PredicatedEncoder> delegates) {
-    this.defaultEncoder = Objects.requireNonNull(defaultEncoder, "defaultEncoder cannot be null");
-    Objects.requireNonNull(delegates, "delegates cannot be null");
-    for (PredicatedEncoder delegate : delegates) {
-      Objects.requireNonNull(delegate, "delegates cannot contain null");
-    }
+  private MultiEncoder(Encoder defaultEncoder, List<Delegate> delegates) {
+    this.defaultEncoder = defaultEncoder;
     this.delegates = Collections.unmodifiableList(new ArrayList<>(delegates));
   }
 
   /**
-   * Encodes using the first delegate whose predicate accepts the request, or the default encoder if
-   * none do.
+   * Starts building a multi-encoder.
+   *
+   * @param defaultEncoder the encoder used when no delegate accepts the request
+   * @return the builder
+   */
+  public static Builder builder(Encoder defaultEncoder) {
+    return new Builder(defaultEncoder);
+  }
+
+  /**
+   * Encodes using the first delegate that accepts the request, or the default encoder if none do.
    *
    * @param object {@inheritDoc}
    * @param bodyType {@inheritDoc}
@@ -91,9 +80,9 @@ public class MultiEncoder implements Encoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    for (PredicatedEncoder delegate : delegates) {
-      if (delegate.canEncode(object, bodyType, template)) {
-        delegate.encode(object, bodyType, template);
+    for (Delegate delegate : delegates) {
+      if (delegate.predicate.canEncode(object, bodyType, template)) {
+        delegate.encoder.encode(object, bodyType, template);
         return;
       }
     }
@@ -103,5 +92,62 @@ public class MultiEncoder implements Encoder {
   @Override
   public String toString() {
     return "MultiEncoder{defaultEncoder=" + defaultEncoder + ", delegates=" + delegates + '}';
+  }
+
+  private static final class Delegate {
+    private final EncoderPredicate predicate;
+    private final Encoder encoder;
+
+    Delegate(EncoderPredicate predicate, Encoder encoder) {
+      this.predicate = predicate;
+      this.encoder = encoder;
+    }
+
+    @Override
+    public String toString() {
+      return encoder.toString();
+    }
+  }
+
+  /** Collects the delegates of a {@link MultiEncoder}. */
+  @Experimental
+  public static final class Builder {
+
+    private final Encoder defaultEncoder;
+
+    private final List<Delegate> delegates = new ArrayList<>();
+
+    private Builder(Encoder defaultEncoder) {
+      this.defaultEncoder = Objects.requireNonNull(defaultEncoder, "defaultEncoder cannot be null");
+    }
+
+    /**
+     * Adds an encoder that declares its own applicability.
+     *
+     * @param encoder the encoder, consulted via {@link PredicatedEncoder#canEncode}
+     */
+    public Builder add(PredicatedEncoder encoder) {
+      Objects.requireNonNull(encoder, "encoder cannot be null");
+      return add(encoder::canEncode, encoder);
+    }
+
+    /**
+     * Adds any encoder, guarded by the given predicate. Use this for encoders that do not implement
+     * {@link PredicatedEncoder}, including ones you do not control.
+     *
+     * @param predicate decides whether the encoder handles a request
+     * @param encoder the encoder to delegate to
+     */
+    public Builder add(EncoderPredicate predicate, Encoder encoder) {
+      Objects.requireNonNull(predicate, "predicate cannot be null");
+      Objects.requireNonNull(encoder, "encoder cannot be null");
+      delegates.add(new Delegate(predicate, encoder));
+      return this;
+    }
+
+    /** Builds the multi-encoder. */
+    public MultiEncoder build() {
+      return new MultiEncoder(defaultEncoder, delegates);
+    }
   }
 }

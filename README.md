@@ -714,8 +714,10 @@ public class Example {
 > This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
 
 A single client sometimes has to speak more than one format &mdash; JSON for most endpoints, XML for
-a legacy one, plain bytes for an upload. `MultiEncoder` picks the encoder per request by asking each
-candidate's predicate, falling back to a default encoder when none match.
+a legacy one, plain bytes for an upload. `MultiEncoder` routes each request to the right encoder,
+falling back to a default when none applies.
+
+Most first-party encoders already declare what they can handle, so they can simply be added:
 
 ```java
 interface MixedClient {
@@ -731,33 +733,55 @@ interface MixedClient {
 public class Example {
   public static void main(String[] args) {
     MixedClient client = Feign.builder()
-                              .encoder(
-                                  new DefaultEncoder(),
-                                  PredicatedEncoder.forJsonContentType(new GsonEncoder()),
-                                  PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
+                              .encoder(new DefaultEncoder(), new GsonEncoder(), new JAXBEncoder())
                               .target(MixedClient.class, "https://foo.com");
   }
 }
 ```
 
-The first argument is the default encoder, used when no predicate accepts the request. The remaining
-arguments are consulted in the order given, so the most specific encoder should come first.
+The first argument is the default encoder, used when nothing else accepts the request.
 
-`PredicatedEncoder` ships with factories for the common cases &mdash; `forJsonContentType`,
-`forXmlContentType` and `forEmptyBody`. `EncoderPredicate` is a functional interface, so any other
-condition is a lambda over the same three arguments `Encoder#encode` receives:
+For an encoder that does not declare itself &mdash; including one you do not control &mdash; pair it
+with an `EncoderPredicate` using the builder:
 
 ```java
 Encoder encoder =
-    MultiEncoder.of(
-        new DefaultEncoder(),
-        new PredicatedEncoder(
-            (object, bodyType, template) -> bodyType == byte[].class, new BinaryEncoder()),
-        PredicatedEncoder.forJsonContentType(new GsonEncoder()));
+    MultiEncoder.builder(new DefaultEncoder())
+        .add(new GsonEncoder())                                   // declares itself
+        .add(EncoderPredicate.xmlContentType(), someXmlEncoder)    // paired
+        .add((object, bodyType, template) -> bodyType == byte[].class, binaryEncoder)
+        .build();
 ```
 
-A `PredicatedEncoder` used on its own, outside a `MultiEncoder`, is strict: a request its predicate
-rejects raises `EncodeException` rather than silently encoding nothing.
+Delegates are consulted in the order they were added, so put the narrowest predicate first. Note
+that `Content-Type: application/json` with a null body is claimed by a JSON encoder before
+`EncoderPredicate.emptyBody()` gets a chance &mdash; order accordingly.
+
+##### Declaring your own encoder
+
+Implement `PredicatedEncoder` alongside `Encoder` and override `canEncode`:
+
+```java
+public class MyEncoder implements Encoder, PredicatedEncoder {
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
+  }
+
+  @Override
+  public void encode(Object object, Type bodyType, RequestTemplate template) {
+    // ...
+  }
+}
+```
+
+`EncoderPredicate` ships with `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`,
+`emptyBody()`, `bodyType(type)` and `formEncoded()`, plus `and`/`or`/`negate` to combine them.
+
+**If you wrap an encoder, forward `canEncode` to your delegate.** A wrapper that does not will claim
+every request, because the default `canEncode` accepts everything. The metrics modules'
+`MeteredEncoder` forwards for exactly this reason.
 
 ### @Body templates
 The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.

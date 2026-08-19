@@ -413,13 +413,38 @@ public class Util {
     return hasContentTypeMatching(template, XML_CONTENT_TYPE);
   }
 
-  private static boolean hasContentTypeMatching(RequestTemplate template, Pattern pattern) {
+  /**
+   * Checks whether the {@code Content-Type} header of the given template starts with the given
+   * media type, ignoring case and any parameters such as {@code ;charset=utf-8}.
+   *
+   * @param template the request template to check
+   * @param mediaType the media type to look for, for example {@code
+   *     application/x-www-form-urlencoded}
+   * @return {@code true} if the content type matches, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean hasContentType(RequestTemplate template, String mediaType) {
+    return contentTypes(template)
+        .anyMatch(
+            contentType -> {
+              String trimmed = contentType.trim();
+              return trimmed.regionMatches(true, 0, mediaType, 0, mediaType.length())
+                  && (trimmed.length() == mediaType.length()
+                      || trimmed.charAt(mediaType.length()) == ';');
+            });
+  }
+
+  private static Stream<String> contentTypes(RequestTemplate template) {
     return template.headers().entrySet().stream()
         .filter(header -> CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
         .map(Map.Entry::getValue)
         .filter(Objects::nonNull)
         .flatMap(Collection::stream)
-        .anyMatch(
-            contentType -> contentType != null && pattern.matcher(contentType.trim()).matches());
+        .filter(Objects::nonNull);
+  }
+
+  private static boolean hasContentTypeMatching(RequestTemplate template, Pattern pattern) {
+    return contentTypes(template)
+        .anyMatch(contentType -> pattern.matcher(contentType.trim()).matches());
   }
 }

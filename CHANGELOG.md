@@ -1,13 +1,14 @@
 ### Version 13.14
 
-* Add `@Experimental` `MultiEncoder`, `PredicatedEncoder` and `EncoderPredicate`, letting a single client pick an
-  encoder per request. `Feign.builder().encoder(defaultEncoder, predicatedEncoders...)` builds one;
-  predicates are consulted in order and the default encoder is the fallback. `Util.isJsonContentType`
-  and `Util.isXmlContentType` back the `PredicatedEncoder.forJsonContentType`/`forXmlContentType`
-  factories. The `Encoder` interface is unchanged, so existing encoders keep working (#3485).
+* Add `@Experimental` `MultiEncoder`, `PredicatedEncoder` and `EncoderPredicate`, letting a single
+  client route each request to the right encoder. Encoders declare what they can handle by
+  implementing `PredicatedEncoder`; anything else is paired with a predicate via
+  `MultiEncoder.builder(defaultEncoder)`. The first-party JSON encoders (Gson, Jackson, Jackson 3,
+  Jackson Jr, Jackson JAXB, Moshi, Fastjson2, JSON-java) and XML encoders (JAXB, JAXB Jakarta, SOAP,
+  SOAP Jakarta) now declare themselves, and the metrics modules' `MeteredEncoder` forwards
+  `canEncode` to the encoder it wraps. The `Encoder` interface is unchanged, so existing encoders
+  keep working (#3485).
 
-* `JAXBContextFactory.withProperty` is now applied when creating Unmarshallers, not only
-  Marshallers. Marshaller-only properties are skipped on unmarshal (#3056).
 * Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
   request body. `HttpCacheInterceptor` includes QUERY in its default cacheable set and
   incorporates a body hash into the cache key to reduce cross-body collisions.
