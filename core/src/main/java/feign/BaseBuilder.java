@@ -39,7 +39,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
-
   protected List<RequestInterceptor> requestInterceptors = new ArrayList<>();
   protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
   protected List<MethodInterceptor> methodInterceptors = new ArrayList<>();
@@ -65,44 +64,45 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   }
 
   @SuppressWarnings("unchecked")
-  private B thisB() {
+  public B logLevel(Logger.Level logLevel) {
+    this.logLevel = logLevel;
     return (B) this;
   }
 
-  public B logLevel(Logger.Level logLevel) {
-    this.logLevel = logLevel;
-    return thisB();
-  }
-
+  @SuppressWarnings("unchecked")
   public B contract(Contract contract) {
     this.contract = contract;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B retryer(Retryer retryer) {
     this.retryer = retryer;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B logger(Logger logger) {
     this.logger = logger;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B encoder(Encoder encoder) {
     this.encoder = encoder;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B decoder(Decoder decoder) {
     this.decoder = decoder;
-    return thisB();
+    return (B) this;
   }
 
   public B codec(Codec codec) {
     this.encoder = codec.encoder();
     this.decoder = codec.decoder();
-    return thisB();
+    return (B) this;
   }
 
   /**
@@ -115,25 +115,29 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    *
    * @since 9.6
    */
+  @SuppressWarnings("unchecked")
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B decodeVoid() {
     this.decodeVoid = true;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B queryMapEncoder(QueryMapEncoder queryMapEncoder) {
     this.queryMapEncoder = queryMapEncoder;
-    return thisB();
+    return (B) this;
   }
 
   /** Allows to map the response before passing it to the decoder. */
+  @SuppressWarnings("unchecked")
   public B mapAndDecode(ResponseMapper mapper, Decoder decoder) {
     this.decoder = new ResponseMappingDecoder(mapper, decoder);
-    return thisB();
+    return (B) this;
   }
 
   /**
@@ -151,9 +155,10 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    *
    * @since 11.9
    */
+  @SuppressWarnings("unchecked")
   public B dismiss404() {
     this.dismiss404 = true;
-    return thisB();
+    return (B) this;
   }
 
   /**
@@ -173,55 +178,62 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * @deprecated use {@link #dismiss404()} instead.
    */
   @Deprecated
+  @SuppressWarnings("unchecked")
   public B decode404() {
     this.dismiss404 = true;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B errorDecoder(ErrorDecoder errorDecoder) {
     this.errorDecoder = errorDecoder;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B options(Options options) {
     this.options = options;
-    return thisB();
+    return (B) this;
   }
 
   /** Adds a single request interceptor to the builder. */
+  @SuppressWarnings("unchecked")
   public B requestInterceptor(RequestInterceptor requestInterceptor) {
     this.requestInterceptors.add(requestInterceptor);
-    return thisB();
+    return (B) this;
   }
 
   /**
    * Sets the full set of request interceptors for the builder, overwriting any previous
    * interceptors.
    */
+  @SuppressWarnings("unchecked")
   public B requestInterceptors(Iterable<RequestInterceptor> requestInterceptors) {
     this.requestInterceptors.clear();
     for (RequestInterceptor requestInterceptor : requestInterceptors) {
       this.requestInterceptors.add(requestInterceptor);
     }
-    return thisB();
+    return (B) this;
   }
 
   /**
    * Sets the full set of request interceptors for the builder, overwriting any previous
    * interceptors.
    */
+  @SuppressWarnings("unchecked")
   public B responseInterceptors(Iterable<ResponseInterceptor> responseInterceptors) {
     this.responseInterceptors.clear();
     for (ResponseInterceptor responseInterceptor : responseInterceptors) {
       this.responseInterceptors.add(responseInterceptor);
     }
-    return thisB();
+    return (B) this;
   }
 
   /** Adds a single response interceptor to the builder. */
+  @SuppressWarnings("unchecked")
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
     this.responseInterceptors.add(responseInterceptor);
-    return thisB();
+    return (B) this;
   }
 
   /**
@@ -232,7 +244,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Experimental
   public B methodInterceptor(MethodInterceptor methodInterceptor) {
     this.methodInterceptors.add(methodInterceptor);
-    return thisB();
+    return (B) this;
   }
 
   /** Sets the full set of method interceptors, overwriting any previously configured. */
@@ -242,33 +254,36 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (MethodInterceptor methodInterceptor : methodInterceptors) {
       this.methodInterceptors.add(methodInterceptor);
     }
-    return thisB();
+    return (B) this;
   }
 
   /** Allows you to override how reflective dispatch works inside of Feign. */
+  @SuppressWarnings("unchecked")
   public B invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
     this.invocationHandlerFactory = invocationHandlerFactory;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
     this.propagationPolicy = propagationPolicy;
-    return thisB();
+    return (B) this;
   }
 
+  @SuppressWarnings("unchecked")
   public B addCapability(Capability capability) {
     this.capabilities.add(capability);
-    return thisB();
+    return (B) this;
   }
 
   @SuppressWarnings("unchecked")
   B enrich() {
     if (capabilities.isEmpty()) {
-      return thisB();
+      return (B) this;
     }
 
     try {
-      B clone = (B) thisB().clone();
+      B clone = (B) this.clone();
 
       getFieldsToEnrich()
           .forEach(
