@@ -27,6 +27,8 @@ import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.MultiDecoder;
+import feign.codec.PredicatedDecoder;
 import feign.interceptor.MethodInterceptor;
 import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
@@ -97,6 +99,32 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   public B decoder(Decoder decoder) {
     this.decoder = decoder;
     return thisB();
+  }
+
+  /**
+   * Configures a {@link MultiDecoder} built from decoders that declare their own applicability.
+   *
+   * <p>Each {@link PredicatedDecoder} is consulted in the order given; {@code defaultDecoder} is
+   * the fallback used when none accepts the response.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .decoder(new DefaultDecoder(), new JacksonDecoder(), new JAXBDecoder())
+   * </pre>
+   *
+   * <p>To pair a predicate with a decoder that does not implement {@link PredicatedDecoder}, use
+   * {@link MultiDecoder#builder(Decoder)} instead.
+   *
+   * @param defaultDecoder the decoder used when no delegate accepts the response
+   * @param decoders the predicated decoders, consulted in the order given
+   */
+  @Experimental
+  public B decoder(Decoder defaultDecoder, PredicatedDecoder... decoders) {
+    MultiDecoder.Builder builder = MultiDecoder.builder(defaultDecoder);
+    for (PredicatedDecoder decoder : decoders) {
+      builder.add(decoder);
+    }
+    return decoder(builder.build());
   }
 
   public B codec(Codec codec) {

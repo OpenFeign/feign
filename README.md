@@ -663,6 +663,82 @@ public class Example {
 }
 ```
 
+#### Multiple decoders
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+A single client sometimes has to read more than one format &mdash; JSON for most endpoints, XML for
+a legacy one, plain text for a health check. `MultiDecoder` routes each response to the right
+decoder, falling back to a default when none applies.
+
+Most first-party decoders already declare what they can handle, so they can simply be added:
+
+```java
+interface MixedClient {
+  @RequestLine("GET /orders/{id}")
+  Order order(@Param("id") String id);
+
+  @RequestLine("GET /legacy/orders/{id}")
+  Order legacyOrder(@Param("id") String id);
+}
+
+public class Example {
+  public static void main(String[] args) {
+    MixedClient client = Feign.builder()
+                              .decoder(new DefaultDecoder(), new GsonDecoder(), new JAXBDecoder())
+                              .target(MixedClient.class, "https://foo.com");
+  }
+}
+```
+
+The first argument is the default decoder, used when nothing else accepts the response. Routing is
+driven by what the server actually sent back, so a client that talks to endpoints answering
+`application/json` and `application/xml` no longer needs one Feign instance per format.
+
+For a decoder that does not declare itself &mdash; including one you do not control &mdash; pair it
+with a `DecoderPredicate` using the builder:
+
+```java
+Decoder decoder =
+    MultiDecoder.builder(new DefaultDecoder())
+        .add(new GsonDecoder())                                  // declares itself
+        .add(DecoderPredicate.xmlContentType(), someXmlDecoder)   // paired
+        .add((response, type) -> type == byte[].class, binaryDecoder)
+        .build();
+```
+
+Delegates are consulted in the order they were added, so put the narrowest predicate first.
+
+##### Declaring your own decoder
+
+Implement `PredicatedDecoder` alongside `Decoder` and override `canDecode`:
+
+```java
+public class MyDecoder implements Decoder, PredicatedDecoder {
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException {
+    // ...
+  }
+}
+```
+
+`DecoderPredicate` ships with `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`,
+`emptyBody()`, `status(codes...)` and `returnType(type)`, plus `and`/`or`/`negate` to combine them.
+
+**Predicates must not read the response body.** For most clients it is a single-pass stream, so
+consuming it in `canDecode` would leave nothing for the decoder that is eventually chosen. Decide
+on the status, the headers and the expected type instead.
+
+**If you wrap a decoder, forward `canDecode` to your delegate.** A wrapper that does not will claim
+every response, because the default `canDecode` accepts everything. `OptionalDecoder` and the
+metrics modules' `MeteredDecoder` forward for exactly this reason.
+
 ### Encoders
 The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
