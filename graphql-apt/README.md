@@ -56,6 +56,29 @@ public record CharByRegion(String id, Location location) {
 }
 ```
 
+### Multiple root fields
+
+An operation selecting several root fields gets a record with one component per field, mirroring the operation's own selection set rather than a single field's type:
+
+```graphql
+query authorPage($authorId: ID!) {
+  books(authorId: $authorId) { id title }
+  reviews(authorId: $authorId) { id rating }
+}
+```
+
+```java
+public record AuthorPage(Optional<List<Books>> books, Optional<List<Reviews>> reviews) {
+
+  public record Books(String id, String title) {}
+
+  public record Reviews(String id, Integer rating) {}
+
+}
+```
+
+With a single root field the record still mirrors that field's type, so `{ character(id: "1") { id name } }` keeps generating `record CharacterResult(String id, String name)`.
+
 ### Conflicting return type error
 
 If two queries use the same return type name but select different fields, the processor reports compilation errors on both methods showing which fields each selects:
