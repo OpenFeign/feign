@@ -27,6 +27,8 @@ import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.MultiEncoder;
+import feign.codec.PredicatedEncoder;
 import feign.interceptor.MethodInterceptor;
 import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
@@ -92,6 +94,27 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   public B encoder(Encoder encoder) {
     this.encoder = encoder;
     return thisB();
+  }
+
+  /**
+   * Configures a {@link MultiEncoder} that picks an encoder per request.
+   *
+   * <p>Each {@link PredicatedEncoder} is consulted in the order given; {@code defaultEncoder} is
+   * the fallback used when no predicate accepts the request.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .encoder(
+   *         new DefaultEncoder(),
+   *         PredicatedEncoder.forJsonContentType(new JacksonEncoder()),
+   *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
+   * </pre>
+   *
+   * @param defaultEncoder the encoder used when no predicate accepts the request
+   * @param encoders the predicated encoders, consulted in the order given
+   */
+  public B encoder(Encoder defaultEncoder, PredicatedEncoder... encoders) {
+    return encoder(MultiEncoder.of(defaultEncoder, encoders));
   }
 
   public B decoder(Decoder decoder) {

@@ -709,6 +709,54 @@ public class Example {
 }
 ```
 
+#### Multiple encoders
+
+A single client sometimes has to speak more than one format &mdash; JSON for most endpoints, XML for
+a legacy one, plain bytes for an upload. `MultiEncoder` picks the encoder per request by asking each
+candidate's predicate, falling back to a default encoder when none match.
+
+```java
+interface MixedClient {
+  @RequestLine("POST /orders")
+  @Headers("Content-Type: application/json")
+  void createOrder(Order order);
+
+  @RequestLine("POST /legacy/orders")
+  @Headers("Content-Type: application/xml")
+  void createLegacyOrder(Order order);
+}
+
+public class Example {
+  public static void main(String[] args) {
+    MixedClient client = Feign.builder()
+                              .encoder(
+                                  new DefaultEncoder(),
+                                  PredicatedEncoder.forJsonContentType(new GsonEncoder()),
+                                  PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
+                              .target(MixedClient.class, "https://foo.com");
+  }
+}
+```
+
+The first argument is the default encoder, used when no predicate accepts the request. The remaining
+arguments are consulted in the order given, so the most specific encoder should come first.
+
+`PredicatedEncoder` ships with factories for the common cases &mdash; `forJsonContentType`,
+`forXmlContentType` and `forEmptyBody`. `EncoderPredicate` is a functional interface, so any other
+condition is a lambda over the same three arguments `Encoder#encode` receives:
+
+```java
+Encoder encoder =
+    MultiEncoder.of(
+        new DefaultEncoder(),
+        new PredicatedEncoder(
+            (object, bodyType, template) -> bodyType == byte[].class, new BinaryEncoder()),
+        PredicatedEncoder.forJsonContentType(new GsonEncoder()));
+```
+
+A `PredicatedEncoder` used on its own, outside a `MultiEncoder`, is strict: a request its predicate
+rejects raises `EncodeException` rather than silently encoding nothing.
+
 ### @Body templates
 The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.
 
