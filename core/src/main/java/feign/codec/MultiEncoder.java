@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import feign.Experimental;
 import feign.RequestTemplate;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import java.util.Objects;
  *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()));
  * </pre>
  */
+@Experimental
 public class MultiEncoder implements Encoder {
 
   private final Encoder defaultEncoder;

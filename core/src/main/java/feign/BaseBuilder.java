@@ -113,6 +113,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * @param defaultEncoder the encoder used when no predicate accepts the request
    * @param encoders the predicated encoders, consulted in the order given
    */
+  @Experimental
   public B encoder(Encoder defaultEncoder, PredicatedEncoder... encoders) {
     return encoder(MultiEncoder.of(defaultEncoder, encoders));
   }

@@ -711,6 +711,8 @@ public class Example {
 
 #### Multiple encoders
 
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
 A single client sometimes has to speak more than one format &mdash; JSON for most endpoints, XML for
 a legacy one, plain bytes for an upload. `MultiEncoder` picks the encoder per request by asking each
 candidate's predicate, falling back to a default encoder when none match.

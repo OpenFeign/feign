@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import feign.Experimental;
 import feign.RequestTemplate;
 import feign.Util;
 import java.lang.reflect.Type;
@@ -36,6 +37,7 @@ import java.util.Objects;
  *         PredicatedEncoder.forXmlContentType(new JAXBEncoder()))
  * </pre>
  */
+@Experimental
 public class PredicatedEncoder implements Encoder {
 
   private final EncoderPredicate predicate;

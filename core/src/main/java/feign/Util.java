@@ -394,6 +394,7 @@ public class Util {
    * @param template the request template to check
    * @return {@code true} if the content type is JSON, {@code false} otherwise
    */
+  @Experimental
   public static boolean isJsonContentType(RequestTemplate template) {
     return hasContentTypeMatching(template, JSON_CONTENT_TYPE);
   }
@@ -407,6 +408,7 @@ public class Util {
    * @param template the request template to check
    * @return {@code true} if the content type is XML, {@code false} otherwise
    */
+  @Experimental
   public static boolean isXmlContentType(RequestTemplate template) {
     return hasContentTypeMatching(template, XML_CONTENT_TYPE);
   }

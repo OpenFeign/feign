@@ -15,6 +15,7 @@
  */
 package feign.codec;
 
+import feign.Experimental;
 import feign.RequestTemplate;
 import java.lang.reflect.Type;
 
@@ -29,6 +30,7 @@ import java.lang.reflect.Type;
  * @see MultiEncoder
  */
 @FunctionalInterface
+@Experimental
 public interface EncoderPredicate {
 
   /**
