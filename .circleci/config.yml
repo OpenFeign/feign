@@ -177,7 +177,7 @@ jobs:
       - checkout
       - setup-build-environment
 
-  test:
+  build:
     executor:
       name: java
     <<: *defaults
@@ -185,11 +185,49 @@ jobs:
       - checkout
       - restore-build-environment
       - run:
+          name: 'Build'
+          command: |
+            source "$HOME/.sdkman/bin/sdkman-init.sh"
+            ./mvnw -ntp -B install -DskipTests
+      - verify-formatting
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - .m2/repository/io/github/openfeign
+
+  test:
+    executor:
+      name: java
+    <<: *defaults
+    parallelism: 4
+    steps:
+      - checkout
+      - restore-build-environment
+      - attach_workspace:
+          at: ~/
+      - run:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify
-      - verify-formatting
+            MODULES=$(scripts/shard-modules.sh "$CIRCLE_NODE_INDEX" "$CIRCLE_NODE_TOTAL")
+            echo "shard $CIRCLE_NODE_INDEX of $CIRCLE_NODE_TOTAL: $MODULES"
+            # the build job already ran these across the whole reactor, and repeating them per
+            # shard costs more than the tests themselves
+            ./mvnw -ntp -B verify -pl "$MODULES" \
+              -Djapicmp.skip=true \
+              -Dmoditect.skip=true \
+              -Dlicense.skip=true \
+              -Dsort.skip=true \
+              -Dgcf.skip=true
+      - run:
+          name: 'Collect test results'
+          when: always
+          command: |
+            mkdir -p ~/test-results/junit
+            find . -regex '.*/target/\(surefire\|failsafe\)-reports/.*\.xml' \
+              -exec cp --parents {} ~/test-results/junit/ \;
+      - store_test_results:
+          path: ~/test-results
 
   deploy:
     executor:
@@ -209,10 +247,16 @@ workflows:
           name: 'setup-environment'
           filters:
             <<: *all-branches
-      - test:
+      - build:
           name: 'pr-build'
           requires:
             - 'setup-environment'
+          filters:
+            <<: *all-branches
+      - test:
+          name: 'pr-test'
+          requires:
+            - 'pr-build'
           filters:
             <<: *all-branches
 
@@ -222,10 +266,16 @@ workflows:
           name: 'setup-environment-snapshot'
           filters:
             <<: *master-only
+      - build:
+          name: 'snapshot-build'
+          requires:
+            - 'setup-environment-snapshot'
+          filters:
+            <<: *master-only
       - test:
           name: 'snapshot'
           requires:
-            - 'setup-environment-snapshot'
+            - 'snapshot-build'
           filters:
             <<: *master-only
       - deploy:
