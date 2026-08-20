@@ -22,13 +22,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public final class JacksonJaxbJsonEncoder implements Encoder {
+public final class JacksonJaxbJsonEncoder implements Encoder, PredicatedEncoder {
   private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
   public JacksonJaxbJsonEncoder() {
@@ -50,5 +52,10 @@ public final class JacksonJaxbJsonEncoder implements Encoder {
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }

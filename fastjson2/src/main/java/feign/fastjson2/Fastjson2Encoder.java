@@ -19,15 +19,17 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 
 /**
  * @author changjin wei(魏昌进)
  */
-public class Fastjson2Encoder implements Encoder, JsonEncoder {
+public class Fastjson2Encoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   private final JSONWriter.Feature[] features;
 
@@ -43,5 +45,10 @@ public class Fastjson2Encoder implements Encoder, JsonEncoder {
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
     template.body(Request.Body.of(JSON.toJSONBytes(object, features)));
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }

@@ -19,13 +19,15 @@ import com.fasterxml.jackson.jr.ob.JSON;
 import com.fasterxml.jackson.jr.ob.JacksonJrExtension;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
 /** A {@link Encoder} that uses Jackson Jr to convert objects to String or byte representation. */
-public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
+public class JacksonJrEncoder extends JacksonJrMapper implements Encoder, PredicatedEncoder {
 
   public JacksonJrEncoder() {
     super();
@@ -61,5 +63,10 @@ public class JacksonJrEncoder extends JacksonJrMapper implements Encoder {
     } catch (IOException e) {
       throw new EncodeException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }

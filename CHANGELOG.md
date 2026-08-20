@@ -8,9 +8,34 @@
 
 ### Version 13.14
 
+* Add `@Experimental` `MultiEncoder`, `PredicatedEncoder` and `EncoderPredicate`, letting a single
+  client route each request to the right encoder. Encoders declare what they can handle by
+  implementing `PredicatedEncoder`; anything else is paired with a predicate via
+  `PredicatedEncoder.of(predicate, encoder)` or `MultiEncoder.builder()`. Encoders are consulted in
+  the order given and a request nothing accepts fails with an `EncodeException` naming what was
+  tried, so a default is an encoder guarded by `EncoderPredicate.any()` listed last. `FormEncoder`
+  and `SpringFormEncoder` gain `createPredicatedFormEncoder()`, a delegate-free flavour that can
+  take part. The first-party JSON encoders (Gson, Jackson, Jackson 3, Jackson Jr, Jackson JAXB,
+  Moshi, Fastjson2, JSON-java) and XML encoders (JAXB, JAXB Jakarta, SOAP, SOAP Jakarta) now declare
+  themselves, and the metrics modules' `MeteredEncoder` forwards `canEncode` to the encoder it
+  wraps. The `Encoder` interface is unchanged, so existing encoders keep working (#3485).
+* Add `@Experimental` `MultiDecoder`, `PredicatedDecoder` and `DecoderPredicate`, the decode-side
+  counterpart, letting a single client route each response to the right decoder. Decoders declare
+  what they can handle by implementing `PredicatedDecoder`; anything else is paired with a predicate
+  via `PredicatedDecoder.of(predicate, decoder)` or `MultiDecoder.builder()`. Decoders are consulted
+  in the order given and a response nothing accepts fails with a `DecodeException` naming what was
+  tried, so a default is a decoder guarded by `DecoderPredicate.any()` listed last. The first-party
+  JSON decoders (Gson, Jackson, Jackson 3, Jackson Jr, Jackson JAXB, Moshi, Fastjson2, JSON-java)
+  and XML decoders (JAXB, JAXB Jakarta, SAX, SOAP, SOAP Jakarta) now declare themselves, and
+  `OptionalDecoder` and the metrics modules' `MeteredDecoder` forward `canDecode` to the decoder
+  they wrap. The `Decoder` interface is unchanged, so existing decoders keep working.
+* `JAXBContextFactory.withProperty` is now applied when creating Unmarshallers, not only
+  Marshallers. Marshaller-only properties are skipped on unmarshal (#3056).
 * Add support for the HTTP QUERY method (RFC 10008) — safe, idempotent, and cacheable with a
   request body. `HttpCacheInterceptor` includes QUERY in its default cacheable set and
   incorporates a body hash into the cache key to reduce cross-body collisions.
+* Flatten `feign-bom` on install/deploy so importing the BOM does not pull `feign-parent`
+  dependency management (for example Jackson) into consumer projects such as Spring Boot.
 
 ### Version 13.12
 

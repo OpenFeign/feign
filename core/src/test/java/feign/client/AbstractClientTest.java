@@ -231,6 +231,16 @@ public abstract class AbstractClientTest {
     api.noPutBody();
   }
 
+  @Test
+  public void emptyStringBodyForPost() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.postEmptyStringBody("");
+  }
+
   /**
    * Some client implementation tests should override this test if the PATCH operation is
    * unsupported.
@@ -618,6 +628,9 @@ public abstract class AbstractClientTest {
 
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("POST /")
+    String postEmptyStringBody(String body);
 
     @RequestLine("PUT")
     String noPutBody();

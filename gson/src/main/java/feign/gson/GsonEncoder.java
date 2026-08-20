@@ -19,12 +19,14 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class GsonEncoder implements Encoder, JsonEncoder {
+public class GsonEncoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   private final Gson gson;
 
@@ -43,5 +45,10 @@ public class GsonEncoder implements Encoder, JsonEncoder {
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     template.body(Request.Body.of(gson.toJson(object, bodyType)));
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }
