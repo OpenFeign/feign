@@ -386,6 +386,20 @@ public class Util {
   }
 
   /**
+   * Checks whether the {@code Content-Type} header of the given template denotes JSON.
+   *
+   * <p>Matches {@code application/json} as well as suffixed types such as {@code
+   * application/vnd.github+json}. The header name is matched case-insensitively.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is JSON, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean isJsonContentType(RequestTemplate template) {
+    return hasContentTypeMatching(template, JSON_CONTENT_TYPE);
+  }
+
+  /**
    * Checks whether the {@code Content-Type} header of the given response denotes JSON.
    *
    * <p>Matches {@code application/json} as well as suffixed types such as {@code
@@ -397,6 +411,20 @@ public class Util {
   @Experimental
   public static boolean isJsonContentType(Response response) {
     return hasContentTypeMatching(response, JSON_CONTENT_TYPE);
+  }
+
+  /**
+   * Checks whether the {@code Content-Type} header of the given template denotes XML.
+   *
+   * <p>Matches {@code application/xml} and {@code text/xml} as well as suffixed types such as
+   * {@code application/soap+xml}. The header name is matched case-insensitively.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is XML, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean isXmlContentType(RequestTemplate template) {
+    return hasContentTypeMatching(template, XML_CONTENT_TYPE);
   }
 
   /**
@@ -414,6 +442,20 @@ public class Util {
   }
 
   /**
+   * Checks whether the {@code Content-Type} header of the given template starts with the given
+   * media type, ignoring case and any parameters such as {@code ;charset=utf-8}.
+   *
+   * @param template the request template to check
+   * @param mediaType the media type to look for, for example {@code
+   *     application/x-www-form-urlencoded}
+   * @return {@code true} if the content type matches, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean hasContentType(RequestTemplate template, String mediaType) {
+    return matchesMediaType(contentTypes(template), mediaType);
+  }
+
+  /**
    * Checks whether the {@code Content-Type} header of the given response starts with the given
    * media type, ignoring case and any parameters such as {@code ;charset=utf-8}.
    *
@@ -423,21 +465,32 @@ public class Util {
    */
   @Experimental
   public static boolean hasContentType(Response response, String mediaType) {
-    return contentTypes(response)
-        .anyMatch(
-            contentType -> {
-              String trimmed = contentType.trim();
-              return trimmed.regionMatches(true, 0, mediaType, 0, mediaType.length())
-                  && (trimmed.length() == mediaType.length()
-                      || trimmed.charAt(mediaType.length()) == ';');
-            });
+    return matchesMediaType(contentTypes(response), mediaType);
+  }
+
+  private static boolean matchesMediaType(Stream<String> contentTypes, String mediaType) {
+    return contentTypes.anyMatch(
+        contentType -> {
+          String trimmed = contentType.trim();
+          return trimmed.regionMatches(true, 0, mediaType, 0, mediaType.length())
+              && (trimmed.length() == mediaType.length()
+                  || trimmed.charAt(mediaType.length()) == ';');
+        });
+  }
+
+  private static Stream<String> contentTypes(RequestTemplate template) {
+    return contentTypes(template.headers());
   }
 
   private static Stream<String> contentTypes(Response response) {
     if (response == null || response.headers() == null) {
       return Stream.empty();
     }
-    return response.headers().entrySet().stream()
+    return contentTypes(response.headers());
+  }
+
+  private static Stream<String> contentTypes(Map<String, Collection<String>> headers) {
+    return headers.entrySet().stream()
         .filter(header -> CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
         .map(Map.Entry::getValue)
         .filter(Objects::nonNull)
@@ -445,8 +498,15 @@ public class Util {
         .filter(Objects::nonNull);
   }
 
+  private static boolean hasContentTypeMatching(RequestTemplate template, Pattern pattern) {
+    return matchesPattern(contentTypes(template), pattern);
+  }
+
   private static boolean hasContentTypeMatching(Response response, Pattern pattern) {
-    return contentTypes(response)
-        .anyMatch(contentType -> pattern.matcher(contentType.trim()).matches());
+    return matchesPattern(contentTypes(response), pattern);
+  }
+
+  private static boolean matchesPattern(Stream<String> contentTypes, Pattern pattern) {
+    return contentTypes.anyMatch(contentType -> pattern.matcher(contentType.trim()).matches());
   }
 }

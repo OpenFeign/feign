@@ -16,8 +16,10 @@
 package feign.jaxb;
 
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import javax.xml.bind.JAXBException;
@@ -42,7 +44,7 @@ import javax.xml.bind.Marshaller;
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
  * contexts.
  */
-public class JAXBEncoder implements Encoder {
+public class JAXBEncoder implements Encoder, PredicatedEncoder {
 
   private final JAXBContextFactory jaxbContextFactory;
 
@@ -64,5 +66,10 @@ public class JAXBEncoder implements Encoder {
     } catch (JAXBException e) {
       throw new EncodeException(e.toString(), e);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isXmlContentType(template);
   }
 }

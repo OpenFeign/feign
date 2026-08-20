@@ -18,11 +18,13 @@ package feign.moshi;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 
-public class MoshiEncoder implements Encoder, JsonEncoder {
+public class MoshiEncoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   private final Moshi moshi;
 
@@ -42,5 +44,10 @@ public class MoshiEncoder implements Encoder, JsonEncoder {
   public void encode(Object object, Type bodyType, RequestTemplate template) {
     JsonAdapter<Object> jsonAdapter = moshi.adapter(bodyType).indent("  ");
     template.body(jsonAdapter.toJson(object));
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }
