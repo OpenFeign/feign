@@ -19,6 +19,7 @@ import feign.FeignException;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import feign.utils.ExceptionUtils;
 import io.micrometer.core.instrument.*;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 
 /** Wrap feign {@link Decoder} with metrics. */
-public class MeteredDecoder implements Decoder {
+public class MeteredDecoder implements Decoder, PredicatedDecoder {
 
   private final Decoder decoder;
   private final MeterRegistry meterRegistry;
@@ -116,5 +117,11 @@ public class MeteredDecoder implements Decoder {
   protected Tag[] extraTags(Response response, Type type, Exception e) {
     RequestTemplate template = response.request().requestTemplate();
     return new Tag[] {Tag.of("uri", template.methodMetadata().template().path())};
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return !(decoder instanceof PredicatedDecoder)
+        || ((PredicatedDecoder) decoder).canDecode(response, type);
   }
 }

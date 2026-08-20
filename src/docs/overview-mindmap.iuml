@@ -32,6 +32,7 @@ left side
 
 ** encoders/decoders
 *** Multi encoder (predicate based, experimental)
+*** Multi decoder (predicate based, experimental)
 *** GSON
 *** JAXB
 *** JAXB Jakarta

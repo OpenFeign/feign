@@ -24,12 +24,13 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class GsonDecoder implements Decoder, JsonDecoder {
+public class GsonDecoder implements Decoder, PredicatedDecoder, JsonDecoder {
 
   private final Gson gson;
 
@@ -65,5 +66,10 @@ public class GsonDecoder implements Decoder, JsonDecoder {
   @Override
   public Object convert(Object object, Type type) {
     return gson.fromJson(gson.toJsonTree(object), type);
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

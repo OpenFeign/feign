@@ -23,13 +23,14 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class JacksonDecoder implements Decoder, JsonDecoder {
+public class JacksonDecoder implements Decoder, PredicatedDecoder, JsonDecoder {
 
   private final ObjectMapper mapper;
 
@@ -75,5 +76,10 @@ public class JacksonDecoder implements Decoder, JsonDecoder {
   @Override
   public Object convert(Object object, Type type) {
     return mapper.convertValue(object, mapper.constructType(type));
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }
