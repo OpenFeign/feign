@@ -42,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 import mockwebserver3.MockResponse;
+import mockwebserver3.RecordedRequest;
 import okio.Buffer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -146,6 +147,45 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
+  void lowerCaseContentLengthHeaderIsUsedForFixedLengthStreamingMode() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
+    byte[] body = "hello".getBytes(StandardCharsets.UTF_8);
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList(String.valueOf(body.length)));
+    Request request =
+        Request.create(
+            HttpMethod.POST,
+            "http://localhost:" + server.getPort() + "/",
+            headers,
+            Request.Body.of(body),
+            null);
+
+    // the two-arg constructor disables request buffering, so a recognised Content-Length selects
+    // fixed-length streaming mode and the JDK emits the header itself, exactly once
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    RecordedRequest recordedRequest = server.takeRequest();
+    assertThat(recordedRequest.getHeaders().values("Content-Length"))
+        .containsExactly(String.valueOf(body.length));
+    assertThat(recordedRequest.getHeaders().get("Transfer-Encoding")).isNull();
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void contentLengthHeaderIsNotDuplicatedForBodylessRequest() throws Exception {
+    server.enqueue(new MockResponse.Builder().build());
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList("0"));
+    Request request =
+        Request.create(
+            HttpMethod.POST, "http://localhost:" + server.getPort() + "/", headers, null, null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Length")).containsExactly("0");
+  }
+
+  @Test
   void emptyBodyDoesNotConvertGetToPost() throws Exception {
     server.enqueue(new MockResponse.Builder().body("foo").build());
     Request request =
@@ -159,6 +199,15 @@ public class DefaultClientTest extends AbstractClientTest {
     new DefaultClient(null, null).execute(request, new Request.Options());
 
     MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET");
+  }
+
+  @Test
+  @Override
+  public void emptyStringBodyForPost() throws Exception {
+    super.emptyStringBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasNoHeaderNamed("Content-Type");
   }
 
   @Test

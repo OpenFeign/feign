@@ -21,6 +21,7 @@ import static java.util.Collections.singletonMap;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import feign.core.codec.DefaultEncoder;
 import feign.form.FormEncoder;
 import feign.form.MultipartFormContentProcessor;
@@ -42,9 +43,21 @@ public class SpringFormEncoder extends FormEncoder {
   }
 
   /**
+   * Creates a Spring form encoder that declares what it can handle, for use with {@code
+   * MultiEncoder}. It has no delegate, so a request it does not accept is left for the other
+   * encoders registered alongside it.
+   *
+   * @return a Spring form encoder guarded by {@link FormEncoder#formRequests()}
+   */
+  public static PredicatedEncoder createPredicatedFormEncoder() {
+    return PredicatedEncoder.of(FormEncoder.formRequests(), new SpringFormEncoder(null));
+  }
+
+  /**
    * Constructor with specified delegate encoder.
    *
-   * @param delegate delegate encoder, if this encoder couldn't encode object.
+   * @param delegate delegate encoder, if this encoder couldn't encode object. {@code null} leaves
+   *     this encoder without one, see {@link FormEncoder#FormEncoder(Encoder)}.
    */
   public SpringFormEncoder(Encoder delegate) {
     super(delegate);

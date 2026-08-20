@@ -23,13 +23,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 import java.util.Collections;
 
-public class JacksonEncoder implements Encoder, JsonEncoder {
+public class JacksonEncoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   private final ObjectMapper mapper;
 
@@ -57,5 +59,10 @@ public class JacksonEncoder implements Encoder, JsonEncoder {
     } catch (JsonProcessingException e) {
       throw new EncodeException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }

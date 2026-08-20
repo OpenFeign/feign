@@ -181,7 +181,7 @@ public class DefaultClient implements Client {
         hasAcceptHeader = true;
       }
       for (String value : request.headers().get(field)) {
-        if (field.equals(CONTENT_LENGTH)) {
+        if (field.equalsIgnoreCase(CONTENT_LENGTH)) {
           if (!gzipEncodedRequest && !deflateEncodedRequest) {
             contentLength = Integer.valueOf(value);
           }
@@ -202,12 +202,7 @@ public class DefaultClient implements Client {
 
     Optional<Request.Body> body = request.body();
 
-    if (body.isPresent()
-        && (body.get().contentLength() != 0 || request.httpMethod() != Request.HttpMethod.GET)) {
-      /*
-       * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
-       * retry logic applies to such requests.
-       */
+    if (body.isPresent() && body.get().contentLength() != 0) {
       if (disableRequestBuffering) {
         if (contentLength != null) {
           connection.setFixedLengthStreamingMode(contentLength);
@@ -230,10 +225,15 @@ public class DefaultClient implements Client {
         } catch (IOException suppressed) { // NOPMD
         }
       }
-    }
-
-    if (body.isEmpty() && request.httpMethod().isWithBody()) {
-      // To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
+    } else if (request.httpMethod().isWithBody()) {
+      /*
+       * Avoid calling connection.getOutputStream() for an empty body: HttpURLConnection defaults
+       * the Content-Type to application/x-www-form-urlencoded as soon as an output stream (a
+       * "poster") is created, even when zero bytes are written to it. Setting Content-Length
+       * directly ensures internal retry logic still applies to such requests, without triggering
+       * that default.
+       * To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
+       */
       connection.addRequestProperty("Content-Length", "0");
     }
 

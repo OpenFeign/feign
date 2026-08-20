@@ -17,8 +17,10 @@ package feign.soap;
 
 import feign.Request;
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import feign.jaxb.JAXBContextFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -83,7 +85,7 @@ import org.w3c.dom.Document;
  * <p>The JAXBContextFactory should be reused across requests as it caches the created JAXB
  * contexts.
  */
-public class SOAPEncoder implements Encoder {
+public class SOAPEncoder implements Encoder, PredicatedEncoder {
 
   private static final String DEFAULT_SOAP_PROTOCOL = SOAPConstants.SOAP_1_1_PROTOCOL;
 
@@ -224,5 +226,10 @@ public class SOAPEncoder implements Encoder {
       }
       return new SOAPEncoder(this);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isXmlContentType(template);
   }
 }
