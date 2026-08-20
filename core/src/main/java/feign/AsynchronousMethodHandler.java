@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -114,18 +115,19 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   }
 
   private static class CancellableFuture<T> extends CompletableFuture<T> {
-    private CompletableFuture<T> inner = null;
+    private final AtomicReference<CompletableFuture<T>> inner = new AtomicReference<>();
 
     public void setInner(CompletableFuture<T> value) {
-      inner = value;
-      inner.whenComplete(pipeTo(this));
+      inner.set(value);
+      value.whenComplete(pipeTo(this));
     }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       final boolean result = super.cancel(mayInterruptIfRunning);
-      if (inner != null) {
-        inner.cancel(mayInterruptIfRunning);
+      CompletableFuture<T> current = inner.get();
+      if (current != null) {
+        current.cancel(mayInterruptIfRunning);
       }
       return result;
     }
