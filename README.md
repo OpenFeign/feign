@@ -714,10 +714,11 @@ public class Example {
 > This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
 
 A single client sometimes has to speak more than one format &mdash; JSON for most endpoints, XML for
-a legacy one, plain bytes for an upload. `MultiEncoder` routes each request to the right encoder,
-falling back to a default when none applies.
+a legacy one, plain bytes for an upload. `MultiEncoder` hands each request to the first encoder that
+accepts it.
 
-Most first-party encoders already declare what they can handle, so they can simply be added:
+Most first-party encoders already declare what they can handle, so they can simply be listed, in the
+order they should be consulted:
 
 ```java
 interface MixedClient {
@@ -733,36 +734,56 @@ interface MixedClient {
 public class Example {
   public static void main(String[] args) {
     MixedClient client = Feign.builder()
-                              .encoder(new DefaultEncoder(), new GsonEncoder(), new JAXBEncoder())
+                              .encoders(new GsonEncoder(), new JAXBEncoder())
                               .target(MixedClient.class, "https://foo.com");
   }
 }
 ```
 
-The first argument is the default encoder, used when nothing else accepts the request.
+There is no implicit fallback. A request that no encoder accepts fails with an `EncodeException`
+naming the encoders that were tried and what each one wants:
 
-For an encoder that does not declare itself &mdash; including one you do not control &mdash; pair it
-with an `EncoderPredicate` using the builder:
+```
+Unable to encode java.lang.String (Content-Type: text/plain) for POST /orders. Encoders tried, in order:
+  - GsonEncoder
+  - JAXBEncoder
+Add an encoder guarded by EncoderPredicate.any() last to act as a default.
+```
+
+To get a default, pair an encoder with the predicate that accepts everything and list it **last**:
+
+```java
+Feign.builder()
+     .encoders(
+         new GsonEncoder(),
+         new JAXBEncoder(),
+         PredicatedEncoder.of(EncoderPredicate.any(), new DefaultEncoder()));
+```
+
+The same pairing works for any encoder that does not declare itself, including one you do not
+control. `MultiEncoder.builder()` spells it out when a lambda reads better than a wrapper:
 
 ```java
 Encoder encoder =
-    MultiEncoder.builder(new DefaultEncoder())
-        .add(new GsonEncoder())                                   // declares itself
-        .add(EncoderPredicate.xmlContentType(), someXmlEncoder)    // paired
+    MultiEncoder.builder()
+        .add(new GsonEncoder())                                    // declares itself
+        .add(EncoderPredicate.xmlContentType(), someXmlEncoder)     // paired
         .add((object, bodyType, template) -> bodyType == byte[].class, binaryEncoder)
+        .add(EncoderPredicate.any(), new DefaultEncoder())          // the default, last
         .build();
 ```
 
-Delegates are consulted in the order they were added, so put the narrowest predicate first. Note
-that `Content-Type: application/json` with a null body is claimed by a JSON encoder before
+Encoders are consulted in the order they were added, so put the narrowest one first. Note that
+`Content-Type: application/json` with a null body is claimed by a JSON encoder before
 `EncoderPredicate.emptyBody()` gets a chance &mdash; order accordingly.
 
 ##### Declaring your own encoder
 
-Implement `PredicatedEncoder` alongside `Encoder` and override `canEncode`:
+Implement `PredicatedEncoder` and say what you handle. `canEncode` has no default: an encoder that
+declares nothing would claim every request, which is rarely what its author meant.
 
 ```java
-public class MyEncoder implements Encoder, PredicatedEncoder {
+public class MyEncoder implements PredicatedEncoder {
 
   @Override
   public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
@@ -776,12 +797,42 @@ public class MyEncoder implements Encoder, PredicatedEncoder {
 }
 ```
 
-`EncoderPredicate` ships with `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`,
-`emptyBody()`, `bodyType(type)` and `formEncoded()`, plus `and`/`or`/`negate` to combine them.
+`EncoderPredicate` is the `@FunctionalInterface` here, so predicates can be lambdas. It ships with
+`any()`, `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`, `emptyBody()`,
+`bodyType(type)` and `formEncoded()`, plus `and`/`or`/`negate` to combine them. Each one describes
+itself, which is what shows up in the error message above; wrap your own lambdas in
+`EncoderPredicate.describedAs("it is Tuesday", ...)` to read as well.
 
-**If you wrap an encoder, forward `canEncode` to your delegate.** A wrapper that does not will claim
-every request, because the default `canEncode` accepts everything. The metrics modules'
-`MeteredEncoder` forwards for exactly this reason.
+`PredicatedEncoder.of(predicate, encoder)` replaces whatever the encoder says about itself, so it
+can widen an encoder as well as narrow it. To keep the encoder's own declaration and add to it, use
+`narrowing`:
+
+```java
+// only this vendor content type, and only what Gson would have taken anyway
+PredicatedEncoder.narrowing(
+    EncoderPredicate.contentType("application/vnd.acme+json"), new GsonEncoder());
+```
+
+**If you wrap an encoder, forward `canEncode` to your delegate**, otherwise wrapping silently
+changes what the encoder handles. The metrics modules' `MeteredEncoder` forwards for exactly this
+reason.
+
+##### Form encoders
+
+`FormEncoder` and `SpringFormEncoder` wrap a delegate encoder, so they cannot honestly declare what
+they handle &mdash; the delegate's applicability is unknown to them. Instead, each offers a
+delegate-free flavour that does:
+
+```java
+Feign.builder()
+     .encoders(
+         FormEncoder.createPredicatedFormEncoder(),  // form and multipart requests only
+         new JacksonEncoder());
+```
+
+It accepts form and multipart requests carrying a map or a user pojo, and leaves everything else to
+the encoders registered alongside it. Constructing one directly with a `null` delegate does the same
+thing: anything it cannot encode itself fails with an `EncodeException` instead of being passed on.
 
 ### @Body templates
 The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.

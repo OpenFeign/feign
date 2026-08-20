@@ -17,32 +17,38 @@ package feign.codec;
 
 import feign.Experimental;
 import feign.RequestTemplate;
+import feign.Util;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * An {@link Encoder} that selects a delegate per request, falling back to a default encoder when no
- * delegate accepts it.
+ * An {@link Encoder} that hands each request to the first encoder that accepts it.
  *
- * <p>Delegates come from two places. An encoder that implements {@link PredicatedEncoder} declares
+ * <p>Encoders come from two places. An encoder that implements {@link PredicatedEncoder} declares
  * its own applicability and can simply be added; any other encoder is paired with an {@link
  * EncoderPredicate} at the call site:
  *
  * <pre>
  * Feign.builder()
  *     .encoder(
- *         MultiEncoder.builder(new DefaultEncoder())
+ *         MultiEncoder.builder()
  *             .add(new JacksonEncoder())
  *             .add(EncoderPredicate.xmlContentType(), new JAXBEncoder())
  *             .add((object, bodyType, template) -&gt; bodyType == byte[].class, new BinaryEncoder())
+ *             .add(EncoderPredicate.any(), new DefaultEncoder())
  *             .build());
  * </pre>
  *
- * <p>Delegates are consulted in the order they were added, so the narrowest predicate should come
- * first. The default encoder is consulted last.
+ * <p>Encoders are consulted in the order they were added, so the narrowest one comes first. There
+ * is no implicit fallback: a request no encoder accepts fails with an {@link EncodeException}
+ * naming what was tried. Add an encoder guarded by {@link EncoderPredicate#any()} last to act as a
+ * default, as above.
  *
  * @see PredicatedEncoder
  * @see EncoderPredicate
@@ -50,76 +56,83 @@ import java.util.Objects;
 @Experimental
 public class MultiEncoder implements Encoder {
 
-  private final Encoder defaultEncoder;
+  private final List<PredicatedEncoder> encoders;
 
-  private final List<Delegate> delegates;
+  private MultiEncoder(List<PredicatedEncoder> encoders) {
+    this.encoders = Collections.unmodifiableList(new ArrayList<>(encoders));
+  }
 
-  private MultiEncoder(Encoder defaultEncoder, List<Delegate> delegates) {
-    this.defaultEncoder = defaultEncoder;
-    this.delegates = Collections.unmodifiableList(new ArrayList<>(delegates));
+  /** Starts building a multi-encoder. */
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
-   * Starts building a multi-encoder.
-   *
-   * @param defaultEncoder the encoder used when no delegate accepts the request
-   * @return the builder
-   */
-  public static Builder builder(Encoder defaultEncoder) {
-    return new Builder(defaultEncoder);
-  }
-
-  /**
-   * Encodes using the first delegate that accepts the request, or the default encoder if none do.
+   * Encodes using the first encoder that accepts the request.
    *
    * @param object {@inheritDoc}
    * @param bodyType {@inheritDoc}
    * @param template {@inheritDoc}
-   * @throws EncodeException {@inheritDoc}
+   * @throws EncodeException when no encoder accepts the request, or the chosen one fails
    */
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template)
       throws EncodeException {
-    for (Delegate delegate : delegates) {
-      if (delegate.predicate.canEncode(object, bodyType, template)) {
-        delegate.encoder.encode(object, bodyType, template);
+    for (PredicatedEncoder encoder : encoders) {
+      if (encoder.canEncode(object, bodyType, template)) {
+        encoder.encode(object, bodyType, template);
         return;
       }
     }
-    defaultEncoder.encode(object, bodyType, template);
+    throw new EncodeException(unableToEncode(bodyType, template));
+  }
+
+  private String unableToEncode(Type bodyType, RequestTemplate template) {
+    StringBuilder message =
+        new StringBuilder("Unable to encode ")
+            .append(bodyType == null ? "request body" : bodyType.getTypeName())
+            .append(" (Content-Type: ")
+            .append(contentTypes(template))
+            .append(')');
+    if (template.method() != null) {
+      message.append(" for ").append(template.method()).append(' ').append(template.path());
+    }
+    if (encoders.isEmpty()) {
+      return message.append(". No encoders were configured.").toString();
+    }
+    message.append(". Encoders tried, in order:");
+    for (PredicatedEncoder encoder : encoders) {
+      message.append("\n  - ").append(PairedEncoder.describe(encoder));
+    }
+    return message
+        .append("\nAdd an encoder guarded by EncoderPredicate.any() last to act as a default.")
+        .toString();
+  }
+
+  private static String contentTypes(RequestTemplate template) {
+    String contentTypes =
+        template.headers().entrySet().stream()
+            .filter(header -> Util.CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
+            .map(Map.Entry::getValue)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .collect(Collectors.joining(", "));
+    return contentTypes.isEmpty() ? "not set" : contentTypes;
   }
 
   @Override
   public String toString() {
-    return "MultiEncoder{defaultEncoder=" + defaultEncoder + ", delegates=" + delegates + '}';
+    return "MultiEncoder"
+        + encoders.stream().map(PairedEncoder::describe).collect(Collectors.toList());
   }
 
-  private static final class Delegate {
-    private final EncoderPredicate predicate;
-    private final Encoder encoder;
-
-    Delegate(EncoderPredicate predicate, Encoder encoder) {
-      this.predicate = predicate;
-      this.encoder = encoder;
-    }
-
-    @Override
-    public String toString() {
-      return encoder.toString();
-    }
-  }
-
-  /** Collects the delegates of a {@link MultiEncoder}. */
+  /** Collects the encoders of a {@link MultiEncoder}. */
   @Experimental
   public static final class Builder {
 
-    private final Encoder defaultEncoder;
+    private final List<PredicatedEncoder> encoders = new ArrayList<>();
 
-    private final List<Delegate> delegates = new ArrayList<>();
-
-    private Builder(Encoder defaultEncoder) {
-      this.defaultEncoder = Objects.requireNonNull(defaultEncoder, "defaultEncoder cannot be null");
-    }
+    private Builder() {}
 
     /**
      * Adds an encoder that declares its own applicability.
@@ -127,8 +140,8 @@ public class MultiEncoder implements Encoder {
      * @param encoder the encoder, consulted via {@link PredicatedEncoder#canEncode}
      */
     public Builder add(PredicatedEncoder encoder) {
-      Objects.requireNonNull(encoder, "encoder cannot be null");
-      return add(encoder::canEncode, encoder);
+      encoders.add(Objects.requireNonNull(encoder, "encoder cannot be null"));
+      return this;
     }
 
     /**
@@ -139,15 +152,12 @@ public class MultiEncoder implements Encoder {
      * @param encoder the encoder to delegate to
      */
     public Builder add(EncoderPredicate predicate, Encoder encoder) {
-      Objects.requireNonNull(predicate, "predicate cannot be null");
-      Objects.requireNonNull(encoder, "encoder cannot be null");
-      delegates.add(new Delegate(predicate, encoder));
-      return this;
+      return add(PredicatedEncoder.of(predicate, encoder));
     }
 
     /** Builds the multi-encoder. */
     public MultiEncoder build() {
-      return new MultiEncoder(defaultEncoder, delegates);
+      return new MultiEncoder(encoders);
     }
   }
 }

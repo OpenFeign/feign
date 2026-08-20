@@ -26,17 +26,25 @@ import java.lang.reflect.Type;
  * route each request to the right one without the call site having to wrap anything:
  *
  * <pre>
- * public class JacksonEncoder implements Encoder, PredicatedEncoder {
+ * public class JacksonEncoder implements PredicatedEncoder {
  *
  *   &#064;Override
  *   public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
- *     return EncoderPredicate.jsonContentType().canEncode(object, bodyType, template);
+ *     return Util.isJsonContentType(template);
+ *   }
+ *
+ *   &#064;Override
+ *   public void encode(Object object, Type bodyType, RequestTemplate template) {
+ *     // ...
  *   }
  * }
  * </pre>
  *
- * <p>{@link Encoder#encode(Object, Type, RequestTemplate) encode} remains the only abstract method,
- * so this stays a functional interface and a bare lambda is an encoder that accepts everything.
+ * <p>{@code canEncode} is deliberately abstract: an encoder that says nothing about what it handles
+ * would claim every request, which is almost never what its author meant. Use {@link
+ * #of(EncoderPredicate, Encoder)} to give an existing encoder a predicate instead of implementing
+ * this on it, and {@link EncoderPredicate} &mdash; which is a {@code @FunctionalInterface} &mdash;
+ * to write that predicate as a lambda.
  *
  * <p>Encoders that wrap another encoder should forward {@code canEncode} to their delegate, so that
  * wrapping does not discard the delegate's applicability.
@@ -45,11 +53,52 @@ import java.lang.reflect.Type;
  * @see EncoderPredicate
  */
 @Experimental
-@FunctionalInterface
 public interface PredicatedEncoder extends Encoder {
 
   /**
-   * Whether this encoder can handle the request. Defaults to accepting everything.
+   * Pairs any encoder with a predicate, for encoders that do not declare themselves, including ones
+   * you do not control. The predicate is the whole answer: whatever the encoder may declare about
+   * itself is replaced, so this can widen an encoder as well as narrow it. Use {@link
+   * #narrowing(EncoderPredicate, Encoder)} to keep the encoder's own declaration.
+   *
+   * <p>An encoder paired with {@link EncoderPredicate#any()} accepts everything, which is how a
+   * {@link MultiEncoder} is given a default:
+   *
+   * <pre>
+   * Feign.builder()
+   *     .encoders(
+   *         new JacksonEncoder(),
+   *         PredicatedEncoder.of(EncoderPredicate.any(), new Encoder.Default()));
+   * </pre>
+   *
+   * @param predicate decides whether the encoder handles a request
+   * @param encoder the encoder to delegate to
+   */
+  static PredicatedEncoder of(EncoderPredicate predicate, Encoder encoder) {
+    return new PairedEncoder(predicate, encoder);
+  }
+
+  /**
+   * Narrows an encoder that already declares itself, by requiring both the given predicate and the
+   * encoder's own {@code canEncode} to accept the request:
+   *
+   * <pre>
+   * PredicatedEncoder.narrowing(
+   *     EncoderPredicate.contentType("application/vnd.acme+json"), new GsonEncoder());
+   * </pre>
+   *
+   * <p>An encoder that does not implement {@link PredicatedEncoder} declares nothing to narrow, so
+   * this behaves like {@link #of(EncoderPredicate, Encoder)}.
+   *
+   * @param predicate narrows what the encoder handles
+   * @param encoder the encoder to delegate to
+   */
+  static PredicatedEncoder narrowing(EncoderPredicate predicate, Encoder encoder) {
+    return new PairedEncoder(PairedEncoder.narrow(predicate, encoder), encoder);
+  }
+
+  /**
+   * Whether this encoder can handle the request.
    *
    * @param object what to encode as the request body
    * @param bodyType the type the object should be encoded as. {@link Encoder#MAP_STRING_WILDCARD}
@@ -57,7 +106,5 @@ public interface PredicatedEncoder extends Encoder {
    * @param template the request template to populate
    * @return {@code true} if this encoder can encode the request, {@code false} otherwise
    */
-  default boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
-    return true;
-  }
+  boolean canEncode(Object object, Type bodyType, RequestTemplate template);
 }

@@ -35,6 +35,15 @@ class EncoderPredicateTest {
   }
 
   @Test
+  void anyMatchesEverything() {
+    EncoderPredicate any = EncoderPredicate.any();
+
+    assertThat(test(any, "application/json")).isTrue();
+    assertThat(test(any, null)).isTrue();
+    assertThat(any.canEncode(null, null, template(null))).isTrue();
+  }
+
+  @Test
   void jsonContentTypeMatchesJsonOnly() {
     EncoderPredicate json = EncoderPredicate.jsonContentType();
 
@@ -99,6 +108,30 @@ class EncoderPredicateTest {
 
     assertThat(form.canEncode(null, Encoder.MAP_STRING_WILDCARD, template(null))).isTrue();
     assertThat(form.canEncode("body", String.class, template(null))).isFalse();
+  }
+
+  @Test
+  void predicatesDescribeThemselves() {
+    assertThat(EncoderPredicate.any()).hasToString("any request");
+    assertThat(EncoderPredicate.jsonContentType()).hasToString("Content-Type is JSON");
+    assertThat(EncoderPredicate.xmlContentType()).hasToString("Content-Type is XML");
+    assertThat(EncoderPredicate.contentType("text/plain"))
+        .hasToString("Content-Type is text/plain");
+    assertThat(EncoderPredicate.emptyBody()).hasToString("body is empty");
+    assertThat(EncoderPredicate.bodyType(byte[].class)).hasToString("body type is byte[]");
+    assertThat(EncoderPredicate.formEncoded()).hasToString("body is form encoded");
+    assertThat(EncoderPredicate.describedAs("it is Tuesday", (o, b, t) -> true))
+        .hasToString("it is Tuesday");
+  }
+
+  @Test
+  void combinedPredicatesDescribeThemselves() {
+    EncoderPredicate json = EncoderPredicate.jsonContentType();
+    EncoderPredicate xml = EncoderPredicate.xmlContentType();
+
+    assertThat(json.or(xml)).hasToString("(Content-Type is JSON or Content-Type is XML)");
+    assertThat(json.and(xml)).hasToString("(Content-Type is JSON and Content-Type is XML)");
+    assertThat(json.negate()).hasToString("not (Content-Type is JSON)");
   }
 
   @Test

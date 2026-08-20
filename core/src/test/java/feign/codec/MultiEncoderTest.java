@@ -69,7 +69,8 @@ class MultiEncoderTest {
     SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
     RecordingEncoder fallback = new RecordingEncoder("fallback");
 
-    Encoder encoder = MultiEncoder.builder(fallback).add(json).build();
+    Encoder encoder =
+        MultiEncoder.builder().add(json).add(EncoderPredicate.any(), fallback).build();
 
     RequestTemplate template = templateWithContentType("application/json");
     encoder.encode("body", String.class, template);
@@ -85,7 +86,10 @@ class MultiEncoderTest {
     RecordingEncoder fallback = new RecordingEncoder("fallback");
 
     Encoder encoder =
-        MultiEncoder.builder(fallback).add(EncoderPredicate.xmlContentType(), xml).build();
+        MultiEncoder.builder()
+            .add(EncoderPredicate.xmlContentType(), xml)
+            .add(EncoderPredicate.any(), fallback)
+            .build();
 
     encoder.encode("body", String.class, templateWithContentType("application/xml"));
 
@@ -101,10 +105,11 @@ class MultiEncoderTest {
     RecordingEncoder fallback = new RecordingEncoder("fallback");
 
     Encoder encoder =
-        MultiEncoder.builder(fallback)
+        MultiEncoder.builder()
             .add(json)
             .add(EncoderPredicate.xmlContentType(), xml)
             .add(EncoderPredicate.bodyType(byte[].class), binary)
+            .add(EncoderPredicate.any(), fallback)
             .build();
 
     encoder.encode(
@@ -119,9 +124,8 @@ class MultiEncoderTest {
   @Test
   void matchesSuffixedContentTypes() {
     SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
-    RecordingEncoder fallback = new RecordingEncoder("fallback");
 
-    Encoder encoder = MultiEncoder.builder(fallback).add(json).build();
+    Encoder encoder = MultiEncoder.builder().add(json).build();
 
     encoder.encode("body", String.class, templateWithContentType("application/vnd.github+json"));
 
@@ -129,11 +133,12 @@ class MultiEncoderTest {
   }
 
   @Test
-  void fallsBackWhenNoDelegateAccepts() {
+  void fallsBackToTheEncoderThatAcceptsAnything() {
     SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
     RecordingEncoder fallback = new RecordingEncoder("fallback");
 
-    Encoder encoder = MultiEncoder.builder(fallback).add(json).build();
+    Encoder encoder =
+        MultiEncoder.builder().add(json).add(EncoderPredicate.any(), fallback).build();
 
     RequestTemplate template = templateWithContentType("text/plain");
     encoder.encode("body", String.class, template);
@@ -148,7 +153,8 @@ class MultiEncoderTest {
     SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
     RecordingEncoder fallback = new RecordingEncoder("fallback");
 
-    Encoder encoder = MultiEncoder.builder(fallback).add(json).build();
+    Encoder encoder =
+        MultiEncoder.builder().add(json).add(EncoderPredicate.any(), fallback).build();
 
     encoder.encode("body", String.class, templateWithContentType(null));
 
@@ -156,24 +162,12 @@ class MultiEncoderTest {
   }
 
   @Test
-  void withNoDelegatesEverythingGoesToTheDefaultEncoder() {
-    RecordingEncoder fallback = new RecordingEncoder("fallback");
-
-    Encoder encoder = MultiEncoder.builder(fallback).build();
-
-    encoder.encode("body", String.class, templateWithContentType("application/json"));
-
-    assertThat(fallback.invoked).isTrue();
-  }
-
-  @Test
-  void delegatesAreConsultedInOrder() {
+  void encodersAreConsultedInOrder() {
     RecordingEncoder first = new RecordingEncoder("first");
     RecordingEncoder second = new RecordingEncoder("second");
-    RecordingEncoder fallback = new RecordingEncoder("fallback");
 
     Encoder encoder =
-        MultiEncoder.builder(fallback)
+        MultiEncoder.builder()
             .add(EncoderPredicate.jsonContentType(), first)
             .add(EncoderPredicate.jsonContentType(), second)
             .build();
@@ -185,18 +179,47 @@ class MultiEncoderTest {
   }
 
   @Test
-  void anEncoderWithoutAPredicateAcceptsEverything() {
-    // a bare lambda is a PredicatedEncoder whose default canEncode returns true
-    RecordingEncoder fallback = new RecordingEncoder("fallback");
-    PredicatedEncoder greedy = (object, bodyType, template) -> template.body("greedy");
+  void pairingReplacesWhatTheEncoderDeclaresAboutItself() {
+    SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
 
-    Encoder encoder = MultiEncoder.builder(fallback).add(greedy).build();
+    Encoder encoder =
+        MultiEncoder.builder().add(PredicatedEncoder.of(EncoderPredicate.any(), json)).build();
 
-    RequestTemplate template = templateWithContentType("text/plain");
-    encoder.encode("body", String.class, template);
+    encoder.encode("body", String.class, templateWithContentType("text/plain"));
 
-    assertThat(fallback.invoked).isFalse();
-    assertThat(template.requestBody().asString()).isEqualTo("greedy");
+    assertThat(json.invoked).isTrue();
+  }
+
+  @Test
+  void narrowingKeepsWhatTheEncoderDeclaresAboutItself() {
+    SelfDeclaringJsonEncoder json = new SelfDeclaringJsonEncoder();
+    PredicatedEncoder narrowed =
+        PredicatedEncoder.narrowing(
+            EncoderPredicate.contentType("application/vnd.acme+json"), json);
+
+    assertThat(
+            narrowed.canEncode("body", String.class, templateWithContentType("application/json")))
+        .isFalse();
+    assertThat(
+            narrowed.canEncode(
+                "body", String.class, templateWithContentType("application/vnd.acme+json")))
+        .isTrue();
+    assertThat(narrowed)
+        .hasToString(
+            "SelfDeclaringJsonEncoder when (Content-Type is application/vnd.acme+json"
+                + " and SelfDeclaringJsonEncoder accepts it)");
+  }
+
+  @Test
+  void narrowingAnEncoderThatDeclaresNothingIsJustThePredicate() {
+    RecordingEncoder plain = new RecordingEncoder("plain");
+    PredicatedEncoder narrowed =
+        PredicatedEncoder.narrowing(EncoderPredicate.jsonContentType(), plain);
+
+    assertThat(narrowed).hasToString("RecordingEncoder when Content-Type is JSON");
+    assertThat(
+            narrowed.canEncode("body", String.class, templateWithContentType("application/json")))
+        .isTrue();
   }
 
   @Test
@@ -207,9 +230,7 @@ class MultiEncoderTest {
         };
 
     Encoder encoder =
-        MultiEncoder.builder(new DefaultEncoder())
-            .add(EncoderPredicate.jsonContentType(), failing)
-            .build();
+        MultiEncoder.builder().add(EncoderPredicate.jsonContentType(), failing).build();
 
     assertThatThrownBy(
             () -> encoder.encode("body", String.class, templateWithContentType("application/json")))
@@ -218,26 +239,82 @@ class MultiEncoderTest {
   }
 
   @Test
-  void rejectsNullArguments() {
-    assertThatThrownBy(() -> MultiEncoder.builder(null))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("defaultEncoder cannot be null");
-    assertThatThrownBy(() -> MultiEncoder.builder(new DefaultEncoder()).add(null))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("encoder cannot be null");
+  void throwsWhenNoEncoderAcceptsTheRequest() {
+    Encoder encoder =
+        MultiEncoder.builder()
+            .add(new SelfDeclaringJsonEncoder())
+            .add(EncoderPredicate.xmlContentType(), new RecordingEncoder("xml"))
+            .build();
+
     assertThatThrownBy(
-            () -> MultiEncoder.builder(new DefaultEncoder()).add(null, new DefaultEncoder()))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("predicate cannot be null");
+            () -> encoder.encode("body", String.class, templateWithContentType("text/plain")))
+        .isInstanceOf(EncodeException.class)
+        .hasMessage(
+            "Unable to encode java.lang.String (Content-Type: text/plain)."
+                + " Encoders tried, in order:"
+                + "\n  - SelfDeclaringJsonEncoder"
+                + "\n  - RecordingEncoder when Content-Type is XML"
+                + "\nAdd an encoder guarded by EncoderPredicate.any() last to act as a default.");
   }
 
   @Test
-  void toStringDescribesDelegates() {
+  void theFailureNamesTheRequestWhenTheTemplateHasOne() {
+    RequestTemplate template = templateWithContentType("text/plain");
+    template.method(Request.HttpMethod.POST);
+    template.uri("/orders");
+
+    Encoder encoder = MultiEncoder.builder().add(new SelfDeclaringJsonEncoder()).build();
+
+    assertThatThrownBy(() -> encoder.encode("body", String.class, template))
+        .isInstanceOf(EncodeException.class)
+        .hasMessageContaining(
+            "Unable to encode java.lang.String (Content-Type: text/plain) for POST /orders.");
+  }
+
+  @Test
+  void theFailureReportsAMissingContentType() {
+    Encoder encoder = MultiEncoder.builder().add(new SelfDeclaringJsonEncoder()).build();
+
+    assertThatThrownBy(() -> encoder.encode("body", String.class, templateWithContentType(null)))
+        .isInstanceOf(EncodeException.class)
+        .hasMessageContaining("(Content-Type: not set)");
+  }
+
+  @Test
+  void throwsWhenNoEncodersAreConfigured() {
+    Encoder encoder = MultiEncoder.builder().build();
+
+    assertThatThrownBy(
+            () -> encoder.encode("body", String.class, templateWithContentType("application/json")))
+        .isInstanceOf(EncodeException.class)
+        .hasMessage(
+            "Unable to encode java.lang.String (Content-Type: application/json)."
+                + " No encoders were configured.");
+  }
+
+  @Test
+  void rejectsNullArguments() {
+    assertThatThrownBy(() -> MultiEncoder.builder().add(null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("encoder cannot be null");
+    assertThatThrownBy(() -> MultiEncoder.builder().add(null, new DefaultEncoder()))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("predicate cannot be null");
+    assertThatThrownBy(() -> MultiEncoder.builder().add(EncoderPredicate.any(), null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("encoder cannot be null");
+  }
+
+  @Test
+  void toStringDescribesEncoders() {
     Encoder encoder =
-        MultiEncoder.builder(new DefaultEncoder())
+        MultiEncoder.builder()
+            .add(new SelfDeclaringJsonEncoder())
             .add(EncoderPredicate.jsonContentType(), new RecordingEncoder("json"))
             .build();
 
-    assertThat(encoder.toString()).startsWith("MultiEncoder{defaultEncoder=");
+    assertThat(encoder.toString())
+        .isEqualTo(
+            "MultiEncoder[SelfDeclaringJsonEncoder, RecordingEncoder when Content-Type is JSON]");
   }
 }

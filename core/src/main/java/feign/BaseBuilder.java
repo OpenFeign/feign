@@ -26,6 +26,7 @@ import feign.codec.DefaultDecoder;
 import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import feign.codec.ErrorDecoder;
 import feign.codec.MultiEncoder;
 import feign.codec.PredicatedEncoder;
@@ -99,23 +100,28 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   /**
    * Configures a {@link MultiEncoder} built from encoders that declare their own applicability.
    *
-   * <p>Each {@link PredicatedEncoder} is consulted in the order given; {@code defaultEncoder} is
-   * the fallback used when none accepts the request.
+   * <p>Encoders are consulted in the order given, and the first one that accepts the request
+   * encodes it. There is no implicit fallback: pair an encoder with {@link EncoderPredicate#any()}
+   * and list it last to act as a default, otherwise a request nothing accepts fails with an {@link
+   * feign.codec.EncodeException}.
    *
    * <pre>
    * Feign.builder()
-   *     .encoder(new DefaultEncoder(), new JacksonEncoder(), new JAXBEncoder())
+   *     .encoders(
+   *         new JacksonEncoder(),
+   *         new JAXBEncoder(),
+   *         PredicatedEncoder.of(EncoderPredicate.any(), new DefaultEncoder()))
    * </pre>
    *
    * <p>To pair a predicate with an encoder that does not implement {@link PredicatedEncoder}, use
-   * {@link MultiEncoder#builder(Encoder)} instead.
+   * {@link PredicatedEncoder#of(EncoderPredicate, Encoder)} as above, or {@link
+   * MultiEncoder#builder()} for the same thing spelled out.
    *
-   * @param defaultEncoder the encoder used when no delegate accepts the request
    * @param encoders the predicated encoders, consulted in the order given
    */
   @Experimental
-  public B encoder(Encoder defaultEncoder, PredicatedEncoder... encoders) {
-    MultiEncoder.Builder builder = MultiEncoder.builder(defaultEncoder);
+  public B encoders(PredicatedEncoder... encoders) {
+    MultiEncoder.Builder builder = MultiEncoder.builder();
     for (PredicatedEncoder encoder : encoders) {
       builder.add(encoder);
     }

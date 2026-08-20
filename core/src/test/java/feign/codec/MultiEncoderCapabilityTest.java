@@ -16,6 +16,7 @@
 package feign.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Capability;
 import feign.Feign;
@@ -29,7 +30,7 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
-/** How {@link MultiEncoder} behaves when a {@link Capability} wraps the configured encoder. */
+/** How {@link MultiEncoder} behaves once configured on a {@link Feign} builder. */
 class MultiEncoderCapabilityTest {
 
   interface MixedApi {
@@ -93,6 +94,42 @@ class MultiEncoderCapabilityTest {
   }
 
   @Test
+  void encodersOnTheBuilderRouteInTheOrderGiven() {
+    AtomicReference<String> captured = new AtomicReference<>();
+
+    MixedApi api =
+        target(
+            Feign.builder()
+                .encoders(
+                    PredicatedEncoder.of(
+                        EncoderPredicate.jsonContentType(), new TaggingEncoder("json")),
+                    PredicatedEncoder.of(EncoderPredicate.any(), new TaggingEncoder("fallback"))),
+            captured);
+
+    api.json("{}");
+    assertThat(captured.get()).isEqualTo("json");
+
+    api.xml("<x/>");
+    assertThat(captured.get()).isEqualTo("fallback");
+  }
+
+  @Test
+  void encodersOnTheBuilderFailWhenNothingAccepts() {
+    MixedApi api =
+        target(
+            Feign.builder()
+                .encoders(
+                    PredicatedEncoder.of(
+                        EncoderPredicate.jsonContentType(), new TaggingEncoder("json"))),
+            new AtomicReference<>());
+
+    assertThatThrownBy(() -> api.xml("<x/>"))
+        .isInstanceOf(EncodeException.class)
+        .hasMessageContaining("Unable to encode java.lang.String (Content-Type: application/xml)")
+        .hasMessageContaining("TaggingEncoder when Content-Type is JSON");
+  }
+
+  @Test
   void capabilityWrapsTheCompositeAndRoutingStillWorks() {
     CountingCapability capability = new CountingCapability();
     AtomicReference<String> captured = new AtomicReference<>();
@@ -101,9 +138,10 @@ class MultiEncoderCapabilityTest {
         target(
             Feign.builder()
                 .encoder(
-                    MultiEncoder.builder(new TaggingEncoder("fallback"))
+                    MultiEncoder.builder()
                         .add(EncoderPredicate.jsonContentType(), new TaggingEncoder("json"))
                         .add(EncoderPredicate.xmlContentType(), new TaggingEncoder("xml"))
+                        .add(EncoderPredicate.any(), new TaggingEncoder("fallback"))
                         .build())
                 .addCapability(capability),
             captured);
@@ -120,8 +158,8 @@ class MultiEncoderCapabilityTest {
   }
 
   /**
-   * A wrapper that does not forward {@code canEncode} claims every request, which is why the
-   * metrics modules' {@code MeteredEncoder} forwards it to its delegate.
+   * A wrapper that answers {@code canEncode} for itself instead of forwarding claims every request,
+   * which is why the metrics modules' {@code MeteredEncoder} forwards it to its delegate.
    */
   @Test
   void wrappingWithoutForwardingCanEncodeErasesSelfDeclaration() {
@@ -138,7 +176,18 @@ class MultiEncoderCapabilityTest {
           }
         };
 
-    PredicatedEncoder naive = jsonOnly::encode;
+    PredicatedEncoder naive =
+        new PredicatedEncoder() {
+          @Override
+          public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+            return true;
+          }
+
+          @Override
+          public void encode(Object object, Type bodyType, RequestTemplate template) {
+            jsonOnly.encode(object, bodyType, template);
+          }
+        };
 
     PredicatedEncoder forwarding =
         new PredicatedEncoder() {
@@ -154,15 +203,17 @@ class MultiEncoderCapabilityTest {
         };
 
     RequestTemplate naiveTemplate = template("application/xml");
-    MultiEncoder.builder(new TaggingEncoder("fallback"))
+    MultiEncoder.builder()
         .add(naive)
+        .add(EncoderPredicate.any(), new TaggingEncoder("fallback"))
         .build()
         .encode("body", String.class, naiveTemplate);
     assertThat(naiveTemplate.requestBody().asString()).isEqualTo("json");
 
     RequestTemplate forwardedTemplate = template("application/xml");
-    MultiEncoder.builder(new TaggingEncoder("fallback"))
+    MultiEncoder.builder()
         .add(forwarding)
+        .add(EncoderPredicate.any(), new TaggingEncoder("fallback"))
         .build()
         .encode("body", String.class, forwardedTemplate);
     assertThat(forwardedTemplate.requestBody().asString()).isEqualTo("fallback");
