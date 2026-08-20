@@ -3,7 +3,10 @@
 * Add `@Experimental` `MultiDecoder`, `PredicatedDecoder` and `DecoderPredicate`, letting a single
   client route each response to the right decoder. Decoders declare what they can handle by
   implementing `PredicatedDecoder`; anything else is paired with a predicate via
-  `MultiDecoder.builder(defaultDecoder)`. The first-party JSON decoders (Gson, Jackson, Jackson 3,
+  `PredicatedDecoder.of(predicate, decoder)` or `MultiDecoder.builder()`. Decoders are consulted in
+  the order given and a response nothing accepts fails with a `DecodeException` naming what was
+  tried, so a default is a decoder guarded by `DecoderPredicate.any()` listed last. The first-party
+  JSON decoders (Gson, Jackson, Jackson 3,
   Jackson Jr, Jackson JAXB, Moshi, Fastjson2, JSON-java) and XML decoders (JAXB, JAXB Jakarta, SAX,
   SOAP, SOAP Jakarta) now declare themselves, and `OptionalDecoder` and the metrics modules'
   `MeteredDecoder` forward `canDecode` to the decoder they wrap. The `Decoder` interface is

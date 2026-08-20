@@ -26,17 +26,25 @@ import java.lang.reflect.Type;
  * route each response to the right one without the call site having to wrap anything:
  *
  * <pre>
- * public class JacksonDecoder implements Decoder, PredicatedDecoder {
+ * public class JacksonDecoder implements PredicatedDecoder {
  *
  *   &#064;Override
  *   public boolean canDecode(Response response, Type type) {
  *     return Util.isJsonContentType(response);
  *   }
+ *
+ *   &#064;Override
+ *   public Object decode(Response response, Type type) throws IOException {
+ *     // ...
+ *   }
  * }
  * </pre>
  *
- * <p>{@link Decoder#decode(Response, Type) decode} remains the only abstract method, so this stays
- * a functional interface and a bare lambda is a decoder that accepts everything.
+ * <p>{@code canDecode} is deliberately abstract: a decoder that says nothing about what it handles
+ * would claim every response, which is almost never what its author meant. Use {@link
+ * #of(DecoderPredicate, Decoder)} to give an existing decoder a predicate instead of implementing
+ * this on it, and {@link DecoderPredicate} &mdash; which is a {@code @FunctionalInterface} &mdash;
+ * to write that predicate as a lambda.
  *
  * <p>Decoders that wrap another decoder should forward {@code canDecode} to their delegate, so that
  * wrapping does not discard the delegate's applicability.
@@ -45,11 +53,52 @@ import java.lang.reflect.Type;
  * @see DecoderPredicate
  */
 @Experimental
-@FunctionalInterface
 public interface PredicatedDecoder extends Decoder {
 
   /**
-   * Whether this decoder can handle the response. Defaults to accepting everything.
+   * Pairs any decoder with a predicate, for decoders that do not declare themselves, including ones
+   * you do not control. The predicate is the whole answer: whatever the decoder may declare about
+   * itself is replaced, so this can widen a decoder as well as narrow it. Use {@link
+   * #narrowing(DecoderPredicate, Decoder)} to keep the decoder's own declaration.
+   *
+   * <p>A decoder paired with {@link DecoderPredicate#any()} accepts everything, which is how a
+   * {@link MultiDecoder} is given a default:
+   *
+   * <pre>
+   * Feign.builder()
+   *     .decoders(
+   *         new JacksonDecoder(),
+   *         PredicatedDecoder.of(DecoderPredicate.any(), new DefaultDecoder()));
+   * </pre>
+   *
+   * @param predicate decides whether the decoder handles a response
+   * @param decoder the decoder to delegate to
+   */
+  static PredicatedDecoder of(DecoderPredicate predicate, Decoder decoder) {
+    return new PairedDecoder(predicate, decoder);
+  }
+
+  /**
+   * Narrows a decoder that already declares itself, by requiring both the given predicate and the
+   * decoder's own {@code canDecode} to accept the response:
+   *
+   * <pre>
+   * PredicatedDecoder.narrowing(
+   *     DecoderPredicate.status(200), new JacksonDecoder());
+   * </pre>
+   *
+   * <p>A decoder that does not implement {@link PredicatedDecoder} declares nothing to narrow, so
+   * this behaves like {@link #of(DecoderPredicate, Decoder)}.
+   *
+   * @param predicate narrows what the decoder handles
+   * @param decoder the decoder to delegate to
+   */
+  static PredicatedDecoder narrowing(DecoderPredicate predicate, Decoder decoder) {
+    return new PairedDecoder(PairedDecoder.narrow(predicate, decoder), decoder);
+  }
+
+  /**
+   * Whether this decoder can handle the response.
    *
    * <p>The response body must not be read here: it is a single-pass stream for most clients, so
    * consuming it would leave nothing for the decoder that is eventually chosen.
@@ -59,7 +108,5 @@ public interface PredicatedDecoder extends Decoder {
    *     caller expects back
    * @return {@code true} if this decoder can decode the response, {@code false} otherwise
    */
-  default boolean canDecode(Response response, Type type) {
-    return true;
-  }
+  boolean canDecode(Response response, Type type);
 }

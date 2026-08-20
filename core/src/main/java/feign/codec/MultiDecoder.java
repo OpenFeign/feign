@@ -18,33 +18,39 @@ package feign.codec;
 import feign.Experimental;
 import feign.FeignException;
 import feign.Response;
+import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * A {@link Decoder} that selects a delegate per response, falling back to a default decoder when no
- * delegate accepts it.
+ * A {@link Decoder} that hands each response to the first decoder that accepts it.
  *
- * <p>Delegates come from two places. A decoder that implements {@link PredicatedDecoder} declares
+ * <p>Decoders come from two places. A decoder that implements {@link PredicatedDecoder} declares
  * its own applicability and can simply be added; any other decoder is paired with a {@link
  * DecoderPredicate} at the call site:
  *
  * <pre>
  * Feign.builder()
  *     .decoder(
- *         MultiDecoder.builder(new DefaultDecoder())
+ *         MultiDecoder.builder()
  *             .add(new JacksonDecoder())
  *             .add(DecoderPredicate.xmlContentType(), new JAXBDecoder())
  *             .add((response, type) -&gt; type == byte[].class, new BinaryDecoder())
+ *             .add(DecoderPredicate.any(), new DefaultDecoder())
  *             .build());
  * </pre>
  *
- * <p>Delegates are consulted in the order they were added, so the narrowest predicate should come
- * first. The default decoder is consulted last.
+ * <p>Decoders are consulted in the order they were added, so the narrowest one comes first. There
+ * is no implicit fallback: a response no decoder accepts fails with a {@link DecodeException}
+ * naming what was tried. Add a decoder guarded by {@link DecoderPredicate#any()} last to act as a
+ * default, as above.
  *
  * @see PredicatedDecoder
  * @see DecoderPredicate
@@ -52,77 +58,83 @@ import java.util.Objects;
 @Experimental
 public class MultiDecoder implements Decoder {
 
-  private final Decoder defaultDecoder;
+  private final List<PredicatedDecoder> decoders;
 
-  private final List<Delegate> delegates;
+  private MultiDecoder(List<PredicatedDecoder> decoders) {
+    this.decoders = Collections.unmodifiableList(new ArrayList<>(decoders));
+  }
 
-  private MultiDecoder(Decoder defaultDecoder, List<Delegate> delegates) {
-    this.defaultDecoder = defaultDecoder;
-    this.delegates = Collections.unmodifiableList(new ArrayList<>(delegates));
+  /** Starts building a multi-decoder. */
+  public static Builder builder() {
+    return new Builder();
   }
 
   /**
-   * Starts building a multi-decoder.
-   *
-   * @param defaultDecoder the decoder used when no delegate accepts the response
-   * @return the builder
-   */
-  public static Builder builder(Decoder defaultDecoder) {
-    return new Builder(defaultDecoder);
-  }
-
-  /**
-   * Decodes using the first delegate that accepts the response, or the default decoder if none do.
+   * Decodes using the first decoder that accepts the response.
    *
    * @param response {@inheritDoc}
    * @param type {@inheritDoc}
    * @return {@inheritDoc}
    * @throws IOException {@inheritDoc}
-   * @throws DecodeException {@inheritDoc}
+   * @throws DecodeException when no decoder accepts the response, or the chosen one fails
    * @throws FeignException {@inheritDoc}
    */
   @Override
   public Object decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
-    for (Delegate delegate : delegates) {
-      if (delegate.predicate.canDecode(response, type)) {
-        return delegate.decoder.decode(response, type);
+    for (PredicatedDecoder decoder : decoders) {
+      if (decoder.canDecode(response, type)) {
+        return decoder.decode(response, type);
       }
     }
-    return defaultDecoder.decode(response, type);
+    throw new DecodeException(
+        response.status(), unableToDecode(response, type), response.request());
+  }
+
+  private String unableToDecode(Response response, Type type) {
+    StringBuilder message =
+        new StringBuilder("Unable to decode ")
+            .append(response.status())
+            .append(" response (Content-Type: ")
+            .append(contentTypes(response))
+            .append(") as ")
+            .append(type == null ? "the expected type" : type.getTypeName());
+    if (decoders.isEmpty()) {
+      return message.append(". No decoders were configured.").toString();
+    }
+    message.append(". Decoders tried, in order:");
+    for (PredicatedDecoder decoder : decoders) {
+      message.append("\n  - ").append(PairedDecoder.describe(decoder));
+    }
+    return message
+        .append("\nAdd a decoder guarded by DecoderPredicate.any() last to act as a default.")
+        .toString();
+  }
+
+  private static String contentTypes(Response response) {
+    String contentTypes =
+        response.headers().entrySet().stream()
+            .filter(header -> Util.CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
+            .map(Map.Entry::getValue)
+            .filter(Objects::nonNull)
+            .flatMap(Collection::stream)
+            .collect(Collectors.joining(", "));
+    return contentTypes.isEmpty() ? "not set" : contentTypes;
   }
 
   @Override
   public String toString() {
-    return "MultiDecoder{defaultDecoder=" + defaultDecoder + ", delegates=" + delegates + '}';
+    return "MultiDecoder"
+        + decoders.stream().map(PairedDecoder::describe).collect(Collectors.toList());
   }
 
-  private static final class Delegate {
-    private final DecoderPredicate predicate;
-    private final Decoder decoder;
-
-    Delegate(DecoderPredicate predicate, Decoder decoder) {
-      this.predicate = predicate;
-      this.decoder = decoder;
-    }
-
-    @Override
-    public String toString() {
-      return decoder.toString();
-    }
-  }
-
-  /** Collects the delegates of a {@link MultiDecoder}. */
+  /** Collects the decoders of a {@link MultiDecoder}. */
   @Experimental
   public static final class Builder {
 
-    private final Decoder defaultDecoder;
+    private final List<PredicatedDecoder> decoders = new ArrayList<>();
 
-    private final List<Delegate> delegates = new ArrayList<>();
-
-    private Builder(Decoder defaultDecoder) {
-      this.defaultDecoder = Objects.requireNonNull(defaultDecoder, "defaultDecoder cannot be null");
-    }
+    private Builder() {}
 
     /**
      * Adds a decoder that declares its own applicability.
@@ -130,8 +142,8 @@ public class MultiDecoder implements Decoder {
      * @param decoder the decoder, consulted via {@link PredicatedDecoder#canDecode}
      */
     public Builder add(PredicatedDecoder decoder) {
-      Objects.requireNonNull(decoder, "decoder cannot be null");
-      return add(decoder::canDecode, decoder);
+      decoders.add(Objects.requireNonNull(decoder, "decoder cannot be null"));
+      return this;
     }
 
     /**
@@ -142,15 +154,12 @@ public class MultiDecoder implements Decoder {
      * @param decoder the decoder to delegate to
      */
     public Builder add(DecoderPredicate predicate, Decoder decoder) {
-      Objects.requireNonNull(predicate, "predicate cannot be null");
-      Objects.requireNonNull(decoder, "decoder cannot be null");
-      delegates.add(new Delegate(predicate, decoder));
-      return this;
+      return add(PredicatedDecoder.of(predicate, decoder));
     }
 
     /** Builds the multi-decoder. */
     public MultiDecoder build() {
-      return new MultiDecoder(defaultDecoder, delegates);
+      return new MultiDecoder(decoders);
     }
   }
 }

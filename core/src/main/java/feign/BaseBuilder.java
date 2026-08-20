@@ -22,6 +22,7 @@ import feign.Logger.NoOpLogger;
 import feign.Request.Options;
 import feign.codec.Codec;
 import feign.codec.Decoder;
+import feign.codec.DecoderPredicate;
 import feign.codec.DefaultDecoder;
 import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
@@ -104,23 +105,28 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   /**
    * Configures a {@link MultiDecoder} built from decoders that declare their own applicability.
    *
-   * <p>Each {@link PredicatedDecoder} is consulted in the order given; {@code defaultDecoder} is
-   * the fallback used when none accepts the response.
+   * <p>Decoders are consulted in the order given, and the first one that accepts the response
+   * decodes it. There is no implicit fallback: pair a decoder with {@link DecoderPredicate#any()}
+   * and list it last to act as a default, otherwise a response nothing accepts fails with a {@link
+   * feign.codec.DecodeException}.
    *
    * <pre>
    * Feign.builder()
-   *     .decoder(new DefaultDecoder(), new JacksonDecoder(), new JAXBDecoder())
+   *     .decoders(
+   *         new JacksonDecoder(),
+   *         new JAXBDecoder(),
+   *         PredicatedDecoder.of(DecoderPredicate.any(), new DefaultDecoder()))
    * </pre>
    *
    * <p>To pair a predicate with a decoder that does not implement {@link PredicatedDecoder}, use
-   * {@link MultiDecoder#builder(Decoder)} instead.
+   * {@link PredicatedDecoder#of(DecoderPredicate, Decoder)} as above, or {@link
+   * MultiDecoder#builder()} for the same thing spelled out.
    *
-   * @param defaultDecoder the decoder used when no delegate accepts the response
    * @param decoders the predicated decoders, consulted in the order given
    */
   @Experimental
-  public B decoder(Decoder defaultDecoder, PredicatedDecoder... decoders) {
-    MultiDecoder.Builder builder = MultiDecoder.builder(defaultDecoder);
+  public B decoders(PredicatedDecoder... decoders) {
+    MultiDecoder.Builder builder = MultiDecoder.builder();
     for (PredicatedDecoder decoder : decoders) {
       builder.add(decoder);
     }

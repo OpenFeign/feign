@@ -16,6 +16,7 @@
 package feign.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Capability;
 import feign.Feign;
@@ -110,9 +111,10 @@ class MultiDecoderCapabilityTest {
         target(
             Feign.builder()
                 .decoder(
-                    MultiDecoder.builder(new TaggingDecoder("fallback"))
+                    MultiDecoder.builder()
                         .add(DecoderPredicate.jsonContentType(), new TaggingDecoder("json"))
                         .add(DecoderPredicate.xmlContentType(), new TaggingDecoder("xml"))
+                        .add(DecoderPredicate.any(), new TaggingDecoder("fallback"))
                         .build())
                 .addCapability(capability),
             contentTypes);
@@ -126,25 +128,41 @@ class MultiDecoderCapabilityTest {
   }
 
   @Test
-  void builderShorthandRoutesToSelfDeclaringDecoders() {
+  void decodersOnTheBuilderRouteInTheOrderGiven() {
     Map<String, String> contentTypes = new HashMap<>();
     contentTypes.put("json", "application/json");
     contentTypes.put("csv", "text/csv");
 
     MixedApi api =
         target(
-            Feign.builder().decoder(new TaggingDecoder("fallback"), new SelfDeclaringJsonDecoder()),
+            Feign.builder()
+                .decoders(
+                    new SelfDeclaringJsonDecoder(),
+                    PredicatedDecoder.of(DecoderPredicate.any(), new TaggingDecoder("fallback"))),
             contentTypes);
 
     assertThat(api.get("json")).isEqualTo("json");
     assertThat(api.get("csv")).isEqualTo("fallback");
   }
 
+  @Test
+  void decodersOnTheBuilderFailWhenNothingAccepts() {
+    Map<String, String> contentTypes = new HashMap<>();
+    contentTypes.put("csv", "text/csv");
+
+    MixedApi api = target(Feign.builder().decoders(new SelfDeclaringJsonDecoder()), contentTypes);
+
+    assertThatThrownBy(() -> api.get("csv"))
+        .isInstanceOf(DecodeException.class)
+        .hasMessageContaining("Unable to decode 200 response (Content-Type: text/csv)")
+        .hasMessageContaining("SelfDeclaringJsonDecoder");
+  }
+
   /** The selected decoder still receives an unread body: predicates must not consume it. */
   @Test
   void predicatesLeaveTheBodyForTheSelectedDecoder() throws IOException {
     Decoder decoder =
-        MultiDecoder.builder(new TaggingDecoder("fallback"))
+        MultiDecoder.builder()
             .add(
                 DecoderPredicate.jsonContentType(),
                 (response, type) -> Util.toString(response.body().asReader(Util.UTF_8)))
@@ -168,14 +186,25 @@ class MultiDecoderCapabilityTest {
   }
 
   /**
-   * A wrapper that does not forward {@code canDecode} claims every response, which is why the
-   * metrics modules' {@code MeteredDecoder} forwards it to its delegate.
+   * A wrapper that answers {@code canDecode} for itself instead of forwarding claims every
+   * response, which is why the metrics modules' {@code MeteredDecoder} forwards it to its delegate.
    */
   @Test
   void wrappingWithoutForwardingCanDecodeErasesSelfDeclaration() throws IOException {
     PredicatedDecoder jsonOnly = new SelfDeclaringJsonDecoder();
 
-    PredicatedDecoder naive = jsonOnly::decode;
+    PredicatedDecoder naive =
+        new PredicatedDecoder() {
+          @Override
+          public boolean canDecode(Response response, Type type) {
+            return true;
+          }
+
+          @Override
+          public Object decode(Response response, Type type) throws IOException {
+            return jsonOnly.decode(response, type);
+          }
+        };
 
     PredicatedDecoder forwarding =
         new PredicatedDecoder() {
@@ -191,15 +220,17 @@ class MultiDecoderCapabilityTest {
         };
 
     assertThat(
-            MultiDecoder.builder(new TaggingDecoder("fallback"))
+            MultiDecoder.builder()
                 .add(naive)
+                .add(DecoderPredicate.any(), new TaggingDecoder("fallback"))
                 .build()
                 .decode(response("application/xml", "payload"), String.class))
         .isEqualTo("json");
 
     assertThat(
-            MultiDecoder.builder(new TaggingDecoder("fallback"))
+            MultiDecoder.builder()
                 .add(forwarding)
+                .add(DecoderPredicate.any(), new TaggingDecoder("fallback"))
                 .build()
                 .decode(response("application/xml", "payload"), String.class))
         .isEqualTo("fallback");

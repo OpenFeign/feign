@@ -33,6 +33,10 @@ import java.util.Objects;
  * for most clients, so consuming it here would leave nothing for the decoder that is eventually
  * chosen.
  *
+ * <p>Every predicate built here describes itself, so a {@link MultiDecoder} that cannot route a
+ * response can say what it did consider. Wrap your own lambdas in {@link #describedAs(String,
+ * DecoderPredicate)} to get the same in error messages.
+ *
  * @see PredicatedDecoder
  * @see MultiDecoder
  */
@@ -50,14 +54,48 @@ public interface DecoderPredicate {
    */
   boolean canDecode(Response response, Type type);
 
+  /**
+   * Wraps a predicate so that it describes itself, which is what a {@link MultiDecoder} reports
+   * when no decoder accepts a response.
+   *
+   * @param description how the predicate reads in an error message, for example {@code
+   *     "Content-Type is JSON"}
+   * @param predicate the predicate to describe
+   */
+  static DecoderPredicate describedAs(String description, DecoderPredicate predicate) {
+    Objects.requireNonNull(description, "description cannot be null");
+    Objects.requireNonNull(predicate, "predicate cannot be null");
+    return new DecoderPredicate() {
+
+      @Override
+      public boolean canDecode(Response response, Type type) {
+        return predicate.canDecode(response, type);
+      }
+
+      @Override
+      public String toString() {
+        return description;
+      }
+    };
+  }
+
+  /**
+   * Matches every response. Pair this with a decoder registered last to make it the default of a
+   * {@link MultiDecoder}.
+   */
+  static DecoderPredicate any() {
+    return describedAs("any response", (response, type) -> true);
+  }
+
   /** Matches responses whose {@code Content-Type} header denotes JSON. */
   static DecoderPredicate jsonContentType() {
-    return (response, type) -> Util.isJsonContentType(response);
+    return describedAs(
+        "Content-Type is JSON", (response, type) -> Util.isJsonContentType(response));
   }
 
   /** Matches responses whose {@code Content-Type} header denotes XML. */
   static DecoderPredicate xmlContentType() {
-    return (response, type) -> Util.isXmlContentType(response);
+    return describedAs("Content-Type is XML", (response, type) -> Util.isXmlContentType(response));
   }
 
   /**
@@ -66,40 +104,51 @@ public interface DecoderPredicate {
    */
   static DecoderPredicate contentType(String mediaType) {
     Objects.requireNonNull(mediaType, "mediaType cannot be null");
-    return (response, type) -> Util.hasContentType(response, mediaType);
+    return describedAs(
+        "Content-Type is " + mediaType,
+        (response, type) -> Util.hasContentType(response, mediaType));
   }
 
   /** Matches responses carrying no body, such as a {@code 204 No Content}. */
   static DecoderPredicate emptyBody() {
-    return (response, type) ->
-        response.body() == null
-            || (response.body().length() != null && response.body().length() == 0);
+    return describedAs(
+        "body is empty",
+        (response, type) ->
+            response.body() == null
+                || (response.body().length() != null && response.body().length() == 0));
   }
 
   /** Matches responses whose status is one of the given codes. */
   static DecoderPredicate status(int... statuses) {
     int[] accepted = Arrays.copyOf(statuses, statuses.length);
     Arrays.sort(accepted);
-    return (response, type) -> Arrays.binarySearch(accepted, response.status()) >= 0;
+    return describedAs(
+        "status is one of " + Arrays.toString(accepted),
+        (response, type) -> Arrays.binarySearch(accepted, response.status()) >= 0);
   }
 
   /** Matches responses the caller expects to come back as exactly the given type. */
   static DecoderPredicate returnType(Type expected) {
     Objects.requireNonNull(expected, "expected cannot be null");
-    return (response, type) -> expected.equals(type);
+    return describedAs(
+        "return type is " + expected.getTypeName(), (response, type) -> expected.equals(type));
   }
 
   default DecoderPredicate and(DecoderPredicate other) {
     Objects.requireNonNull(other, "other cannot be null");
-    return (response, type) -> canDecode(response, type) && other.canDecode(response, type);
+    return describedAs(
+        "(" + this + " and " + other + ")",
+        (response, type) -> canDecode(response, type) && other.canDecode(response, type));
   }
 
   default DecoderPredicate or(DecoderPredicate other) {
     Objects.requireNonNull(other, "other cannot be null");
-    return (response, type) -> canDecode(response, type) || other.canDecode(response, type);
+    return describedAs(
+        "(" + this + " or " + other + ")",
+        (response, type) -> canDecode(response, type) || other.canDecode(response, type));
   }
 
   default DecoderPredicate negate() {
-    return (response, type) -> !canDecode(response, type);
+    return describedAs("not (" + this + ")", (response, type) -> !canDecode(response, type));
   }
 }

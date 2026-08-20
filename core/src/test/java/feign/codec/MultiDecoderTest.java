@@ -90,7 +90,8 @@ class MultiDecoderTest {
     SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
     RecordingDecoder fallback = new RecordingDecoder("fallback");
 
-    Decoder decoder = MultiDecoder.builder(fallback).add(json).build();
+    Decoder decoder =
+        MultiDecoder.builder().add(json).add(DecoderPredicate.any(), fallback).build();
 
     assertThat(decoder.decode(responseWithContentType("application/json"), String.class))
         .isEqualTo("json");
@@ -104,7 +105,10 @@ class MultiDecoderTest {
     RecordingDecoder fallback = new RecordingDecoder("fallback");
 
     Decoder decoder =
-        MultiDecoder.builder(fallback).add(DecoderPredicate.xmlContentType(), xml).build();
+        MultiDecoder.builder()
+            .add(DecoderPredicate.xmlContentType(), xml)
+            .add(DecoderPredicate.any(), fallback)
+            .build();
 
     assertThat(decoder.decode(responseWithContentType("application/xml"), String.class))
         .isEqualTo("xml");
@@ -119,10 +123,11 @@ class MultiDecoderTest {
     RecordingDecoder fallback = new RecordingDecoder("fallback");
 
     Decoder decoder =
-        MultiDecoder.builder(fallback)
+        MultiDecoder.builder()
             .add(json)
             .add(DecoderPredicate.xmlContentType(), xml)
             .add(DecoderPredicate.contentType("text/csv"), csv)
+            .add(DecoderPredicate.any(), fallback)
             .build();
 
     assertThat(decoder.decode(responseWithContentType("text/csv;charset=utf-8"), String.class))
@@ -135,20 +140,20 @@ class MultiDecoderTest {
   @Test
   void matchesSuffixedContentTypes() throws IOException {
     SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
-    RecordingDecoder fallback = new RecordingDecoder("fallback");
 
-    Decoder decoder = MultiDecoder.builder(fallback).add(json).build();
+    Decoder decoder = MultiDecoder.builder().add(json).build();
 
     assertThat(decoder.decode(responseWithContentType("application/vnd.github+json"), String.class))
         .isEqualTo("json");
   }
 
   @Test
-  void fallsBackToTheDefaultDecoderWhenNoDelegateAccepts() throws IOException {
+  void fallsBackToTheDecoderThatAcceptsAnything() throws IOException {
     SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
     RecordingDecoder fallback = new RecordingDecoder("fallback");
 
-    Decoder decoder = MultiDecoder.builder(fallback).add(json).build();
+    Decoder decoder =
+        MultiDecoder.builder().add(json).add(DecoderPredicate.any(), fallback).build();
 
     assertThat(decoder.decode(responseWithContentType("text/plain"), String.class))
         .isEqualTo("fallback");
@@ -160,19 +165,19 @@ class MultiDecoderTest {
     SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
     RecordingDecoder fallback = new RecordingDecoder("fallback");
 
-    Decoder decoder = MultiDecoder.builder(fallback).add(json).build();
+    Decoder decoder =
+        MultiDecoder.builder().add(json).add(DecoderPredicate.any(), fallback).build();
 
     assertThat(decoder.decode(responseWithContentType(null), String.class)).isEqualTo("fallback");
   }
 
   @Test
-  void consultsDelegatesInTheOrderTheyWereAdded() throws IOException {
+  void consultsDecodersInTheOrderTheyWereAdded() throws IOException {
     RecordingDecoder first = new RecordingDecoder("first");
     RecordingDecoder second = new RecordingDecoder("second");
-    RecordingDecoder fallback = new RecordingDecoder("fallback");
 
     Decoder decoder =
-        MultiDecoder.builder(fallback)
+        MultiDecoder.builder()
             .add(DecoderPredicate.jsonContentType(), first)
             .add(DecoderPredicate.jsonContentType(), second)
             .build();
@@ -183,15 +188,82 @@ class MultiDecoderTest {
   }
 
   @Test
-  void aBareLambdaIsADecoderThatAcceptsEverything() throws IOException {
-    PredicatedDecoder anything = (response, type) -> "anything";
-    RecordingDecoder fallback = new RecordingDecoder("fallback");
+  void pairingReplacesWhatTheDecoderDeclaresAboutItself() throws IOException {
+    SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
 
-    Decoder decoder = MultiDecoder.builder(fallback).add(anything).build();
+    Decoder decoder =
+        MultiDecoder.builder().add(PredicatedDecoder.of(DecoderPredicate.any(), json)).build();
 
     assertThat(decoder.decode(responseWithContentType("text/plain"), String.class))
-        .isEqualTo("anything");
-    assertThat(fallback.invoked).isFalse();
+        .isEqualTo("json");
+  }
+
+  @Test
+  void narrowingKeepsWhatTheDecoderDeclaresAboutItself() {
+    SelfDeclaringJsonDecoder json = new SelfDeclaringJsonDecoder();
+    PredicatedDecoder narrowed = PredicatedDecoder.narrowing(DecoderPredicate.status(200), json);
+
+    assertThat(narrowed.canDecode(responseWithContentType("application/json"), String.class))
+        .isTrue();
+    assertThat(
+            narrowed.canDecode(
+                responseWithContentType("application/json", 204, null), String.class))
+        .isFalse();
+    assertThat(narrowed.canDecode(responseWithContentType("text/plain"), String.class)).isFalse();
+    assertThat(narrowed)
+        .hasToString(
+            "SelfDeclaringJsonDecoder when (status is one of [200]"
+                + " and SelfDeclaringJsonDecoder accepts it)");
+  }
+
+  @Test
+  void narrowingADecoderThatDeclaresNothingIsJustThePredicate() {
+    RecordingDecoder plain = new RecordingDecoder("plain");
+    PredicatedDecoder narrowed =
+        PredicatedDecoder.narrowing(DecoderPredicate.jsonContentType(), plain);
+
+    assertThat(narrowed).hasToString("RecordingDecoder when Content-Type is JSON");
+    assertThat(narrowed.canDecode(responseWithContentType("application/json"), String.class))
+        .isTrue();
+  }
+
+  @Test
+  void throwsWhenNoDecoderAcceptsTheResponse() {
+    Decoder decoder =
+        MultiDecoder.builder()
+            .add(new SelfDeclaringJsonDecoder())
+            .add(DecoderPredicate.xmlContentType(), new RecordingDecoder("xml"))
+            .build();
+
+    assertThatThrownBy(() -> decoder.decode(responseWithContentType("text/plain"), String.class))
+        .isInstanceOf(DecodeException.class)
+        .hasMessage(
+            "Unable to decode 200 response (Content-Type: text/plain) as java.lang.String."
+                + " Decoders tried, in order:"
+                + "\n  - SelfDeclaringJsonDecoder"
+                + "\n  - RecordingDecoder when Content-Type is XML"
+                + "\nAdd a decoder guarded by DecoderPredicate.any() last to act as a default.");
+  }
+
+  @Test
+  void theFailureReportsAMissingContentType() {
+    Decoder decoder = MultiDecoder.builder().add(new SelfDeclaringJsonDecoder()).build();
+
+    assertThatThrownBy(() -> decoder.decode(responseWithContentType(null), String.class))
+        .isInstanceOf(DecodeException.class)
+        .hasMessageContaining("(Content-Type: not set)");
+  }
+
+  @Test
+  void throwsWhenNoDecodersAreConfigured() {
+    Decoder decoder = MultiDecoder.builder().build();
+
+    assertThatThrownBy(
+            () -> decoder.decode(responseWithContentType("application/json"), String.class))
+        .isInstanceOf(DecodeException.class)
+        .hasMessage(
+            "Unable to decode 200 response (Content-Type: application/json) as java.lang.String."
+                + " No decoders were configured.");
   }
 
   @Test
@@ -202,9 +274,7 @@ class MultiDecoderTest {
         };
 
     Decoder decoder =
-        MultiDecoder.builder(new RecordingDecoder("fallback"))
-            .add(DecoderPredicate.jsonContentType(), failing)
-            .build();
+        MultiDecoder.builder().add(DecoderPredicate.jsonContentType(), failing).build();
 
     assertThatThrownBy(
             () -> decoder.decode(responseWithContentType("application/json"), String.class))
@@ -213,15 +283,8 @@ class MultiDecoderTest {
   }
 
   @Test
-  void rejectsANullDefaultDecoder() {
-    assertThatThrownBy(() -> MultiDecoder.builder(null))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("defaultDecoder cannot be null");
-  }
-
-  @Test
-  void rejectsNullDelegates() {
-    MultiDecoder.Builder builder = MultiDecoder.builder(new RecordingDecoder("fallback"));
+  void rejectsNullDecoders() {
+    MultiDecoder.Builder builder = MultiDecoder.builder();
 
     assertThatThrownBy(() -> builder.add((PredicatedDecoder) null))
         .isInstanceOf(NullPointerException.class)
@@ -235,26 +298,15 @@ class MultiDecoderTest {
   }
 
   @Test
-  void describesItsDelegates() {
+  void describesItsDecoders() {
     Decoder decoder =
-        MultiDecoder.builder(
-                new RecordingDecoder("fallback") {
-                  @Override
-                  public String toString() {
-                    return "fallback";
-                  }
-                })
-            .add(
-                DecoderPredicate.jsonContentType(),
-                new RecordingDecoder("json") {
-                  @Override
-                  public String toString() {
-                    return "json";
-                  }
-                })
+        MultiDecoder.builder()
+            .add(new SelfDeclaringJsonDecoder())
+            .add(DecoderPredicate.jsonContentType(), new RecordingDecoder("json"))
             .build();
 
     assertThat(decoder.toString())
-        .isEqualTo("MultiDecoder{defaultDecoder=fallback, delegates=[json]}");
+        .isEqualTo(
+            "MultiDecoder[SelfDeclaringJsonDecoder, RecordingDecoder when Content-Type is JSON]");
   }
 }
