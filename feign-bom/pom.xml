@@ -272,6 +272,8 @@
         <version>${flatten-maven-plugin.version}</version>
         <configuration>
           <flattenMode>bom</flattenMode>
+          <!-- keep the generated POM out of the source tree, so `mvn clean` disposes of it -->
+          <outputDirectory>${project.build.directory}</outputDirectory>
           <pomElements>
             <properties>remove</properties>
           </pomElements>
