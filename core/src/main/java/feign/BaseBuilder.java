@@ -26,7 +26,10 @@ import feign.codec.DefaultDecoder;
 import feign.codec.DefaultEncoder;
 import feign.codec.DefaultErrorDecoder;
 import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import feign.codec.ErrorDecoder;
+import feign.codec.MultiEncoder;
+import feign.codec.PredicatedEncoder;
 import feign.interceptor.MethodInterceptor;
 import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
@@ -92,6 +95,37 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   public B encoder(Encoder encoder) {
     this.encoder = encoder;
     return thisB();
+  }
+
+  /**
+   * Configures a {@link MultiEncoder} built from encoders that declare their own applicability.
+   *
+   * <p>Encoders are consulted in the order given, and the first one that accepts the request
+   * encodes it. There is no implicit fallback: pair an encoder with {@link EncoderPredicate#any()}
+   * and list it last to act as a default, otherwise a request nothing accepts fails with an {@link
+   * feign.codec.EncodeException}.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .encoders(
+   *         new JacksonEncoder(),
+   *         new JAXBEncoder(),
+   *         PredicatedEncoder.of(EncoderPredicate.any(), new DefaultEncoder()))
+   * </pre>
+   *
+   * <p>To pair a predicate with an encoder that does not implement {@link PredicatedEncoder}, use
+   * {@link PredicatedEncoder#of(EncoderPredicate, Encoder)} as above, or {@link
+   * MultiEncoder#builder()} for the same thing spelled out.
+   *
+   * @param encoders the predicated encoders, consulted in the order given
+   */
+  @Experimental
+  public B encoders(PredicatedEncoder... encoders) {
+    MultiEncoder.Builder builder = MultiEncoder.builder();
+    for (PredicatedEncoder encoder : encoders) {
+      builder.add(encoder);
+    }
+    return encoder(builder.build());
   }
 
   public B decoder(Decoder decoder) {

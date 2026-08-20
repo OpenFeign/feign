@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /** Utilities, typically copied in from guava, so as to avoid dependency conflicts. */
@@ -61,6 +62,9 @@ public class Util {
 
   /** The HTTP Content-Encoding header field name. */
   public static final String CONTENT_ENCODING = "Content-Encoding";
+
+  /** The HTTP Content-Type header field name. */
+  public static final String CONTENT_TYPE = "Content-Type";
 
   /** The HTTP Accept-Encoding header field name. */
   public static final String ACCEPT_ENCODING = "Accept-Encoding";
@@ -82,6 +86,15 @@ public class Util {
   public static final Charset ISO_8859_1 = StandardCharsets.ISO_8859_1;
 
   private static final int BUF_SIZE = 0x800; // 2K chars (4K bytes)
+
+  // matches application/json, text/json, application/vnd.github+json,
+  // application/json;charset=utf-8
+  private static final Pattern JSON_CONTENT_TYPE =
+      Pattern.compile("(?i)\\w+/(?:[\\w._-]+\\+)?json.*");
+
+  // matches application/xml, text/xml, application/soap+xml, application/xml;charset=utf-8
+  private static final Pattern XML_CONTENT_TYPE =
+      Pattern.compile("(?i)\\w+/(?:[\\w._-]+\\+)?xml.*");
 
   /** Type literal for {@code Map<String, ?>}. */
   public static final Type MAP_STRING_WILDCARD =
@@ -370,5 +383,68 @@ public class Util {
         + currentThread.getName()
         + "_"
         + currentThread.getId();
+  }
+
+  /**
+   * Checks whether the {@code Content-Type} header of the given template denotes JSON.
+   *
+   * <p>Matches {@code application/json} as well as suffixed types such as {@code
+   * application/vnd.github+json}. The header name is matched case-insensitively.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is JSON, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean isJsonContentType(RequestTemplate template) {
+    return hasContentTypeMatching(template, JSON_CONTENT_TYPE);
+  }
+
+  /**
+   * Checks whether the {@code Content-Type} header of the given template denotes XML.
+   *
+   * <p>Matches {@code application/xml} and {@code text/xml} as well as suffixed types such as
+   * {@code application/soap+xml}. The header name is matched case-insensitively.
+   *
+   * @param template the request template to check
+   * @return {@code true} if the content type is XML, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean isXmlContentType(RequestTemplate template) {
+    return hasContentTypeMatching(template, XML_CONTENT_TYPE);
+  }
+
+  /**
+   * Checks whether the {@code Content-Type} header of the given template starts with the given
+   * media type, ignoring case and any parameters such as {@code ;charset=utf-8}.
+   *
+   * @param template the request template to check
+   * @param mediaType the media type to look for, for example {@code
+   *     application/x-www-form-urlencoded}
+   * @return {@code true} if the content type matches, {@code false} otherwise
+   */
+  @Experimental
+  public static boolean hasContentType(RequestTemplate template, String mediaType) {
+    return contentTypes(template)
+        .anyMatch(
+            contentType -> {
+              String trimmed = contentType.trim();
+              return trimmed.regionMatches(true, 0, mediaType, 0, mediaType.length())
+                  && (trimmed.length() == mediaType.length()
+                      || trimmed.charAt(mediaType.length()) == ';');
+            });
+  }
+
+  private static Stream<String> contentTypes(RequestTemplate template) {
+    return template.headers().entrySet().stream()
+        .filter(header -> CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
+        .map(Map.Entry::getValue)
+        .filter(Objects::nonNull)
+        .flatMap(Collection::stream)
+        .filter(Objects::nonNull);
+  }
+
+  private static boolean hasContentTypeMatching(RequestTemplate template, Pattern pattern) {
+    return contentTypes(template)
+        .anyMatch(contentType -> pattern.matcher(contentType.trim()).matches());
   }
 }
