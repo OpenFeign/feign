@@ -20,7 +20,24 @@ import feign.Util;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public class DefaultDecoder extends StringDecoder {
+public class DefaultDecoder extends StringDecoder implements PredicatedDecoder {
+
+  /**
+   * Accepts exactly what {@link #decode} handles: a {@code String} or {@code byte[]} return type,
+   * and any type at all when there is no body to read.
+   *
+   * @param response {@inheritDoc}
+   * @param type {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return response.status() == 404
+        || response.status() == 204
+        || response.body() == null
+        || byte[].class.equals(type)
+        || String.class.equals(type);
+  }
 
   @Override
   public Object decode(Response response, Type type) throws IOException {

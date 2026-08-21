@@ -79,7 +79,10 @@ public class FormEncoder implements Encoder {
    *
    * @param delegate delegate encoder, if this encoder couldn't encode object. {@code null} leaves
    *     this encoder without one, in which case anything it cannot encode itself fails with an
-   *     {@link EncodeException} rather than being passed on.
+   *     {@link EncodeException} rather than being passed on. Prefer {@link
+   *     #createPredicatedFormEncoder()} together with {@code BaseBuilder.encoders(...)}: chaining
+   *     belongs there rather than in a delegate, and this constructor is expected to be deprecated
+   *     once that surface stops being experimental.
    */
   public FormEncoder(Encoder delegate) {
     this.delegate = delegate == null ? NO_DELEGATE : delegate;
@@ -112,8 +115,8 @@ public class FormEncoder implements Encoder {
   }
 
   /**
-   * The requests a delegate-less form encoder can handle: a form or multipart {@code Content-Type},
-   * carrying a body this encoder knows how to turn into fields.
+   * Creates a predicate for the requests a delegate-less form encoder can handle: a form or
+   * multipart {@code Content-Type}, carrying a body this encoder knows how to turn into fields.
    *
    * @return the predicate
    */
