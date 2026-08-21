@@ -26,7 +26,16 @@ import org.junit.jupiter.api.Test;
 
 class DefaultEncoderTest {
 
-  private final Encoder encoder = new DefaultEncoder();
+  private final DefaultEncoder encoder = new DefaultEncoder();
+
+  @Test
+  void declaresTheTypesItEncodes() {
+    RequestTemplate template = new RequestTemplate();
+    assertThat(encoder.canEncode("content", String.class, template)).isTrue();
+    assertThat(encoder.canEncode(new byte[0], byte[].class, template)).isTrue();
+    assertThat(encoder.canEncode(null, Clock.class, template)).isTrue();
+    assertThat(encoder.canEncode(Clock.systemUTC(), Clock.class, template)).isFalse();
+  }
 
   @Test
   void encodesStrings() throws Exception {
