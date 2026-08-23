@@ -1,3 +1,9 @@
+### Version 13.15
+
+* `GsonEncoder` serializes request bodies using the runtime type when the declared body type is a
+  raw `Class`, so subclass fields on an abstract `@RequestBody` type are included. Parameterized
+  types (TypeToken / generics) still use the declared type (#2485).
+
 ### Version 13.14
 
 * Add `@Experimental` `MultiEncoder`, `PredicatedEncoder` and `EncoderPredicate`, letting a single
