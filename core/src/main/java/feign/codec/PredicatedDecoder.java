@@ -71,6 +71,9 @@ public interface PredicatedDecoder extends Decoder {
    *         PredicatedDecoder.of(DecoderPredicate.any(), new DefaultDecoder()));
    * </pre>
    *
+   * <p>The predicate is used <em>instead of</em> the decoder's own, not in addition to it. {@link
+   * MultiDecoder.Builder#add(DecoderPredicate, Decoder)} is the same thing at the call site.
+   *
    * @param predicate decides whether the decoder handles a response
    * @param decoder the decoder to delegate to
    */
@@ -89,6 +92,9 @@ public interface PredicatedDecoder extends Decoder {
    *
    * <p>A decoder that does not implement {@link PredicatedDecoder} declares nothing to narrow, so
    * this behaves like {@link #of(DecoderPredicate, Decoder)}.
+   *
+   * <p>The predicate is used <em>in addition to</em> the decoder's own, not instead of it. {@link
+   * MultiDecoder.Builder#narrow(DecoderPredicate, Decoder)} is the same thing at the call site.
    *
    * @param predicate narrows what the decoder handles
    * @param decoder the decoder to delegate to

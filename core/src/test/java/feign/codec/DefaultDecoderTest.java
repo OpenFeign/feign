@@ -36,7 +36,15 @@ import org.w3c.dom.Document;
 @SuppressWarnings("deprecation")
 class DefaultDecoderTest {
 
-  private final Decoder decoder = new DefaultDecoder();
+  private final DefaultDecoder decoder = new DefaultDecoder();
+
+  @Test
+  void declaresTheTypesItDecodes() throws Exception {
+    assertThat(decoder.canDecode(knownResponse(), String.class)).isTrue();
+    assertThat(decoder.canDecode(knownResponse(), byte[].class)).isTrue();
+    assertThat(decoder.canDecode(knownResponse(), Document.class)).isFalse();
+    assertThat(decoder.canDecode(nullBodyResponse(), Document.class)).isTrue();
+  }
 
   @Test
   void decodesToString() throws Exception {
