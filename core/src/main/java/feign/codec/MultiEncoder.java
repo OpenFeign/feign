@@ -52,10 +52,11 @@ import java.util.stream.Collectors;
  *
  * <p>A multi-encoder is itself a {@link PredicatedEncoder}, accepting whatever any of its encoders
  * accepts, so one can be added to another. That is how a library ships a set of encoders as a
- * single unit:
+ * single unit: given a hypothetical {@code AcmeFeign.encoders()} returning a multi-encoder over
+ * that library's encoders, the whole set is added in one go:
  *
  * <pre>
- * Feign.builder().encoders(StreamingFeign.encoders(), new JacksonEncoder());
+ * Feign.builder().encoders(AcmeFeign.encoders(), new JacksonEncoder());
  * </pre>
  *
  * @see PredicatedEncoder
@@ -208,13 +209,14 @@ public class MultiEncoder implements PredicatedEncoder {
     }
 
     /**
-     * Adds an encoder that already declares itself, narrowed by the given predicate: both it and
-     * the encoder's own {@code canEncode} have to accept the request.
+     * Adds an encoder, narrowed by the given predicate. If the encoder is itself a {@link
+     * PredicatedEncoder}, the predicate applies in addition to the encoder's own {@code canEncode}
+     * rather than instead of it: both have to accept the request.
      *
      * <pre>
      * MultiEncoder.builder()
      *     .narrow(EncoderPredicate.contentType("application/vnd.acme+json"), new GsonEncoder())
-     *     .add(new GsonEncoder())
+     *     .add(EncoderPredicate.any(), new DefaultEncoder())
      *     .build();
      * </pre>
      *

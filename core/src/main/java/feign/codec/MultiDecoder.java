@@ -55,10 +55,11 @@ import java.util.stream.Collectors;
  *
  * <p>A multi-decoder is itself a {@link PredicatedDecoder}, accepting whatever any of its decoders
  * accepts, so one can be added to another. That is how a library ships a set of decoders as a
- * single unit:
+ * single unit: given a hypothetical {@code AcmeFeign.decoders()} returning a multi-decoder over
+ * that library's decoders, the whole set is added in one go:
  *
  * <pre>
- * Feign.builder().decoders(StreamingFeign.decoders(), new JacksonDecoder());
+ * Feign.builder().decoders(AcmeFeign.decoders(), new JacksonDecoder());
  * </pre>
  *
  * @see PredicatedDecoder
@@ -212,13 +213,14 @@ public class MultiDecoder implements PredicatedDecoder {
     }
 
     /**
-     * Adds a decoder that already declares itself, narrowed by the given predicate: both it and the
-     * decoder's own {@code canDecode} have to accept the response.
+     * Adds a decoder, narrowed by the given predicate. If the decoder is itself a {@link
+     * PredicatedDecoder}, the predicate applies in addition to the decoder's own {@code canDecode}
+     * rather than instead of it: both have to accept the response.
      *
      * <pre>
      * MultiDecoder.builder()
      *     .narrow(DecoderPredicate.status(200), new JacksonDecoder())
-     *     .add(new JacksonDecoder())
+     *     .add(DecoderPredicate.any(), new DefaultDecoder())
      *     .build();
      * </pre>
      *
