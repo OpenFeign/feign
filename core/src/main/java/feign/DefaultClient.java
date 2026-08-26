@@ -172,7 +172,7 @@ public class DefaultClient implements Client {
         hasAcceptHeader = true;
       }
       for (String value : request.headers().get(field)) {
-        if (field.equals(CONTENT_LENGTH)) {
+        if (field.equalsIgnoreCase(CONTENT_LENGTH)) {
           if (!gzipEncodedRequest && !deflateEncodedRequest) {
             contentLength = Integer.valueOf(value);
           }

@@ -25,6 +25,8 @@ import feign.RequestTemplate;
 import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -48,6 +50,16 @@ public class FormEncoder implements Encoder {
 
   private static final Pattern CHARSET_PATTERN;
 
+  /** Stands in for a delegate that was never supplied, see {@link #FormEncoder(Encoder)}. */
+  private static final Encoder NO_DELEGATE =
+      (object, bodyType, template) -> {
+        throw new EncodeException(
+            "This form encoder has no delegate encoder, so it can only encode form and multipart"
+                + " requests, and "
+                + bodyType
+                + " is neither. Register an encoder that handles it.");
+      };
+
   static {
     CONTENT_TYPE_HEADER = "Content-Type";
     CHARSET_PATTERN = Pattern.compile("(?<=charset=)([\\w\\-]+)");
@@ -65,18 +77,55 @@ public class FormEncoder implements Encoder {
   /**
    * Constructor with specified delegate encoder.
    *
-   * @param delegate delegate encoder, if this encoder couldn't encode object.
+   * @param delegate delegate encoder, if this encoder couldn't encode object. {@code null} leaves
+   *     this encoder without one, in which case anything it cannot encode itself fails with an
+   *     {@link EncodeException} rather than being passed on. Prefer {@link
+   *     #createPredicatedFormEncoder()} together with {@code BaseBuilder.encoders(...)}: chaining
+   *     belongs there rather than in a delegate, and this constructor is expected to be deprecated
+   *     once that surface stops being experimental.
    */
   public FormEncoder(Encoder delegate) {
-    this.delegate = delegate;
+    this.delegate = delegate == null ? NO_DELEGATE : delegate;
 
     val list =
-        asList(new MultipartFormContentProcessor(delegate), new UrlencodedFormContentProcessor());
+        asList(
+            new MultipartFormContentProcessor(this.delegate), new UrlencodedFormContentProcessor());
 
     processors = new HashMap<ContentType, ContentProcessor>(list.size(), 1.F);
     for (ContentProcessor processor : list) {
       processors.put(processor.getSupportedContentType(), processor);
     }
+  }
+
+  /**
+   * Creates a form encoder that declares what it can handle, for use with {@code MultiEncoder}.
+   *
+   * <p>It has no delegate: a request it does not accept is left for the other encoders registered
+   * alongside it, instead of being swallowed by a fallback of its own.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .encoders(FormEncoder.createPredicatedFormEncoder(), new JacksonEncoder());
+   * </pre>
+   *
+   * @return a form encoder guarded by {@link #formRequests()}
+   */
+  public static PredicatedEncoder createPredicatedFormEncoder() {
+    return PredicatedEncoder.of(formRequests(), new FormEncoder(null));
+  }
+
+  /**
+   * Creates a predicate for the requests a delegate-less form encoder can handle: a form or
+   * multipart {@code Content-Type}, carrying a body this encoder knows how to turn into fields.
+   *
+   * @return the predicate
+   */
+  public static EncoderPredicate formRequests() {
+    return EncoderPredicate.describedAs(
+        "Content-Type is a form type and the body is a map or a user pojo",
+        (object, bodyType, template) ->
+            ContentType.of(getContentTypeValue(template.headers())) != ContentType.UNDEFINED
+                && (object instanceof Map || (bodyType != null && isUserPojo(bodyType))));
   }
 
   @Override
@@ -115,7 +164,7 @@ public class FormEncoder implements Encoder {
   }
 
   @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
-  private String getContentTypeValue(Map<String, Collection<String>> headers) {
+  private static String getContentTypeValue(Map<String, Collection<String>> headers) {
     for (val entry : headers.entrySet()) {
       if (!entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)) {
         continue;

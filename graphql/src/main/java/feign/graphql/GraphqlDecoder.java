@@ -113,13 +113,17 @@ public class GraphqlDecoder implements Decoder {
     }
 
     var dataMap = (Map<String, Object>) data;
-    var fieldNames = dataMap.keySet().iterator();
-    if (!fieldNames.hasNext()) {
+    if (dataMap.isEmpty()) {
       return Util.emptyValueOf(type);
     }
 
-    var firstField = fieldNames.next();
-    var operationData = dataMap.get(firstField);
+    // A single root field is the operation result itself; several root fields are its components,
+    // so the whole data map binds to the return type and no field gets dropped.
+    if (dataMap.size() > 1) {
+      return jsonDecoder.convert(dataMap, type);
+    }
+
+    var operationData = dataMap.values().iterator().next();
     if (operationData == null) {
       return Util.emptyValueOf(type);
     }

@@ -41,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import org.junit.jupiter.api.Test;
@@ -147,6 +148,51 @@ public class DefaultClientTest extends AbstractClientTest {
         .hasMethod("POST")
         .hasNoHeaderNamed("Content-Type")
         .hasHeaders(entry("Content-Length", Collections.singletonList("0")));
+  }
+
+  @Test
+  void lowerCaseContentLengthHeaderIsUsedForFixedLengthStreamingMode() throws Exception {
+    server.enqueue(new MockResponse());
+    byte[] body = "hello".getBytes(StandardCharsets.UTF_8);
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList(String.valueOf(body.length)));
+    Request request =
+        Request.create(
+            HttpMethod.POST,
+            "http://localhost:" + server.getPort() + "/",
+            headers,
+            body,
+            StandardCharsets.UTF_8,
+            null);
+
+    // the two-arg constructor disables request buffering, so a recognised Content-Length selects
+    // fixed-length streaming mode and the JDK emits the header itself, exactly once
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    RecordedRequest recordedRequest = server.takeRequest();
+    assertThat(recordedRequest.getHeaders().values("Content-Length"))
+        .containsExactly(String.valueOf(body.length));
+    assertThat(recordedRequest.getHeader("Transfer-Encoding")).isNull();
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void contentLengthHeaderIsNotDuplicatedForBodylessRequest() throws Exception {
+    server.enqueue(new MockResponse());
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList("0"));
+    Request request =
+        Request.create(
+            HttpMethod.POST,
+            "http://localhost:" + server.getPort() + "/",
+            headers,
+            null,
+            StandardCharsets.UTF_8,
+            null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Length")).containsExactly("0");
   }
 
   @Test

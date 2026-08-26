@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>13.15-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-vertx</artifactId>
@@ -31,7 +31,7 @@
 
   <properties>
     <main.java.version>11</main.java.version>
-    <jackson.version>2.22.1</jackson.version>
+    <jackson.version>2.22.2</jackson.version>
   </properties>
 
   <dependencyManagement>
