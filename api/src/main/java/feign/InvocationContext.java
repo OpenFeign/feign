@@ -21,6 +21,7 @@ import static feign.Util.ensureClosed;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -71,6 +72,8 @@ public class InvocationContext {
       return disconnectResponseBodyIfNeeded(response);
     }
 
+    boolean noClose = false;
+
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
@@ -86,6 +89,11 @@ public class InvocationContext {
       }
 
       Class<?> rawType = Types.getRawType(returnType);
+
+      if (Closeable.class.isAssignableFrom(rawType)) {
+        noClose = true;
+      }
+
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
         return TypedResponse.builder(response).body(decode(response, bodyType)).build();
@@ -93,7 +101,7 @@ public class InvocationContext {
 
       return decode(response, returnType);
     } finally {
-      if (closeAfterDecode) {
+      if (closeAfterDecode && !noClose) {
         ensureClosed(response.body());
       }
     }
