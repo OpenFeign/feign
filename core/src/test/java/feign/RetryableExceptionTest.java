@@ -29,6 +29,35 @@ import org.junit.jupiter.api.Test;
 class RetryableExceptionTest {
 
   @Test
+  void createRetryableExceptionWithoutRequest() {
+    Long retryAfter = 5000L;
+
+    RetryableException retryableException =
+        new RetryableException(503, "Service Unavailable", Request.HttpMethod.GET, retryAfter);
+
+    assertThat(retryableException.hasRequest()).isFalse();
+    assertThat(retryableException.request()).isNull();
+    assertThat(retryableException.retryAfter()).isEqualTo(retryAfter);
+    assertThat(retryableException.method()).isEqualTo(Request.HttpMethod.GET);
+  }
+
+  @Test
+  void createRetryableExceptionWithoutRequestAndWithCause() {
+    Long retryAfter = 5000L;
+    Throwable cause = new RuntimeException("test cause");
+
+    RetryableException retryableException =
+        new RetryableException(
+            503, "Service Unavailable", Request.HttpMethod.GET, cause, retryAfter);
+
+    assertThat(retryableException.hasRequest()).isFalse();
+    assertThat(retryableException.request()).isNull();
+    assertThat(retryableException.getCause()).isSameAs(cause);
+    assertThat(retryableException.retryAfter()).isEqualTo(retryAfter);
+    assertThat(retryableException.method()).isEqualTo(Request.HttpMethod.GET);
+  }
+
+  @Test
   void createRetryableExceptionWithResponseAndResponseHeader() {
     // given
     Long retryAfter = 5000L;
