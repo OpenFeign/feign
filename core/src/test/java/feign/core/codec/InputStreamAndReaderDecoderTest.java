@@ -20,8 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import feign.Feign;
 import feign.RequestLine;
 import feign.Util;
-import feign.core.codec.InputStreamAndReaderDecoder;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
