@@ -17,17 +17,16 @@ package feign.core.codec;
 
 import static java.lang.String.format;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.lang.reflect.Type;
-
 import feign.FeignException;
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.PredicatedDecoder;
 import feign.utils.ContentTypeParser;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.lang.reflect.Type;
 
 public class InputStreamAndReaderDecoder implements PredicatedDecoder {
 
@@ -46,16 +45,16 @@ public class InputStreamAndReaderDecoder implements PredicatedDecoder {
                   .orElse(Util.UTF_8));
 
     throw new DecodeException(
-            response.status(),
-            format("%s is not a type supported by this decoder.", type),
-            response.request());
+        response.status(),
+        format("%s is not a type supported by this decoder.", type),
+        response.request());
   }
 
   @Override
   public boolean canDecode(Response response, Type type) {
     if (InputStream.class.equals(type)) return true;
     if (Reader.class.equals(type)) return true;
-    
-	return false;
+
+    return false;
   }
 }
