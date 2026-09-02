@@ -17,18 +17,20 @@ package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.Feign;
-import feign.RequestLine;
-import feign.Util;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+
+import org.junit.jupiter.api.Test;
+
+import feign.Feign;
+import feign.RequestLine;
+import feign.Util;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.internal.BufferMockResponseBody;
 import okio.Buffer;
-import org.junit.jupiter.api.Test;
 
 public class InputStreamAndReaderDecoderTest {
   public final MockWebServer server = new MockWebServer();
@@ -56,7 +58,7 @@ public class InputStreamAndReaderDecoderTest {
 
     LargeStreamTestInterface api =
         Feign.builder()
-            .decoder(new InputStreamAndReaderDecoder(null))
+            .decoder(new InputStreamAndReaderDecoder())
             .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
 
     try (InputStream is = api.getLargeStream()) {
@@ -88,7 +90,7 @@ public class InputStreamAndReaderDecoderTest {
 
     LargeStreamTestInterface api =
         Feign.builder()
-            .decoder(new InputStreamAndReaderDecoder(null))
+            .decoder(new InputStreamAndReaderDecoder())
             .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
 
     try (Reader r = api.getLargeReader()) {
@@ -120,7 +122,7 @@ public class InputStreamAndReaderDecoderTest {
 
     LargeStreamTestInterface api =
         Feign.builder()
-            .decoder(new InputStreamAndReaderDecoder(null))
+            .decoder(new InputStreamAndReaderDecoder())
             .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
 
     try (Reader r = api.getLargeReader()) {
