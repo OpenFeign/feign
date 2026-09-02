@@ -21,8 +21,14 @@ import feign.Feign.ResponseMappingDecoder;
 import feign.Request.Options;
 import feign.codec.Codec;
 import feign.codec.Decoder;
+import feign.codec.DecoderPredicate;
 import feign.codec.Encoder;
+import feign.codec.EncoderPredicate;
 import feign.codec.ErrorDecoder;
+import feign.codec.MultiDecoder;
+import feign.codec.MultiEncoder;
+import feign.codec.PredicatedDecoder;
+import feign.codec.PredicatedEncoder;
 import feign.interceptor.MethodInterceptor;
 import feign.interceptor.MethodInterceptors;
 import java.lang.reflect.Field;
@@ -35,8 +41,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Cloneable {
-
-  private final B thisB;
 
   protected List<RequestInterceptor> requestInterceptors = new ArrayList<>();
   protected List<ResponseInterceptor> responseInterceptors = new ArrayList<>();
@@ -59,7 +63,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
 
   public BaseBuilder() {
     super();
-    thisB = (B) this;
     FeignDefaults defaults = ServiceLoaderUtils.defaults();
     this.contract = defaults.contract();
     this.retryer = defaults.retryer();
@@ -71,40 +74,107 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     this.invocationHandlerFactory = defaults.invocationHandlerFactory();
   }
 
+  @SuppressWarnings("unchecked")
+  private B thisB() {
+    return (B) this;
+  }
+
   public B logLevel(Logger.Level logLevel) {
     this.logLevel = logLevel;
-    return thisB;
+    return thisB();
   }
 
   public B contract(Contract contract) {
     this.contract = contract;
-    return thisB;
+    return thisB();
   }
 
   public B retryer(Retryer retryer) {
     this.retryer = retryer;
-    return thisB;
+    return thisB();
   }
 
   public B logger(Logger logger) {
     this.logger = logger;
-    return thisB;
+    return thisB();
   }
 
   public B encoder(Encoder encoder) {
     this.encoder = encoder;
-    return thisB;
+    return thisB();
+  }
+
+  /**
+   * Configures a {@link MultiEncoder} built from encoders that declare their own applicability.
+   *
+   * <p>Encoders are consulted in the order given, and the first one that accepts the request
+   * encodes it. There is no implicit fallback: pair an encoder with {@link EncoderPredicate#any()}
+   * and list it last to act as a default, otherwise a request nothing accepts fails with an {@link
+   * feign.codec.EncodeException}.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .encoders(
+   *         new JacksonEncoder(),
+   *         new JAXBEncoder(),
+   *         PredicatedEncoder.of(EncoderPredicate.any(), new DefaultEncoder()))
+   * </pre>
+   *
+   * <p>To pair a predicate with an encoder that does not implement {@link PredicatedEncoder}, use
+   * {@link PredicatedEncoder#of(EncoderPredicate, Encoder)} as above, or {@link
+   * MultiEncoder#builder()} for the same thing spelled out.
+   *
+   * @param encoders the predicated encoders, consulted in the order given
+   */
+  @Experimental
+  public B encoders(PredicatedEncoder... encoders) {
+    MultiEncoder.Builder builder = MultiEncoder.builder();
+    for (PredicatedEncoder encoder : encoders) {
+      builder.add(encoder);
+    }
+    return encoder(builder.build());
   }
 
   public B decoder(Decoder decoder) {
     this.decoder = decoder;
-    return thisB;
+    return thisB();
+  }
+
+  /**
+   * Configures a {@link MultiDecoder} built from decoders that declare their own applicability.
+   *
+   * <p>Decoders are consulted in the order given, and the first one that accepts the response
+   * decodes it. There is no implicit fallback: pair a decoder with {@link DecoderPredicate#any()}
+   * and list it last to act as a default, otherwise a response nothing accepts fails with a {@link
+   * feign.codec.DecodeException}.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .decoders(
+   *         new JacksonDecoder(),
+   *         new JAXBDecoder(),
+   *         PredicatedDecoder.of(DecoderPredicate.any(), new DefaultDecoder()))
+   * </pre>
+   *
+   * <p>To pair a predicate with a decoder that does not implement {@link PredicatedDecoder}, use
+   * {@link PredicatedDecoder#of(DecoderPredicate, Decoder)} as above, or {@link
+   * MultiDecoder#builder()} for the same thing spelled out.
+   *
+   * @param decoders the predicated decoders, consulted in the order given
+   */
+  @Experimental
+  public B decoders(PredicatedDecoder... decoders) {
+    MultiDecoder.Builder builder = MultiDecoder.builder();
+    for (PredicatedDecoder decoder : decoders) {
+      builder.add(decoder);
+    }
+    return decoder(builder.build());
   }
 
   public B codec(Codec codec) {
     this.encoder = codec.encoder();
     this.decoder = codec.decoder();
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -119,23 +189,23 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    */
   public B doNotCloseAfterDecode() {
     this.closeAfterDecode = false;
-    return thisB;
+    return thisB();
   }
 
   public B decodeVoid() {
     this.decodeVoid = true;
-    return thisB;
+    return thisB();
   }
 
   public B queryMapEncoder(QueryMapEncoder queryMapEncoder) {
     this.queryMapEncoder = queryMapEncoder;
-    return thisB;
+    return thisB();
   }
 
   /** Allows to map the response before passing it to the decoder. */
   public B mapAndDecode(ResponseMapper mapper, Decoder decoder) {
     this.decoder = new ResponseMappingDecoder(mapper, decoder);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -155,7 +225,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    */
   public B dismiss404() {
     this.dismiss404 = true;
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -177,23 +247,23 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Deprecated
   public B decode404() {
     this.dismiss404 = true;
-    return thisB;
+    return thisB();
   }
 
   public B errorDecoder(ErrorDecoder errorDecoder) {
     this.errorDecoder = errorDecoder;
-    return thisB;
+    return thisB();
   }
 
   public B options(Options options) {
     this.options = options;
-    return thisB;
+    return thisB();
   }
 
   /** Adds a single request interceptor to the builder. */
   public B requestInterceptor(RequestInterceptor requestInterceptor) {
     this.requestInterceptors.add(requestInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -205,7 +275,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (RequestInterceptor requestInterceptor : requestInterceptors) {
       this.requestInterceptors.add(requestInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -217,13 +287,13 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (ResponseInterceptor responseInterceptor : responseInterceptors) {
       this.responseInterceptors.add(responseInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /** Adds a single response interceptor to the builder. */
   public B responseInterceptor(ResponseInterceptor responseInterceptor) {
     this.responseInterceptors.add(responseInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /**
@@ -234,7 +304,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Experimental
   public B methodInterceptor(MethodInterceptor methodInterceptor) {
     this.methodInterceptors.add(methodInterceptor);
-    return thisB;
+    return thisB();
   }
 
   /** Sets the full set of method interceptors, overwriting any previously configured. */
@@ -244,33 +314,33 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     for (MethodInterceptor methodInterceptor : methodInterceptors) {
       this.methodInterceptors.add(methodInterceptor);
     }
-    return thisB;
+    return thisB();
   }
 
   /** Allows you to override how reflective dispatch works inside of Feign. */
   public B invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
     this.invocationHandlerFactory = invocationHandlerFactory;
-    return thisB;
+    return thisB();
   }
 
   public B exceptionPropagationPolicy(ExceptionPropagationPolicy propagationPolicy) {
     this.propagationPolicy = propagationPolicy;
-    return thisB;
+    return thisB();
   }
 
   public B addCapability(Capability capability) {
     this.capabilities.add(capability);
-    return thisB;
+    return thisB();
   }
 
   @SuppressWarnings("unchecked")
   B enrich() {
     if (capabilities.isEmpty()) {
-      return thisB;
+      return thisB();
     }
 
     try {
-      B clone = (B) thisB.clone();
+      B clone = (B) thisB().clone();
 
       getFieldsToEnrich()
           .forEach(
@@ -320,10 +390,21 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
       // enrich each response interceptor, then enrich the list as a whole
       ResponseInterceptor[] responseArray =
           clone.responseInterceptors.toArray(new ResponseInterceptor[0]);
-      for (int i = 0; i < responseArray.length; i++) {
-        responseArray[i] =
+      if (responseArray.length == 0) {
+        ResponseInterceptor defaultResponseInterceptor = (context, chain) -> chain.next(context);
+        ResponseInterceptor enrichedResponseInterceptor =
             (ResponseInterceptor)
-                Capability.enrich(responseArray[i], ResponseInterceptor.class, capabilities);
+                Capability.enrich(
+                    defaultResponseInterceptor, ResponseInterceptor.class, capabilities);
+        if (enrichedResponseInterceptor != defaultResponseInterceptor) {
+          responseArray = new ResponseInterceptor[] {enrichedResponseInterceptor};
+        }
+      } else {
+        for (int i = 0; i < responseArray.length; i++) {
+          responseArray[i] =
+              (ResponseInterceptor)
+                  Capability.enrich(responseArray[i], ResponseInterceptor.class, capabilities);
+        }
       }
       ResponseInterceptors responseInterceptors =
           (ResponseInterceptors)
@@ -360,8 +441,6 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
         .filter(field -> !field.isSynthetic())
         // and capabilities itself
         .filter(field -> !Objects.equals(field.getName(), "capabilities"))
-        // and thisB helper field
-        .filter(field -> !Objects.equals(field.getName(), "thisB"))
         // interceptor lists are enriched per-element then as a whole via custom types
         .filter(field -> !Objects.equals(field.getName(), "requestInterceptors"))
         .filter(field -> !Objects.equals(field.getName(), "responseInterceptors"))

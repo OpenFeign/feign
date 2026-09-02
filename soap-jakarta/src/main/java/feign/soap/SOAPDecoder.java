@@ -19,6 +19,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import feign.jaxb.JAXBContextFactory;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
@@ -75,7 +76,7 @@ import java.lang.reflect.Type;
  * @see SOAPErrorDecoder
  * @see SOAPFaultException
  */
-public class SOAPDecoder implements Decoder {
+public class SOAPDecoder implements Decoder, PredicatedDecoder {
 
   private final JAXBContextFactory jaxbContextFactory;
   private final String soapProtocol;
@@ -174,5 +175,10 @@ public class SOAPDecoder implements Decoder {
       }
       return new SOAPDecoder(this);
     }
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isXmlContentType(response);
   }
 }

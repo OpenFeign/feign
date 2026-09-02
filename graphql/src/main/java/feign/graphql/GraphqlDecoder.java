@@ -21,25 +21,53 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.graphql.GraphqlSubscriptionClient.Subscription;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Flow;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SubmissionPublisher;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 @Experimental
 public class GraphqlDecoder implements Decoder {
 
+  /** How long a blocking subscription call waits for an event before giving up. */
+  public static final Duration DEFAULT_EVENT_TIMEOUT = Duration.ofSeconds(60);
+
   private final JsonDecoder jsonDecoder;
+  private final long eventTimeoutMillis;
+  private final Executor executor;
 
   public GraphqlDecoder(JsonDecoder jsonDecoder) {
+    this(jsonDecoder, DEFAULT_EVENT_TIMEOUT, Runnable::run);
+  }
+
+  public GraphqlDecoder(JsonDecoder jsonDecoder, Duration eventTimeout, Executor executor) {
+    if (eventTimeout.isNegative()) {
+      throw new IllegalArgumentException("eventTimeout must not be negative: " + eventTimeout);
+    }
     this.jsonDecoder = jsonDecoder;
+    this.eventTimeoutMillis = eventTimeout.toMillis();
+    this.executor = executor;
   }
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
+    if (response.body() instanceof Subscription subscription) {
+      return subscribe(subscription, type);
+    }
+
     Type targetType = type;
     boolean optional = isOptionalType(type);
     if (optional) {
@@ -67,11 +95,16 @@ public class GraphqlDecoder implements Decoder {
       return Util.emptyValueOf(type);
     }
 
+    return unwrap(root, type, response.status(), response.request());
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object unwrap(Map<String, Object> root, Type type, int status, Request request)
+      throws IOException {
     var errors = root.get("errors");
     if (errors instanceof List<?> errorList && !errorList.isEmpty()) {
-      var operationField = resolveOperationField(root, response);
-      throw new GraphqlErrorException(
-          response.status(), operationField, errors.toString(), response.request());
+      var operationField = resolveOperationField(root, request);
+      throw new GraphqlErrorException(status, operationField, errors.toString(), request);
     }
 
     var data = root.get("data");
@@ -80,13 +113,17 @@ public class GraphqlDecoder implements Decoder {
     }
 
     var dataMap = (Map<String, Object>) data;
-    var fieldNames = dataMap.keySet().iterator();
-    if (!fieldNames.hasNext()) {
+    if (dataMap.isEmpty()) {
       return Util.emptyValueOf(type);
     }
 
-    var firstField = fieldNames.next();
-    var operationData = dataMap.get(firstField);
+    // A single root field is the operation result itself; several root fields are its components,
+    // so the whole data map binds to the return type and no field gets dropped.
+    if (dataMap.size() > 1) {
+      return jsonDecoder.convert(dataMap, type);
+    }
+
+    var operationData = dataMap.values().iterator().next();
     if (operationData == null) {
       return Util.emptyValueOf(type);
     }
@@ -102,7 +139,7 @@ public class GraphqlDecoder implements Decoder {
   }
 
   @SuppressWarnings("unchecked")
-  private String resolveOperationField(Map<String, Object> root, Response response) {
+  private String resolveOperationField(Map<String, Object> root, Request request) {
     var data = root.get("data");
     if (data instanceof Map) {
       var dataMap = (Map<String, Object>) data;
@@ -112,14 +149,14 @@ public class GraphqlDecoder implements Decoder {
       }
     }
 
-    if (response.request() != null && response.request().body().isPresent()) {
+    if (request != null && request.body().isPresent()) {
       try {
         var fakeResponse =
             Response.builder()
                 .status(200)
                 .headers(Collections.emptyMap())
-                .request(response.request())
-                .body(bodyAsByteArray(response.request()))
+                .request(request)
+                .body(bodyAsByteArray(request))
                 .build();
         var requestBody = (Map<String, Object>) jsonDecoder.decode(fakeResponse, Map.class);
         if (requestBody != null) {
@@ -140,6 +177,118 @@ public class GraphqlDecoder implements Decoder {
     var body = request.body();
 
     return body.isPresent() ? body.get().writeToByteArray() : null;
+  }
+
+  /**
+   * The return type picks the semantics: {@code Stream<T>} blocks on every element and {@code
+   * Flow.Publisher<T>} pushes them, while {@code T} and {@code Optional<T>} block for the first
+   * event only and {@code CompletableFuture<T>} delivers that first event asynchronously. Every
+   * single-value form unsubscribes as soon as it has its event.
+   *
+   * <p>The blocking forms are bounded by the configured event timeout; the asynchronous ones are
+   * not, since their caller already owns the deadline.
+   */
+  private Object subscribe(Subscription subscription, Type type) {
+    subscription.detach();
+
+    if (isRawType(type, Stream.class)) {
+      return elements(subscription, typeArgument(type), eventTimeoutMillis);
+    }
+    if (isRawType(type, Flow.Publisher.class)) {
+      return publish(subscription, typeArgument(type));
+    }
+    if (isRawType(type, CompletableFuture.class)) {
+      return futureOf(subscription, typeArgument(type));
+    }
+    if (isRawType(type, Optional.class)) {
+      return first(subscription, typeArgument(type), eventTimeoutMillis);
+    }
+    return first(subscription, type, eventTimeoutMillis).orElseGet(() -> Util.emptyValueOf(type));
+  }
+
+  private Optional<Object> first(Subscription subscription, Type elementType, long timeoutMillis) {
+    try (var elements = elements(subscription, elementType, timeoutMillis)) {
+      return elements.findFirst();
+    }
+  }
+
+  private CompletableFuture<Object> futureOf(Subscription subscription, Type elementType) {
+    var future = new CompletableFuture<>();
+    // Cancelling must reach the socket, or a cancelled future leaks the connection and its worker.
+    future.whenComplete(
+        (ignored, error) -> {
+          if (future.isCancelled()) {
+            subscription.unsubscribe();
+          }
+        });
+    try {
+      executor.execute(
+          () -> {
+            try {
+              future.complete(first(subscription, elementType, 0).orElse(null));
+            } catch (Throwable e) {
+              future.completeExceptionally(e);
+            }
+          });
+    } catch (RejectedExecutionException e) {
+      subscription.unsubscribe();
+      future.completeExceptionally(e);
+    }
+    return future;
+  }
+
+  private Stream<Object> elements(Subscription subscription, Type elementType, long timeoutMillis) {
+    return subscription
+        .payloads(timeoutMillis)
+        .map(
+            payload -> {
+              try {
+                return unwrap(payload, elementType, 200, subscription.request());
+              } catch (IOException e) {
+                throw new UncheckedIOException(e);
+              }
+            });
+  }
+
+  private Flow.Publisher<Object> publish(Subscription subscription, Type elementType) {
+    // Runnable::run delivers on the pump thread: one worker per subscription in total, delivery can
+    // never be rejected by a busy pool, and onNext is inherently ordered.
+    var publisher = new SubmissionPublisher<>(Runnable::run, Flow.defaultBufferSize());
+    var started = new AtomicBoolean();
+    // Pumping starts on the first subscribe, so hasSubscribers() is meaningful from the first
+    // element onwards and there is no pre-subscribe window to latch around.
+    return subscriber -> {
+      publisher.subscribe(subscriber);
+      if (!started.compareAndSet(false, true)) {
+        return;
+      }
+      try {
+        executor.execute(
+            () -> {
+              try (var elements = elements(subscription, elementType, 0)) {
+                var iterator = elements.iterator();
+                while (iterator.hasNext() && publisher.hasSubscribers()) {
+                  publisher.submit(iterator.next());
+                }
+                publisher.close();
+              } catch (Throwable e) {
+                publisher.closeExceptionally(e);
+              }
+            });
+      } catch (RejectedExecutionException e) {
+        // A subscriber must always get a terminal signal; stranding it is worse than failing it.
+        subscription.unsubscribe();
+        publisher.closeExceptionally(e);
+      }
+    };
+  }
+
+  private static boolean isRawType(Type type, Class<?> raw) {
+    return type instanceof ParameterizedType pt && pt.getRawType() == raw;
+  }
+
+  private static Type typeArgument(Type type) {
+    return ((ParameterizedType) type).getActualTypeArguments()[0];
   }
 
   private boolean isOptionalType(Type type) {

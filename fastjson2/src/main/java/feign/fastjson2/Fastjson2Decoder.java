@@ -26,6 +26,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
@@ -33,7 +34,7 @@ import java.lang.reflect.Type;
 /**
  * @author changjin wei(魏昌进)
  */
-public class Fastjson2Decoder implements Decoder, JsonDecoder {
+public class Fastjson2Decoder implements Decoder, PredicatedDecoder, JsonDecoder {
 
   private final JSONReader.Feature[] features;
 
@@ -68,5 +69,10 @@ public class Fastjson2Decoder implements Decoder, JsonDecoder {
       return ((JSONObject) object).to(type);
     }
     return JSON.parseObject(JSON.toJSONString(object), type);
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

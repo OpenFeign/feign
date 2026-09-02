@@ -28,6 +28,7 @@ import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import jakarta.xml.bind.MarshalException;
 import jakarta.xml.bind.UnmarshalException;
+import jakarta.xml.bind.ValidationEventHandler;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -39,10 +40,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.glassfish.jaxb.runtime.IDResolver;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation")
@@ -207,6 +211,53 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">\
     JAXBDecoder decoder = new JAXBDecoder(new JAXBContextFactory.Builder().build());
 
     assertThat(decoder.decode(response, MockObject.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void decodesXmlUsingFactoryProperty() throws Exception {
+    MockObject mock = new MockObject();
+    mock.value = "Test";
+
+    String mockXml =
+        """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?><mockObject>\
+        <value>Test</value></mockObject>\
+        """;
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+            .headers(Collections.emptyMap())
+            .body(mockXml, UTF_8)
+            .build();
+
+    AtomicBoolean started = new AtomicBoolean();
+    IDResolver resolver =
+        new IDResolver() {
+          @Override
+          public void startDocument(ValidationEventHandler eventHandler) {
+            started.set(true);
+          }
+
+          @Override
+          public void bind(String id, Object obj) {}
+
+          @Override
+          public Callable<?> resolve(String id, Class targetType) {
+            return () -> null;
+          }
+        };
+
+    JAXBContextFactory factory =
+        new JAXBContextFactory.Builder()
+            .withMarshallerFormattedOutput(true)
+            .withProperty(IDResolver.class.getName(), resolver)
+            .build();
+
+    assertThat(new JAXBDecoder(factory).decode(response, MockObject.class)).isEqualTo(mock);
+    assertThat(started).isTrue();
   }
 
   @Test

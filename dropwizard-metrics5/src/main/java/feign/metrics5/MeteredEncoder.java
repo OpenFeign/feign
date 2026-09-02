@@ -18,13 +18,14 @@ package feign.metrics5;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer.Context;
 import java.lang.reflect.Type;
 import java.util.Map;
 
 /** Warp feign {@link Encoder} with metrics. */
-public class MeteredEncoder implements Encoder {
+public class MeteredEncoder implements Encoder, PredicatedEncoder {
 
   private final Encoder encoder;
   private final MetricRegistry metricRegistry;
@@ -72,5 +73,11 @@ public class MeteredEncoder implements Encoder {
                             template.methodMetadata(), template.feignTarget(), "request_size"),
                         metricSuppliers.histograms())
                     .update(body.contentLength()));
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return !(encoder instanceof PredicatedEncoder)
+        || ((PredicatedEncoder) encoder).canEncode(object, bodyType, template);
   }
 }

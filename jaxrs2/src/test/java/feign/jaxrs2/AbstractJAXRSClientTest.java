@@ -47,6 +47,16 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
 
   @Override
   @Test
+  public void query() throws Exception {
+    try {
+      super.query();
+    } catch (final RuntimeException _) {
+      Assumptions.assumeFalse(false, "JaxRS client do not support QUERY requests");
+    }
+  }
+
+  @Override
+  @Test
   public void noResponseBodyForPut() throws Exception {
     try {
       super.noResponseBodyForPut();

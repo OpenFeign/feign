@@ -163,7 +163,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
-    final Integer contentLength =
+    Integer contentLength =
         length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
             ? (int) length.getAsLong()
             : null;
@@ -173,10 +173,13 @@ public class Http2Client implements Client, AsyncClient<Object> {
     if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_GZIP)) {
       try {
         body = new GZIPInputStream(body);
+        // the body is now decompressed, the Content-Length described the compressed bytes
+        contentLength = null;
       } catch (IOException ignored) {
       }
     } else if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_DEFLATE)) {
       body = new InflaterInputStream(body);
+      contentLength = null;
     }
 
     return Response.builder()

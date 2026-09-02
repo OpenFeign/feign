@@ -21,6 +21,7 @@ import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -30,7 +31,7 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 
 /** Wrap feign {@link Encoder} with metrics. */
-public class MeteredEncoder implements Encoder {
+public class MeteredEncoder implements Encoder, PredicatedEncoder {
 
   private final Encoder encoder;
   private final MeterRegistry meterRegistry;
@@ -86,5 +87,11 @@ public class MeteredEncoder implements Encoder {
 
   protected Tag[] extraTags(Object object, Type bodyType, RequestTemplate template) {
     return EMPTY_TAGS_ARRAY;
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return !(encoder instanceof PredicatedEncoder)
+        || ((PredicatedEncoder) encoder).canEncode(object, bodyType, template);
   }
 }
