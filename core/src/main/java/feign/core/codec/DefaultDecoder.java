@@ -29,6 +29,7 @@ public class DefaultDecoder extends StringDecoder {
     if (byte[].class.equals(type)) {
       return Util.toByteArray(response.body().asInputStream());
     }
+
     return super.decode(response, type);
   }
 }
