@@ -15,11 +15,10 @@
  */
 package feign.core.codec;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-
 import feign.Response;
 import feign.Util;
+import java.io.IOException;
+import java.lang.reflect.Type;
 
 public class DefaultDecoder extends StringDecoder {
 
@@ -30,7 +29,7 @@ public class DefaultDecoder extends StringDecoder {
     if (byte[].class.equals(type)) {
       return Util.toByteArray(response.body().asInputStream());
     }
-    		
+
     return super.decode(response, type);
   }
 }
