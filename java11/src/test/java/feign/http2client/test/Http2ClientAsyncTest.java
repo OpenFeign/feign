@@ -45,6 +45,7 @@ import feign.RequestLine;
 import feign.RequestTemplate;
 import feign.Response;
 import feign.ResponseMapper;
+import feign.Retryer;
 import feign.Target;
 import feign.Target.HardCodedTarget;
 import feign.Util;
@@ -63,6 +64,7 @@ import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -508,6 +510,24 @@ public class Http2ClientAsyncTest {
     server.takeRequest();
     Throwable exception = assertThrows(FeignException.class, () -> unwrap(cf));
     assertThat(exception.getMessage()).contains("timeout reading POST http://");
+  }
+
+  @Test
+  void timeoutReadingResponseBody() throws Throwable {
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(1, TimeUnit.SECONDS));
+
+    final TestInterfaceAsync api =
+        newAsyncBuilder()
+            .retryer(Retryer.NEVER_RETRY)
+            .options(
+                new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
+            .target("http://localhost:" + server.getPort());
+
+    final CompletableFuture<?> cf = api.post();
+    server.takeRequest();
+
+    Throwable exception = assertThrows(FeignException.class, () -> unwrap(cf));
+    assertThat(exception).hasCauseInstanceOf(HttpTimeoutException.class);
   }
 
   @Test
@@ -1057,6 +1077,16 @@ public class Http2ClientAsyncTest {
 
     TestInterfaceAsyncBuilder dismiss404() {
       delegate.dismiss404();
+      return this;
+    }
+
+    TestInterfaceAsyncBuilder options(Request.Options options) {
+      delegate.options(options);
+      return this;
+    }
+
+    TestInterfaceAsyncBuilder retryer(Retryer retryer) {
+      delegate.retryer(retryer);
       return this;
     }
 
