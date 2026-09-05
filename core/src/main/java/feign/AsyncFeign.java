@@ -245,6 +245,7 @@ public final class AsyncFeign<C> {
                       dismiss404,
                       closeAfterDecode,
                       decodeVoid,
+                      decodeErrorResponses,
                       responseInterceptorChain()),
                   AsyncResponseHandler.class,
                   capabilities);
