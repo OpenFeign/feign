@@ -21,6 +21,7 @@ import static feign.Util.ensureClosed;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -32,6 +33,7 @@ public class InvocationContext {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
   private final boolean decodeVoid;
+  private final boolean decodeErrorResponses;
   private final Response response;
   private final Type returnType;
 
@@ -44,12 +46,35 @@ public class InvocationContext {
       boolean decodeVoid,
       Response response,
       Type returnType) {
+    this(
+        configKey,
+        decoder,
+        errorDecoder,
+        dismiss404,
+        closeAfterDecode,
+        decodeVoid,
+        false,
+        response,
+        returnType);
+  }
+
+  InvocationContext(
+      String configKey,
+      Decoder decoder,
+      ErrorDecoder errorDecoder,
+      boolean dismiss404,
+      boolean closeAfterDecode,
+      boolean decodeVoid,
+      boolean decodeErrorResponses,
+      Response response,
+      Type returnType) {
     this.configKey = configKey;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
     this.decodeVoid = decodeVoid;
+    this.decodeErrorResponses = decodeErrorResponses;
     this.response = response;
     this.returnType = returnType;
   }
@@ -71,13 +96,26 @@ public class InvocationContext {
       return disconnectResponseBodyIfNeeded(response);
     }
 
+    Response response = this.response;
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
               || (response.status() == 404 && dismiss404 && !isVoidType(returnType));
 
       if (!shouldDecodeResponseBody) {
-        throw decodeError(configKey, response);
+        if (!shouldDecodeErrorResponseBody(response)) {
+          throw decodeError(configKey, response);
+        }
+        // Buffer once: both the error decoder and the body decoder below need to read it, and a
+        // response body is not generally replayable.
+        response = bufferBody(response);
+        Exception error = errorDecoder.decode(configKey, response);
+        if (error instanceof RetryableException) {
+          // Retryable failures stay exceptions, so Retryer keeps behaving as it does today.
+          ensureClosed(response.body());
+          throw error;
+        }
+        return decodeErrorResponseBody(response, error);
       }
 
       if (isVoidType(returnType) && !decodeVoid) {
@@ -96,6 +134,60 @@ public class InvocationContext {
       if (closeAfterDecode) {
         ensureClosed(response.body());
       }
+    }
+  }
+
+  /**
+   * Whether the error body should be returned as a value rather than thrown, per {@link
+   * feign.BaseBuilder#decodeErrorResponses()}. The return type is deliberately not inspected: the
+   * method's signature is the declaration of what an error body should decode to. Retryability is
+   * not checked here either, since it requires reading the body, which the caller only does once it
+   * knows the flag is in play.
+   */
+  private boolean shouldDecodeErrorResponseBody(Response response) {
+    if (!decodeErrorResponses || response.status() < 400) {
+      return false;
+    }
+    // A decoder that declares what it handles gets to refuse an HTML error page from a proxy. One
+    // that declares nothing cannot be asked, so the status range above is the only gate.
+    return !(decoder instanceof PredicatedDecoder)
+        || ((PredicatedDecoder) decoder).canDecode(response, returnType);
+  }
+
+  /**
+   * Decodes the error body, falling back to throwing {@code error} if it does not decode. The
+   * decoder is handed a response whose status reads {@code 200}: decoders commonly short-circuit
+   * 404 and 204 to an empty value without reading the body, which would discard the envelope that
+   * was asked for. {@link TypedResponse} is still built from the real response, so its status stays
+   * truthful.
+   */
+  private Object decodeErrorResponseBody(Response response, Exception error) throws Exception {
+    Response decodable = response.toBuilder().status(200).build();
+    Class<?> rawType = Types.getRawType(returnType);
+    try {
+      if (TypedResponse.class.isAssignableFrom(rawType)) {
+        Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+        return TypedResponse.builder(response).body(decode(decodable, bodyType)).build();
+      }
+      return decode(decodable, returnType);
+    } catch (FeignException e) {
+      if (error == null) {
+        // A custom ErrorDecoder may return null; the decode failure is then the only diagnosis.
+        throw e;
+      }
+      error.addSuppressed(e);
+      throw error;
+    }
+  }
+
+  private static Response bufferBody(Response response) throws IOException {
+    if (response.body() == null) {
+      return response;
+    }
+    try {
+      return response.toBuilder().body(Util.toByteArray(response.body().asInputStream())).build();
+    } finally {
+      ensureClosed(response.body());
     }
   }
 

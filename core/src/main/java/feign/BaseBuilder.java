@@ -63,6 +63,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   protected InvocationHandlerFactory invocationHandlerFactory =
       new DefaultInvocationHandlerFactory();
   protected boolean dismiss404;
+  protected boolean decodeErrorResponses;
   protected ExceptionPropagationPolicy propagationPolicy = NONE;
   protected List<Capability> capabilities = new ArrayList<>();
 
@@ -243,6 +244,64 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Deprecated
   public B decode404() {
     this.dismiss404 = true;
+    return thisB();
+  }
+
+  /**
+   * Returns an error response as a value instead of throwing, when the upstream describes the
+   * failure in the response body rather than by status alone.
+   *
+   * <p>Some teams answer a failed call with a status in the 4xx/5xx range <em>and</em> a body
+   * describing what went wrong. By default Feign hands any non-2xx response to the {@link
+   * #errorDecoder(ErrorDecoder) error decoder} and throws, so that body is unreachable. With this
+   * flag set, the body is decoded into the method's declared return type and returned:
+   *
+   * <pre>
+   * interface MyApi {
+   *   &#064;RequestLine("POST /users")
+   *   BaseResponse createUser(NewUser user);
+   * }
+   *
+   * Feign.builder()
+   *      .decoder(new JacksonDecoder())
+   *      .decodeErrorResponses()
+   *      .target(MyApi.class, "https://api.example.com");
+   * </pre>
+   *
+   * <p>The flag engages only when <em>every</em> one of the following holds; in any other case the
+   * response is thrown exactly as it is today:
+   *
+   * <ul>
+   *   <li>the response status is 400 or above &mdash; 3xx is left to {@link
+   *       RedirectionInterceptor}, and is not a failure;
+   *   <li>the {@link #decoder(Decoder) decoder} accepts the response, checked via {@link
+   *       feign.codec.PredicatedDecoder#canDecode}, so a decoder that declares itself as JSON will
+   *       not be handed an HTML error page from a proxy. A decoder that is not a {@code
+   *       PredicatedDecoder} declares nothing, so this check cannot be made and is skipped;
+   *   <li>the {@link #errorDecoder(ErrorDecoder) error decoder} did not classify the response as
+   *       {@link RetryableException retryable}. Retryable failures are thrown as before, so {@link
+   *       Retryer} keeps working;
+   *   <li>the body actually decodes. If it does not, the error decoder's exception is thrown, with
+   *       the decode failure attached as {@linkplain Throwable#addSuppressed suppressed}.
+   * </ul>
+   *
+   * <p><b>This flag applies to every method on the client.</b> It does not check that the return
+   * type is one an error body makes sense as, because there is nothing reliable to check against:
+   * most decoders ignore unknown properties, so an error body will decode into an unrelated type
+   * and produce an object with every field null rather than failing. On a client with this flag
+   * set, a method whose return type is not an error-body shape will return such an object instead
+   * of throwing. Use a separate client for methods that should keep throwing.
+   *
+   * <p><b>Note for custom decoders:</b> when this flag engages, the {@link Response} passed to the
+   * decoder has its status rewritten to {@code 200}. This is deliberate &mdash; several decoders,
+   * including {@code JacksonDecoder} and {@link feign.optionals.OptionalDecoder}, return an empty
+   * value for 404 and 204 without reading the body, which would discard the very body being asked
+   * for. A decoder that branches on {@link Response#status()} will therefore not see the real
+   * status; read it from the response passed to a {@link ResponseInterceptor}, or declare {@code
+   * TypedResponse<T>}, whose {@link TypedResponse#status()} always reports the true status.
+   */
+  public B decodeErrorResponses() {
+    this.decodeErrorResponses = true;
     return thisB();
   }
 
