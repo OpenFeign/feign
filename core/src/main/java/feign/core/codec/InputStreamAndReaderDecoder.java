@@ -17,16 +17,15 @@ package feign.core.codec;
 
 import static java.lang.String.format;
 
-import feign.FeignException;
-import feign.Response;
-import feign.Util;
-import feign.codec.DecodeException;
-import feign.codec.PredicatedDecoder;
-import feign.utils.ContentTypeParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Type;
+
+import feign.FeignException;
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.PredicatedDecoder;
 
 public class InputStreamAndReaderDecoder implements PredicatedDecoder {
 
@@ -39,10 +38,7 @@ public class InputStreamAndReaderDecoder implements PredicatedDecoder {
     if (Reader.class.equals(type))
       return response
           .body()
-          .asReader(
-              ContentTypeParser.parseContentTypeFromHeaders(response.headers())
-                  .map(ctr -> ctr.getCharset().orElse(Util.UTF_8))
-                  .orElse(Util.UTF_8));
+          .asReader(response.charset());
 
     throw new DecodeException(
         response.status(),
