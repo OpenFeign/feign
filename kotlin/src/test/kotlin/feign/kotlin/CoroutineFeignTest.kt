@@ -110,10 +110,10 @@ class CoroutineFeignTest {
             .target("http://localhost:" + server.port)
 
         // Act
-        val firstOrder: Unit? = client.findOrderThatReturningUnit(orderId = 1)
+        val firstOrder: Unit = client.findOrderThatReturningUnit(orderId = 1)
 
         // Assert
-        assertThat(firstOrder).isNull()
+        assertThat(firstOrder).isEqualTo(Unit)
     }
 
     @Test
@@ -163,7 +163,7 @@ class CoroutineFeignTest {
         )
 
         // Assert
-        assertThat(firstOrder).isNull()
+        assertThat(firstOrder).isEqualTo(Unit)
     }
 
     internal class GsonDecoder : Decoder {

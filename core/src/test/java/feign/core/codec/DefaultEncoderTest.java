@@ -23,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.Encoder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +37,18 @@ import org.junit.jupiter.api.io.TempDir;
 
 class DefaultEncoderTest {
 
-  private final Encoder encoder = new DefaultEncoder();
+  private final DefaultEncoder encoder = new DefaultEncoder();
+
+  @Test
+  void declaresTheTypesItEncodes() {
+    RequestTemplate template = new RequestTemplate();
+    assertThat(encoder.canEncode("content", String.class, template)).isTrue();
+    assertThat(encoder.canEncode(new byte[0], byte[].class, template)).isTrue();
+    assertThat(encoder.canEncode(null, Clock.class, template)).isTrue();
+    assertThat(encoder.canEncode(Request.Body.of("content"), Request.Body.class, template))
+        .isTrue();
+    assertThat(encoder.canEncode(Clock.systemUTC(), Clock.class, template)).isFalse();
+  }
 
   @Test
   void encodesStrings() throws Exception {

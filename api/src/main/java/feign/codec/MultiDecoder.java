@@ -17,6 +17,7 @@ package feign.codec;
 
 import feign.Experimental;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
@@ -52,11 +53,20 @@ import java.util.stream.Collectors;
  * naming what was tried. Add a decoder guarded by {@link DecoderPredicate#any()} last to act as a
  * default, as above.
  *
+ * <p>A multi-decoder is itself a {@link PredicatedDecoder}, accepting whatever any of its decoders
+ * accepts, so one can be added to another. That is how a library ships a set of decoders as a
+ * single unit: given a hypothetical {@code AcmeFeign.decoders()} returning a multi-decoder over
+ * that library's decoders, the whole set is added in one go:
+ *
+ * <pre>
+ * Feign.builder().decoders(AcmeFeign.decoders(), new JacksonDecoder());
+ * </pre>
+ *
  * @see PredicatedDecoder
  * @see DecoderPredicate
  */
 @Experimental
-public class MultiDecoder implements Decoder {
+public class MultiDecoder implements PredicatedDecoder {
 
   private final List<PredicatedDecoder> decoders;
 
@@ -67,6 +77,18 @@ public class MultiDecoder implements Decoder {
   /** Starts building a multi-decoder. */
   public static Builder builder() {
     return new Builder();
+  }
+
+  /**
+   * Whether any of the decoders accepts the response.
+   *
+   * @param response {@inheritDoc}
+   * @param type {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return decoders.stream().anyMatch(decoder -> decoder.canDecode(response, type));
   }
 
   /**
@@ -95,31 +117,61 @@ public class MultiDecoder implements Decoder {
     StringBuilder message =
         new StringBuilder("Unable to decode ")
             .append(response.status())
-            .append(" response (Content-Type: ")
-            .append(contentTypes(response))
+            .append(" response (")
+            .append(headers(response))
             .append(") as ")
-            .append(type == null ? "the expected type" : type.getTypeName());
-    if (decoders.isEmpty()) {
-      return message.append(". No decoders were configured.").toString();
-    }
-    message.append(". Decoders tried, in order:");
-    for (PredicatedDecoder decoder : decoders) {
-      message.append("\n  - ").append(PairedDecoder.describe(decoder));
-    }
+            .append(type == null ? "the expected type" : type.getTypeName())
+            .append(". Decoders tried, in order:");
+    appendTo(message, "\n  ");
     return message
-        .append("\nAdd a decoder guarded by DecoderPredicate.any() last to act as a default.")
+        .append("\nRegister a decoder that accepts it, or add a catch-all")
+        .append(" (DecoderPredicate.any()) last.")
         .toString();
   }
 
-  private static String contentTypes(Response response) {
-    String contentTypes =
-        response.headers().entrySet().stream()
-            .filter(header -> Util.CONTENT_TYPE.equalsIgnoreCase(header.getKey()))
+  /**
+   * Lists the decoders one per line, unfolding nested multi-decoders so that a set contributed as a
+   * single unit still shows what it contains.
+   */
+  private void appendTo(StringBuilder message, String indent) {
+    for (PredicatedDecoder decoder : decoders) {
+      if (decoder instanceof MultiDecoder) {
+        message.append(indent).append("- MultiDecoder:");
+        ((MultiDecoder) decoder).appendTo(message, indent + "  ");
+      } else {
+        message.append(indent).append("- ").append(PairedDecoder.describe(decoder));
+      }
+    }
+  }
+
+  /**
+   * The headers a decoder is most likely to have been chosen on: what came back, and what was asked
+   * for. Everything else a predicate looks at belongs in that predicate's own description, which is
+   * listed alongside it.
+   */
+  private static String headers(Response response) {
+    String contentType = header(response.headers(), Util.CONTENT_TYPE);
+    StringBuilder headers =
+        new StringBuilder(Util.CONTENT_TYPE)
+            .append(": ")
+            .append(contentType == null ? "not set" : contentType);
+    Request request = response.request();
+    String accept = request == null ? null : header(request.headers(), Util.ACCEPT);
+    if (accept != null) {
+      headers.append(", ").append(Util.ACCEPT).append(": ").append(accept);
+    }
+    return headers.toString();
+  }
+
+  private static String header(Map<String, Collection<String>> headers, String name) {
+    String values =
+        headers.entrySet().stream()
+            .filter(header -> name.equalsIgnoreCase(header.getKey()))
             .map(Map.Entry::getValue)
             .filter(Objects::nonNull)
             .flatMap(Collection::stream)
             .collect(Collectors.joining(", "));
-    return contentTypes.isEmpty() ? "not set" : contentTypes;
+    return values.isEmpty() ? null : values;
   }
 
   @Override
@@ -148,7 +200,10 @@ public class MultiDecoder implements Decoder {
 
     /**
      * Adds any decoder, guarded by the given predicate. Use this for decoders that do not implement
-     * {@link PredicatedDecoder}, including ones you do not control.
+     * {@link PredicatedDecoder}, including ones you do not control. The predicate is the whole
+     * answer: whatever the decoder may declare about itself is replaced, so this can widen a
+     * decoder as well as narrow it. Use {@link #narrow(DecoderPredicate, Decoder)} to keep the
+     * decoder's own declaration.
      *
      * @param predicate decides whether the decoder handles a response
      * @param decoder the decoder to delegate to
@@ -157,8 +212,34 @@ public class MultiDecoder implements Decoder {
       return add(PredicatedDecoder.of(predicate, decoder));
     }
 
-    /** Builds the multi-decoder. */
+    /**
+     * Adds a decoder, narrowed by the given predicate. If the decoder is itself a {@link
+     * PredicatedDecoder}, the predicate applies in addition to the decoder's own {@code canDecode}
+     * rather than instead of it: both have to accept the response.
+     *
+     * <pre>
+     * MultiDecoder.builder()
+     *     .narrow(DecoderPredicate.status(200), new JacksonDecoder())
+     *     .add(DecoderPredicate.any(), new DefaultDecoder())
+     *     .build();
+     * </pre>
+     *
+     * @param predicate narrows what the decoder handles
+     * @param decoder the decoder to delegate to
+     */
+    public Builder narrow(DecoderPredicate predicate, Decoder decoder) {
+      return add(PredicatedDecoder.narrowing(predicate, decoder));
+    }
+
+    /**
+     * Builds the multi-decoder.
+     *
+     * @throws IllegalStateException if no decoder was added
+     */
     public MultiDecoder build() {
+      if (decoders.isEmpty()) {
+        throw new IllegalStateException("at least one decoder is required");
+      }
       return new MultiDecoder(decoders);
     }
   }

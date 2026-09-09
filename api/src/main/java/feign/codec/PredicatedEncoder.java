@@ -71,6 +71,9 @@ public interface PredicatedEncoder extends Encoder {
    *         PredicatedEncoder.of(EncoderPredicate.any(), new Encoder.Default()));
    * </pre>
    *
+   * <p>The predicate is used <em>instead of</em> the encoder's own, not in addition to it. {@link
+   * MultiEncoder.Builder#add(EncoderPredicate, Encoder)} is the same thing at the call site.
+   *
    * @param predicate decides whether the encoder handles a request
    * @param encoder the encoder to delegate to
    */
@@ -89,6 +92,9 @@ public interface PredicatedEncoder extends Encoder {
    *
    * <p>An encoder that does not implement {@link PredicatedEncoder} declares nothing to narrow, so
    * this behaves like {@link #of(EncoderPredicate, Encoder)}.
+   *
+   * <p>The predicate is used <em>in addition to</em> the encoder's own, not instead of it. {@link
+   * MultiEncoder.Builder#narrow(EncoderPredicate, Encoder)} is the same thing at the call site.
    *
    * @param predicate narrows what the encoder handles
    * @param encoder the encoder to delegate to

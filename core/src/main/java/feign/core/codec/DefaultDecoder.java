@@ -22,6 +22,19 @@ import java.lang.reflect.Type;
 
 public class DefaultDecoder extends StringDecoder {
 
+  /**
+   * Accepts exactly what {@link #decode} handles: everything {@link StringDecoder} accepts, plus a
+   * {@code byte[]} return type.
+   *
+   * @param response {@inheritDoc}
+   * @param type {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return byte[].class.equals(type) || super.canDecode(response, type);
+  }
+
   @Override
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) return Util.emptyValueOf(type);

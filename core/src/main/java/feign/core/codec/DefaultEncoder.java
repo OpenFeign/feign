@@ -20,13 +20,34 @@ import static java.lang.String.format;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 
-public class DefaultEncoder implements Encoder {
+public class DefaultEncoder implements PredicatedEncoder {
+
+  /**
+   * Accepts exactly what {@link #encode} handles: a {@code String} or {@code byte[]} body, a {@code
+   * File}, {@code Path}, {@code InputStream} or {@link Request.Body} streamed body, and a null
+   * body, which is sent as no body at all.
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return bodyType == String.class
+        || bodyType == byte[].class
+        || object == null
+        || object instanceof File
+        || object instanceof Path
+        || object instanceof InputStream
+        || object instanceof Request.Body;
+  }
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
