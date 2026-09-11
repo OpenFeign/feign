@@ -71,6 +71,44 @@ public class RetryableException extends FeignException {
   }
 
   /**
+   * Represents a retryable exception without retaining the original request.
+   *
+   * <p>Use this constructor when the request is unavailable or should not be retained by the
+   * exception.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param retryAfter the retry delay in milliseconds
+   */
+  public RetryableException(int status, String message, HttpMethod httpMethod, Long retryAfter) {
+    super(status, message);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+    this.methodKey = null;
+  }
+
+  /**
+   * Represents a retryable exception without retaining the original request.
+   *
+   * <p>Use this constructor when the request is unavailable or should not be retained by the
+   * exception.
+   *
+   * @param status the HTTP status code
+   * @param message the exception message
+   * @param httpMethod the HTTP method (GET, POST, etc.)
+   * @param cause the underlying cause of the exception
+   * @param retryAfter the retry delay in milliseconds
+   */
+  public RetryableException(
+      int status, String message, HttpMethod httpMethod, Throwable cause, Long retryAfter) {
+    super(status, message, cause);
+    this.httpMethod = httpMethod;
+    this.retryAfter = retryAfter;
+    this.methodKey = null;
+  }
+
+  /**
    * Represents a retryable exception when Retry-After information is available.
    *
    * <p>Use this constructor when the server response includes a Retry-After header specifying the
