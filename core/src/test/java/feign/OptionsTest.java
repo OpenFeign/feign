@@ -38,6 +38,22 @@ class OptionsTest {
     }
   }
 
+  /**
+   * Options subclass that overrides threadIdentifier() to return a fixed constant, forcing all
+   * threads to contend on the same outer key in threadToMethodOptions. This is the only way to
+   * exercise the pre-fix check-then-act race without changing thread identity.
+   */
+  static class SharedKeyOptions extends Request.Options {
+    public SharedKeyOptions(int connectTimeoutMillis, int readTimeoutMillis) {
+      super(connectTimeoutMillis, readTimeoutMillis);
+    }
+
+    @Override
+    protected String threadIdentifier() {
+      return "shared-key";
+    }
+  }
+
   interface OptionsInterface {
     @RequestLine("GET /")
     String get(Request.Options options);
@@ -134,5 +150,51 @@ class OptionsTest {
             });
     thread.start();
     thread.join();
+  }
+  
+  /**
+   * Forces multiple threads to contend on the SAME outer key in threadToMethodOptions by using
+   * SharedKeyOptions, which returns a fixed "shared-key" from threadIdentifier().
+   *
+   * <p>Before the fix (getOrDefault + put), two threads racing with the same key could both
+   * observe the key absent, both create a new inner map, and one thread's put would overwrite the
+   * other's — silently losing entries. With computeIfAbsent + ConcurrentHashMap, creation is
+   * atomic and all entries must be present after all threads complete.
+   */
+  @Test
+  void concurrentSetMethodOptionsOnSameKeyDoesNotLoseEntries() throws Exception {
+    SharedKeyOptions options = new SharedKeyOptions(1000, 1000);
+    int threadCount = 20;
+    CountDownLatch start = new CountDownLatch(1);
+    CountDownLatch done = new CountDownLatch(threadCount);
+    AtomicReference<Throwable> error = new AtomicReference<>();
+
+    for (int i = 0; i < threadCount; i++) {
+      final String method = "method" + i;
+      new Thread(
+              () -> {
+                try {
+                  start.await();
+                  options.setMethodOptions(method, new Request.Options(1000, 2000));
+                } catch (Throwable t) {
+                  error.set(t);
+                } finally {
+                  done.countDown();
+                }
+              })
+          .start();
+    }
+
+    start.countDown();
+    assertThat(done.await(5, TimeUnit.SECONDS)).isTrue();
+
+    // No exception must have been thrown
+    assertThat(error.get()).isNull();
+    // All 20 entries must be present — proves no lost updates due to the race
+    for (int i = 0; i < threadCount; i++) {
+      assertThat(options.getMethodOptions("method" + i))
+          .as("entry for method%d must not have been lost", i)
+          .isNotSameAs(options);
+    }
   }
 }
