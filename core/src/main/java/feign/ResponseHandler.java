@@ -40,6 +40,8 @@ public class ResponseHandler {
 
   private final boolean decodeVoid;
 
+  private final boolean decodeErrorResponses;
+
   private final ResponseInterceptor.Chain executionChain;
 
   public ResponseHandler(
@@ -51,6 +53,28 @@ public class ResponseHandler {
       boolean closeAfterDecode,
       boolean decodeVoid,
       ResponseInterceptor.Chain executionChain) {
+    this(
+        logLevel,
+        logger,
+        decoder,
+        errorDecoder,
+        dismiss404,
+        closeAfterDecode,
+        decodeVoid,
+        false,
+        executionChain);
+  }
+
+  public ResponseHandler(
+      Level logLevel,
+      Logger logger,
+      Decoder decoder,
+      ErrorDecoder errorDecoder,
+      boolean dismiss404,
+      boolean closeAfterDecode,
+      boolean decodeVoid,
+      boolean decodeErrorResponses,
+      ResponseInterceptor.Chain executionChain) {
     super();
     this.logLevel = logLevel;
     this.logger = logger;
@@ -59,6 +83,7 @@ public class ResponseHandler {
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
     this.decodeVoid = decodeVoid;
+    this.decodeErrorResponses = decodeErrorResponses;
     this.executionChain = executionChain;
   }
 
@@ -74,6 +99,7 @@ public class ResponseHandler {
               dismiss404,
               closeAfterDecode,
               decodeVoid,
+              decodeErrorResponses,
               response,
               returnType));
     } catch (final IOException e) {
