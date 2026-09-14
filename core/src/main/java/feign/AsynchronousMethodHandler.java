@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -114,18 +115,31 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   }
 
   private static class CancellableFuture<T> extends CompletableFuture<T> {
-    private CompletableFuture<T> inner = null;
+    // volatile provides the same JMM happens-before guarantees as AtomicReference
+    // since we only ever read/write (never CAS), with less indirection.
+    private volatile CompletableFuture<T> inner;
 
+    /**
+     * Registers {@code value} as the active inner future and pipes its result into this future.
+     *
+     * <p>Side-effect: if this future has already been cancelled before {@code setInner} is called,
+     * the cancellation is immediately forwarded to {@code value} so that the in-flight async work
+     * is also cancelled rather than completing silently.
+     */
     public void setInner(CompletableFuture<T> value) {
       inner = value;
-      inner.whenComplete(pipeTo(this));
+      value.whenComplete(pipeTo(this));
+      if (isCancelled()) {
+        value.cancel(true);
+      }
     }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       final boolean result = super.cancel(mayInterruptIfRunning);
-      if (inner != null) {
-        inner.cancel(mayInterruptIfRunning);
+      CompletableFuture<T> current = inner;
+      if (current != null) {
+        current.cancel(mayInterruptIfRunning);
       }
       return result;
     }
