@@ -104,14 +104,12 @@ public abstract class Logger {
       String configKey, Level logLevel, Response response, long elapsedTime) throws IOException {
     String protocolVersion = resolveProtocolVersion(response.protocolVersion());
     String reason =
-        response.reason() != null && logLevel.compareTo(Level.NONE) > 0
-            ? " " + response.reason()
-            : "";
+        response.reason() != null && logLevel.atLeast(Level.BASIC) ? " " + response.reason() : "";
     int status = response.status();
     log(configKey, "<--- %s %s%s (%sms)", protocolVersion, status, reason, elapsedTime);
     if (logLevel.atLeast(Level.HEADERS)) {
 
-      logResponseHeaders(configKey, logLevel, response);
+      logResponseHeaders(configKey, response);
 
       int bodyLength = 0;
       if (response.body() != null && !(status == 204 || status == 205)) {
@@ -134,7 +132,7 @@ public abstract class Logger {
     return response;
   }
 
-  private void logResponseHeaders(String configKey, Level logLevel, Response response) {
+  private void logResponseHeaders(String configKey, Response response) {
     for (String field : response.headers().keySet()) {
       if (shouldLogResponseHeader(field)) {
         for (String value : valuesOrEmpty(response.headers(), field)) {

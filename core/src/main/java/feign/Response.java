@@ -36,13 +36,13 @@ public final class Response implements Closeable {
   private final ProtocolVersion protocolVersion;
 
   private Response(Builder builder) {
-    checkState(builder.request() != null, "original request is required");
-    this.status = builder.status();
-    this.request = builder.request();
-    this.reason = builder.reason(); // nullable
-    this.headers = caseInsensitiveCopyOf(builder.headers());
-    this.body = builder.body(); // nullable
-    this.protocolVersion = builder.protocolVersion();
+    checkState(builder.request != null, "original request is required");
+    this.status = builder.status;
+    this.request = builder.request;
+    this.reason = builder.reason; // nullable
+    this.headers = caseInsensitiveCopyOf(builder.headers);
+    this.body = builder.body; // nullable
+    this.protocolVersion = builder.protocolVersion;
   }
 
   public Builder toBuilder() {
@@ -72,30 +72,6 @@ public final class Response implements Closeable {
       this.body = source.body;
       this.request = source.request;
       this.protocolVersion = source.protocolVersion;
-    }
-
-    int status() {
-      return status;
-    }
-
-    String reason() {
-      return reason;
-    }
-
-    Map<String, Collection<String>> headers() {
-      return headers;
-    }
-
-    Body body() {
-      return body;
-    }
-
-    Request request() {
-      return request;
-    }
-
-    ProtocolVersion protocolVersion() {
-      return protocolVersion;
     }
 
     /**

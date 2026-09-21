@@ -54,7 +54,7 @@ public class LoggerMethodsTest {
     verify(spyBody).close();
     assertThat(rebufferedResponse.body()).isNotSameAs(spyBody);
   }
-  
+
   @Test
   void atLeastReturnsTrueForEqualLevel() {
     assertThat(Level.BASIC.atLeast(Level.BASIC)).isTrue();
