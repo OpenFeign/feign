@@ -327,11 +327,7 @@ public final class Request implements Serializable {
     private final boolean followRedirects;
     private final Map<String, Map<String, Options>> threadToMethodOptions;
 
-    /**
-     * Returns the identifier used to bucket method-level options by calling context. Defaults to
-     * the current thread's identity. Subclasses may override this to provide a fixed identifier,
-     * which is useful in tests to force concurrent threads to contend on the same outer map key.
-     */
+    /** Returns the key used to bucket per-thread method options. */
     String threadIdentifier() {
       return getThreadIdentifier();
     }
