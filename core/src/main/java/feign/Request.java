@@ -332,7 +332,7 @@ public final class Request implements Serializable {
      * the current thread's identity. Subclasses may override this to provide a fixed identifier,
      * which is useful in tests to force concurrent threads to contend on the same outer map key.
      */
-    protected String threadIdentifier() {
+    String threadIdentifier() {
       return getThreadIdentifier();
     }
 
