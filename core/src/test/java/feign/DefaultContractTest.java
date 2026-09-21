@@ -59,6 +59,8 @@ class DefaultContractTest {
     assertThat(parseAndValidateMetadata(Methods.class, "get").template()).hasMethod("GET");
 
     assertThat(parseAndValidateMetadata(Methods.class, "delete").template()).hasMethod("DELETE");
+
+    assertThat(parseAndValidateMetadata(Methods.class, "query").template()).hasMethod("QUERY");
   }
 
   @Test
@@ -422,6 +424,9 @@ class DefaultContractTest {
 
     @RequestLine("DELETE /")
     void delete();
+
+    @RequestLine("QUERY /")
+    void query();
   }
 
   interface BodyParams {

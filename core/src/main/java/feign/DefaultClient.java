@@ -111,7 +111,9 @@ public class DefaultClient implements Client {
     }
 
     Integer length = connection.getContentLength();
-    if (length == -1) {
+    if (length < 0) {
+      // -1 signals unknown or above Integer.MAX_VALUE; any other negative value is a malformed
+      // header that HttpURLConnection surfaces verbatim
       length = null;
     }
     InputStream stream;
@@ -122,8 +124,11 @@ public class DefaultClient implements Client {
     }
     if (stream != null && this.isGzip(headers.get(CONTENT_ENCODING))) {
       stream = new GZIPInputStream(stream);
+      // the body is now decompressed, the Content-Length described the compressed bytes
+      length = null;
     } else if (stream != null && this.isDeflate(headers.get(CONTENT_ENCODING))) {
       stream = new InflaterInputStream(stream);
+      length = null;
     }
     return Response.builder()
         .status(status)
@@ -167,10 +172,9 @@ public class DefaultClient implements Client {
         hasAcceptHeader = true;
       }
       for (String value : request.headers().get(field)) {
-        if (field.equals(CONTENT_LENGTH)) {
+        if (field.equalsIgnoreCase(CONTENT_LENGTH)) {
           if (!gzipEncodedRequest && !deflateEncodedRequest) {
             contentLength = Integer.valueOf(value);
-            connection.addRequestProperty(field, value);
           }
         }
         // Avoid add "Accept-encoding" twice or more when "compression" option is enabled
@@ -189,11 +193,7 @@ public class DefaultClient implements Client {
 
     byte[] body = request.body();
 
-    if (body != null) {
-      /*
-       * Ignore disableRequestBuffering flag if the empty body was set, to ensure that internal
-       * retry logic applies to such requests.
-       */
+    if (body != null && body.length > 0) {
       if (disableRequestBuffering) {
         if (contentLength != null) {
           connection.setFixedLengthStreamingMode(contentLength);
@@ -216,10 +216,15 @@ public class DefaultClient implements Client {
         } catch (IOException suppressed) { // NOPMD
         }
       }
-    }
-
-    if (body == null && request.httpMethod().isWithBody()) {
-      // To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
+    } else if (request.httpMethod().isWithBody()) {
+      /*
+       * Avoid calling connection.getOutputStream() for an empty body: HttpURLConnection defaults
+       * the Content-Type to application/x-www-form-urlencoded as soon as an output stream (a
+       * "poster") is created, even when zero bytes are written to it. Setting Content-Length
+       * directly ensures internal retry logic still applies to such requests, without triggering
+       * that default.
+       * To use this Header, set 'sun.net.http.allowRestrictedHeaders' property true.
+       */
       connection.addRequestProperty("Content-Length", "0");
     }
 

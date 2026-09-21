@@ -60,7 +60,9 @@ public interface Contract {
         if (method.getDeclaringClass() == Object.class
             || (method.getModifiers() & Modifier.STATIC) != 0
             || Util.isDefault(method)
-            || method.isAnnotationPresent(FeignIgnore.class)) {
+            || method.isAnnotationPresent(FeignIgnore.class)
+            || method.isSynthetic()
+            || method.isBridge()) {
           continue;
         }
         final MethodMetadata metadata = parseAndValidateMetadata(targetType, method);

@@ -66,6 +66,7 @@ public final class JAXBContextFactory {
   /** Creates a new {@link javax.xml.bind.Unmarshaller} that handles the supplied class. */
   public Unmarshaller createUnmarshaller(Class<?> clazz) throws JAXBException {
     Unmarshaller unmarshaller = getContext(clazz).createUnmarshaller();
+    setUnmarshallerProperties(unmarshaller);
     if (unmarshallerEventHandler != null) {
       unmarshaller.setEventHandler(unmarshallerEventHandler);
     }
@@ -87,6 +88,16 @@ public final class JAXBContextFactory {
   private void setMarshallerProperties(Marshaller marshaller) throws PropertyException {
     for (Entry<String, Object> en : properties.entrySet()) {
       marshaller.setProperty(en.getKey(), en.getValue());
+    }
+  }
+
+  private void setUnmarshallerProperties(Unmarshaller unmarshaller) {
+    for (Entry<String, Object> en : properties.entrySet()) {
+      try {
+        unmarshaller.setProperty(en.getKey(), en.getValue());
+      } catch (PropertyException ignored) {
+        // The same map holds marshaller-only properties (for example JAXB_FORMATTED_OUTPUT).
+      }
     }
   }
 
@@ -164,7 +175,8 @@ public final class JAXBContextFactory {
     }
 
     /**
-     * Sets the given property of any Marshaller created by this factory.
+     * Sets the given property of any Marshaller or Unmarshaller created by this factory.
+     * Marshaller-only properties are ignored when creating an Unmarshaller.
      *
      * <p>Example : <br>
      * <br>

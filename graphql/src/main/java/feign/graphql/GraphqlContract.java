@@ -31,6 +31,8 @@ public class GraphqlContract extends DefaultContract {
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\s*(\\w+)\\s*:");
 
+  private static final Pattern SUBSCRIPTION_PATTERN = Pattern.compile("^\\s*subscription\\b");
+
   private final Map<String, QueryMetadata> metadata = new ConcurrentHashMap<>();
 
   public GraphqlContract() {
@@ -45,7 +47,8 @@ public class GraphqlContract extends DefaultContract {
           }
 
           var variableName = extractFirstVariable(query);
-          metadata.put(data.configKey(), new QueryMetadata(query, variableName));
+          metadata.put(
+              data.configKey(), new QueryMetadata(query, variableName, isSubscription(query)));
         });
   }
 
@@ -97,13 +100,19 @@ public class GraphqlContract extends DefaultContract {
     return null;
   }
 
+  static boolean isSubscription(String query) {
+    return SUBSCRIPTION_PATTERN.matcher(query).find();
+  }
+
   static class QueryMetadata {
     final String query;
     final String variableName;
+    final boolean subscription;
 
-    QueryMetadata(String query, String variableName) {
+    QueryMetadata(String query, String variableName, boolean subscription) {
       this.query = query;
       this.variableName = variableName;
+      this.subscription = subscription;
     }
   }
 }

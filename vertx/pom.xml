@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.14-SNAPSHOT</version>
+    <version>13.16-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-vertx-parent</artifactId>
@@ -36,7 +36,7 @@
 
   <properties>
     <vertx.version>5.0.4</vertx.version>
-    <slf4j-log4j12.version>2.0.18</slf4j-log4j12.version>
+    <slf4j-log4j12.version>2.0.19</slf4j-log4j12.version>
     <wiremock.version>3.0.1</wiremock.version>
   </properties>
 

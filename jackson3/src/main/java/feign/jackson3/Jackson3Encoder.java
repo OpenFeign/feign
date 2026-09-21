@@ -21,6 +21,7 @@ import feign.Util;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.codec.JsonEncoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import tools.jackson.core.JacksonException;
@@ -29,7 +30,7 @@ import tools.jackson.databind.JavaType;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-public class Jackson3Encoder implements Encoder, JsonEncoder {
+public class Jackson3Encoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   private final JsonMapper mapper;
 
@@ -59,5 +60,10 @@ public class Jackson3Encoder implements Encoder, JsonEncoder {
     } catch (JacksonException e) {
       throw new EncodeException(e.getMessage(), e);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
   }
 }

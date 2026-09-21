@@ -22,12 +22,13 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import okio.BufferedSource;
 import okio.Okio;
 
-public class MoshiDecoder implements Decoder, JsonDecoder {
+public class MoshiDecoder implements Decoder, PredicatedDecoder, JsonDecoder {
   private final Moshi moshi;
 
   public MoshiDecoder(Moshi moshi) {
@@ -66,5 +67,10 @@ public class MoshiDecoder implements Decoder, JsonDecoder {
   public Object convert(Object object, Type type) throws IOException {
     JsonAdapter<Object> adapter = moshi.adapter(type);
     return adapter.fromJsonValue(object);
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

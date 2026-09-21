@@ -18,6 +18,7 @@ package feign.okhttp;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
+import feign.Client;
 import feign.Feign;
 import feign.Feign.Builder;
 import feign.Headers;
@@ -31,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
+import okio.Buffer;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 
@@ -135,6 +137,27 @@ public class OkHttpClientTest extends AbstractClientTest {
   @Override
   public void canExceptCaseInsensitiveHeader() throws Exception {
     assumeFalse(false, "OkHTTP client do not support gzip compression");
+  }
+
+  @Test
+  void asReaderHonoursRequestedCharset() throws Exception {
+    // "café" encoded as ISO-8859-1: the trailing 0xE9 is not valid standalone UTF-8
+    byte[] body = {'c', 'a', 'f', (byte) 0xE9};
+    Buffer buffer = new Buffer().write(body);
+    server.enqueue(new MockResponse().setBody(buffer).addHeader("Content-Type", "text/plain"));
+
+    Client client = new OkHttpClient();
+    Request request =
+        Request.create(
+            Request.HttpMethod.GET,
+            "http://localhost:" + server.getPort(),
+            Collections.emptyMap(),
+            Request.Body.empty(),
+            null);
+    Response response = client.execute(request, new Request.Options());
+
+    assertThat(Util.toString(response.body().asReader(StandardCharsets.ISO_8859_1)))
+        .isEqualTo("café");
   }
 
   public interface OkHttpClientTestInterface {

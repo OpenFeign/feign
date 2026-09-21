@@ -23,6 +23,7 @@ import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.JsonDecoder;
+import feign.codec.PredicatedDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -34,7 +35,8 @@ import java.util.Map;
 /**
  * A {@link JsonDecoder} that uses Jackson Jr to convert objects to String or byte representation.
  */
-public class JacksonJrDecoder extends JacksonJrMapper implements Decoder, JsonDecoder {
+public class JacksonJrDecoder extends JacksonJrMapper
+    implements Decoder, PredicatedDecoder, JsonDecoder {
 
   @FunctionalInterface
   protected interface Transformer {
@@ -133,5 +135,10 @@ public class JacksonJrDecoder extends JacksonJrMapper implements Decoder, JsonDe
       return mapper.beanFrom((Class<?>) type, json);
     }
     throw new IOException("Cannot convert to type: " + type.getTypeName());
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

@@ -21,6 +21,7 @@ import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -53,7 +54,7 @@ import org.json.JSONTokener;
  *   System.out.println(contributors.getJSONObject(0).getString("login"));
  * </pre>
  */
-public class JsonDecoder implements Decoder, feign.codec.JsonDecoder {
+public class JsonDecoder implements Decoder, PredicatedDecoder, feign.codec.JsonDecoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException, DecodeException {
@@ -113,5 +114,10 @@ public class JsonDecoder implements Decoder, feign.codec.JsonDecoder {
       return new JSONObject((Map<?, ?>) object);
     }
     throw new IOException(type.getTypeName() + " is not a type supported by this decoder.");
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

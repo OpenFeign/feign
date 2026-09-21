@@ -55,6 +55,12 @@ class GraphqlClientTest {
     public String name;
   }
 
+  public record Book(String id, String title) {}
+
+  public record Review(String id, Integer rating) {}
+
+  public record AuthorPage(List<Book> books, List<Review> reviews) {}
+
   @Headers("Content-Type: application/json")
   interface TestApi {
 
@@ -78,6 +84,12 @@ class GraphqlClientTest {
 
     @GraphqlQuery("query topUser($limit: Int!) {" + " topUsers(limit: $limit) { id name email } }")
     User topUser(int limit);
+
+    @GraphqlQuery(
+        "query authorPage($authorId: ID!) {"
+            + " books(authorId: $authorId) { id title }"
+            + " reviews(authorId: $authorId) { id rating } }")
+    AuthorPage authorPage(String authorId);
   }
 
   @BeforeEach
@@ -213,6 +225,27 @@ class GraphqlClientTest {
     var user = buildClient().findUser("999");
 
     assertThat(user).isEmpty();
+  }
+
+  @Test
+  void multipleRootFieldsDecodedIntoSingleResult() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setBody(
+                "{\"data\":{\"books\":[{\"id\":\"1\",\"title\":\"Dune\"}],"
+                    + "\"reviews\":[{\"id\":\"9\",\"rating\":5}]}}")
+            .addHeader("Content-Type", "application/json"));
+
+    var page = buildClient().authorPage("42");
+
+    assertThat(page.books()).hasSize(1);
+    assertThat(page.books().getFirst().title()).isEqualTo("Dune");
+    assertThat(page.reviews()).hasSize(1);
+    assertThat(page.reviews().getFirst().rating()).isEqualTo(5);
+
+    var recorded = server.takeRequest();
+    var body = mapper.readTree(recorded.getBody().readUtf8());
+    assertThat(body.get("variables").get("authorId").asText()).isEqualTo("42");
   }
 
   @Test

@@ -18,10 +18,18 @@ package feign.cache;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import feign.Client;
 import feign.Feign;
 import feign.FeignException;
 import feign.Param;
 import feign.RequestLine;
+import feign.Response;
+import feign.Util;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -44,6 +52,9 @@ class HttpCacheInterceptorTest {
 
     @RequestLine("POST /things")
     String create(String body);
+
+    @RequestLine("QUERY /things")
+    String query(String body);
   }
 
   private Api api() {
@@ -118,6 +129,47 @@ class HttpCacheInterceptorTest {
     assertThat(store.size()).isZero();
     RecordedRequest recorded = server.takeRequest();
     assertThat(recorded.getHeader("If-None-Match")).isNull();
+  }
+
+  @Test
+  void queryRequestsParticipateInCache() {
+    AtomicInteger calls = new AtomicInteger();
+    Client client =
+        (request, options) -> {
+          calls.incrementAndGet();
+          if (request.headers().containsKey("If-None-Match")) {
+            return Response.builder()
+                .status(304)
+                .headers(Collections.emptyMap())
+                .request(request)
+                .build();
+          }
+          String body = request.body() != null ? new String(request.body(), Util.UTF_8) : "";
+          Map<String, Collection<String>> headers = new HashMap<>();
+          headers.put("ETag", Collections.singletonList("\"" + body + "\""));
+          return Response.builder()
+              .status(200)
+              .headers(headers)
+              .body("result-" + body, Util.UTF_8)
+              .request(request)
+              .build();
+        };
+
+    Api api =
+        Feign.builder()
+            .client(client)
+            .methodInterceptor(new HttpCacheInterceptor(store))
+            .target(Api.class, "http://localhost:0");
+
+    String first = api.query("q1");
+    String second = api.query("q2");
+    String third = api.query("q1");
+
+    assertThat(first).isEqualTo("result-q1");
+    assertThat(second).isEqualTo("result-q2");
+    assertThat(third).isEqualTo("result-q1");
+    assertThat(calls.get()).isEqualTo(3);
+    assertThat(store.size()).isEqualTo(2);
   }
 
   @Test

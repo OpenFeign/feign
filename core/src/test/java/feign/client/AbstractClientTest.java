@@ -229,6 +229,16 @@ public abstract class AbstractClientTest {
     api.noPutBody();
   }
 
+  @Test
+  void emptyStringBodyForPost() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.postEmptyStringBody("");
+  }
+
   /**
    * Some client implementation tests should override this test if the PATCH operation is
    * unsupported.
@@ -241,6 +251,28 @@ public abstract class AbstractClientTest {
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
     api.noPatchBody();
+  }
+
+  /**
+   * Some client implementation tests should override this test if the QUERY operation is
+   * unsupported.
+   */
+  @Test
+  public void query() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    server.enqueue(new MockResponse());
+
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.query("body")).isEqualTo("foo");
+
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasHeaders(
+            entry("Accept", Collections.singletonList("text/plain")),
+            entry("Content-Type", Collections.singletonList("application/json")),
+            entry("Content-Length", Collections.singletonList("4")))
+        .hasMethod("QUERY");
   }
 
   @Test
@@ -583,8 +615,15 @@ public abstract class AbstractClientTest {
     @Headers("Accept: text/plain")
     String patch(String body);
 
+    @RequestLine("QUERY /")
+    @Headers({"Accept: text/plain", "Content-Type: application/json"})
+    String query(String body);
+
     @RequestLine("POST")
     String noPostBody();
+
+    @RequestLine("POST /")
+    String postEmptyStringBody(String body);
 
     @RequestLine("PUT")
     String noPutBody();

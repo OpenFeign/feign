@@ -56,6 +56,26 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
   }
 
   @Test
+  public void testWithGzipAndDeflateHeaders() throws InterruptedException, IOException {
+    final TestInterface testInterface =
+        newBuilder()
+            .requestInterceptor(req -> req.header("Content-Encoding", "gzip", "deflate"))
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    assertEquals("foo", testInterface.withBody("bar"));
+    final RecordedRequest request1 = server.takeRequest();
+    assertEquals("/test", request1.getPath());
+
+    ByteArrayInputStream bodyContentIs =
+        new ByteArrayInputStream(request1.getBody().readByteArray());
+    byte[] uncompressed = new GZIPInputStream(bodyContentIs).readAllBytes();
+
+    assertEquals("bar", new String(uncompressed, StandardCharsets.UTF_8));
+  }
+
+  @Test
   public void testWithUncompressedBody() throws InterruptedException, IOException {
     final TestInterface testInterface = buildTestInterface(false);
 

@@ -53,6 +53,14 @@ class GraphqlDecoderTest {
 
   public record DeeplyNested(String value, Optional<UserWithAddress> nested) {}
 
+  public record Book(String id, String title) {}
+
+  public record Review(String id, Integer rating) {}
+
+  public record AuthorPage(List<Book> books, List<Review> reviews) {}
+
+  public record MixedPage(User getUser, List<Book> books) {}
+
   @Test
   void decodesDataField() throws Exception {
     var json = "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"}}}";
@@ -318,6 +326,69 @@ class GraphqlDecoderTest {
     var result = (List<User>) decoder.decode(response, parameterizedType(List.class, User.class));
 
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  void decodesMultipleRootFieldsIntoRecord() throws Exception {
+    var json =
+        "{\"data\":{\"books\":[{\"id\":\"1\",\"title\":\"Dune\"}],"
+            + "\"reviews\":[{\"id\":\"9\",\"rating\":5}]}}";
+    var response = buildResponse(json);
+
+    var page = (AuthorPage) decoder.decode(response, AuthorPage.class);
+
+    assertThat(page.books()).hasSize(1);
+    assertThat(page.books().getFirst().title()).isEqualTo("Dune");
+    assertThat(page.reviews()).hasSize(1);
+    assertThat(page.reviews().getFirst().rating()).isEqualTo(5);
+  }
+
+  @Test
+  void decodesMultipleRootFieldsOfDifferentShapes() throws Exception {
+    var json =
+        "{\"data\":{\"getUser\":{\"id\":\"1\",\"name\":\"Alice\"},"
+            + "\"books\":[{\"id\":\"1\",\"title\":\"Dune\"}]}}";
+    var response = buildResponse(json);
+
+    var page = (MixedPage) decoder.decode(response, MixedPage.class);
+
+    assertThat(page.getUser().name).isEqualTo("Alice");
+    assertThat(page.books()).hasSize(1);
+  }
+
+  @Test
+  void keepsNullRootFieldWhenDecodingMultipleRootFields() throws Exception {
+    var json = "{\"data\":{\"books\":[{\"id\":\"1\",\"title\":\"Dune\"}],\"reviews\":null}}";
+    var response = buildResponse(json);
+
+    var page = (AuthorPage) decoder.decode(response, AuthorPage.class);
+
+    assertThat(page.books()).hasSize(1);
+    assertThat(page.reviews()).isNull();
+  }
+
+  @Test
+  void decodesMultipleRootFieldsIntoOptional() throws Exception {
+    var json =
+        "{\"data\":{\"books\":[{\"id\":\"1\",\"title\":\"Dune\"}],"
+            + "\"reviews\":[{\"id\":\"9\",\"rating\":5}]}}";
+    var response = buildResponse(json);
+
+    @SuppressWarnings("unchecked")
+    var page = (Optional<AuthorPage>) decoder.decode(response, optionalOf(AuthorPage.class));
+
+    assertThat(page).isPresent();
+    assertThat(page.get().reviews()).hasSize(1);
+  }
+
+  @Test
+  void throwsGraphqlErrorExceptionOnErrorsWithMultipleRootFields() {
+    var json = "{\"errors\":[{\"message\":\"Boom\"}],\"data\":{\"books\":null,\"reviews\":null}}";
+    var response = buildResponse(json);
+
+    assertThatThrownBy(() -> decoder.decode(response, AuthorPage.class))
+        .isInstanceOf(GraphqlErrorException.class)
+        .hasMessageContaining("Boom");
   }
 
   private Response buildResponse(String body) {

@@ -18,13 +18,14 @@ package feign.optionals;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class OptionalDecoder implements Decoder {
+public final class OptionalDecoder implements Decoder, PredicatedDecoder {
   final Decoder delegate;
 
   public OptionalDecoder(Decoder delegate) {
@@ -42,6 +43,16 @@ public final class OptionalDecoder implements Decoder {
     }
     Type enclosedType = Util.resolveLastTypeParameter(type, Optional.class);
     return Optional.ofNullable(delegate.decode(response, enclosedType));
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    if (!(delegate instanceof PredicatedDecoder)) {
+      return true;
+    }
+    Type enclosedType =
+        isOptional(type) ? Util.resolveLastTypeParameter(type, Optional.class) : type;
+    return ((PredicatedDecoder) delegate).canDecode(response, enclosedType);
   }
 
   static boolean isOptional(Type type) {

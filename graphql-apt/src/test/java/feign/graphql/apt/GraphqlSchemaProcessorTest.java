@@ -636,6 +636,102 @@ class GraphqlSchemaProcessorTest {
   }
 
   @Test
+  void multipleRootFieldsGenerateOneComponentPerField() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MultiRootApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MultiRootApi {
+              @GraphqlQuery(\"""
+                  query overview($id: ID!) {
+                    character(id: $id) { id name }
+                    starship(id: $id) { id name }
+                  }\""")
+              Overview overview(String id);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents =
+        assertThat(compilation).generatedSourceFile("test.Overview").contentsAsUtf8String();
+
+    contents.contains(
+        "public record Overview(Optional<Character> character, Optional<Starship> starship) {");
+    contents.contains("public record Character(String id, String name) {}");
+    contents.contains("public record Starship(String id, String name) {}");
+  }
+
+  @Test
+  void multipleRootFieldsKeepListAndScalarShapes() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MultiRootListApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface MultiRootListApi {
+              @GraphqlQuery(\"""
+                  query page($id: ID!) {
+                    characters { id name }
+                    starship(id: $id) { id name }
+                  }\""")
+              Page page(String id);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    var contents = assertThat(compilation).generatedSourceFile("test.Page").contentsAsUtf8String();
+
+    contents.contains(
+        "public record Page(Optional<List<Characters>> characters, Optional<Starship> starship) {");
+    contents.contains("public record Characters(String id, String name) {}");
+  }
+
+  @Test
+  void singleRootFieldStillMirrorsThatFieldType() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.SingleRootApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+
+            @GraphqlSchema("test-schema.graphql")
+            interface SingleRootApi {
+              @GraphqlQuery("query one($id: ID!) { character(id: $id) { id name } }")
+              One one(String id);
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).succeeded();
+
+    assertThat(compilation)
+        .generatedSourceFile("test.One")
+        .contentsAsUtf8String()
+        .contains("public record One(String id, String name) {}");
+  }
+
+  @Test
   void differentQueriesDifferentNestedFields() {
     var source =
         JavaFileObjects.forSourceString(
