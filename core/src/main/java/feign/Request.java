@@ -44,7 +44,8 @@ public final class Request implements Serializable {
     CONNECT,
     OPTIONS,
     TRACE,
-    PATCH(true);
+    PATCH(true),
+    QUERY(true);
 
     private final boolean withBody;
 
@@ -554,7 +555,7 @@ public final class Request implements Serializable {
     }
 
     public static Body create(String data) {
-      return new Body(data.getBytes());
+      return create(data, Util.UTF_8);
     }
 
     public static Body create(String data, Charset charset) {

@@ -19,8 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
+import feign.codec.Decoder;
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -61,5 +63,42 @@ class BaseBuilderTest {
       throws IllegalArgumentException, IllegalAccessException {
     test(
         Feign.builder().requestInterceptor(_ -> {}).responseInterceptor((ic, c) -> c.next(ic)), 10);
+  }
+
+  @Test
+  void clonedBuilderFluentMethodsReturnClone() throws CloneNotSupportedException {
+    CloneableFeignBuilder original = new CloneableFeignBuilder();
+    Feign.Builder clone = original.copy();
+
+    assertThat(clone.requestInterceptor(_ -> {})).isSameAs(clone);
+    assertThat(clone.decoder(Mockito.mock(Decoder.class))).isSameAs(clone);
+  }
+
+  private static final class CloneableFeignBuilder extends Feign.Builder {
+
+    Feign.Builder copy() throws CloneNotSupportedException {
+      return (Feign.Builder) super.clone();
+    }
+  }
+
+  @Test
+  void capabilityCanProvideResponseInterceptorWhenNoneConfigured() {
+    AtomicInteger enrichCalls = new AtomicInteger();
+    ResponseInterceptor capabilityInterceptor = (context, chain) -> chain.next(context);
+
+    Feign.Builder enrichedBuilder =
+        Feign.builder()
+            .addCapability(
+                new Capability() {
+                  @Override
+                  public ResponseInterceptor enrich(ResponseInterceptor responseInterceptor) {
+                    enrichCalls.incrementAndGet();
+                    return capabilityInterceptor;
+                  }
+                })
+            .enrich();
+
+    assertThat(enrichCalls).hasValue(1);
+    assertThat(enrichedBuilder.responseInterceptors).containsExactly(capabilityInterceptor);
   }
 }

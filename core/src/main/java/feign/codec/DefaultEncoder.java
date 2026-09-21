@@ -20,7 +20,21 @@ import static java.lang.String.format;
 import feign.RequestTemplate;
 import java.lang.reflect.Type;
 
-public class DefaultEncoder implements Encoder {
+public class DefaultEncoder implements PredicatedEncoder {
+
+  /**
+   * Accepts exactly what {@link #encode} handles: a {@code String} or {@code byte[]} body, and a
+   * null body, which is sent as no body at all.
+   *
+   * @param object {@inheritDoc}
+   * @param bodyType {@inheritDoc}
+   * @param template {@inheritDoc}
+   * @return {@inheritDoc}
+   */
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return bodyType == String.class || bodyType == byte[].class || object == null;
+  }
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {

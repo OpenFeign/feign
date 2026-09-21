@@ -155,7 +155,65 @@ public class ReflectiveFeign<C> extends Feign {
         }
       }
 
+      for (Method method : target.type().getMethods()) {
+        if (!method.isBridge()) {
+          continue;
+        }
+        Method bridged = resolveBridgedMethod(method);
+        MethodHandler handler = result.get(bridged);
+        if (handler != null) {
+          result.put(method, handler);
+        }
+      }
+
       return result;
+    }
+
+    static Method resolveBridgedMethod(Method bridgeMethod) {
+      Method matched = null;
+      Class<?>[] bridgeParams = bridgeMethod.getParameterTypes();
+      for (Method candidate : bridgeMethod.getDeclaringClass().getDeclaredMethods()) {
+        if (candidate.isBridge()
+            || candidate.isSynthetic()
+            || !candidate.getName().equals(bridgeMethod.getName())
+            || candidate.getParameterCount() != bridgeParams.length) {
+          continue;
+        }
+        Class<?>[] candidateParams = candidate.getParameterTypes();
+        boolean paramsMatch = true;
+        for (int i = 0; i < bridgeParams.length; i++) {
+          if (!bridgeParams[i].isAssignableFrom(candidateParams[i])) {
+            paramsMatch = false;
+            break;
+          }
+        }
+        if (!paramsMatch) {
+          continue;
+        }
+        Class<?> bridgeReturn = bridgeMethod.getReturnType();
+        Class<?> candidateReturn = candidate.getReturnType();
+        if (bridgeReturn != void.class && !bridgeReturn.isAssignableFrom(candidateReturn)) {
+          continue;
+        }
+        if (matched == null || isMoreSpecific(candidate, matched)) {
+          matched = candidate;
+        }
+      }
+      return matched != null ? matched : bridgeMethod;
+    }
+
+    private static boolean isMoreSpecific(Method candidate, Method current) {
+      Class<?>[] candidateParams = candidate.getParameterTypes();
+      Class<?>[] currentParams = current.getParameterTypes();
+      for (int i = 0; i < candidateParams.length; i++) {
+        if (candidateParams[i] != currentParams[i]
+            && currentParams[i].isAssignableFrom(candidateParams[i])) {
+          return true;
+        }
+      }
+      Class<?> candidateReturn = candidate.getReturnType();
+      Class<?> currentReturn = current.getReturnType();
+      return candidateReturn != currentReturn && currentReturn.isAssignableFrom(candidateReturn);
     }
 
     private MethodHandler createMethodHandler(

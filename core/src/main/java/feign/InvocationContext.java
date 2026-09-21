@@ -82,7 +82,7 @@ public class InvocationContext {
 
       if (isVoidType(returnType) && !decodeVoid) {
         ensureClosed(response.body());
-        return null;
+        return kotlinUnitInstance(returnType);
       }
 
       Class<?> rawType = Types.getRawType(returnType);
@@ -140,5 +140,21 @@ public class InvocationContext {
     return returnType == Void.class
         || returnType == void.class
         || returnType.getTypeName().equals("kotlin.Unit");
+  }
+
+  /**
+   * Kotlin's {@code Unit} is non-nullable, so a suspend function declared to return it must get
+   * back the singleton {@code Unit.INSTANCE} rather than {@code null}. Resolved reflectively since
+   * feign-core has no compile-time dependency on kotlin-stdlib.
+   */
+  private static Object kotlinUnitInstance(Type returnType) {
+    if (!(returnType instanceof Class) || !returnType.getTypeName().equals("kotlin.Unit")) {
+      return null;
+    }
+    try {
+      return ((Class<?>) returnType).getField("INSTANCE").get(null);
+    } catch (ReflectiveOperationException e) {
+      return null;
+    }
   }
 }

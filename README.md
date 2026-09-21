@@ -663,6 +663,116 @@ public class Example {
 }
 ```
 
+#### Multiple decoders
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+A single client sometimes has to read more than one format &mdash; JSON for most endpoints, XML for
+a legacy one, plain text for a health check. `MultiDecoder` hands each response to the first decoder
+that accepts it.
+
+Most first-party decoders already declare what they can handle, so they can simply be listed, in the
+order they should be consulted:
+
+```java
+interface MixedClient {
+  @RequestLine("GET /orders/{id}")
+  Order order(@Param("id") String id);
+
+  @RequestLine("GET /legacy/orders/{id}")
+  Order legacyOrder(@Param("id") String id);
+}
+
+public class Example {
+  public static void main(String[] args) {
+    MixedClient client = Feign.builder()
+                              .decoders(new GsonDecoder(), new JAXBDecoder())
+                              .target(MixedClient.class, "https://foo.com");
+  }
+}
+```
+
+Routing is driven by what the server actually sent back, so a client that talks to endpoints
+answering `application/json` and `application/xml` no longer needs one Feign instance per format.
+
+There is no implicit fallback. A response that no decoder accepts fails with a `DecodeException`
+naming the decoders that were tried and what each one wants:
+
+```
+Unable to decode 200 response (Content-Type: text/plain) as com.example.Order. Decoders tried, in order:
+  - GsonDecoder
+  - JAXBDecoder
+Add a decoder guarded by DecoderPredicate.any() last to act as a default.
+```
+
+To get a default, pair a decoder with the predicate that accepts everything and list it **last**:
+
+```java
+Feign.builder()
+     .decoders(
+         new GsonDecoder(),
+         new JAXBDecoder(),
+         PredicatedDecoder.of(DecoderPredicate.any(), new DefaultDecoder()));
+```
+
+The same pairing works for any decoder that does not declare itself, including one you do not
+control. `MultiDecoder.builder()` spells it out when a lambda reads better than a wrapper:
+
+```java
+Decoder decoder =
+    MultiDecoder.builder()
+        .add(new GsonDecoder())                                   // declares itself
+        .add(DecoderPredicate.xmlContentType(), someXmlDecoder)    // paired
+        .add((response, type) -> type == byte[].class, binaryDecoder)
+        .add(DecoderPredicate.any(), new DefaultDecoder())         // the default, last
+        .build();
+```
+
+Decoders are consulted in the order they were added, so put the narrowest one first.
+
+##### Declaring your own decoder
+
+Implement `PredicatedDecoder` and say what you handle. `canDecode` has no default: a decoder that
+declares nothing would claim every response, which is rarely what its author meant.
+
+```java
+public class MyDecoder implements PredicatedDecoder {
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
+  }
+
+  @Override
+  public Object decode(Response response, Type type) throws IOException {
+    // ...
+  }
+}
+```
+
+`DecoderPredicate` is the `@FunctionalInterface` here, so predicates can be lambdas. It ships with
+`any()`, `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`, `emptyBody()`,
+`status(codes...)` and `returnType(type)`, plus `and`/`or`/`negate` to combine them. Each one
+describes itself, which is what shows up in the error message above; wrap your own lambdas in
+`DecoderPredicate.describedAs("it is Tuesday", ...)` to read as well.
+
+`PredicatedDecoder.of(predicate, decoder)` replaces whatever the decoder says about itself, so it
+can widen a decoder as well as narrow it. To keep the decoder's own declaration and add to it, use
+`narrowing`:
+
+```java
+// JSON responses as usual, but only when the call actually succeeded
+PredicatedDecoder.narrowing(DecoderPredicate.status(200, 201), new GsonDecoder());
+```
+
+**Predicates must not read the response body.** For most clients it is a single-pass stream, so
+consuming it in `canDecode` would leave nothing for the decoder that is eventually chosen. Decide
+on the status, the headers and the expected type instead.
+
+**If you wrap a decoder, forward `canDecode` to your delegate**, otherwise wrapping silently changes
+what the decoder handles. `OptionalDecoder` and the metrics modules' `MeteredDecoder` forward for
+exactly this reason.
+
 ### Encoders
 The simplest way to send a request body to a server is to define a `POST` method that has a `String` or `byte[]` parameter without any annotations on it. You will likely need to add a `Content-Type` header.
 
@@ -708,6 +818,131 @@ public class Example {
   }
 }
 ```
+
+#### Multiple encoders
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+A single client sometimes has to speak more than one format &mdash; JSON for most endpoints, XML for
+a legacy one, plain bytes for an upload. `MultiEncoder` hands each request to the first encoder that
+accepts it.
+
+Most first-party encoders already declare what they can handle, so they can simply be listed, in the
+order they should be consulted:
+
+```java
+interface MixedClient {
+  @RequestLine("POST /orders")
+  @Headers("Content-Type: application/json")
+  void createOrder(Order order);
+
+  @RequestLine("POST /legacy/orders")
+  @Headers("Content-Type: application/xml")
+  void createLegacyOrder(Order order);
+}
+
+public class Example {
+  public static void main(String[] args) {
+    MixedClient client = Feign.builder()
+                              .encoders(new GsonEncoder(), new JAXBEncoder())
+                              .target(MixedClient.class, "https://foo.com");
+  }
+}
+```
+
+There is no implicit fallback. A request that no encoder accepts fails with an `EncodeException`
+naming the encoders that were tried and what each one wants:
+
+```
+Unable to encode java.lang.String (Content-Type: text/plain) for POST /orders. Encoders tried, in order:
+  - GsonEncoder
+  - JAXBEncoder
+Add an encoder guarded by EncoderPredicate.any() last to act as a default.
+```
+
+To get a default, pair an encoder with the predicate that accepts everything and list it **last**:
+
+```java
+Feign.builder()
+     .encoders(
+         new GsonEncoder(),
+         new JAXBEncoder(),
+         PredicatedEncoder.of(EncoderPredicate.any(), new DefaultEncoder()));
+```
+
+The same pairing works for any encoder that does not declare itself, including one you do not
+control. `MultiEncoder.builder()` spells it out when a lambda reads better than a wrapper:
+
+```java
+Encoder encoder =
+    MultiEncoder.builder()
+        .add(new GsonEncoder())                                    // declares itself
+        .add(EncoderPredicate.xmlContentType(), someXmlEncoder)     // paired
+        .add((object, bodyType, template) -> bodyType == byte[].class, binaryEncoder)
+        .add(EncoderPredicate.any(), new DefaultEncoder())          // the default, last
+        .build();
+```
+
+Encoders are consulted in the order they were added, so put the narrowest one first. Note that
+`Content-Type: application/json` with a null body is claimed by a JSON encoder before
+`EncoderPredicate.emptyBody()` gets a chance &mdash; order accordingly.
+
+##### Declaring your own encoder
+
+Implement `PredicatedEncoder` and say what you handle. `canEncode` has no default: an encoder that
+declares nothing would claim every request, which is rarely what its author meant.
+
+```java
+public class MyEncoder implements PredicatedEncoder {
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return Util.isJsonContentType(template);
+  }
+
+  @Override
+  public void encode(Object object, Type bodyType, RequestTemplate template) {
+    // ...
+  }
+}
+```
+
+`EncoderPredicate` is the `@FunctionalInterface` here, so predicates can be lambdas. It ships with
+`any()`, `jsonContentType()`, `xmlContentType()`, `contentType(mediaType)`, `emptyBody()`,
+`bodyType(type)` and `formEncoded()`, plus `and`/`or`/`negate` to combine them. Each one describes
+itself, which is what shows up in the error message above; wrap your own lambdas in
+`EncoderPredicate.describedAs("it is Tuesday", ...)` to read as well.
+
+`PredicatedEncoder.of(predicate, encoder)` replaces whatever the encoder says about itself, so it
+can widen an encoder as well as narrow it. To keep the encoder's own declaration and add to it, use
+`narrowing`:
+
+```java
+// only this vendor content type, and only what Gson would have taken anyway
+PredicatedEncoder.narrowing(
+    EncoderPredicate.contentType("application/vnd.acme+json"), new GsonEncoder());
+```
+
+**If you wrap an encoder, forward `canEncode` to your delegate**, otherwise wrapping silently
+changes what the encoder handles. The metrics modules' `MeteredEncoder` forwards for exactly this
+reason.
+
+##### Form encoders
+
+`FormEncoder` and `SpringFormEncoder` wrap a delegate encoder, so they cannot honestly declare what
+they handle &mdash; the delegate's applicability is unknown to them. Instead, each offers a
+delegate-free flavour that does:
+
+```java
+Feign.builder()
+     .encoders(
+         FormEncoder.createPredicatedFormEncoder(),  // form and multipart requests only
+         new JacksonEncoder());
+```
+
+It accepts form and multipart requests carrying a map or a user pojo, and leaves everything else to
+the encoders registered alongside it. Constructing one directly with a `null` delegate does the same
+thing: anything it cannot encode itself fails with an `EncodeException` instead of being passed on.
 
 ### @Body templates
 The `@Body` annotation indicates a template to expand using parameters annotated with `@Param`. You will likely need to add a `Content-Type` header.

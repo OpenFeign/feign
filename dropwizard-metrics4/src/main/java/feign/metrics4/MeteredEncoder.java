@@ -20,10 +20,11 @@ import com.codahale.metrics.Timer;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
+import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 
 /** Warp feign {@link Encoder} with metrics. */
-public class MeteredEncoder implements Encoder {
+public class MeteredEncoder implements Encoder, PredicatedEncoder {
 
   private final Encoder encoder;
   private final MetricRegistry metricRegistry;
@@ -58,5 +59,11 @@ public class MeteredEncoder implements Encoder {
               metricSuppliers.histograms())
           .update(template.body().length);
     }
+  }
+
+  @Override
+  public boolean canEncode(Object object, Type bodyType, RequestTemplate template) {
+    return !(encoder instanceof PredicatedEncoder)
+        || ((PredicatedEncoder) encoder).canEncode(object, bodyType, template);
   }
 }

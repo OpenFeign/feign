@@ -247,22 +247,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
 
     var returnTypeName = getSimpleTypeName(method.getReturnType());
     if (returnTypeName != null && !isExistingExternalType(method.getReturnType(), targetPackage)) {
-      var rootType = getRootType(operation, registry);
-      if (rootType != null) {
-        var rootField = findRootField(operation.getSelectionSet());
-        if (rootField != null && rootField.getSelectionSet() != null) {
-          var rootFieldDef = GraphqlTypeMapper.findFieldDefinition(rootType, rootField.getName());
-          if (rootFieldDef != null) {
-            var fieldTypeName = GraphqlTypeMapper.unwrapTypeName(rootFieldDef.getType());
-            var fieldObjectType =
-                registry.getType(fieldTypeName, ObjectTypeDefinition.class).orElse(null);
-            if (fieldObjectType != null) {
-              generator.generateResultType(
-                  returnTypeName, rootField.getSelectionSet(), fieldObjectType, method);
-            }
-          }
-        }
-      }
+      generateReturnType(returnTypeName, operation, registry, generator, method);
     }
 
     var params = method.getParameters();
@@ -294,16 +279,58 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return null;
   }
 
-  private Field findRootField(SelectionSet selectionSet) {
+  /**
+   * A single root field is the operation result itself, so the record mirrors that field's type.
+   * Several root fields are all part of the result — the decoder binds the whole {@code data} map —
+   * so the record mirrors the operation's own selection set, one component per root field.
+   */
+  private void generateReturnType(
+      String returnTypeName,
+      OperationDefinition operation,
+      TypeDefinitionRegistry registry,
+      TypeGenerator generator,
+      ExecutableElement method) {
+    var rootType = getRootType(operation, registry);
+    if (rootType == null) {
+      return;
+    }
+
+    var rootFields = rootFields(operation.getSelectionSet());
+    if (rootFields.size() > 1) {
+      generator.generateResultType(returnTypeName, operation.getSelectionSet(), rootType, method);
+      return;
+    }
+
+    if (rootFields.isEmpty()) {
+      return;
+    }
+
+    var rootField = rootFields.get(0);
+    if (rootField.getSelectionSet() == null) {
+      return;
+    }
+
+    var rootFieldDef = GraphqlTypeMapper.findFieldDefinition(rootType, rootField.getName());
+    if (rootFieldDef == null) {
+      return;
+    }
+
+    var fieldTypeName = GraphqlTypeMapper.unwrapTypeName(rootFieldDef.getType());
+    var fieldObjectType = registry.getType(fieldTypeName, ObjectTypeDefinition.class).orElse(null);
+    if (fieldObjectType != null) {
+      generator.generateResultType(
+          returnTypeName, rootField.getSelectionSet(), fieldObjectType, method);
+    }
+  }
+
+  private List<Field> rootFields(SelectionSet selectionSet) {
     if (selectionSet == null) {
-      return null;
+      return List.of();
     }
-    for (var selection : selectionSet.getSelections()) {
-      if (selection instanceof Field field) {
-        return field;
-      }
-    }
-    return null;
+    return selectionSet.getSelections().stream()
+        .filter(Field.class::isInstance)
+        .map(Field.class::cast)
+        .toList();
   }
 
   private ObjectTypeDefinition getRootType(
@@ -358,12 +385,15 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return JAVA_BUILT_INS.contains(typeName);
   }
 
+  /** Wrappers that carry the operation result rather than being it. */
+  private static final Set<String> RESULT_CONTAINERS = Set.of("List", "Stream", "Publisher");
+
   private String getSimpleTypeName(TypeMirror typeMirror) {
     if (typeMirror instanceof DeclaredType declaredType) {
       var typeElement = declaredType.asElement();
       var simpleName = typeElement.getSimpleName().toString();
 
-      if ("List".equals(simpleName)) {
+      if (RESULT_CONTAINERS.contains(simpleName)) {
         var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
           return getSimpleTypeName(typeArgs.get(0));
@@ -376,7 +406,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
   }
 
   private boolean isExistingExternalType(TypeMirror typeMirror, String targetPackage) {
-    var unwrapped = unwrapListTypeMirror(typeMirror);
+    var unwrapped = unwrapContainerTypeMirror(typeMirror);
     if (unwrapped.getKind() == TypeKind.ERROR) {
       return false;
     }
@@ -392,13 +422,13 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     return false;
   }
 
-  private TypeMirror unwrapListTypeMirror(TypeMirror typeMirror) {
+  private TypeMirror unwrapContainerTypeMirror(TypeMirror typeMirror) {
     if (typeMirror instanceof DeclaredType declaredType) {
       var simpleName = declaredType.asElement().getSimpleName().toString();
-      if ("List".equals(simpleName)) {
+      if (RESULT_CONTAINERS.contains(simpleName)) {
         var typeArgs = declaredType.getTypeArguments();
         if (!typeArgs.isEmpty()) {
-          return typeArgs.get(0);
+          return unwrapContainerTypeMirror(typeArgs.get(0));
         }
       }
     }

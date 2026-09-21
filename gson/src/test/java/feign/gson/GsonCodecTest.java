@@ -29,7 +29,9 @@ import feign.RequestTemplate;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -77,6 +79,28 @@ class GsonCodecTest {
   }
 
   @Test
+  void decodesUsingResponseCharset() throws Exception {
+    Map<String, Object> expected = new LinkedHashMap<>();
+    expected.put("name", "ÁÉÍÓÚ");
+
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("Content-Type", Arrays.asList("application/json;charset=ISO-8859-1"));
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(headers)
+            .body("{\"name\":\"ÁÉÍÓÚ\"}".getBytes(StandardCharsets.ISO_8859_1))
+            .build();
+    assertThat(expected)
+        .isEqualTo(
+            new GsonDecoder().decode(response, new TypeToken<Map<String, Object>>() {}.getType()));
+  }
+
+  @Test
   void encodesFormParams() {
 
     Map<String, Object> form = new LinkedHashMap<>();
@@ -97,6 +121,42 @@ class GsonCodecTest {
               ]
             }\
             """);
+  }
+
+  @Test
+  void encodesSubclassFieldsWhenBodyTypeIsAbstract() {
+    SimpleTextMessage message = new SimpleTextMessage("user", "hello", 1);
+
+    RequestTemplate template = new RequestTemplate();
+    new GsonEncoder().encode(message, Message.class, template);
+
+    assertThat(template)
+        .hasBody(
+            """
+            {
+              "content": "hello",
+              "type": 1,
+              "toUser": "user"
+            }            """);
+  }
+
+  abstract static class Message {
+    final String toUser;
+
+    Message(String toUser) {
+      this.toUser = toUser;
+    }
+  }
+
+  static class SimpleTextMessage extends Message {
+    final String content;
+    final Integer type;
+
+    SimpleTextMessage(String toUser, String content, Integer type) {
+      super(toUser);
+      this.content = content;
+      this.type = type;
+    }
   }
 
   static class Zone extends LinkedHashMap<String, Object> {

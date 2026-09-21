@@ -24,10 +24,11 @@ import feign.FeignException;
 import feign.Response;
 import feign.Util;
 import feign.codec.Decoder;
+import feign.codec.PredicatedDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-public final class JacksonJaxbJsonDecoder implements Decoder {
+public final class JacksonJaxbJsonDecoder implements Decoder, PredicatedDecoder {
   private final JacksonJaxbJsonProvider jacksonJaxbJsonProvider;
 
   public JacksonJaxbJsonDecoder() {
@@ -44,5 +45,10 @@ public final class JacksonJaxbJsonDecoder implements Decoder {
     if (response.body() == null) return null;
     return jacksonJaxbJsonProvider.readFrom(
         Object.class, type, null, APPLICATION_JSON_TYPE, null, response.body().asInputStream());
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    return Util.isJsonContentType(response);
   }
 }

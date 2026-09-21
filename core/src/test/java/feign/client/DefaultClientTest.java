@@ -24,13 +24,26 @@ import feign.Client.Proxied;
 import feign.DefaultClient;
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Request;
+import feign.Request.HttpMethod;
+import feign.Request.Options;
+import feign.Response;
 import feign.RetryableException;
+import feign.Util;
 import feign.assertj.MockWebServerAssertions;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
+import okio.Buffer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
@@ -56,6 +69,42 @@ public class DefaultClientTest extends AbstractClientTest {
 
     api.post("foo");
     assertThat(server.getRequestCount()).isEqualTo(2);
+  }
+
+  @Test
+  void gzipDecodedBodyReportsUnknownLength() throws Exception {
+    // Accept-Encoding is set explicitly so HttpURLConnection leaves the gzip body for the client
+    // to decode, exercising DefaultClient's own decompression path.
+    server.enqueue(
+        new MockResponse()
+            .addHeader("Content-Encoding", "gzip")
+            .setBody(new Buffer().write(gzip("Compressed Data"))));
+
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("Accept-Encoding", Collections.singletonList("gzip"));
+    Request request =
+        Request.create(
+            HttpMethod.GET,
+            "http://localhost:" + server.getPort(),
+            headers,
+            null,
+            StandardCharsets.UTF_8,
+            null);
+
+    Response response = new DefaultClient(null, null, false).execute(request, new Options());
+
+    // the body is decompressed, so the compressed Content-Length must not be reported as the length
+    assertThat(response.body().length()).isNull();
+    assertThat(Util.toString(response.body().asReader(StandardCharsets.UTF_8)))
+        .isEqualTo("Compressed Data");
+  }
+
+  private static byte[] gzip(String data) throws IOException {
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    try (GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
+      gzip.write(data.getBytes(StandardCharsets.UTF_8));
+    }
+    return bos.toByteArray();
   }
 
   @Test
@@ -102,6 +151,76 @@ public class DefaultClientTest extends AbstractClientTest {
   }
 
   @Test
+  void lowerCaseContentLengthHeaderIsUsedForFixedLengthStreamingMode() throws Exception {
+    server.enqueue(new MockResponse());
+    byte[] body = "hello".getBytes(StandardCharsets.UTF_8);
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList(String.valueOf(body.length)));
+    Request request =
+        Request.create(
+            HttpMethod.POST,
+            "http://localhost:" + server.getPort() + "/",
+            headers,
+            body,
+            StandardCharsets.UTF_8,
+            null);
+
+    // the two-arg constructor disables request buffering, so a recognised Content-Length selects
+    // fixed-length streaming mode and the JDK emits the header itself, exactly once
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    RecordedRequest recordedRequest = server.takeRequest();
+    assertThat(recordedRequest.getHeaders().values("Content-Length"))
+        .containsExactly(String.valueOf(body.length));
+    assertThat(recordedRequest.getHeader("Transfer-Encoding")).isNull();
+  }
+
+  @Test
+  @EnabledIfSystemProperty(named = "sun.net.http.allowRestrictedHeaders", matches = "true")
+  public void contentLengthHeaderIsNotDuplicatedForBodylessRequest() throws Exception {
+    server.enqueue(new MockResponse());
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("content-length", Collections.singletonList("0"));
+    Request request =
+        Request.create(
+            HttpMethod.POST,
+            "http://localhost:" + server.getPort() + "/",
+            headers,
+            null,
+            StandardCharsets.UTF_8,
+            null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Length")).containsExactly("0");
+  }
+
+  @Test
+  void emptyBodyDoesNotConvertGetToPost() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    Request request =
+        Request.create(
+            HttpMethod.GET,
+            "http://localhost:" + server.getPort() + "/",
+            Collections.emptyMap(),
+            new byte[0],
+            null);
+
+    new DefaultClient(null, null).execute(request, new Request.Options());
+
+    MockWebServerAssertions.assertThat(server.takeRequest()).hasMethod("GET");
+  }
+
+  @Test
+  @Override
+  void emptyStringBodyForPost() throws Exception {
+    super.emptyStringBodyForPost();
+    MockWebServerAssertions.assertThat(server.takeRequest())
+        .hasMethod("POST")
+        .hasNoHeaderNamed("Content-Type");
+  }
+
+  @Test
   @Override
   public void noResponseBodyForPut() throws Exception {
     super.noResponseBodyForPut();
@@ -125,6 +244,18 @@ public class DefaultClientTest extends AbstractClientTest {
   public void noResponseBodyForPatch() {
     RetryableException exception =
         assertThrows(RetryableException.class, super::noResponseBodyForPatch);
+    assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
+  }
+
+  /**
+   * {@link java.net.HttpURLConnection} does not support the QUERY method. For now, prefer okhttp.
+   *
+   * @see java.net.HttpURLConnection#setRequestMethod
+   */
+  @Test
+  @Override
+  public void query() throws Exception {
+    RetryableException exception = assertThrows(RetryableException.class, super::query);
     assertThat(exception).hasCauseInstanceOf(ProtocolException.class);
   }
 
