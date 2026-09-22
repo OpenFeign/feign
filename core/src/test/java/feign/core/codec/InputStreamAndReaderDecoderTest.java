@@ -17,21 +17,19 @@ package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
-
-import org.junit.jupiter.api.Test;
-
 import feign.Feign;
 import feign.RequestLine;
 import feign.TypedResponse;
 import feign.Util;
+import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.internal.BufferMockResponseBody;
 import okio.Buffer;
+import org.junit.jupiter.api.Test;
 
 public class InputStreamAndReaderDecoderTest {
 
@@ -42,10 +40,9 @@ public class InputStreamAndReaderDecoderTest {
 
     @RequestLine("GET /")
     Reader getLargeReader();
-    
+
     @RequestLine("GET /")
     TypedResponse<InputStream> getLargeStreamTypedResponse();
-
   }
 
   @Test
@@ -143,8 +140,7 @@ public class InputStreamAndReaderDecoderTest {
       }
     }
   }
-  
-  
+
   @Test
   void streamingTypedResponse() throws Exception {
 
@@ -166,13 +162,12 @@ public class InputStreamAndReaderDecoderTest {
 
       TypedResponse<InputStream> resp = api.getLargeStreamTypedResponse();
       try {
-          byte[] out = resp.body().readAllBytes();
-          assertThat(out.length).isEqualTo(expectedResponse.length);
-          assertThat(out).isEqualTo(expectedResponse);
+        byte[] out = resp.body().readAllBytes();
+        assertThat(out.length).isEqualTo(expectedResponse.length);
+        assertThat(out).isEqualTo(expectedResponse);
       } finally {
-    	  	resp.body().close();
+        resp.body().close();
       }
     }
   }
-  
 }
