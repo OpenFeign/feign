@@ -96,6 +96,12 @@ public class InvocationContext {
 
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+        if (bodyType instanceof Class<?>) {
+          if (Closeable.class.isAssignableFrom((Class<?>) bodyType)) {
+            noClose = true;
+          }
+        }
+
         return TypedResponse.builder(response).body(decode(response, bodyType)).build();
       }
 

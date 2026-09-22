@@ -17,18 +17,21 @@ package feign.core.codec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import feign.Feign;
-import feign.RequestLine;
-import feign.Util;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+
+import org.junit.jupiter.api.Test;
+
+import feign.Feign;
+import feign.RequestLine;
+import feign.TypedResponse;
+import feign.Util;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import mockwebserver3.internal.BufferMockResponseBody;
 import okio.Buffer;
-import org.junit.jupiter.api.Test;
 
 public class InputStreamAndReaderDecoderTest {
 
@@ -39,6 +42,10 @@ public class InputStreamAndReaderDecoderTest {
 
     @RequestLine("GET /")
     Reader getLargeReader();
+    
+    @RequestLine("GET /")
+    TypedResponse<InputStream> getLargeStreamTypedResponse();
+
   }
 
   @Test
@@ -136,4 +143,36 @@ public class InputStreamAndReaderDecoderTest {
       }
     }
   }
+  
+  
+  @Test
+  void streamingTypedResponse() throws Exception {
+
+    try (MockWebServer server = new MockWebServer()) {
+
+      server.start();
+
+      byte[] expectedResponse = new byte[16184];
+      new Random().nextBytes(expectedResponse);
+      server.enqueue(
+          new MockResponse.Builder()
+              .body(new BufferMockResponseBody(new Buffer().write(expectedResponse)))
+              .build());
+
+      LargeStreamTestInterface api =
+          Feign.builder()
+              .decoder(new InputStreamAndReaderDecoder())
+              .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+      TypedResponse<InputStream> resp = api.getLargeStreamTypedResponse();
+      try {
+          byte[] out = resp.body().readAllBytes();
+          assertThat(out.length).isEqualTo(expectedResponse.length);
+          assertThat(out).isEqualTo(expectedResponse);
+      } finally {
+    	  	resp.body().close();
+      }
+    }
+  }
+  
 }
