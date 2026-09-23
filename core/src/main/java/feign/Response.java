@@ -55,11 +55,11 @@ public final class Response implements Closeable {
 
   public static final class Builder {
     private static final ProtocolVersion DEFAULT_PROTOCOL_VERSION = ProtocolVersion.HTTP_1_1;
-    int status;
-    String reason;
-    Map<String, Collection<String>> headers;
-    Body body;
-    Request request;
+    private int status;
+    private String reason;
+    private Map<String, Collection<String>> headers;
+    private Body body;
+    private Request request;
     private RequestTemplate requestTemplate;
     private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
 
