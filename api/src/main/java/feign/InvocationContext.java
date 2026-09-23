@@ -72,7 +72,7 @@ public class InvocationContext {
       return disconnectResponseBodyIfNeeded(response);
     }
 
-    boolean noClose = false;
+    boolean shouldClose = closeAfterDecode;
 
     try {
       final boolean shouldDecodeResponseBody =
@@ -84,30 +84,35 @@ public class InvocationContext {
       }
 
       if (isVoidType(returnType) && !decodeVoid) {
-        ensureClosed(response.body());
         return kotlinUnitInstance(returnType);
       }
 
       Class<?> rawType = Types.getRawType(returnType);
 
-      if (Closeable.class.isAssignableFrom(rawType)) {
-        noClose = true;
-      }
-
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+
+        Object rslt = TypedResponse.builder(response).body(decode(response, bodyType)).build();
+
         if (bodyType instanceof Class<?>) {
           if (Closeable.class.isAssignableFrom((Class<?>) bodyType)) {
-            noClose = true;
+            shouldClose = false;
           }
         }
 
-        return TypedResponse.builder(response).body(decode(response, bodyType)).build();
+        return rslt;
       }
 
-      return decode(response, returnType);
+      Object rslt = decode(response, returnType);
+
+      if (Closeable.class.isAssignableFrom(rawType)) {
+        shouldClose = false;
+      }
+
+      return rslt;
+
     } finally {
-      if (closeAfterDecode && !noClose) {
+      if (shouldClose) {
         ensureClosed(response.body());
       }
     }
