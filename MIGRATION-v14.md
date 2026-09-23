@@ -1,12 +1,14 @@
-# Migration Guide — Feign v14 (Request Body Streaming)
+# Migration Guide — Feign v14 (Request and Response Body Streaming)
 
-This guide covers the breaking changes introduced in https://github.com/OpenFeign/feign/pull/3360 and explains how to update your code.
+This guide covers the breaking changes introduced in https://github.com/OpenFeign/feign/pull/3360 (streaming requests) and https://github.com/OpenFeign/feign/pull/3551 (streaming responses) and explains how to update your code.
 
 > **Target release:** `v14`
 
 ---
 
-## Overview
+## Request Streaming
+
+### Overview
 
 `feign.Request.Body` has been redesigned from a `byte[]`-backed concrete class into a **streaming-ready interface**.
 Request bodies are no longer eagerly buffered in memory unless you explicitly use the `byte[]`/`String` factory methods.
@@ -19,7 +21,7 @@ The **breaking changes** primarily affect code that interacts directly with requ
 - Any code that directly reads `Request.body()`, `Request.length()`, `Request.charset()`, or `RequestTemplate.body()`/
   `RequestTemplate.requestBody()`
 
-### `DefaultEncoder` streaming support (non-breaking) (https://github.com/OpenFeign/feign/pull/3396)
+#### `DefaultEncoder` streaming support (non-breaking) (https://github.com/OpenFeign/feign/pull/3396)
 
 `DefaultEncoder` now additionally supports `File`, `Path`, `InputStream`, and `Request.Body` as request body types.
 This is an additive, non-breaking change. Existing `DefaultEncoder` users do not need to modify code; users can now opt
@@ -27,9 +29,9 @@ into streaming by passing these types.
 
 ---
 
-## Breaking Changes
+### Breaking Changes
 
-### 1. `Request.Body` is now an interface
+#### 1. `Request.Body` is now an interface
 
 **Before:**
 
@@ -74,7 +76,7 @@ boolean repeatable = body.isRepeatable();
 
 ---
 
-### 2. `Request.body()` now returns `Optional<Request.Body>`
+#### 2. `Request.body()` now returns `Optional<Request.Body>`
 
 **Before:**
 
@@ -98,7 +100,7 @@ if (body.isPresent()) {
 
 ---
 
-### 3. `Request.length()` removed
+#### 3. `Request.length()` removed
 
 **Before:**
 
@@ -117,7 +119,7 @@ long length = request.body()
 
 ---
 
-### 4. `Request.charset()` removed
+#### 4. `Request.charset()` removed
 
 **Before:**
 
@@ -130,7 +132,7 @@ itself.
 
 ---
 
-### 5. `Request.isBinary()` removed
+#### 5. `Request.isBinary()` removed
 
 **Before:**
 
@@ -150,7 +152,7 @@ boolean repeatable = request.body()
 
 ---
 
-### 6. `Request.create(...)` overloads removed
+#### 6. `Request.create(...)` overloads removed
 
 The `byte[]` + `Charset`-based `Request.create(...)` overloads have been removed.
 
@@ -175,9 +177,9 @@ Request.create(HttpMethod.GET, url, headers, null, null);
 
 ---
 
-### 7. `RequestTemplate` API changes
+#### 7. `RequestTemplate` API changes
 
-#### `RequestTemplate.body(String)` removed
+##### `RequestTemplate.body(String)` removed
 
 **Before:**
 
@@ -191,7 +193,7 @@ template.body("hello world");
 template.body(Request.Body.of("hello world"));
 ```
 
-#### `RequestTemplate.body(byte[], Charset)` deprecated
+##### `RequestTemplate.body(byte[], Charset)` deprecated
 
 **Before:**
 
@@ -207,7 +209,7 @@ template.body(Request.Body.of(bytes, StandardCharsets.UTF_8));
 template.body(Request.Body.of(bytes));
 ```
 
-#### `RequestTemplate.body()` (returns `byte[]`) removed
+##### `RequestTemplate.body()` (returns `byte[]`) removed
 
 **Before:**
 
@@ -227,11 +229,11 @@ if (requestBody.isPresent()) {
 }
 ```
 
-#### `RequestTemplate.requestBody()` is no longer `@Deprecated`
+##### `RequestTemplate.requestBody()` is no longer `@Deprecated`
 
 The method now returns `Optional<Request.Body>` and is the primary accessor.
 
-#### `RequestTemplate.requestCharset()` removed
+##### `RequestTemplate.requestCharset()` removed
 
 **Before:**
 
@@ -243,7 +245,7 @@ Charset charset = template.requestCharset();
 
 ---
 
-### 8. Custom `Encoder` implementations
+#### 8. Custom `Encoder` implementations
 
 If you implement a custom `Encoder`, update calls to `template.body(...)`:
 
@@ -265,7 +267,7 @@ template.body(Request.Body.of(serialized));
 
 ---
 
-### 9. Custom `Client` implementations
+#### 9. Custom `Client` implementations
 
 If you implement a custom `Client`, update how you write the request body:
 
@@ -294,7 +296,7 @@ cannot be re-sent.
 
 ---
 
-### 10. `FeignException.errorReading(...)` — request body no longer captured
+#### 10. `FeignException.errorReading(...)` — request body no longer captured
 
 `FeignException` no longer captures the request body when a read error occurs, because the body may be a non-repeatable
 stream. Code asserting `exception.contentUTF8()` returns the request body must be updated:
@@ -313,7 +315,7 @@ assertThat(exception.contentUTF8()).isEmpty();
 
 ---
 
-### 11. `mock` module — `RequestKey` no longer stores `Charset`
+#### 11. `mock` module — `RequestKey` no longer stores `Charset`
 
 **Before:**
 
@@ -326,7 +328,7 @@ code.
 
 ---
 
-### 12. `Request.Body` no longer implements `Serializable`
+#### 12. `Request.Body` no longer implements `Serializable`
 
 `feign.Request.Body` previously implemented `java.io.Serializable`. This has been removed.
 If you were serializing `Request.Body` objects (e.g., for caching or distributed tracing), you will need an alternative
@@ -334,7 +336,7 @@ serialization strategy.
 
 ---
 
-### 13. Vert.x integration — `VertxFeign.Builder` now requires `.vertx(Vertx)`
+#### 13. Vert.x integration — `VertxFeign.Builder` now requires `.vertx(Vertx)`
 
 **Before:**
 
@@ -355,7 +357,7 @@ VertxFeign.builder()
 
 ---
 
-## Implementing a Custom Streaming Body
+### Implementing a Custom Streaming Body
 
 If you want to stream a body (e.g., from a file or `InputStream`), implement `Request.Body` directly. Because
 `writeTo(OutputStream)` itself declares `throws IOException`, the lambda **can** propagate it freely — the restriction
@@ -420,8 +422,95 @@ public class FileBody implements Request.Body {
 
 ---
 
-## Spring Cloud OpenFeign Compatibility
+### Spring Cloud OpenFeign Compatibility
 
 `RequestTemplate#body(byte[], Charset)` is kept `@Deprecated` for backward compatibility with
 `spring-cloud-openfeign-core`. Spring Cloud OpenFeign users are not required to make any changes immediately, but should
 migrate to `body(Request.Body)` once the Spring team provides an updated release.
+
+---
+
+## Response Streaming
+
+### Overview
+
+Feign now supports response streaming via `InputStreamAndReaderDecoder` or custom `Decoder` implementations. To support this change, a breaking change was made in how Feign automatically closes the underlying response body during response processing.
+
+Example:
+
+```java
+interface ExampleInterface {
+
+    @RequestLine("GET /")
+    InputStream getLargeStream();
+
+}
+  
+  LargeStreamTestInterface api = Feign.builder()
+	      .decoders(new InputStreamAndReaderDecoder(), new DefaultDecoder())
+	      .target(ExampleInterface.class, "http://localhost");
+ 
+
+```
+
+### Breaking Changes
+
+If a Feign interface template method returns a `Closable` object type, Feign will no longer automatically close the input stream from the server.  It is now the callers responsibility to call `close()`.
+
+The caller is now responsible for calling close:
+
+```java
+  try (InputStream is = api.getLargeStream()) {
+    // process stream
+  }
+
+```
+
+or
+
+```java
+  InputStream is = api.getLargeStream()
+  try{
+    // process stream
+  } finally {
+    is.close();
+  }
+
+```
+
+### Implementing a Custom Streaming Response Decoder
+
+A custom streaming response decoder just needs to handle a type that implements `Closable`.
+
+For example:
+
+```java
+
+public class ExampleStreamingReturn implements Closable{
+  // ...
+}
+
+public class ExampleStreamingDecoder implements PredicatedDecoder {
+
+  @Override
+  public Object decode(Response response, Type type)
+      throws IOException, DecodeException, FeignException {
+
+    if (ExampleStreamingReturn.class.equals(type)) return new ExampleStream(response.body().asInputStream());
+
+    throw new DecodeException(
+        response.status(),
+        format("%s is not a type supported by this decoder.", type),
+        response.request());
+  }
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    if (ExampleStreamingReturn.class.equals(type)) return true;
+
+    return false;
+  }
+}
+```
+
+---
