@@ -441,21 +441,20 @@ Example:
 ```java
 interface ExampleInterface {
 
-    @RequestLine("GET /")
-    InputStream getLargeStream();
+  @RequestLine("GET /")
+  InputStream getLargeStream();
 
 }
   
-  LargeStreamTestInterface api = Feign.builder()
-	      .decoders(new InputStreamAndReaderDecoder(), new DefaultDecoder())
-	      .target(ExampleInterface.class, "http://localhost");
+LargeStreamTestInterface api = Feign.builder()
+  .decoders(new InputStreamAndReaderDecoder(), new DefaultDecoder())
+  .target(ExampleInterface.class, "http://localhost");
  
-
 ```
 
 ### Breaking Changes
 
-If a Feign interface template method returns a `Closable` object type, Feign will no longer automatically close the input stream from the server.  It is now the callers responsibility to call `close()`.
+If a Feign interface template method returns a `Closeable` object type, Feign will no longer automatically close the input stream from the server.  It is now the caller's responsibility to call `close()`.
 
 The caller is now responsible for calling close:
 
@@ -480,13 +479,13 @@ or
 
 ### Implementing a Custom Streaming Response Decoder
 
-A custom streaming response decoder just needs to handle a type that implements `Closable`.
+A custom streaming response decoder just needs to handle a type that implements `Closeable`.
 
 For example:
 
 ```java
 
-public class ExampleStreamingReturn implements Closable{
+public class ExampleStream implements Closeable{
   // ...
 }
 
@@ -496,7 +495,7 @@ public class ExampleStreamingDecoder implements PredicatedDecoder {
   public Object decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
 
-    if (ExampleStreamingReturn.class.equals(type)) return new ExampleStream(response.body().asInputStream());
+    if (ExampleStream.class.equals(type)) return new ExampleStream(response.body().asInputStream());
 
     throw new DecodeException(
         response.status(),

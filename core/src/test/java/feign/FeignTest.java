@@ -19,7 +19,10 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -45,6 +48,7 @@ import feign.core.codec.StringDecoder;
 import feign.core.querymap.BeanQueryMapEncoder;
 import feign.core.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.ProtocolException;
 import java.net.URI;
@@ -1292,6 +1296,62 @@ public class FeignTest {
     }
   }
 
+  @Test
+  void voidMethodsCloseBodyWhenDoNotCloseAfterDecodeIsActive() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .doNotCloseAfterDecode()
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithVoidResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void voidMethodsCloseBodyWhenDoNotCloseAfterDecodeAndDecodeVoidIsActive() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .doNotCloseAfterDecode()
+            .decodeVoid()
+            .decoder(mock(Decoder.class))
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithVoidResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closableMethodsDoNotCloseBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decoder(mock(Decoder.class))
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithCloseableResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isFalse();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -1407,6 +1467,12 @@ public class FeignTest {
 
     @FeignIgnore
     String ignore();
+
+    @RequestLine("GET /")
+    void getWithVoidResponse();
+
+    @RequestLine("GET /")
+    InputStream getWithCloseableResponse();
 
     class ClockToMillis implements Param.Expander {
 
@@ -1552,6 +1618,11 @@ public class FeignTest {
       return this;
     }
 
+    TestInterfaceBuilder doNotCloseAfterDecode() {
+      delegate.doNotCloseAfterDecode();
+      return this;
+    }
+
     TestInterfaceBuilder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
       return this;
@@ -1574,6 +1645,33 @@ public class FeignTest {
         }
       }
       return chain.next(invocationContext);
+    }
+  }
+
+  class BodyCapturingResponseInterceptor implements ResponseInterceptor {
+    private final AtomicReference<Response.Body> responseBodyRef = new AtomicReference<>();
+
+    @Override
+    public Object intercept(InvocationContext invocationContext, Chain chain) throws Exception {
+      responseBodyRef.set(invocationContext.response().body());
+      return chain.next(invocationContext);
+    }
+
+    public Response.Body getResponseBody() {
+      return responseBodyRef.get();
+    }
+
+    public boolean isResponseBodyClosed() {
+      try {
+        getResponseBody().asInputStream().read();
+        return false;
+      } catch (IOException e) {
+        if (!e.getMessage().contains("closed"))
+          throw new RuntimeException(
+              "Unexpected exception message during body closed check (expected message to contain 'closed')",
+              e);
+        return true;
+      }
     }
   }
 

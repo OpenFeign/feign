@@ -83,8 +83,10 @@ public class InvocationContext {
         throw decodeError(configKey, response);
       }
 
-      if (isVoidType(returnType) && !decodeVoid) {
-        return kotlinUnitInstance(returnType);
+      if (isVoidType(returnType)) {
+        shouldClose = true;
+
+        if (!decodeVoid) return kotlinUnitInstance(returnType);
       }
 
       Class<?> rawType = Types.getRawType(returnType);
@@ -92,25 +94,22 @@ public class InvocationContext {
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
 
-        Object rslt = TypedResponse.builder(response).body(decode(response, bodyType)).build();
+        Object result = TypedResponse.builder(response).body(decode(response, bodyType)).build();
 
-        if (bodyType instanceof Class<?>) {
-          if (Closeable.class.isAssignableFrom((Class<?>) bodyType)) {
-            shouldClose = false;
-          }
+        if (Closeable.class.isAssignableFrom(Types.getRawType(bodyType))) {
+          shouldClose = false;
         }
 
-        return rslt;
+        return result;
       }
 
-      Object rslt = decode(response, returnType);
+      Object result = decode(response, returnType);
 
       if (Closeable.class.isAssignableFrom(rawType)) {
         shouldClose = false;
       }
 
-      return rslt;
-
+      return result;
     } finally {
       if (shouldClose) {
         ensureClosed(response.body());
