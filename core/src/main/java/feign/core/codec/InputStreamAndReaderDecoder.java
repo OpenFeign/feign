@@ -27,7 +27,8 @@ import java.io.Reader;
 import java.lang.reflect.Type;
 
 /**
- * A decoder that converts response bodies into {@code InputStream} and {@code Reader} response types.
+ * A decoder that converts response bodies into {@code InputStream} and {@code Reader} response
+ * types.
  *
  * <p><b>Important:</b> the caller of the Feign interface template method is responsible for closing
  * the returned stream.
