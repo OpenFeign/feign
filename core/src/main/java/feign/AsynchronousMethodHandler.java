@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
-
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -115,8 +114,6 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   }
 
   private static class CancellableFuture<T> extends CompletableFuture<T> {
-    // volatile provides the same JMM happens-before guarantees as AtomicReference
-    // since we only ever read/write (never CAS), with less indirection.
     private volatile CompletableFuture<T> inner;
 
     /**

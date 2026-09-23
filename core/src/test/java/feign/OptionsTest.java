@@ -151,15 +151,15 @@ class OptionsTest {
     thread.start();
     thread.join();
   }
-  
+
   /**
    * Forces multiple threads to contend on the SAME outer key in threadToMethodOptions by using
    * SharedKeyOptions, which returns a fixed "shared-key" from threadIdentifier().
    *
-   * <p>Before the fix (getOrDefault + put), two threads racing with the same key could both
-   * observe the key absent, both create a new inner map, and one thread's put would overwrite the
-   * other's — silently losing entries. With computeIfAbsent + ConcurrentHashMap, creation is
-   * atomic and all entries must be present after all threads complete.
+   * <p>Before the fix (getOrDefault + put), two threads racing with the same key could both observe
+   * the key absent, both create a new inner map, and one thread's put would overwrite the other's —
+   * silently losing entries. With computeIfAbsent + ConcurrentHashMap, creation is atomic and all
+   * entries must be present after all threads complete.
    */
   @Test
   void concurrentSetMethodOptionsOnSameKeyDoesNotLoseEntries() throws Exception {

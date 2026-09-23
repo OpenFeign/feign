@@ -79,9 +79,9 @@ class CancellableFutureTest {
    * cancel() arrives AFTER setInner() has already been called (the retry path).
    *
    * <p>The first execute() fails immediately to trigger a retry. The retry execute() returns a
-   * pending CompletableFuture immediately (no blocking inside execute()) and signals a latch so
-   * the caller knows setInner() has been called. The caller then cancels — cancel() must read
-   * inner and propagate to the retry future.
+   * pending CompletableFuture immediately (no blocking inside execute()) and signals a latch so the
+   * caller knows setInner() has been called. The caller then cancels — cancel() must read inner and
+   * propagate to the retry future.
    */
   @Test
   void cancelAfterSetInnerRacesCorrectly() throws Exception {
@@ -145,4 +145,3 @@ class CancellableFutureTest {
     server.shutdown();
   }
 }
-
