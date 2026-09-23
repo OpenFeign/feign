@@ -18,6 +18,8 @@ package feign.core.codec;
 import feign.Response;
 import feign.Util;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.Type;
 
 public class DefaultDecoder extends StringDecoder {
@@ -32,16 +34,22 @@ public class DefaultDecoder extends StringDecoder {
    */
   @Override
   public boolean canDecode(Response response, Type type) {
-    return byte[].class.equals(type) || super.canDecode(response, type);
+    if (byte[].class.equals(type)) return true;
+    if (InputStream.class.equals(type)) return true;
+    if (Reader.class.equals(type)) return true;
+    if (super.canDecode(response, type)) return true;
+
+    return false;
   }
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
     if (response.status() == 404 || response.status() == 204) return Util.emptyValueOf(type);
     if (response.body() == null) return null;
-    if (byte[].class.equals(type)) {
-      return Util.toByteArray(response.body().asInputStream());
-    }
+    if (byte[].class.equals(type)) return Util.toByteArray(response.body().asInputStream());
+    if (InputStream.class.equals(type)) return response.body().asInputStream();
+    if (Reader.class.equals(type)) return response.body().asReader(response.charset());
+
     return super.decode(response, type);
   }
 }

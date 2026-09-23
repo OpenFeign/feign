@@ -21,6 +21,7 @@ import static feign.Util.ensureClosed;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 
@@ -71,6 +72,8 @@ public class InvocationContext {
       return disconnectResponseBodyIfNeeded(response);
     }
 
+    boolean shouldClose = closeAfterDecode;
+
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
@@ -80,20 +83,35 @@ public class InvocationContext {
         throw decodeError(configKey, response);
       }
 
-      if (isVoidType(returnType) && !decodeVoid) {
-        ensureClosed(response.body());
-        return kotlinUnitInstance(returnType);
+      if (isVoidType(returnType)) {
+        shouldClose = true;
+
+        if (!decodeVoid) return kotlinUnitInstance(returnType);
       }
 
       Class<?> rawType = Types.getRawType(returnType);
+
       if (TypedResponse.class.isAssignableFrom(rawType)) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
-        return TypedResponse.builder(response).body(decode(response, bodyType)).build();
+
+        Object result = TypedResponse.builder(response).body(decode(response, bodyType)).build();
+
+        if (Closeable.class.isAssignableFrom(Types.getRawType(bodyType))) {
+          shouldClose = false;
+        }
+
+        return result;
       }
 
-      return decode(response, returnType);
+      Object result = decode(response, returnType);
+
+      if (Closeable.class.isAssignableFrom(rawType)) {
+        shouldClose = false;
+      }
+
+      return result;
     } finally {
-      if (closeAfterDecode) {
+      if (shouldClose) {
         ensureClosed(response.body());
       }
     }
