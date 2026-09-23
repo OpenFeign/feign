@@ -434,7 +434,7 @@ migrate to `body(Request.Body)` once the Spring team provides an updated release
 
 ### Overview
 
-Feign now supports response streaming via `InputStreamAndReaderDecoder` or custom `Decoder` implementations. To support this change, a breaking change was made in how Feign automatically closes the underlying response body during response processing.
+Feign now supports response streaming via `DefaultDecoder` (which now supports InputStream and Reader return types) or via custom `Decoder` implementations. Previously, Feign read the entire content of the response into memory prior to processing - this made it difficult to use Feign when downloading large response payloads.
 
 Example:
 
@@ -447,10 +447,14 @@ interface ExampleInterface {
 }
   
 LargeStreamTestInterface api = Feign.builder()
-  .decoders(new InputStreamAndReaderDecoder(), new DefaultDecoder())
   .target(ExampleInterface.class, "http://localhost");
- 
+
+try(InputStream is = api.getLargeStream()){ // Note that caller is responsible for closing the returned InputStream
+  // work with the stream...
+} 
 ```
+
+To support this change, a breaking change was made in how Feign automatically closes the underlying response body during response processing.
 
 ### Breaking Changes
 
@@ -468,7 +472,7 @@ The caller is now responsible for calling close:
 or
 
 ```java
-  InputStream is = api.getLargeStream()
+  InputStream is = api.getLargeStream();
   try{
     // process stream
   } finally {
@@ -479,7 +483,7 @@ or
 
 ### Implementing a Custom Streaming Response Decoder
 
-A custom streaming response decoder just needs to handle a type that implements `Closeable`.
+A custom streaming response decoder handles a type that implements `Closeable`.
 
 For example:
 
@@ -490,6 +494,13 @@ public class ExampleStream implements Closeable{
 }
 
 public class ExampleStreamingDecoder implements PredicatedDecoder {
+
+  @Override
+  public boolean canDecode(Response response, Type type) {
+    if (ExampleStream.class.equals(type)) return true;
+
+    return false;
+  }
 
   @Override
   public Object decode(Response response, Type type)
@@ -503,12 +514,6 @@ public class ExampleStreamingDecoder implements PredicatedDecoder {
         response.request());
   }
 
-  @Override
-  public boolean canDecode(Response response, Type type) {
-    if (ExampleStreamingReturn.class.equals(type)) return true;
-
-    return false;
-  }
 }
 ```
 

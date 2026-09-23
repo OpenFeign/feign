@@ -111,6 +111,14 @@ public class MyApp {
 }
 ```
 
+### Streaming Responses
+
+To handle large response bodies (instead of reading them into memory), Feign supports InputStream and Reader as return types for interface methods.
+
+**Important:** The caller is responsible for closing the returned InputStream and Reader instance.
+
+Other custom `Decoder` implementations may also support streaming. As a general rule any Closable instance returned from a Feign target must be closed by the caller.
+
 ### Interface Annotations
 
 Feign annotations define the `Contract` between the interface and how the underlying client
