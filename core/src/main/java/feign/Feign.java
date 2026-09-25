@@ -224,6 +224,7 @@ public abstract class Feign {
               dismiss404,
               closeAfterDecode,
               decodeVoid,
+              decodeErrorResponses,
               responseInterceptorChain());
       MethodHandler.Factory<Object> methodHandlerFactory =
           new SynchronousMethodHandler.Factory(
