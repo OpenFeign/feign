@@ -21,6 +21,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 import feign.form.FormProperty;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.rmi.UnexpectedException;
 import java.security.PrivilegedAction;
@@ -41,14 +42,26 @@ import lombok.val;
 public final class PojoUtil {
 
   public static boolean isUserPojo(@NonNull Object object) {
-    val type = object.getClass();
-    val packageName = type.getPackage().getName();
-    return !packageName.startsWith("java.");
+    return isUserPojo(object.getClass());
   }
 
   public static boolean isUserPojo(@NonNull Type type) {
-    val typeName = type.toString();
-    return !typeName.startsWith("class java.");
+    if (type instanceof Class<?>) {
+      return isUserPojo((Class<?>) type);
+    }
+
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      return isUserPojo(parameterizedType.getRawType());
+    }
+
+    return false;
+  }
+
+  private static boolean isUserPojo(@NonNull Class<?> type) {
+    val packageName = type.getPackage().getName();
+
+    return !packageName.startsWith("java.");
   }
 
   @SneakyThrows

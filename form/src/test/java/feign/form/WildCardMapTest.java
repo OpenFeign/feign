@@ -41,12 +41,10 @@ class WildCardMapTest {
 
   @BeforeAll
   static void configureClient() {
-    var logFile = logDir.resolve("log.txt").toString();
-
     api =
         Feign.builder()
             .encoder(new FormEncoder())
-            .logger(new JavaLogger(WildCardMapTest.class).appendToFile(logFile))
+            .logger(new JavaLogger(WildCardMapTest.class))
             .logLevel(FULL)
             .target(FormUrlEncodedApi.class, "http://localhost:8080");
   }
@@ -83,10 +81,24 @@ class WildCardMapTest {
     assertThat(api.wildCardMap(param)).isNotNull().extracting(Response::status).isEqualTo(418);
   }
 
+  @Test
+  void testMapStringString() {
+    Map<String, String> param = new HashMap<>();
+
+    param.put("key1", "1");
+    param.put("key2", "1");
+
+    assertThat(api.mapStringString(param)).isNotNull().extracting(Response::status).isEqualTo(200);
+  }
+
   interface FormUrlEncodedApi {
 
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
     Response wildCardMap(Map<String, ?> param);
+
+    @RequestLine("POST /wild-card-map")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    Response mapStringString(Map<String, String> param);
   }
 }
