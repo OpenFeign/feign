@@ -242,22 +242,53 @@ public final class Expressions {
       StringBuilder result = new StringBuilder();
 
       for (Entry<String, ?> entry : values.entrySet()) {
-        StringBuilder expanded = new StringBuilder();
         String name = this.encode(entry.getKey());
-        String value = this.encode(entry.getValue().toString());
-
-        expanded.append(name).append("=");
-        if (!value.isEmpty()) {
-          expanded.append(value);
+        Object raw = entry.getValue();
+        if (raw instanceof Iterable) {
+          this.appendNamedValues(result, name, (Iterable<?>) raw);
+        } else if (raw != null && raw.getClass().isArray()) {
+          this.appendArrayValues(result, name, raw);
+        } else {
+          this.appendNamedValue(result, name, raw.toString());
         }
-
-        if (result.length() != 0) {
-          result.append(this.separator);
-        }
-
-        result.append(expanded);
       }
       return result.toString();
+    }
+
+    /**
+     * A collection stored as a map value expands like a named iterable: each element is {@code
+     * name=value}, joined by this expression's separator. Encoding {@link Object#toString()} would
+     * put a bracketed list into the URL.
+     */
+    private void appendNamedValues(StringBuilder result, String encodedName, Iterable<?> values) {
+      for (Object value : values) {
+        if (value == null) {
+          continue;
+        }
+        this.appendNamedValue(result, encodedName, value.toString());
+      }
+    }
+
+    private void appendArrayValues(StringBuilder result, String encodedName, Object array) {
+      int length = java.lang.reflect.Array.getLength(array);
+      for (int i = 0; i < length; i++) {
+        Object value = java.lang.reflect.Array.get(array, i);
+        if (value == null) {
+          continue;
+        }
+        this.appendNamedValue(result, encodedName, value.toString());
+      }
+    }
+
+    private void appendNamedValue(StringBuilder result, String encodedName, String value) {
+      String encoded = this.encode(value);
+      if (result.length() != 0) {
+        result.append(this.separator);
+      }
+      result.append(encodedName).append("=");
+      if (!encoded.isEmpty()) {
+        result.append(encoded);
+      }
     }
 
     protected static boolean isSimpleExpression(String expressionCandidate) {
