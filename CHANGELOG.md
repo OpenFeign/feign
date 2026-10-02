@@ -1,3 +1,9 @@
+### Version 13.16
+
+* Path-style expansion repeats the entry name for each collection or array value inside a map,
+  instead of encoding `Object.toString()`. A list value expands as `;colours=red;colours=blue`
+  rather than a bracketed list, and an array no longer puts its identity hash in the URL (#3584).
+
 ### Version 13.15
 
 * `GsonEncoder` serializes request bodies using the runtime type when the declared body type is a

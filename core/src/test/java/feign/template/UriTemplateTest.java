@@ -347,4 +347,51 @@ class UriTemplateTest {
     String expanded = uriTemplate.expand(values);
     assertThat(expanded).isEqualToIgnoringCase("/server/matrixParams;account=a;name=n");
   }
+
+  @Test
+  void pathStyleExpansionExpandsCollectionValuesInsideAMap() {
+    String template = "/server{;parameters}";
+    List<String> colours = new ArrayList<>();
+    colours.add("red");
+    colours.add("blue");
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("colours", colours);
+    parameters.put("size", "L");
+
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("parameters", parameters);
+
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(values);
+    assertThat(expanded).isEqualToIgnoringCase("/server;colours=red;colours=blue;size=L");
+  }
+
+  @Test
+  void pathStyleExpansionExpandsArrayValuesInsideAMap() {
+    String template = "/server{;parameters}";
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("colours", new String[] {"red", "blue"});
+
+    Map<String, Object> values = new LinkedHashMap<>();
+    values.put("parameters", parameters);
+
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(values);
+    assertThat(expanded).isEqualToIgnoringCase("/server;colours=red;colours=blue");
+    assertThat(expanded).doesNotContain("@");
+  }
+
+  @Test
+  void pathStyleExpansionEncodesCollectionElementsInsideAMap() {
+    String template = "{;parameters}";
+    List<String> half = new ArrayList<>();
+    half.add("50%");
+    half.add("a b");
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("half", half);
+
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
+    assertThat(expanded).isEqualToIgnoringCase(";half=50%25;half=a%20b");
+  }
 }
