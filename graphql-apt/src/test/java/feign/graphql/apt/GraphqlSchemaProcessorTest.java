@@ -47,6 +47,7 @@ class GraphqlSchemaProcessorTest {
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
     assertThat(compilation).succeeded();
+    assertThat(compilation).hadWarningCount(0);
     assertThat(compilation).generatedSourceFile("test.CreateCharacterResult");
     assertThat(compilation).generatedSourceFile("test.CreateCharacterInput");
   }
