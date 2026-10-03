@@ -173,6 +173,21 @@ class PojoUtilTest {
 
     assertThat(PojoUtil.isUserPojo(wildcard)).isFalse();
   }
+  
+  @Test
+  void shouldNotIdentifyPrimitiveAsUserPojo() {
+    assertThat(PojoUtil.isUserPojo(int.class)).isFalse();
+  }
+  
+  @Test
+  void shouldNotIdentifyArrayAsUserPojo() {
+    assertThat(PojoUtil.isUserPojo(byte[].class)).isFalse();
+  }
+  
+  @Test
+  void shouldNotIdentifyObjectArrayAsUserPojo() {
+    assertThat(PojoUtil.isUserPojo(String[].class)).isFalse();
+  }
 
   static class UserPojo<T> {
 

@@ -59,9 +59,13 @@ public final class PojoUtil {
   }
 
   private static boolean isUserPojo(@NonNull Class<?> type) {
-    val packageName = type.getPackage().getName();
+  	if (type.isPrimitive() || type.isArray()) {
+      return false;
+  	}
 
-    return !packageName.startsWith("java.");
+  	Package pkg = type.getPackage();
+   
+    return pkg != null && !pkg.getName().startsWith("java.");
   }
 
   @SneakyThrows
