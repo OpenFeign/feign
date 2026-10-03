@@ -59,12 +59,12 @@ public final class PojoUtil {
   }
 
   private static boolean isUserPojo(@NonNull Class<?> type) {
-  	if (type.isPrimitive() || type.isArray()) {
+    if (type.isPrimitive() || type.isArray()) {
       return false;
-  	}
+    }
 
-  	Package pkg = type.getPackage();
-   
+    Package pkg = type.getPackage();
+
     return pkg != null && !pkg.getName().startsWith("java.");
   }
 

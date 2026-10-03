@@ -26,7 +26,6 @@ import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.EncodeException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +41,7 @@ class WildCardMapTest {
 
   @BeforeAll
   static void configureClient() {
-  	api =
+    api =
         Feign.builder()
             .encoder(new FormEncoder())
             .logger(new JavaLogger(WildCardMapTest.class))
@@ -91,7 +90,7 @@ class WildCardMapTest {
 
     assertThat(api.mapStringString(param)).isNotNull().extracting(Response::status).isEqualTo(200);
   }
-  
+
   @Test
   void testListIsDelegatedToDefaultEncoder() {
     List<String> param = new ArrayList<>();
@@ -112,7 +111,7 @@ class WildCardMapTest {
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
     Response mapStringString(Map<String, String> param);
-    
+
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
     Response list(List<String> param);

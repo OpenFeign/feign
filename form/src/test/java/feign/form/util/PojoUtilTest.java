@@ -18,7 +18,6 @@ package feign.form.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.form.FormProperty;
-import feign.form.util.PojoUtil;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -173,17 +172,17 @@ class PojoUtilTest {
 
     assertThat(PojoUtil.isUserPojo(wildcard)).isFalse();
   }
-  
+
   @Test
   void shouldNotIdentifyPrimitiveAsUserPojo() {
     assertThat(PojoUtil.isUserPojo(int.class)).isFalse();
   }
-  
+
   @Test
   void shouldNotIdentifyArrayAsUserPojo() {
     assertThat(PojoUtil.isUserPojo(byte[].class)).isFalse();
   }
-  
+
   @Test
   void shouldNotIdentifyObjectArrayAsUserPojo() {
     assertThat(PojoUtil.isUserPojo(String[].class)).isFalse();
@@ -234,9 +233,7 @@ class PojoUtilTest {
     private final Type type;
 
     protected TypeReference() {
-      type =
-          ((ParameterizedType) getClass().getGenericSuperclass())
-              .getActualTypeArguments()[0];
+      type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
     Type getType() {
