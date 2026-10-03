@@ -27,14 +27,12 @@ import feign.RequestLine;
 import feign.Response;
 import feign.codec.EncodeException;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
@@ -42,11 +40,9 @@ class WildCardMapTest {
 
   private static FormUrlEncodedApi api;
 
-  @TempDir static Path logDir;
-
   @BeforeAll
   static void configureClient() {
-    api =
+  	api =
         Feign.builder()
             .encoder(new FormEncoder())
             .logger(new JavaLogger(WildCardMapTest.class))

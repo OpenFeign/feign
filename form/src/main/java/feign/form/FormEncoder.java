@@ -104,7 +104,8 @@ public class FormEncoder implements Encoder {
    * alongside it, instead of being swallowed by a fallback of its own.
    *
    * <pre>
-   * Feign.builder().encoders(FormEncoder.createPredicatedFormEncoder(), new JacksonEncoder());
+   * Feign.builder()
+   *     .encoders(FormEncoder.createPredicatedFormEncoder(), new JacksonEncoder());
    * </pre>
    *
    * @return a form encoder guarded by {@link #formRequests()}
@@ -124,7 +125,7 @@ public class FormEncoder implements Encoder {
         "Content-Type is a form type and the body is a map or a user pojo",
         (object, bodyType, template) ->
             ContentType.of(getContentTypeValue(template.headers())) != ContentType.UNDEFINED
-                && (isMap(object) || (bodyType != null && isUserPojo(bodyType))));
+                && (object instanceof Map || (bodyType != null && isUserPojo(bodyType))));
   }
 
   @Override
@@ -139,7 +140,7 @@ public class FormEncoder implements Encoder {
     }
 
     Map<String, Object> data;
-    if (isMap(object)) {
+    if (object instanceof Map) {
       data = (Map<String, Object>) object;
     } else if (isUserPojo(bodyType)) {
       data = toMap(object);
@@ -188,9 +189,5 @@ public class FormEncoder implements Encoder {
     } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
       return UTF_8;
     }
-  }
-
-  private static boolean isMap(Object object) {
-    return object instanceof Map;
   }
 }
