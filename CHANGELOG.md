@@ -3,6 +3,8 @@
 * Path-style expansion repeats the entry name for each collection or array value inside a map,
   instead of encoding `Object.toString()`. A list value expands as `;colours=red;colours=blue`
   rather than a bracketed list, and an array no longer puts its identity hash in the URL (#3584).
+* Simple and path-style expansion skip a map entry whose value is `null`, the same way a `null`
+  element of an iterable is skipped, instead of throwing a `NullPointerException`.
 
 ### Version 13.15
 

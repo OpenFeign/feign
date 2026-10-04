@@ -1102,6 +1102,19 @@ public class FeignTest {
   }
 
   @Test
+  void matrixParametersWithMapSkipNullValues() throws Exception {
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    server.enqueue(new MockResponse());
+    Map<String, Object> properties = new LinkedHashMap<>();
+    properties.put("account", "a");
+    properties.put("name", null);
+
+    api.matrixParametersWithMap(properties);
+    assertThat(server.takeRequest()).hasPath("/settings;account=a");
+  }
+
+  @Test
   void supportComplexHeaders() throws Exception {
     TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
 

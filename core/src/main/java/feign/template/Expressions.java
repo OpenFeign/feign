@@ -244,9 +244,13 @@ public final class Expressions {
       for (Entry<String, ?> entry : values.entrySet()) {
         String name = this.encode(entry.getKey());
         Object raw = entry.getValue();
+        if (raw == null) {
+          /* an undefined value is skipped, like a null element of an iterable */
+          continue;
+        }
         if (raw instanceof Iterable) {
           this.appendNamedValues(result, name, (Iterable<?>) raw);
-        } else if (raw != null && raw.getClass().isArray()) {
+        } else if (raw.getClass().isArray()) {
           this.appendArrayValues(result, name, raw);
         } else {
           this.appendNamedValue(result, name, raw.toString());
