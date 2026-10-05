@@ -73,9 +73,9 @@ public final class Expressions {
    * specification. Feign deviates from the rfc in that the ':' value modifier is used to mark a
    * regular expression.
    */
-  private static final Pattern VARIABLE_LIST_PATTERN =
+  static final Pattern VARIABLE_LIST_PATTERN =
       Pattern.compile(
-          "(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?)(,(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?))*");
+          "(?:(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(?:\\.?(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*+\\*?,)*+(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(?:\\.?(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*+(?::.*|\\*)?");
 
   public static Expression create(final String value) {
 
