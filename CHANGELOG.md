@@ -5,6 +5,10 @@
   rather than a bracketed list, and an array no longer puts its identity hash in the URL (#3584).
 * Simple and path-style expansion skip map entries where the value is `null`. This works the same
   way as skipping a `null` element in an iterable. It no longer throws a `NullPointerException`.
+* New experimental `decodeErrorResponses()` builder option decodes a 4xx/5xx response body into the
+  method's return type instead of throwing, for APIs that report failures in a response envelope
+  (#3559). 404, `void` methods, bodies that are missing, empty or over 8 KiB, and retryable errors
+  still throw.
 
 ### Version 13.15
 

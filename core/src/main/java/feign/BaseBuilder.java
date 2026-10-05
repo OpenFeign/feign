@@ -267,8 +267,11 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * response is thrown exactly as it is today:
    *
    * <ul>
-   *   <li>the response status is 400 or above &mdash; 3xx is left to {@link
-   *       RedirectionInterceptor}, and is not a failure;
+   *   <li>the response status is 400 or above, other than 404. 3xx is left to {@link
+   *       RedirectionInterceptor}; 404 keeps its own switch, {@link #dismiss404()};
+   *   <li>the method returns a value. {@code void} methods always throw;
+   *   <li>the response has a body of 1 to 8192 bytes. A missing, empty or larger body is thrown, so
+   *       a bodiless {@code 401} still fails as {@link FeignException.Unauthorized};
    *   <li>the {@link #decoder(Decoder) decoder} accepts the response, checked via {@link
    *       feign.codec.PredicatedDecoder#canDecode}, so a decoder that declares itself as JSON will
    *       not be handed an HTML error page from a proxy. A decoder that is not a {@code
@@ -281,11 +284,10 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
    * </ul>
    *
    * <p>The response reaches the decoder untouched, so the status it sees is the one the server
-   * sent. Note that every first-party decoder returns an empty value for {@code 404} without
-   * reading the body, the same rule {@link #dismiss404()} relies on, so an envelope carried on a
-   * {@code 404} arrives empty. Pass a decoder that reads the body regardless of status if you need
-   * that case.
+   * sent. With the default decoder and a {@code String} return type, the error body is returned as
+   * the string.
    */
+  @Experimental
   public B decodeErrorResponses() {
     this.decodeErrorResponses = true;
     return thisB();

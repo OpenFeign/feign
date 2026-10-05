@@ -21,11 +21,15 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import com.google.gson.Gson;
 import feign.codec.Decoder;
 import feign.codec.PredicatedDecoder;
+import feign.optionals.OptionalDecoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link BaseBuilder#decodeErrorResponses()}. */
@@ -48,6 +52,17 @@ class DecodeErrorResponsesTest {
 
     @RequestLine("GET /")
     Unrelated getUnrelated();
+
+    @RequestLine("GET /")
+    String getString();
+
+    @RequestLine("DELETE /")
+    void delete();
+  }
+
+  interface AsyncTestInterface {
+    @RequestLine("GET /")
+    CompletableFuture<BaseResponse> get();
   }
 
   public static class BaseResponse {
@@ -90,13 +105,157 @@ class DecodeErrorResponsesTest {
     assertThat(response.errorCode).isEqualTo(42);
   }
 
+  @AfterEach
+  void afterEachTest() throws IOException {
+    server.close();
+  }
+
   @Test
-  void decodesErrorBodyOn404WhenTheDecoderReadsIt() {
-    // First-party decoders return an empty value for 404 without reading the body, so a 404
-    // envelope needs a decoder that reads the body regardless of status, as this one does.
+  void notFoundStillThrows() {
     server.enqueue(json(404, ERROR_BODY));
 
-    assertThat(api(builder()).get().message).isEqualTo("nope");
+    assertThatExceptionOfType(FeignException.NotFound.class).isThrownBy(() -> api(builder()).get());
+  }
+
+  @Test
+  void voidMethodStillThrows() {
+    server.enqueue(json(500, ERROR_BODY));
+
+    TestInterface api =
+        builder()
+            .decoder((response, type) -> null)
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThatExceptionOfType(FeignException.InternalServerError.class).isThrownBy(api::delete);
+  }
+
+  @Test
+  void defaultDecoderReturnsTheErrorBodyAsString() {
+    server.enqueue(new MockResponse().setResponseCode(401).setBody("token expired"));
+
+    TestInterface api =
+        builder()
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.getString()).isEqualTo("token expired");
+  }
+
+  @Test
+  void defaultDecoderStillThrowsOnABodilessUnauthorized() {
+    server.enqueue(new MockResponse().setResponseCode(401));
+
+    TestInterface api =
+        builder()
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThatExceptionOfType(FeignException.Unauthorized.class).isThrownBy(api::getString);
+  }
+
+  @Test
+  void defaultDecoderStillThrowsOnNotFound() {
+    server.enqueue(new MockResponse().setResponseCode(404).setBody("missing"));
+
+    TestInterface api =
+        builder()
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThatExceptionOfType(FeignException.NotFound.class).isThrownBy(api::getString);
+  }
+
+  @Test
+  void throwsWhenTheErrorBodyIsLargerThanTheBufferLimit() {
+    server.enqueue(json(500, largeErrorBody()));
+
+    assertThatExceptionOfType(FeignException.InternalServerError.class)
+        .isThrownBy(() -> api(builder()).get());
+  }
+
+  @Test
+  void throwsWhenAChunkedErrorBodyIsLargerThanTheBufferLimit() {
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(500)
+            .addHeader("Content-Type", "application/json")
+            .setChunkedBody(largeErrorBody(), 1024));
+
+    assertThatExceptionOfType(FeignException.InternalServerError.class)
+        .isThrownBy(() -> api(builder()).get());
+  }
+
+  @Test
+  void decodesAChunkedErrorBodyWithinTheBufferLimit() {
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(500)
+            .addHeader("Content-Type", "application/json")
+            .setChunkedBody(ERROR_BODY, 16));
+
+    assertThat(api(builder()).get().errorCode).isEqualTo(42);
+  }
+
+  @Test
+  void decoderThatIsNotPredicatedSeesEveryErrorBody() {
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(502)
+            .addHeader("Content-Type", "text/html")
+            .setBody("<html>Bad Gateway</html>"));
+
+    TestInterface api =
+        builder()
+            .decoder((response, type) -> Util.toString(response.body().asReader(Util.UTF_8)))
+            .retryer(Retryer.NEVER_RETRY)
+            .target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.getString()).isEqualTo("<html>Bad Gateway</html>");
+  }
+
+  @Test
+  void decodesErrorBodyWhenErrorDecoderReturnsNull() {
+    server.enqueue(json(500, ERROR_BODY));
+
+    assertThat(api(builder().errorDecoder((methodKey, response) -> null)).get().errorCode)
+        .isEqualTo(42);
+  }
+
+  @Test
+  void throwsTheDecodeFailureWhenErrorDecoderReturnsNull() {
+    server.enqueue(json(500, "not json at all"));
+
+    assertThatExceptionOfType(FeignException.class)
+        .isThrownBy(() -> api(builder().errorDecoder((methodKey, response) -> null)).get())
+        .satisfies(e -> assertThat(e.getSuppressed()).isEmpty());
+  }
+
+  @Test
+  void asyncClientDecodesErrorBody() throws Exception {
+    server.enqueue(json(500, ERROR_BODY));
+
+    AsyncTestInterface api =
+        AsyncFeign.builder()
+            .decoder(new JsonDecoder())
+            .decodeErrorResponses()
+            .target(AsyncTestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThat(api.get().get().errorCode).isEqualTo(42);
+  }
+
+  @Test
+  void asyncClientThrowsWithoutTheFlag() {
+    server.enqueue(json(500, ERROR_BODY));
+
+    AsyncTestInterface api =
+        AsyncFeign.builder()
+            .decoder(new JsonDecoder())
+            .target(AsyncTestInterface.class, "http://localhost:" + server.getPort());
+
+    assertThatExceptionOfType(ExecutionException.class)
+        .isThrownBy(() -> api.get().get())
+        .withCauseInstanceOf(FeignException.InternalServerError.class);
   }
 
   @Test
@@ -188,7 +347,7 @@ class DecodeErrorResponsesTest {
 
     TestInterface api =
         builder()
-            .decoder(new feign.optionals.OptionalDecoder(new JsonDecoder()))
+            .decoder(new OptionalDecoder(new JsonDecoder()))
             .retryer(Retryer.NEVER_RETRY)
             .target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -201,6 +360,10 @@ class DecodeErrorResponsesTest {
     server.enqueue(json(304, ERROR_BODY));
 
     assertThatExceptionOfType(FeignException.class).isThrownBy(() -> api(builder()).get());
+  }
+
+  private static String largeErrorBody() {
+    return "{\"message\":\"" + "x".repeat(9000) + "\",\"errorCode\":42}";
   }
 
   /** Records the status the decoder was handed. */
