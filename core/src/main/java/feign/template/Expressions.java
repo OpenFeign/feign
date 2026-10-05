@@ -17,6 +17,10 @@ package feign.template;
 
 import feign.Param.Expander;
 import feign.Util;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -243,45 +247,28 @@ public final class Expressions {
 
       for (Entry<String, ?> entry : values.entrySet()) {
         String name = this.encode(entry.getKey());
-        Object raw = entry.getValue();
-        if (raw == null) {
-          /* an undefined value is skipped, like a null element of an iterable */
-          continue;
-        }
-        if (raw instanceof Iterable) {
-          this.appendNamedValues(result, name, (Iterable<?>) raw);
-        } else if (raw.getClass().isArray()) {
-          this.appendArrayValues(result, name, raw);
-        } else {
-          this.appendNamedValue(result, name, raw.toString());
+        for (Object value : valuesOf(entry.getValue())) {
+          if (value != null) {
+            this.appendNamedValue(result, name, value.toString());
+          }
         }
       }
       return result.toString();
     }
 
-    /**
-     * A collection stored as a map value expands like a named iterable: each element is {@code
-     * name=value}, joined by this expression's separator. Encoding {@link Object#toString()} would
-     * put a bracketed list into the URL.
-     */
-    private void appendNamedValues(StringBuilder result, String encodedName, Iterable<?> values) {
-      for (Object value : values) {
-        if (value == null) {
-          continue;
-        }
-        this.appendNamedValue(result, encodedName, value.toString());
+    private static Iterable<?> valuesOf(Object raw) {
+      if (raw instanceof Iterable) {
+        return (Iterable<?>) raw;
       }
-    }
-
-    private void appendArrayValues(StringBuilder result, String encodedName, Object array) {
-      int length = java.lang.reflect.Array.getLength(array);
-      for (int i = 0; i < length; i++) {
-        Object value = java.lang.reflect.Array.get(array, i);
-        if (value == null) {
-          continue;
+      if (raw != null && raw.getClass().isArray()) {
+        int length = Array.getLength(raw);
+        List<Object> values = new ArrayList<>(length);
+        for (int i = 0; i < length; i++) {
+          values.add(Array.get(raw, i));
         }
-        this.appendNamedValue(result, encodedName, value.toString());
+        return values;
       }
+      return Collections.singletonList(raw);
     }
 
     private void appendNamedValue(StringBuilder result, String encodedName, String value) {

@@ -409,6 +409,16 @@ class UriTemplateTest {
   }
 
   @Test
+  void pathStyleExpansionOfAMapWithOnlyNullValuesLeavesTheSeparator() {
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("name", null);
+
+    UriTemplate uriTemplate = UriTemplate.create("/server{;parameters}", Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
+    assertThat(expanded).isEqualTo("/server;");
+  }
+
+  @Test
   void simpleExpansionSkipsNullValuesInsideAMap() {
     Map<String, Object> parameters = new LinkedHashMap<>();
     parameters.put("account", "a");
