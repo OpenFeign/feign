@@ -394,4 +394,38 @@ class UriTemplateTest {
     String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
     assertThat(expanded).isEqualToIgnoringCase(";half=50%25;half=a%20b");
   }
+
+  @Test
+  void pathStyleExpansionSkipsNullValuesInsideAMap() {
+    String template = "/server{;parameters}";
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("account", "a");
+    parameters.put("name", null);
+    parameters.put("size", "L");
+
+    UriTemplate uriTemplate = UriTemplate.create(template, Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
+    assertThat(expanded).isEqualToIgnoringCase("/server;account=a;size=L");
+  }
+
+  @Test
+  void pathStyleExpansionOfAMapWithOnlyNullValuesLeavesTheSeparator() {
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("name", null);
+
+    UriTemplate uriTemplate = UriTemplate.create("/server{;parameters}", Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
+    assertThat(expanded).isEqualTo("/server;");
+  }
+
+  @Test
+  void simpleExpansionSkipsNullValuesInsideAMap() {
+    Map<String, Object> parameters = new LinkedHashMap<>();
+    parameters.put("account", "a");
+    parameters.put("name", null);
+
+    UriTemplate uriTemplate = UriTemplate.create("/server/{parameters}", Util.UTF_8);
+    String expanded = uriTemplate.expand(Collections.singletonMap("parameters", parameters));
+    assertThat(expanded).isEqualToIgnoringCase("/server/account=a");
+  }
 }
