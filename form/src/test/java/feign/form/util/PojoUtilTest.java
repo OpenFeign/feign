@@ -30,27 +30,27 @@ class PojoUtilTest {
 
   @Test
   void shouldIdentifyUserPojoFromObject() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
 
     assertThat(PojoUtil.isUserPojo(pojo)).isTrue();
   }
 
   @Test
-  void shouldNotIdentifyJavaObjectAsUserPojo() {
-    var object = new HashMap<String, Object>();
+  void shouldNotIdentifyJavaObjectAsFormFieldsPojo() {
+    var javaHashMap = new HashMap<String, Object>();
 
-    assertThat(PojoUtil.isUserPojo(object)).isFalse();
+    assertThat(PojoUtil.isUserPojo(javaHashMap)).isFalse();
   }
 
   @Test
   void shouldIdentifyUserPojoFromClassType() {
-    Type type = UserPojo.class;
+    Type type = FormFieldsPojo.class;
 
     assertThat(PojoUtil.isUserPojo(type)).isTrue();
   }
 
   @Test
-  void shouldNotIdentifyJavaClassAsUserPojo() {
+  void shouldNotIdentifyJavaClassAsFormFieldsPojo() {
     Type type = HashMap.class;
 
     assertThat(PojoUtil.isUserPojo(type)).isFalse();
@@ -58,7 +58,7 @@ class PojoUtilTest {
 
   @Test
   void shouldConvertPojoFieldsToMap() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
     pojo.name = "Eduardo";
     pojo.age = 30;
 
@@ -68,7 +68,7 @@ class PojoUtilTest {
 
   @Test
   void shouldIgnoreNullFields() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
     pojo.name = "Eduardo";
 
     assertThat(PojoUtil.toMap(pojo)).containsExactly(Map.entry("custom_name", "Eduardo"));
@@ -76,7 +76,7 @@ class PojoUtilTest {
 
   @Test
   void shouldIgnoreStaticFields() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
     pojo.name = "Eduardo";
 
     assertThat(PojoUtil.toMap(pojo)).doesNotContainKey("staticField");
@@ -84,7 +84,7 @@ class PojoUtilTest {
 
   @Test
   void shouldIgnoreFinalFields() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
     pojo.name = "Eduardo";
 
     assertThat(PojoUtil.toMap(pojo)).doesNotContainKey("finalField");
@@ -92,7 +92,7 @@ class PojoUtilTest {
 
   @Test
   void shouldUseFormPropertyAsMapKey() {
-    var pojo = new UserPojo();
+    var pojo = new FormFieldsPojo();
     pojo.name = "Eduardo";
 
     assertThat(PojoUtil.toMap(pojo))
@@ -123,83 +123,86 @@ class PojoUtilTest {
   }
 
   @Test
-  void shouldNotIdentifyParameterizedMapAsUserPojo() {
+  void shouldNotIdentifyParameterizedMapAsFormFieldsPojo() {
     Type type = new TypeReference<Map<String, String>>() {}.getType();
 
     assertThat(PojoUtil.isUserPojo(type)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyParameterizedListAsUserPojo() {
+  void shouldNotIdentifyParameterizedListAsFormFieldsPojo() {
     Type type = new TypeReference<List<String>>() {}.getType();
 
     assertThat(PojoUtil.isUserPojo(type)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyParameterizedHashMapAsUserPojo() {
+  void shouldNotIdentifyParameterizedHashMapAsFormFieldsPojo() {
     Type type = new TypeReference<HashMap<String, String>>() {}.getType();
 
     assertThat(PojoUtil.isUserPojo(type)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyParameterizedCollectionAsUserPojo() {
+  void shouldNotIdentifyParameterizedCollectionAsFormFieldsPojo() {
     Type type = new TypeReference<Collection<String>>() {}.getType();
 
     assertThat(PojoUtil.isUserPojo(type)).isFalse();
   }
 
   @Test
-  void shouldIdentifyParameterizedUserPojoAsUserPojo() {
-    Type type = new TypeReference<UserPojo<String>>() {}.getType();
+  void shouldIdentifyParameterizedUserPojoAsFormFieldsPojo() {
+    Type type = new TypeReference<GenericPojo<String>>() {}.getType();
 
     assertThat(PojoUtil.isUserPojo(type)).isTrue();
   }
 
   @Test
-  void shouldNotIdentifyTypeVariableAsUserPojo() {
-    Type type = UserPojo.class.getTypeParameters()[0];
+  void shouldNotIdentifyTypeVariableAsFormFieldsPojo() {
+    Type typeVariable = GenericPojo.class.getTypeParameters()[0];
 
-    assertThat(PojoUtil.isUserPojo(type)).isFalse();
+    assertThat(PojoUtil.isUserPojo(typeVariable)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyWildcardTypeAsUserPojo() {
-    Type type = new TypeReference<List<? extends UserPojo>>() {}.getType();
+  void shouldIdentifyWildcardBoundedByUserPojoAsFormFieldsPojo() {
+    Type parameterizedListType = new TypeReference<List<? extends FormFieldsPojo>>() {}.getType();
 
-    Type wildcard = ((ParameterizedType) type).getActualTypeArguments()[0];
+    Type wildcard = ((ParameterizedType) parameterizedListType).getActualTypeArguments()[0];
 
-    assertThat(PojoUtil.isUserPojo(wildcard)).isFalse();
+    assertThat(PojoUtil.isUserPojo(wildcard)).isTrue();
   }
 
   @Test
-  void shouldNotIdentifyPrimitiveAsUserPojo() {
+  void shouldNotIdentifyPrimitiveAsFormFieldsPojo() {
     assertThat(PojoUtil.isUserPojo(int.class)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyArrayAsUserPojo() {
+  void shouldNotIdentifyByteArrayAsFormFieldsPojo() {
     assertThat(PojoUtil.isUserPojo(byte[].class)).isFalse();
   }
 
   @Test
-  void shouldNotIdentifyObjectArrayAsUserPojo() {
+  void shouldNotIdentifyObjectArrayAsFormFieldsPojo() {
     assertThat(PojoUtil.isUserPojo(String[].class)).isFalse();
   }
 
-  static class UserPojo<T> {
+  static class FormFieldsPojo {
 
     @FormProperty("custom_name")
     private String name;
 
     private Integer age;
 
-    private T value;
-
     private static String staticField;
 
     private final String finalField = "ignored";
+  }
+
+  static class GenericPojo<T> {
+
+    private T typeVariableField;
   }
 
   private static class PrivateFieldsPojo {
@@ -223,21 +226,22 @@ class PojoUtilTest {
 
   static class EmptyPojo {
 
-    private static final String STATIC = "ignored";
+    private static final String IGNORED_STATIC_FIELD = "ignored";
 
-    private final String FINAL = "ignored";
+    private final String ignoredFinalField = "ignored";
   }
 
   private abstract static class TypeReference<T> {
 
-    private final Type type;
+    private final Type capturedType;
 
     protected TypeReference() {
-      type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+      capturedType =
+          ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
     Type getType() {
-      return type;
+      return capturedType;
     }
   }
 }

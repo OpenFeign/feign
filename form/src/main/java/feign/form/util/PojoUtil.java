@@ -19,9 +19,9 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.Types;
 import feign.form.FormProperty;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.rmi.UnexpectedException;
 import java.security.PrivilegedAction;
@@ -46,26 +46,8 @@ public final class PojoUtil {
   }
 
   public static boolean isUserPojo(@NonNull Type type) {
-    if (type instanceof Class<?>) {
-      return isUserPojo((Class<?>) type);
-    }
-
-    if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      return isUserPojo(parameterizedType.getRawType());
-    }
-
-    return false;
-  }
-
-  private static boolean isUserPojo(@NonNull Class<?> type) {
-    if (type.isPrimitive() || type.isArray()) {
-      return false;
-    }
-
-    Package pkg = type.getPackage();
-
-    return pkg != null && !pkg.getName().startsWith("java.");
+    val raw = Types.getRawType(type);
+    return !raw.isPrimitive() && !raw.isArray() && !raw.getName().startsWith("java.");
   }
 
   @SneakyThrows

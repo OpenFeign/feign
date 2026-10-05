@@ -26,12 +26,14 @@ import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.Response;
 import feign.codec.EncodeException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(webEnvironment = DEFINED_PORT, classes = Server.class)
@@ -39,12 +41,16 @@ class WildCardMapTest {
 
   private static FormUrlEncodedApi api;
 
+  @TempDir static Path logDir;
+
   @BeforeAll
   static void configureClient() {
+    var logFile = logDir.resolve("log.txt").toString();
+
     api =
         Feign.builder()
             .encoder(new FormEncoder())
-            .logger(new JavaLogger(WildCardMapTest.class))
+            .logger(new JavaLogger(WildCardMapTest.class).appendToFile(logFile))
             .logLevel(FULL)
             .target(FormUrlEncodedApi.class, "http://localhost:8080");
   }
@@ -82,22 +88,25 @@ class WildCardMapTest {
   }
 
   @Test
-  void testMapStringString() {
-    Map<String, String> param = new HashMap<>();
+  void testMapStringStringIsFormUrlEncoded() {
+    Map<String, String> formFields = new HashMap<>();
 
-    param.put("key1", "1");
-    param.put("key2", "1");
+    formFields.put("key1", "1");
+    formFields.put("key2", "1");
 
-    assertThat(api.mapStringString(param)).isNotNull().extracting(Response::status).isEqualTo(200);
+    assertThat(api.postFormFields(formFields))
+        .isNotNull()
+        .extracting(Response::status)
+        .isEqualTo(200);
   }
 
   @Test
   void testListIsDelegatedToDefaultEncoder() {
-    List<String> param = new ArrayList<>();
-    param.add("key1");
-    param.add("key2");
+    List<String> keys = new ArrayList<>();
+    keys.add("key1");
+    keys.add("key2");
 
-    assertThatThrownBy(() -> api.list(param))
+    assertThatThrownBy(() -> api.postFormList(keys))
         .isInstanceOf(EncodeException.class)
         .hasMessageContaining("ArrayList is not a type supported by this encoder.");
   }
@@ -110,10 +119,10 @@ class WildCardMapTest {
 
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    Response mapStringString(Map<String, String> param);
+    Response postFormFields(Map<String, String> formFields);
 
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
-    Response list(List<String> param);
+    Response postFormList(List<String> keys);
   }
 }
