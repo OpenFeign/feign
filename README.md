@@ -1,3 +1,5 @@
+<p align="center"><img src="src/docs/feign-logo.svg" alt="Feign logo" width="160"></p>
+
 # Feign simplifies the process of writing Java HTTP clients
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
