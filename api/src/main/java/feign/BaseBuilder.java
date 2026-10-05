@@ -58,6 +58,7 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   protected Options options = new Options();
   protected InvocationHandlerFactory invocationHandlerFactory;
   protected boolean dismiss404;
+  protected boolean decodeErrorResponses;
   protected ExceptionPropagationPolicy propagationPolicy = NONE;
   protected List<Capability> capabilities = new ArrayList<>();
 
@@ -247,6 +248,52 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
   @Deprecated
   public B decode404() {
     this.dismiss404 = true;
+    return thisB();
+  }
+
+  /**
+   * Returns an error response as a value instead of throwing, when the upstream describes the
+   * failure in the response body rather than by status alone.
+   *
+   * <pre>
+   * interface MyApi {
+   *   &#064;RequestLine("POST /users")
+   *   BaseResponse createUser(NewUser user);
+   * }
+   *
+   * Feign.builder()
+   *      .decoder(new JacksonDecoder())
+   *      .decodeErrorResponses()
+   *      .target(MyApi.class, "https://api.example.com");
+   * </pre>
+   *
+   * <p>The flag engages only when <em>every</em> one of the following holds; in any other case the
+   * response is thrown exactly as it is today:
+   *
+   * <ul>
+   *   <li>the response status is 400 or above, other than 404. 3xx is left to {@link
+   *       RedirectionInterceptor}; 404 keeps its own switch, {@link #dismiss404()};
+   *   <li>the method returns a value. {@code void} methods always throw;
+   *   <li>the response has a body of 1 to 8192 bytes. A missing, empty or larger body is thrown, so
+   *       a bodiless {@code 401} still fails as {@link FeignException.Unauthorized};
+   *   <li>the {@link #decoder(Decoder) decoder} accepts the response, checked via {@link
+   *       feign.codec.PredicatedDecoder#canDecode}, so a decoder that declares itself as JSON will
+   *       not be handed an HTML error page from a proxy. A decoder that is not a {@code
+   *       PredicatedDecoder} declares nothing, so this check cannot be made and is skipped;
+   *   <li>the {@link #errorDecoder(ErrorDecoder) error decoder} did not classify the response as
+   *       {@link RetryableException retryable}. Retryable failures are thrown as before, so {@link
+   *       Retryer} keeps working;
+   *   <li>the body actually decodes. If it does not, the error decoder's exception is thrown, with
+   *       the decode failure attached as {@linkplain Throwable#addSuppressed suppressed}.
+   * </ul>
+   *
+   * <p>The response reaches the decoder untouched, so the status it sees is the one the server
+   * sent. With the default decoder and a {@code String} return type, the error body is returned as
+   * the string.
+   */
+  @Experimental
+  public B decodeErrorResponses() {
+    this.decodeErrorResponses = true;
     return thisB();
   }
 

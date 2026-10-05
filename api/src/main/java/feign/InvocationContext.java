@@ -21,7 +21,12 @@ import static feign.Util.ensureClosed;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.ErrorDecoder;
+import feign.codec.PredicatedDecoder;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.lang.reflect.Type;
 
 public class InvocationContext {
@@ -32,6 +37,7 @@ public class InvocationContext {
   private final boolean dismiss404;
   private final boolean closeAfterDecode;
   private final boolean decodeVoid;
+  private final boolean decodeErrorResponses;
   private final Response response;
   private final Type returnType;
 
@@ -44,12 +50,35 @@ public class InvocationContext {
       boolean decodeVoid,
       Response response,
       Type returnType) {
+    this(
+        configKey,
+        decoder,
+        errorDecoder,
+        dismiss404,
+        closeAfterDecode,
+        decodeVoid,
+        false,
+        response,
+        returnType);
+  }
+
+  InvocationContext(
+      String configKey,
+      Decoder decoder,
+      ErrorDecoder errorDecoder,
+      boolean dismiss404,
+      boolean closeAfterDecode,
+      boolean decodeVoid,
+      boolean decodeErrorResponses,
+      Response response,
+      Type returnType) {
     this.configKey = configKey;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
     this.dismiss404 = dismiss404;
     this.closeAfterDecode = closeAfterDecode;
     this.decodeVoid = decodeVoid;
+    this.decodeErrorResponses = decodeErrorResponses;
     this.response = response;
     this.returnType = returnType;
   }
@@ -71,13 +100,27 @@ public class InvocationContext {
       return disconnectResponseBodyIfNeeded(response);
     }
 
+    Response response = this.response;
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
               || (response.status() == 404 && dismiss404 && !isVoidType(returnType));
 
       if (!shouldDecodeResponseBody) {
-        throw decodeError(configKey, response);
+        if (!shouldDecodeErrorResponseBody(response)) {
+          throw decodeError(configKey, response);
+        }
+
+        response = bufferBodyWithinLimit(response);
+        if (!isBufferedAndNonEmpty(response.body())) {
+          throw decodeError(configKey, response);
+        }
+        Exception error = errorDecoder.decode(configKey, response);
+        if (error instanceof RetryableException) {
+          ensureClosed(response.body());
+          throw error;
+        }
+        return decodeErrorResponseBody(response, error);
       }
 
       if (isVoidType(returnType) && !decodeVoid) {
@@ -97,6 +140,69 @@ public class InvocationContext {
         ensureClosed(response.body());
       }
     }
+  }
+
+  private boolean shouldDecodeErrorResponseBody(Response response) {
+    if (!decodeErrorResponses
+        || response.status() < 400
+        || response.status() == 404
+        || response.body() == null
+        || isVoidType(returnType)) {
+      return false;
+    }
+    return !(decoder instanceof PredicatedDecoder)
+        || ((PredicatedDecoder) decoder).canDecode(response, returnType);
+  }
+
+  private Object decodeErrorResponseBody(Response response, Exception error) throws Exception {
+    Class<?> rawType = Types.getRawType(returnType);
+    try {
+      if (TypedResponse.class.isAssignableFrom(rawType)) {
+        Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+        return TypedResponse.builder(response).body(decode(response, bodyType)).build();
+      }
+      return decode(response, returnType);
+    } catch (RuntimeException e) {
+      if (error == null) {
+        throw e;
+      }
+      error.addSuppressed(e);
+      throw error;
+    }
+  }
+
+  private static boolean isBufferedAndNonEmpty(Response.Body body) {
+    return body.isRepeatable()
+        && body.length() != null
+        && body.length() > 0
+        && body.length() <= MAX_RESPONSE_BUFFER_SIZE;
+  }
+
+  private static Response bufferBodyWithinLimit(Response response) throws IOException {
+    Integer length = response.body().length();
+    if (length != null && length > MAX_RESPONSE_BUFFER_SIZE) {
+      return response;
+    }
+    InputStream stream = response.body().asInputStream();
+    byte[] head = readAtMost(stream, (int) MAX_RESPONSE_BUFFER_SIZE + 1);
+    if (head.length > MAX_RESPONSE_BUFFER_SIZE) {
+      return response.toBuilder()
+          .body(new SequenceInputStream(new ByteArrayInputStream(head), stream), null)
+          .build();
+    }
+    ensureClosed(response.body());
+    return response.toBuilder().body(head).build();
+  }
+
+  private static byte[] readAtMost(InputStream stream, int limit) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    byte[] chunk = new byte[1024];
+    int read;
+    while (out.size() < limit
+        && (read = stream.read(chunk, 0, Math.min(chunk.length, limit - out.size()))) != -1) {
+      out.write(chunk, 0, read);
+    }
+    return out.toByteArray();
   }
 
   private static Response disconnectResponseBodyIfNeeded(Response response) throws IOException {
