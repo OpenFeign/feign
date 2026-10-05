@@ -18,11 +18,11 @@ package feign;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.Test;
@@ -34,114 +34,102 @@ class CancellableFutureTest {
     CompletableFuture<String> get();
   }
 
-  /**
-   * cancel() arrives BEFORE setInner() is called.
-   *
-   * <p>The AsyncClient returns immediately with a pending CompletableFuture so that api.get()
-   * returns the CancellableFuture to the caller without blocking. The caller then cancels it before
-   * the client future is completed. When the client future eventually completes, setInner() must
-   * detect isCancelled() and immediately forward cancellation to the newly registered inner future.
-   */
+  private final List<CompletableFuture<Response>> clientCalls = new CopyOnWriteArrayList<>();
+
+  private final AsyncClient<Void> pendingClient =
+      (request, options, requestContext) -> {
+        CompletableFuture<Response> call = new CompletableFuture<>();
+        clientCalls.add(call);
+        return call;
+      };
+
   @Test
-  void cancelBeforeSetInnerRacesCorrectly() throws Exception {
-    // execute() returns this immediately — no blocking inside execute()
-    CompletableFuture<Response> clientFuture = new CompletableFuture<>();
+  void cancelDuringRetryDecisionStopsTheRetryChain() throws Exception {
+    CountDownLatch retryDecisionStarted = new CountDownLatch(1);
+    CountDownLatch outerCancelled = new CountDownLatch(1);
+    Retryer pausingOnFirstRetry =
+        new AlwaysRetry() {
+          private boolean paused;
 
-    AsyncClient<Void> client = (request, options, ctx) -> clientFuture;
-
-    Api api = AsyncFeign.<Void>builder().client(client).target(Api.class, "http://localhost:0");
-
-    // api.get() returns immediately because execute() returns immediately
-    CompletableFuture<String> result = api.get();
-
-    // Cancel BEFORE clientFuture resolves — inner is not yet set on CancellableFuture
-    result.cancel(true);
-
-    // Complete the client future now. This triggers the whenComplete → setInner() path.
-    // setInner() must see isCancelled() == true and cancel the newly registered inner future.
-    clientFuture.complete(
-        Response.builder()
-            .status(200)
-            .reason("OK")
-            .request(
-                Request.create(
-                    Request.HttpMethod.GET,
-                    "http://localhost:0",
-                    Collections.emptyMap(),
-                    Request.Body.empty(),
-                    null))
-            .build());
-
-    assertThat(result).isCancelled();
-  }
-
-  /**
-   * cancel() arrives AFTER setInner() has already been called (the retry path).
-   *
-   * <p>The first execute() fails immediately to trigger a retry. The retry execute() returns a
-   * pending CompletableFuture immediately (no blocking inside execute()) and signals a latch so the
-   * caller knows setInner() has been called. The caller then cancels — cancel() must read inner and
-   * propagate to the retry future.
-   */
-  @Test
-  void cancelAfterSetInnerRacesCorrectly() throws Exception {
-    AtomicInteger callCount = new AtomicInteger();
-    CountDownLatch retryStarted = new CountDownLatch(1);
-    // Holds the raw client future from the retry execute() call
-    CompletableFuture<Response>[] retryFutureHolder = new CompletableFuture[1];
-
-    AsyncClient<Void> client =
-        (request, options, ctx) -> {
-          int n = callCount.incrementAndGet();
-          if (n == 1) {
-            // First call: fail immediately to trigger the retryer
-            CompletableFuture<Response> failed = new CompletableFuture<>();
-            failed.completeExceptionally(new IOException("transient"));
-            return failed;
+          @Override
+          public void continueOrPropagate(RetryableException e) {
+            if (!paused) {
+              paused = true;
+              retryDecisionStarted.countDown();
+              awaitUninterruptibly(outerCancelled);
+            }
           }
-          // Retry call: return a pending future immediately — execute() does NOT block.
-          // The latch is used only to tell the caller that setInner() has been called.
-          CompletableFuture<Response> retryFuture = new CompletableFuture<>();
-          retryFutureHolder[0] = retryFuture;
-          retryStarted.countDown();
-          return retryFuture;
         };
-
     Api api =
         AsyncFeign.<Void>builder()
-            .client(client)
-            .retryer(new Retryer.Default(0, 0, 2))
+            .client(pendingClient)
+            .retryer(pausingOnFirstRetry)
             .target(Api.class, "http://localhost:0");
 
     CompletableFuture<String> result = api.get();
+    Thread firstCallFailure =
+        new Thread(() -> clientCalls.get(0).completeExceptionally(new IOException("first")));
+    firstCallFailure.start();
+    assertThat(retryDecisionStarted.await(5, TimeUnit.SECONDS)).isTrue();
 
-    // Wait until the retry execute() returned and setInner() has been called
-    assertThat(retryStarted.await(2, TimeUnit.SECONDS)).isTrue();
-
-    // cancel() now arrives after setInner() — inner is already set to retryFuture
     result.cancel(true);
+    outerCancelled.countDown();
+    firstCallFailure.join(TimeUnit.SECONDS.toMillis(5));
+    clientCalls.get(1).completeExceptionally(new IOException("second"));
 
     assertThat(result).isCancelled();
-
-    // Verify the pipeTo guard: even if the raw retry client future eventually completes,
-    // it must NOT overwrite the cancellation on result. setInner() registered a whenComplete
-    // that calls pipeTo(result), which checks isDone() before completing — so result must
-    // remain cancelled after the raw client future resolves.
-    CompletableFuture<Response> retryFuture = retryFutureHolder[0];
-    assertThat(retryFuture).isNotNull();
-    retryFuture.cancel(false); // let the retry future give up
-    assertThat(result).isCancelled(); // must still be cancelled, not overwritten
+    assertThat(clientCalls).hasSize(2);
   }
 
-  /** Normal completion (no cancellation) must not be disrupted by the volatile field change. */
+  @Test
+  void cancelAfterRetryStartedStopsTheRetryChain() {
+    Api api =
+        AsyncFeign.<Void>builder()
+            .client(pendingClient)
+            .retryer(new AlwaysRetry())
+            .target(Api.class, "http://localhost:0");
+
+    CompletableFuture<String> result = api.get();
+    clientCalls.get(0).completeExceptionally(new IOException("first"));
+    assertThat(clientCalls).hasSize(2);
+
+    result.cancel(true);
+    clientCalls.get(1).completeExceptionally(new IOException("second"));
+
+    assertThat(result).isCancelled();
+    assertThat(clientCalls).hasSize(2);
+  }
+
   @Test
   void normalCompletionIsNotAffected() throws Exception {
     MockWebServer server = new MockWebServer();
-    server.enqueue(new MockResponse().setBody("hello"));
+    try {
+      server.enqueue(new MockResponse().setBody("hello"));
 
-    Api api = AsyncFeign.<Void>builder().target(Api.class, server.url("/").toString());
+      Api api = AsyncFeign.<Void>builder().target(Api.class, server.url("/").toString());
 
-    assertThat(api.get().get(2, TimeUnit.SECONDS)).isEqualTo("hello");
-    server.shutdown();
+      assertThat(api.get().get(2, TimeUnit.SECONDS)).isEqualTo("hello");
+    } finally {
+      server.shutdown();
+    }
+  }
+
+  private static void awaitUninterruptibly(CountDownLatch latch) {
+    try {
+      latch.await(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private static class AlwaysRetry implements Retryer {
+
+    @Override
+    public void continueOrPropagate(RetryableException e) {}
+
+    @Override
+    public Retryer clone() {
+      return this;
+    }
   }
 }
