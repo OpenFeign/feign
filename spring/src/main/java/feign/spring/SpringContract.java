@@ -22,7 +22,6 @@ import feign.MethodMetadata;
 import feign.Request;
 import feign.Util;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -193,9 +192,8 @@ public class SpringContract extends DeclarativeContract {
     };
   }
 
-  private boolean isUserPojo(Type type) {
-    String typeName = type.toString();
-    return !typeName.startsWith("class java.");
+  private boolean isUserPojo(Class<?> type) {
+    return !type.isPrimitive() && !type.isArray() && !type.getName().startsWith("java.");
   }
 
   private void appendMappings(MethodMetadata data, String[] mappings) {
