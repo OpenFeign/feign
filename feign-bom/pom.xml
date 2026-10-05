@@ -249,16 +249,6 @@
         <artifactId>feign-vertx</artifactId>
         <version>13.17-SNAPSHOT</version>
       </dependency>
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-vertx4-test</artifactId>
-        <version>13.17-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-vertx5-test</artifactId>
-        <version>13.17-SNAPSHOT</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
