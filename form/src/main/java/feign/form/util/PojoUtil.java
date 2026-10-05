@@ -19,6 +19,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 import static lombok.AccessLevel.PRIVATE;
 
+import feign.Types;
 import feign.form.FormProperty;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
@@ -41,14 +42,12 @@ import lombok.val;
 public final class PojoUtil {
 
   public static boolean isUserPojo(@NonNull Object object) {
-    val type = object.getClass();
-    val packageName = type.getPackage().getName();
-    return !packageName.startsWith("java.");
+    return isUserPojo(object.getClass());
   }
 
   public static boolean isUserPojo(@NonNull Type type) {
-    val typeName = type.toString();
-    return !typeName.startsWith("class java.");
+    val raw = Types.getRawType(type);
+    return !raw.isPrimitive() && !raw.isArray() && !raw.getName().startsWith("java.");
   }
 
   @SneakyThrows
