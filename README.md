@@ -3,8 +3,8 @@
 # Feign simplifies the process of writing Java HTTP clients
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![CI](https://github.com/OpenFeign/feign/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/OpenFeign/feign/actions/workflows/build.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/badge.png)](https://search.maven.org/artifact/io.github.openfeign/feign-core/)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/OpenFeign/feign/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/OpenFeign/feign/tree/master)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.openfeign/feign-core)](https://central.sonatype.com/artifact/io.github.openfeign/feign-core)
 
 Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
 
@@ -1556,10 +1556,6 @@ The Bill Of Material is a special POM file that groups dependency versions that 
 </project>
 ```
 # Form Encoder
-
-[![build_status](https://travis-ci.org/OpenFeign/feign-form.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-form)
-[![maven_central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form)
-[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This module adds support for encoding **application/x-www-form-urlencoded** and **multipart/form-data** forms.
 
