@@ -19,11 +19,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="323" height="271" viewBox="0 0 1292 1084">
 <defs>
 <linearGradient id="swirl" gradientUnits="userSpaceOnUse" x1="12920" y1="10840" x2="0" y2="0">
-<stop offset="0" stop-color="#5fd3f6"/>
-<stop offset="0.45" stop-color="#1f93e2"/>
-<stop offset="1" stop-color="#0848a6"/>
+<stop offset="0" stop-color="#47c8f5"/>
+<stop offset="0.45" stop-color="#1a86e0"/>
+<stop offset="1" stop-color="#0a3f9e"/>
 </linearGradient>
+<filter id="tube" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="22" result="height"/>
+<feDiffuseLighting in="height" surfaceScale="6" diffuseConstant="1" lighting-color="#ffffff" result="diffuse">
+<feDistantLight azimuth="235" elevation="48"/>
+</feDiffuseLighting>
+<feSpecularLighting in="height" surfaceScale="6" specularConstant="0.7" specularExponent="30" lighting-color="#ffffff" result="specular">
+<feDistantLight azimuth="235" elevation="55"/>
+</feSpecularLighting>
+<feComposite in="SourceGraphic" in2="diffuse" operator="arithmetic" k1="0.3" k2="0.78" k3="0" k4="0" result="shaded"/>
+<feComposite in="specular" in2="SourceAlpha" operator="in" result="shine"/>
+<feComposite in="shaded" in2="shine" operator="arithmetic" k1="0" k2="1" k3="0.28" k4="0" result="lit"/>
+<feComposite in="lit" in2="SourceAlpha" operator="in"/>
+</filter>
 </defs>
+<g filter="url(#tube)">
 <g transform="translate(0.000000,1084.000000) scale(0.100000,-0.100000)"
 fill="url(#swirl)" stroke="none">
 <path d="M4925 10681 c-218 -5 -277 -9 -305 -22 -19 -9 -82 -22 -140 -29 -58
@@ -194,5 +208,6 @@ fill="url(#swirl)" stroke="none">
 29 11 76 29 121 16 40 33 91 36 113 4 22 18 78 31 124 13 46 24 95 24 110 0
 14 8 67 19 116 11 50 27 133 37 185 9 52 26 124 38 160 34 105 33 1416 -2
 1501 -31 78 -76 111 -124 91z"/>
+</g>
 </g>
 </svg>
