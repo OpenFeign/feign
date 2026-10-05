@@ -23,7 +23,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.15-SNAPSHOT</version>
+    <version>13.16-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-form</artifactId>
@@ -117,8 +117,7 @@
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <instructions>
-            <Export-Package>feign.form</Export-Package>
-            <Export-Package>feign.form.multipart</Export-Package>
+            <Export-Package>feign.form,feign.form.*</Export-Package>
           </instructions>
         </configuration>
       </plugin>
