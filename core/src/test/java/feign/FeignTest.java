@@ -1385,6 +1385,51 @@ public class FeignTest {
   }
 
   @Test
+  void closeableMethodWithDismiss404ModeThatThrowsClosesBody() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").code(404).build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .dismiss404()
+            .decoder(
+                (response, _) -> {
+                  Assertions.assertThat(response.status()).isEqualTo(404);
+                  throw new NoSuchElementException();
+                })
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    DecodeException exception =
+        assertThatExceptionOfType(DecodeException.class).isThrownBy(() -> api.post()).actual();
+    assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closeableMethodWithDismiss404ModeThatSucceedsDoesNotCloseBody() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").code(404).build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn("Decoded!");
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .dismiss404()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.post();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
   void closableMethodsDoNotCloseBody() throws Exception {
 
     server.enqueue(new MockResponse.Builder().body("foo").build());
