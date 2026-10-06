@@ -445,13 +445,13 @@ interface ExampleInterface {
   InputStream getLargeStream();
 
 }
-  
-LargeStreamTestInterface api = Feign.builder()
+
+ExampleInterface api = Feign.builder()
   .target(ExampleInterface.class, "http://localhost");
 
 try(InputStream is = api.getLargeStream()){ // Note that caller is responsible for closing the returned InputStream
   // work with the stream...
-} 
+}
 ```
 
 To support this change, a breaking change was made in how Feign automatically closes the underlying response body during response processing.

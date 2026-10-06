@@ -32,6 +32,24 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import feign.Feign.ResponseMappingDecoder;
+import feign.QueryMap.MapEncoder;
+import feign.Request.HttpMethod;
+import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.core.DefaultRetryer;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultEncoder;
+import feign.core.codec.DefaultErrorDecoder;
+import feign.core.codec.StringDecoder;
+import feign.core.querymap.BeanQueryMapEncoder;
+import feign.core.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -50,7 +68,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
-
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketEffect;
+import okio.Buffer;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
@@ -58,30 +79,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import feign.Feign.ResponseMappingDecoder;
-import feign.QueryMap.MapEncoder;
-import feign.Request.HttpMethod;
-import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.core.DefaultRetryer;
-import feign.core.codec.DefaultDecoder;
-import feign.core.codec.DefaultEncoder;
-import feign.core.codec.DefaultErrorDecoder;
-import feign.core.codec.StringDecoder;
-import feign.core.querymap.BeanQueryMapEncoder;
-import feign.core.querymap.FieldQueryMapEncoder;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.SocketEffect;
-import okio.Buffer;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -1329,7 +1326,7 @@ public class FeignTest {
 
     Decoder decoder = mock(Decoder.class);
     when(decoder.decode(any(), any())).thenReturn(new Object());
-    
+
     TestInterface api =
         new TestInterfaceBuilder()
             .doNotCloseAfterDecode()
@@ -1352,18 +1349,18 @@ public class FeignTest {
 
     Decoder decoder = mock(Decoder.class);
     when(decoder.decode(any(), any())).thenThrow(mock(DecodeException.class));
-    
+
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(decoder)
             .responseInterceptor(responseCapture)
             .target("http://localhost:" + server.getPort());
 
-    assertThrows(DecodeException.class, () -> api.getWithCloseableResponse() );
+    assertThrows(DecodeException.class, () -> api.getWithCloseableResponse());
 
     assertThat(responseCapture.isResponseBodyClosed()).isTrue();
   }
-  
+
   @Test
   void closableMethodsWithDecoderThatReturnsNullClosesBody() throws Exception {
 
@@ -1373,7 +1370,7 @@ public class FeignTest {
 
     Decoder decoder = mock(Decoder.class);
     when(decoder.decode(any(), any())).thenReturn(null);
-    
+
     TestInterface api =
         new TestInterfaceBuilder()
             .decoder(decoder)
@@ -1381,12 +1378,12 @@ public class FeignTest {
             .target("http://localhost:" + server.getPort());
 
     InputStream out = api.getWithCloseableResponse();
-    
+
     assertThat(out).isNull();
 
     assertThat(responseCapture.isResponseBodyClosed()).isTrue();
   }
-  
+
   @Test
   void closableMethodsDoNotCloseBody() throws Exception {
 
@@ -1718,6 +1715,8 @@ public class FeignTest {
         getResponseBody().asInputStream().read();
         return false;
       } catch (IOException e) {
+        // Note: we are unhappy about doing a text check on the exception message, but there is no
+        // dedicated exception in the JRE for "stream closed".
         if (!e.getMessage().contains("closed"))
           throw new RuntimeException(
               "Unexpected exception message during body closed check (expected message to contain 'closed')",

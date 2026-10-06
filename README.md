@@ -117,7 +117,11 @@ To handle large response bodies (instead of reading them into memory), Feign sup
 
 **Important:** The caller is responsible for closing the returned InputStream and Reader instance.
 
-Other custom `Decoder` implementations may also support streaming. As a general rule any Closable instance returned from a Feign target must be closed by the caller.
+Other custom `Decoder` implementations may also support streaming. As a general rule any Closeable instance returned from a Feign target must be closed by the caller.
+
+#### Impact of Logger Settings on Streaming Responses
+
+If Logger level is set to `Logger.Level.FULL`, the entire response is buffered, effectively disabling response streaming.
 
 ### Interface Annotations
 
