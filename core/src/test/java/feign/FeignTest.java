@@ -1327,11 +1327,14 @@ public class FeignTest {
 
     BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
 
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn(new Object());
+    
     TestInterface api =
         new TestInterfaceBuilder()
             .doNotCloseAfterDecode()
             .decodeVoid()
-            .decoder(mock(Decoder.class))
+            .decoder(decoder)
             .responseInterceptor(responseCapture)
             .target("http://localhost:" + server.getPort());
 
@@ -1393,7 +1396,6 @@ public class FeignTest {
 
     TestInterface api =
         new TestInterfaceBuilder()
-            .decoder(mock(Decoder.class))
             .responseInterceptor(responseCapture)
             .target("http://localhost:" + server.getPort());
 
