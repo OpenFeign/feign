@@ -24,29 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import feign.Feign.ResponseMappingDecoder;
-import feign.QueryMap.MapEncoder;
-import feign.Request.HttpMethod;
-import feign.Target.HardCodedTarget;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import feign.codec.EncodeException;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.core.DefaultRetryer;
-import feign.core.codec.DefaultDecoder;
-import feign.core.codec.DefaultEncoder;
-import feign.core.codec.DefaultErrorDecoder;
-import feign.core.codec.StringDecoder;
-import feign.core.querymap.BeanQueryMapEncoder;
-import feign.core.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -65,10 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicReference;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
-import mockwebserver3.SocketEffect;
-import okio.Buffer;
+
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.MapEntry;
 import org.assertj.core.util.Maps;
@@ -76,6 +58,30 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import feign.Feign.ResponseMappingDecoder;
+import feign.QueryMap.MapEncoder;
+import feign.Request.HttpMethod;
+import feign.Target.HardCodedTarget;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import feign.codec.EncodeException;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import feign.core.DefaultRetryer;
+import feign.core.codec.DefaultDecoder;
+import feign.core.codec.DefaultEncoder;
+import feign.core.codec.DefaultErrorDecoder;
+import feign.core.codec.StringDecoder;
+import feign.core.querymap.BeanQueryMapEncoder;
+import feign.core.querymap.FieldQueryMapEncoder;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.SocketEffect;
+import okio.Buffer;
 
 @SuppressWarnings("deprecation")
 public class FeignTest {
@@ -1334,6 +1340,50 @@ public class FeignTest {
     assertThat(responseCapture.isResponseBodyClosed()).isTrue();
   }
 
+  @Test
+  void closableMethodsThatThrowExceptionClosesBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenThrow(mock(DecodeException.class));
+    
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    assertThrows(DecodeException.class, () -> api.getWithCloseableResponse() );
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+  
+  @Test
+  void closableMethodsWithDecoderThatReturnsNullClosesBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn(null);
+    
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    InputStream out = api.getWithCloseableResponse();
+    
+    assertThat(out).isNull();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+  
   @Test
   void closableMethodsDoNotCloseBody() throws Exception {
 
