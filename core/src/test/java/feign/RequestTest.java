@@ -19,6 +19,8 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.Body;
+import feign.Request.HttpMethod;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 public class RequestTest {
@@ -33,5 +35,27 @@ public class RequestTest {
     assertThat(body.getEncoding()).hasValue(UTF_8);
     assertThat(body.isBinary()).isFalse();
     assertThat(body.asString()).isEqualTo(content);
+  }
+
+  @Test
+  void requestCreatedWithNullBodyReportsNoBody() {
+    Request request = requestWithoutBody();
+
+    assertThat(request.body()).isNull();
+    assertThat(request.charset()).isNull();
+    assertThat(request.isBinary()).isTrue();
+    assertThat(request.length()).isZero();
+  }
+
+  @Test
+  void requestWithoutBodyPrintsOnlyTheRequestLine() {
+    Request request = requestWithoutBody();
+
+    assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
+  }
+
+  private static Request requestWithoutBody() {
+    return Request.create(
+        HttpMethod.GET, "http://example.com", Collections.emptyMap(), (Body) null, null);
   }
 }

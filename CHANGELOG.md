@@ -1,3 +1,10 @@
+### Version 13.17
+
+* `Request` accepts a `null` `Request.Body` as "no body" instead of throwing a
+  `NullPointerException` from `body()`, `charset()`, `isBinary()` and `length()`. A body-less request
+  reports a `null` body and charset, is binary, has length 0, and `toString()` prints the request line
+  and headers without a body (#1210).
+
 ### Version 13.16
 
 * Path-style expansion repeats the entry name for each collection or array value inside a map,
