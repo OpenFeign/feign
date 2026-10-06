@@ -6,6 +6,18 @@
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 
+### Version 13.16
+
+* Path-style expansion repeats the entry name for each collection or array value inside a map,
+  instead of encoding `Object.toString()`. A list value expands as `;colours=red;colours=blue`
+  rather than a bracketed list, and an array no longer puts its identity hash in the URL (#3584).
+* Simple and path-style expansion skip map entries where the value is `null`. This works the same
+  way as skipping a `null` element in an iterable. It no longer throws a `NullPointerException`.
+* New experimental `decodeErrorResponses()` builder option decodes a 4xx/5xx response body into the
+  method's return type instead of throwing, for APIs that report failures in a response envelope
+  (#3559). 404, `void` methods, bodies that are missing, empty or over 8 KiB, and retryable errors
+  still throw.
+
 ### Version 13.15
 
 * `GsonEncoder` serializes request bodies using the runtime type when the declared body type is a

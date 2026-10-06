@@ -53,4 +53,19 @@ class LoggerMethodsTest {
     verify(spyBody).close();
     assertThat(rebufferedResponse.body()).isNotSameAs(spyBody);
   }
+
+  @Test
+  void atLeastReturnsTrueForEqualLevel() {
+    assertThat(Level.BASIC.atLeast(Level.BASIC)).isTrue();
+  }
+
+  @Test
+  void atLeastReturnsTrueWhenMoreVerbose() {
+    assertThat(Level.FULL.atLeast(Level.HEADERS)).isTrue();
+  }
+
+  @Test
+  void atLeastReturnsFalseWhenLessVerbose() {
+    assertThat(Level.NONE.atLeast(Level.FULL)).isFalse();
+  }
 }

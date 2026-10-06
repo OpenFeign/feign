@@ -39,6 +39,17 @@ class OptionsTest {
     }
   }
 
+  static class SharedKeyOptions extends Request.Options {
+    public SharedKeyOptions(int connectTimeoutMillis, int readTimeoutMillis) {
+      super(connectTimeoutMillis, readTimeoutMillis);
+    }
+
+    @Override
+    String threadIdentifier() {
+      return "shared-key";
+    }
+  }
+
   interface OptionsInterface {
     @RequestLine("GET /")
     String get(Request.Options options);
@@ -147,5 +158,40 @@ class OptionsTest {
             });
     thread.start();
     thread.join();
+  }
+
+  @Test
+  void concurrentSetMethodOptionsOnSameKeyDoesNotLoseEntries() throws Exception {
+    SharedKeyOptions options = new SharedKeyOptions(1000, 1000);
+    int threadCount = 20;
+    CountDownLatch start = new CountDownLatch(1);
+    CountDownLatch done = new CountDownLatch(threadCount);
+    AtomicReference<Throwable> error = new AtomicReference<>();
+
+    for (int i = 0; i < threadCount; i++) {
+      final String method = "method" + i;
+      new Thread(
+              () -> {
+                try {
+                  start.await();
+                  options.setMethodOptions(method, new Request.Options(1000, 2000));
+                } catch (Throwable t) {
+                  error.set(t);
+                } finally {
+                  done.countDown();
+                }
+              })
+          .start();
+    }
+
+    start.countDown();
+    assertThat(done.await(5, TimeUnit.SECONDS)).isTrue();
+
+    assertThat(error.get()).isNull();
+    for (int i = 0; i < threadCount; i++) {
+      assertThat(options.getMethodOptions("method" + i))
+          .as("entry for method%d must not have been lost", i)
+          .isNotSameAs(options);
+    }
   }
 }

@@ -33,7 +33,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -481,6 +480,11 @@ public final class Request implements Serializable {
     private final boolean followRedirects;
     private final Map<String, Map<String, Options>> threadToMethodOptions;
 
+    /** Returns the key used to bucket per-thread method options. */
+    String threadIdentifier() {
+      return getThreadIdentifier();
+    }
+
     /**
      * Creates a new Options instance.
      *
@@ -599,9 +603,12 @@ public final class Request implements Serializable {
      */
     @Experimental
     public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions =
-          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
-      return methodOptions.getOrDefault(methodName, this);
+      Map<String, Options> methodOptions = threadToMethodOptions.get(threadIdentifier());
+      if (methodOptions == null) {
+        return this;
+      }
+      Options options = methodOptions.get(methodName);
+      return options != null ? options : this;
     }
 
     /**
@@ -648,11 +655,9 @@ public final class Request implements Serializable {
      */
     @Experimental
     public void setMethodOptions(String methodName, Options options) {
-      String threadIdentifier = getThreadIdentifier();
-      Map<String, Request.Options> methodOptions =
-          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
-      threadToMethodOptions.put(threadIdentifier, methodOptions);
-      methodOptions.put(methodName, options);
+      threadToMethodOptions
+          .computeIfAbsent(threadIdentifier(), key -> new ConcurrentHashMap<>())
+          .put(methodName, options);
     }
   }
 

@@ -1272,6 +1272,34 @@ you to handle the response, wrap the failure into a custom exception or perform 
 If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
 `Retryer`.
 
+#### Error responses as values
+Some APIs describe a failure in the response body, using the same envelope as a success. Call
+`decodeErrorResponses()` to decode that body into the method's return type instead of throwing:
+
+```java
+interface MyApi {
+  @RequestLine("POST /users")
+  BaseResponse createUser(NewUser user);
+}
+
+MyApi myApi = Feign.builder()
+                 .decoder(new JacksonDecoder())
+                 .decodeErrorResponses()
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+The error body is returned as a value only when all of these hold. Otherwise the call throws, as it does without the flag:
+
+* the status is 400 or above, other than 404 (use `dismiss404()` for 404);
+* the method returns a value. `void` methods always throw;
+* the body is between 1 and 8192 bytes;
+* the decoder accepts the response (`PredicatedDecoder.canDecode`), so a JSON decoder is never handed an HTML error page;
+* the `ErrorDecoder` did not return a `RetryableException`, so the `Retryer` keeps working;
+* the body decodes. If it doesn't, the `ErrorDecoder`'s exception is thrown with the decode failure attached as suppressed.
+
+The flag applies to every method on the client, and the decoder sees the status the server sent. With the default
+decoder and a `String` return type, the error body is returned as the string. This option is experimental.
+
 ### Retry
 Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network
 related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`.  To customize this
