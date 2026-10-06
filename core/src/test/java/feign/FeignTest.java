@@ -19,12 +19,18 @@ import static feign.ExceptionPropagationPolicy.UNWRAP;
 import static feign.Util.UTF_8;
 import static feign.assertj.MockWebServerAssertions.assertThat;
 import static java.util.Collections.emptyList;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.data.MapEntry.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -45,6 +51,7 @@ import feign.core.codec.StringDecoder;
 import feign.core.querymap.BeanQueryMapEncoder;
 import feign.core.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.ProtocolException;
 import java.net.URI;
@@ -1292,6 +1299,153 @@ public class FeignTest {
     }
   }
 
+  @Test
+  void voidMethodsCloseBodyWhenDoNotCloseAfterDecodeIsActive() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .doNotCloseAfterDecode()
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithVoidResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void voidMethodsCloseBodyWhenDoNotCloseAfterDecodeAndDecodeVoidIsActive() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn(new Object());
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .doNotCloseAfterDecode()
+            .decodeVoid()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithVoidResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closableMethodsThatThrowExceptionClosesBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenThrow(mock(DecodeException.class));
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    assertThrows(DecodeException.class, () -> api.getWithCloseableResponse());
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closableMethodsWithDecoderThatReturnsNullClosesBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn(null);
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    InputStream out = api.getWithCloseableResponse();
+
+    assertThat(out).isNull();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closeableMethodWithDismiss404ModeThatThrowsClosesBody() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").code(404).build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .dismiss404()
+            .decoder(
+                (response, _) -> {
+                  Assertions.assertThat(response.status()).isEqualTo(404);
+                  throw new NoSuchElementException();
+                })
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    DecodeException exception =
+        assertThatExceptionOfType(DecodeException.class).isThrownBy(() -> api.post()).actual();
+    assertThat(exception).hasCauseInstanceOf(NoSuchElementException.class);
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closeableMethodWithDismiss404ModeThatSucceedsDoesNotCloseBody() throws Exception {
+    server.enqueue(new MockResponse.Builder().body("foo").code(404).build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    Decoder decoder = mock(Decoder.class);
+    when(decoder.decode(any(), any())).thenReturn("Decoded!");
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .dismiss404()
+            .decoder(decoder)
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.post();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isTrue();
+  }
+
+  @Test
+  void closableMethodsDoNotCloseBody() throws Exception {
+
+    server.enqueue(new MockResponse.Builder().body("foo").build());
+
+    BodyCapturingResponseInterceptor responseCapture = new BodyCapturingResponseInterceptor();
+
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(responseCapture)
+            .target("http://localhost:" + server.getPort());
+
+    api.getWithCloseableResponse();
+
+    assertThat(responseCapture.isResponseBodyClosed()).isFalse();
+  }
+
   interface TestInterface {
 
     @RequestLine("POST /")
@@ -1407,6 +1561,12 @@ public class FeignTest {
 
     @FeignIgnore
     String ignore();
+
+    @RequestLine("GET /")
+    void getWithVoidResponse();
+
+    @RequestLine("GET /")
+    InputStream getWithCloseableResponse();
 
     class ClockToMillis implements Param.Expander {
 
@@ -1552,6 +1712,11 @@ public class FeignTest {
       return this;
     }
 
+    TestInterfaceBuilder doNotCloseAfterDecode() {
+      delegate.doNotCloseAfterDecode();
+      return this;
+    }
+
     TestInterfaceBuilder queryMapEncoder(QueryMapEncoder queryMapEncoder) {
       delegate.queryMapEncoder(queryMapEncoder);
       return this;
@@ -1574,6 +1739,35 @@ public class FeignTest {
         }
       }
       return chain.next(invocationContext);
+    }
+  }
+
+  class BodyCapturingResponseInterceptor implements ResponseInterceptor {
+    private final AtomicReference<Response.Body> responseBodyRef = new AtomicReference<>();
+
+    @Override
+    public Object intercept(InvocationContext invocationContext, Chain chain) throws Exception {
+      responseBodyRef.set(invocationContext.response().body());
+      return chain.next(invocationContext);
+    }
+
+    public Response.Body getResponseBody() {
+      return responseBodyRef.get();
+    }
+
+    public boolean isResponseBodyClosed() {
+      try {
+        getResponseBody().asInputStream().read();
+        return false;
+      } catch (IOException e) {
+        // Note: we are unhappy about doing a text check on the exception message, but there is no
+        // dedicated exception in the JRE for "stream closed".
+        if (!e.getMessage().contains("closed"))
+          throw new RuntimeException(
+              "Unexpected exception message during body closed check (expected message to contain 'closed')",
+              e);
+        return true;
+      }
     }
   }
 
