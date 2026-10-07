@@ -38,8 +38,8 @@ public class RequestTest {
   }
 
   @Test
-  void requestCreatedWithNullBodyReportsNoBody() {
-    Request request = requestWithoutBody();
+  void requestWithoutBodyHasNullBodyAndCharsetZeroLengthAndIsBinary() {
+    Request request = createGetRequestWithNullBody();
 
     assertThat(request.body()).isNull();
     assertThat(request.charset()).isNull();
@@ -48,13 +48,39 @@ public class RequestTest {
   }
 
   @Test
-  void requestWithoutBodyPrintsOnlyTheRequestLine() {
-    Request request = requestWithoutBody();
+  void toStringOfRequestWithoutBodyOmitsBodySection() {
+    Request request = createGetRequestWithNullBody();
 
     assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
   }
 
-  private static Request requestWithoutBody() {
+  @Test
+  void requestBuiltFromTemplateWithoutBodyOmitsBodyFromToString() {
+    Request request =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("http://example.com")
+            .resolve(Collections.emptyMap())
+            .request();
+
+    assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
+  }
+
+  @Test
+  void binaryBodyWithoutCharsetPrintsBinaryDataInToString() {
+    Request request =
+        new RequestTemplate()
+            .method(HttpMethod.POST)
+            .target("http://example.com")
+            .body(new byte[] {1, 2, 3}, null)
+            .resolve(Collections.emptyMap())
+            .request();
+
+    assertThat(request)
+        .hasToString("POST http://example.com HTTP/1.1\nContent-Length: 3\n\nBinary data");
+  }
+
+  private static Request createGetRequestWithNullBody() {
     return Request.create(
         HttpMethod.GET, "http://example.com", Collections.emptyMap(), (Body) null, null);
   }

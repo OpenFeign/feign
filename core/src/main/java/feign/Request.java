@@ -147,7 +147,7 @@ public final class Request implements Serializable {
    * @param httpMethod for the request.
    * @param url for the request.
    * @param headers to include.
-   * @param body of the request, can be {@literal null}
+   * @param body of the request, can be {@literal null}, meaning the request has no body.
    * @return a Request
    */
   public static Request create(
@@ -172,7 +172,7 @@ public final class Request implements Serializable {
    * @param method of the request.
    * @param url for the request.
    * @param headers for the request.
-   * @param body for the request, optional. {@literal null} means the request has no body.
+   * @param body for the request, optional.
    * @param requestTemplate used to build the request.
    */
   Request(
@@ -308,7 +308,7 @@ public final class Request implements Serializable {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body.asBytes() != null) {
+    if (body() != null) {
       builder.append('\n').append(body.asString());
     }
     return builder.toString();
