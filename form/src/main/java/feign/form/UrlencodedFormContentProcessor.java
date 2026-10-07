@@ -16,13 +16,13 @@
 package feign.form;
 
 import static feign.form.ContentType.URLENCODED;
+import static feign.form.util.Elements.elementsOf;
 
 import feign.CollectionFormat;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -89,12 +90,12 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
 
     if (value == null) {
       return encodedKey;
-    } else if (value.getClass().isArray()) {
+    } else if (value.getClass().isArray() || value instanceof Collection) {
       return createKeyValuePair(
-          collectionFormat, encodedKey, Arrays.stream((Object[]) value), charset);
-    } else if (value instanceof Collection) {
-      return createKeyValuePair(
-          collectionFormat, encodedKey, ((Collection<?>) value).stream(), charset);
+          collectionFormat,
+          encodedKey,
+          StreamSupport.stream(elementsOf(value).spliterator(), false),
+          charset);
     }
     return new StringBuilder()
         .append(encodedKey)
