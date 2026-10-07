@@ -15,10 +15,10 @@
  */
 package feign.form.multipart;
 
+import static feign.form.util.Elements.elementsOf;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.codec.EncodeException;
-import java.lang.reflect.Array;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -34,30 +34,15 @@ public class ManyParametersWriter extends AbstractWriter {
 
   @Override
   public boolean isApplicable(Object value) {
-    if (value.getClass().isArray()) {
-      return Array.getLength(value) > 0 && parameterWriter.isApplicable(Array.get(value, 0));
-    }
-    if (!(value instanceof Iterable)) {
-      return false;
-    }
-    val iterable = (Iterable<?>) value;
-    val iterator = iterable.iterator();
+    val iterator = elementsOf(value).iterator();
     return iterator.hasNext() && parameterWriter.isApplicable(iterator.next());
   }
 
   @Override
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
-    if (value.getClass().isArray()) {
-      int length = Array.getLength(value);
-      for (int index = 0; index < length; index++) {
-        parameterWriter.write(output, boundary, key, Array.get(value, index));
-      }
-    } else if (value instanceof Iterable) {
-      val iterable = (Iterable<?>) value;
-      for (val object : iterable) {
-        parameterWriter.write(output, boundary, key, object);
-      }
+    for (val object : elementsOf(value)) {
+      parameterWriter.write(output, boundary, key, object);
     }
   }
 }

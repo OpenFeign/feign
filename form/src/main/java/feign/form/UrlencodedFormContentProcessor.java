@@ -16,11 +16,11 @@
 package feign.form;
 
 import static feign.form.ContentType.URLENCODED;
+import static feign.form.util.Elements.elementsOf;
 
 import feign.CollectionFormat;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
-import java.lang.reflect.Array;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.SneakyThrows;
 import lombok.val;
 
@@ -90,11 +90,12 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
 
     if (value == null) {
       return encodedKey;
-    } else if (value.getClass().isArray()) {
-      return createKeyValuePair(collectionFormat, encodedKey, arrayElements(value), charset);
-    } else if (value instanceof Collection) {
+    } else if (value.getClass().isArray() || value instanceof Collection) {
       return createKeyValuePair(
-          collectionFormat, encodedKey, ((Collection<?>) value).stream(), charset);
+          collectionFormat,
+          encodedKey,
+          StreamSupport.stream(elementsOf(value).spliterator(), false),
+          charset);
     }
     return new StringBuilder()
         .append(encodedKey)
@@ -111,17 +112,5 @@ public class UrlencodedFormContentProcessor implements ContentProcessor {
             .map(value -> encode(value, charset))
             .collect(Collectors.toList());
     return collectionFormat.join(key, stringValues, charset);
-  }
-
-  /**
-   * Streams the elements of an array, boxing primitive elements. An {@code (Object[])} cast cannot
-   * be used instead, because it fails with a {@link ClassCastException} on primitive arrays such as
-   * {@code int[]} or {@code char[]}.
-   *
-   * @param array a non-null array of any component type.
-   * @return a stream over the array's elements, in order.
-   */
-  private static Stream<?> arrayElements(Object array) {
-    return IntStream.range(0, Array.getLength(array)).mapToObj(index -> Array.get(array, index));
   }
 }

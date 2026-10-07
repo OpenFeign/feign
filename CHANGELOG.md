@@ -1,8 +1,9 @@
 ### Version 13.17
 
-* Form encoders handle primitive array field values without an `Object[]` cast failure.
-  URL-encoded fields follow the request's `CollectionFormat`; multipart numeric and boolean arrays
-  produce repeated parts. Multipart `byte[]` values remain a single binary part.
+* Form encoders can process primitive array fields without failing on an `Object[]` cast.
+  URL-encoded fields use the request's `CollectionFormat`. In multipart requests, numeric and
+  boolean arrays create repeated parts, and `byte[]` values stay as one binary part. Multipart
+  `char[]` values are still passed to the delegate encoder (#3607).
 
 ### Version 13.16
 
