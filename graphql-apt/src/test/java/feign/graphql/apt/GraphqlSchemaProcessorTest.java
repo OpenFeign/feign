@@ -23,7 +23,9 @@ import java.util.stream.Stream;
 import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GraphqlSchemaProcessorTest {
 
@@ -2087,10 +2089,6 @@ class GraphqlSchemaProcessorTest {
 
     assertThat(compilation).succeeded();
     assertThat(compilation)
-        .generatedSourceFile("test.UserResult")
-        .contentsAsUtf8String()
-        .doesNotContain(" email,");
-    assertThat(compilation)
         .generatedSourceFile("test.CreateUserInput")
         .contentsAsUtf8String()
         .doesNotContain(" email,");
@@ -2133,10 +2131,6 @@ class GraphqlSchemaProcessorTest {
         .generatedSourceFile("test.WithDeprecatedResult")
         .contentsAsUtf8String()
         .contains(" email,");
-    assertThat(compilation)
-        .generatedSourceFile("test.WithoutDeprecatedResult")
-        .contentsAsUtf8String()
-        .doesNotContain(" email,");
   }
 
   @Test
@@ -2234,7 +2228,7 @@ class GraphqlSchemaProcessorTest {
   }
 
   @Test
-  void methodLevelToggleCanDisableDeprecated() {
+  void methodLevelToggleFalseFiltersDeprecatedEnumValues() {
     var source =
         JavaFileObjects.forSourceString(
             "test.MethodDisableDeprecatedApi",
@@ -2258,28 +2252,61 @@ class GraphqlSchemaProcessorTest {
 
     assertThat(compilation).succeeded();
     assertThat(compilation)
-        .generatedSourceFile("test.FilteredUserResult")
-        .contentsAsUtf8String()
-        .doesNotContain(" email,");
-    assertThat(compilation)
         .generatedSourceFile("test.UserStatus")
         .contentsAsUtf8String()
         .doesNotContain("BANNED");
   }
 
-  static Stream<String> deprecatedUsages() {
+  static Stream<Arguments> queriesUsingDeprecatedSchemaElements() {
     return Stream.of(
-        """
-        { user(id: "1") { id email } }""",
-        """
-        { user(id: "1", legacyId: "2") { id } }""",
-        """
-        { users(status: BANNED) { id } }""",
-        """
-        mutation { createUser(input: { name: "a", email: "b" }) { id } }""");
+        Arguments.of(
+            """
+            { user(id: "1") { id email } }""",
+            "Field 'email' is deprecated (use emails instead) and generateDeprecated is false"),
+        Arguments.of(
+            """
+            query user($id: ID!) { user(id: $id) { id email } }""",
+            "Field 'email' is deprecated (use emails instead)"),
+        Arguments.of(
+            """
+            { user(id: "1", legacyId: "2") { id } }""",
+            "Argument 'legacyId' is deprecated (use id instead)"),
+        Arguments.of(
+            """
+            { users(status: BANNED) { id } }""",
+            "Enum value 'BANNED' is deprecated (no longer used)"),
+        Arguments.of(
+            """
+            query users($status: UserStatus = BANNED) { users(status: $status) { id } }""",
+            "Enum value 'BANNED' is deprecated (no longer used)"),
+        Arguments.of(
+            """
+            mutation { createUser(input: { name: "a", email: "b" }) { id } }""",
+            "Input field 'email' is deprecated (use emails instead)"));
   }
 
-  private static JavaFileObject deprecatedUsageSource(String query, boolean generateDeprecated) {
+  static Stream<Arguments> deprecatedUsagesWhenEnabled() {
+    return withToggleSettings(
+        new String[] {"true", "Toggle.INHERIT"}, new String[] {"false", "Toggle.TRUE"});
+  }
+
+  static Stream<Arguments> deprecatedUsagesWhenDisabled() {
+    return withToggleSettings(
+        new String[] {"false", "Toggle.INHERIT"}, new String[] {"true", "Toggle.FALSE"});
+  }
+
+  private static Stream<Arguments> withToggleSettings(String[]... settings) {
+    return queriesUsingDeprecatedSchemaElements()
+        .flatMap(
+            usage ->
+                Stream.of(settings)
+                    .map(
+                        setting ->
+                            Arguments.of(usage.get()[0], setting[0], setting[1], usage.get()[1])));
+  }
+
+  private static JavaFileObject createDeprecatedSchemaApiSource(
+      String query, String schemaGenerateDeprecated, String queryGenerateDeprecated) {
     return JavaFileObjects.forSourceString(
         "test.DeprecatedUsageApi",
         """
@@ -2287,65 +2314,73 @@ class GraphqlSchemaProcessorTest {
 
         import feign.graphql.GraphqlSchema;
         import feign.graphql.GraphqlQuery;
+        import feign.graphql.Toggle;
 
         @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = %s)
         interface DeprecatedUsageApi {
-          @GraphqlQuery(\"""
+          @GraphqlQuery(value = \"""
               %s
-              \""")
-          DeprecatedUsageResult call();
+              \""", generateDeprecated = %s)
+          DeprecatedUsageResult sendOperation(String id);
         }
         """
-            .formatted(generateDeprecated, query));
+            .formatted(schemaGenerateDeprecated, query, queryGenerateDeprecated));
   }
 
   @ParameterizedTest
-  @MethodSource("deprecatedUsages")
-  void deprecatedSchemaElementsAcceptedInQueryWhenEnabled(String query) {
+  @MethodSource("deprecatedUsagesWhenEnabled")
+  void deprecatedSchemaElementsAcceptedInQueryWhenEnabled(
+      String query, String schemaGenerateDeprecated, String queryGenerateDeprecated) {
     var compilation =
         javac()
             .withProcessors(new GraphqlSchemaProcessor())
-            .compile(deprecatedUsageSource(query, true));
+            .compile(
+                createDeprecatedSchemaApiSource(
+                    query, schemaGenerateDeprecated, queryGenerateDeprecated));
 
     assertThat(compilation).succeeded();
   }
 
   @ParameterizedTest
-  @MethodSource("deprecatedUsages")
-  void deprecatedSchemaElementsRejectedInQueryWhenDisabled(String query) {
+  @MethodSource("deprecatedUsagesWhenDisabled")
+  void deprecatedSchemaElementsRejectedInQueryWhenDisabled(
+      String query,
+      String schemaGenerateDeprecated,
+      String queryGenerateDeprecated,
+      String expectedError) {
     var compilation =
         javac()
             .withProcessors(new GraphqlSchemaProcessor())
-            .compile(deprecatedUsageSource(query, false));
+            .compile(
+                createDeprecatedSchemaApiSource(
+                    query, schemaGenerateDeprecated, queryGenerateDeprecated));
 
     assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("GraphQL validation error");
+    assertThat(compilation).hadErrorContaining(expectedError);
   }
 
-  @Test
-  void methodToggleFalseRejectsDeprecatedFieldInQuery() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void schemaWithDeprecatedElementsBehindDefaultsAndInterfacesCompiles(boolean generateDeprecated) {
     var source =
         JavaFileObjects.forSourceString(
-            "test.MethodHiddenDeprecatedApi",
+            "test.EdgeSchemaApi",
             """
             package test;
 
             import feign.graphql.GraphqlSchema;
             import feign.graphql.GraphqlQuery;
-            import feign.graphql.Toggle;
 
-            @GraphqlSchema("deprecated-test-schema.graphql")
-            interface MethodHiddenDeprecatedApi {
-              @GraphqlQuery(value = \"""
-                  { user(id: "1") { id email } }
-                  \""", generateDeprecated = Toggle.FALSE)
-              HiddenResult getUser();
+            @GraphqlSchema(value = "deprecated-edge-schema.graphql", generateDeprecated = %s)
+            interface EdgeSchemaApi {
+              @GraphqlQuery("{ ping }")
+              String ping();
             }
-            """);
+            """
+                .formatted(generateDeprecated));
 
     var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
 
-    assertThat(compilation).failed();
-    assertThat(compilation).hadErrorContaining("Field 'email' in type 'User' is undefined");
+    assertThat(compilation).succeeded();
   }
 }

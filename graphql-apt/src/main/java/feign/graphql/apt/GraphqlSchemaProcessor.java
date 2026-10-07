@@ -29,19 +29,10 @@ import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
 import graphql.language.VariableDefinition;
 import graphql.parser.Parser;
-import graphql.schema.GraphQLArgument;
-import graphql.schema.GraphQLEnumValueDefinition;
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLSchemaElement;
-import graphql.schema.GraphQLTypeVisitorStub;
-import graphql.schema.SchemaTransformer;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.schema.idl.UnExecutableSchemaGenerator;
-import graphql.util.TraversalControl;
-import graphql.util.TraverserContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +115,6 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     }
 
     var graphqlSchema = UnExecutableSchemaGenerator.makeUnExecutableSchema(registry);
-    var nonDeprecatedSchema = withoutDeprecated(graphqlSchema);
 
     var generateTypes = schemaAnnotation.generateTypes();
 
@@ -151,43 +141,14 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       processMethod(
           method,
           queryAnnotation,
-          methodConfig.generateDeprecated() ? graphqlSchema : nonDeprecatedSchema,
+          graphqlSchema,
+          methodConfig.generateDeprecated(),
           registry,
           generator,
           validator,
           generateTypes,
           targetPackage);
     }
-  }
-
-  private static GraphQLSchema withoutDeprecated(GraphQLSchema schema) {
-    return SchemaTransformer.transformSchema(
-        schema,
-        new GraphQLTypeVisitorStub() {
-          @Override
-          public TraversalControl visitGraphQLFieldDefinition(
-              GraphQLFieldDefinition node, TraverserContext<GraphQLSchemaElement> context) {
-            return node.isDeprecated() ? deleteNode(context) : TraversalControl.CONTINUE;
-          }
-
-          @Override
-          public TraversalControl visitGraphQLArgument(
-              GraphQLArgument node, TraverserContext<GraphQLSchemaElement> context) {
-            return node.isDeprecated() ? deleteNode(context) : TraversalControl.CONTINUE;
-          }
-
-          @Override
-          public TraversalControl visitGraphQLInputObjectField(
-              GraphQLInputObjectField node, TraverserContext<GraphQLSchemaElement> context) {
-            return node.isDeprecated() ? deleteNode(context) : TraversalControl.CONTINUE;
-          }
-
-          @Override
-          public TraversalControl visitGraphQLEnumValueDefinition(
-              GraphQLEnumValueDefinition node, TraverserContext<GraphQLSchemaElement> context) {
-            return node.isDeprecated() ? deleteNode(context) : TraversalControl.CONTINUE;
-          }
-        });
   }
 
   private Map<String, TypeName> collectScalarMappings(TypeElement typeElement) {
@@ -259,6 +220,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       ExecutableElement method,
       GraphqlQuery queryAnnotation,
       GraphQLSchema graphqlSchema,
+      boolean generateDeprecated,
       TypeDefinitionRegistry registry,
       TypeGenerator generator,
       QueryValidator validator,
@@ -275,7 +237,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
-    if (!validator.validate(graphqlSchema, document, method) || !generateTypes) {
+    if (!validator.validate(graphqlSchema, document, method, generateDeprecated)
+        || !generateTypes) {
       return;
     }
 
