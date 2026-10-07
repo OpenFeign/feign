@@ -147,7 +147,7 @@ public final class Request implements Serializable {
    * @param httpMethod for the request.
    * @param url for the request.
    * @param headers to include.
-   * @param body of the request, can be {@literal null}
+   * @param body of the request, can be {@literal null}, meaning the request has no body.
    * @return a Request
    */
   public static Request create(
@@ -184,7 +184,7 @@ public final class Request implements Serializable {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
+    this.body = body != null ? body : Body.empty();
     this.requestTemplate = requestTemplate;
     protocolVersion = ProtocolVersion.HTTP_1_1;
   }
@@ -308,7 +308,7 @@ public final class Request implements Serializable {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) {
+    if (body() != null) {
       builder.append('\n').append(body.asString());
     }
     return builder.toString();

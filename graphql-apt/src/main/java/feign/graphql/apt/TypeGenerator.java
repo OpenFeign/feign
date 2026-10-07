@@ -146,9 +146,6 @@ public class TypeGenerator {
         continue;
       }
       var deprecated = isDeprecated(schemaDef);
-      if (!annotationConfig.generateDeprecated() && deprecated) {
-        continue;
-      }
       var fieldName = responseKey(field);
 
       var fieldType = schemaDef.getType();

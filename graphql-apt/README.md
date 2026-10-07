@@ -108,6 +108,14 @@ public enum Episode {
 }
 ```
 
+### Deprecated schema elements
+
+Set `generateDeprecated = false` on `@GraphqlSchema`, or `generateDeprecated = Toggle.FALSE` on a single `@GraphqlQuery`, to hide `@deprecated` schema elements. Generated types leave out deprecated fields, input fields and enum values. A query that uses a deprecated field, argument, input field or enum value fails to compile:
+
+```
+GraphQL validation error at line 1, column 22: Field 'email' is deprecated (use emails instead) and generateDeprecated is false
+```
+
 ## Maven Configuration
 
 Add as a `provided` dependency so it runs during compilation but is not included at runtime:
