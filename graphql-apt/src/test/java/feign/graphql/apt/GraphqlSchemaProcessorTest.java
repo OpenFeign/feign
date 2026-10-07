@@ -19,7 +19,11 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 
 import com.google.testing.compile.JavaFileObjects;
+import java.util.stream.Stream;
+import javax.tools.JavaFileObject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class GraphqlSchemaProcessorTest {
 
@@ -2067,7 +2071,7 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = false)
             interface ClassDisabledDeprecatedApi {
               @GraphqlQuery(\"""
-                  { user(id: "1") { id name email emails status } }
+                  { user(id: "1") { id name emails status } }
                   \""")
               UserResult getUser();
 
@@ -2116,7 +2120,7 @@ class GraphqlSchemaProcessorTest {
               WithDeprecatedResult getUserWithDeprecated();
 
               @GraphqlQuery(\"""
-                  { user(id: "1") { id name email emails status } }
+                  { user(id: "1") { id name emails status } }
                   \""")
               WithoutDeprecatedResult getUserFiltered();
             }
@@ -2244,7 +2248,7 @@ class GraphqlSchemaProcessorTest {
             @GraphqlSchema("deprecated-test-schema.graphql")
             interface MethodDisableDeprecatedApi {
               @GraphqlQuery(value = \"""
-                  { user(id: "1") { id name email emails status } }
+                  { user(id: "1") { id name emails status } }
                   \""", generateDeprecated = Toggle.FALSE)
               FilteredUserResult getUserFiltered();
             }
@@ -2261,5 +2265,87 @@ class GraphqlSchemaProcessorTest {
         .generatedSourceFile("test.UserStatus")
         .contentsAsUtf8String()
         .doesNotContain("BANNED");
+  }
+
+  static Stream<String> deprecatedUsages() {
+    return Stream.of(
+        """
+        { user(id: "1") { id email } }""",
+        """
+        { user(id: "1", legacyId: "2") { id } }""",
+        """
+        { users(status: BANNED) { id } }""",
+        """
+        mutation { createUser(input: { name: "a", email: "b" }) { id } }""");
+  }
+
+  private static JavaFileObject deprecatedUsageSource(String query, boolean generateDeprecated) {
+    return JavaFileObjects.forSourceString(
+        "test.DeprecatedUsageApi",
+        """
+        package test;
+
+        import feign.graphql.GraphqlSchema;
+        import feign.graphql.GraphqlQuery;
+
+        @GraphqlSchema(value = "deprecated-test-schema.graphql", generateDeprecated = %s)
+        interface DeprecatedUsageApi {
+          @GraphqlQuery(\"""
+              %s
+              \""")
+          DeprecatedUsageResult call();
+        }
+        """
+            .formatted(generateDeprecated, query));
+  }
+
+  @ParameterizedTest
+  @MethodSource("deprecatedUsages")
+  void deprecatedSchemaElementsAcceptedInQueryWhenEnabled(String query) {
+    var compilation =
+        javac()
+            .withProcessors(new GraphqlSchemaProcessor())
+            .compile(deprecatedUsageSource(query, true));
+
+    assertThat(compilation).succeeded();
+  }
+
+  @ParameterizedTest
+  @MethodSource("deprecatedUsages")
+  void deprecatedSchemaElementsRejectedInQueryWhenDisabled(String query) {
+    var compilation =
+        javac()
+            .withProcessors(new GraphqlSchemaProcessor())
+            .compile(deprecatedUsageSource(query, false));
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("GraphQL validation error");
+  }
+
+  @Test
+  void methodToggleFalseRejectsDeprecatedFieldInQuery() {
+    var source =
+        JavaFileObjects.forSourceString(
+            "test.MethodHiddenDeprecatedApi",
+            """
+            package test;
+
+            import feign.graphql.GraphqlSchema;
+            import feign.graphql.GraphqlQuery;
+            import feign.graphql.Toggle;
+
+            @GraphqlSchema("deprecated-test-schema.graphql")
+            interface MethodHiddenDeprecatedApi {
+              @GraphqlQuery(value = \"""
+                  { user(id: "1") { id email } }
+                  \""", generateDeprecated = Toggle.FALSE)
+              HiddenResult getUser();
+            }
+            """);
+
+    var compilation = javac().withProcessors(new GraphqlSchemaProcessor()).compile(source);
+
+    assertThat(compilation).failed();
+    assertThat(compilation).hadErrorContaining("Field 'email' in type 'User' is undefined");
   }
 }
