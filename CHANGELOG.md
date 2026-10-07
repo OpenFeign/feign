@@ -1,3 +1,9 @@
+### Version 13.17
+
+* Form encoders handle primitive array field values without an `Object[]` cast failure.
+  URL-encoded fields follow the request's `CollectionFormat`; multipart numeric and boolean arrays
+  produce repeated parts. Multipart `byte[]` values remain a single binary part.
+
 ### Version 13.16
 
 * Path-style expansion repeats the entry name for each collection or array value inside a map,
