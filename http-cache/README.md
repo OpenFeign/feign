@@ -54,5 +54,9 @@ Caveats
   first 200; on a 304 the cached object is returned as-is. Mutations on the returned
   object propagate to subsequent callers — return immutable values from your decoder
   if that matters.
-- `Cache-Control` directives beyond `no-store` are not interpreted; freshness windows
-  (`max-age`, etc.) are not enforced. Every cached entry triggers revalidation.
+- Freshness windows (`max-age`, etc.) are not enforced. Every cached entry triggers
+  revalidation.
+- A store is shared by every caller of the client, so responses marked
+  `Cache-Control: no-store`, `Cache-Control: private` or `Vary: *` are never stored.
+  Other `Vary` field names are not matched against the request, so include them in
+  `keyFn` when a response varies on a header the default key ignores.
