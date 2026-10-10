@@ -19,6 +19,7 @@ import feign.Param;
 import feign.QueryMapEncoder;
 import feign.codec.EncodeException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,6 +35,9 @@ import java.util.stream.Collectors;
  *
  * <p>order of included query parameters not guaranteed, and as usual, if any value is null, it will
  * be left out
+ *
+ * <p>static fields are excluded, whether declared on the object type itself or inherited from a
+ * super type.
  */
 public class FieldQueryMapEncoder implements QueryMapEncoder {
 
@@ -86,6 +90,7 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
       return new ObjectParamMetadata(
           allFields.stream()
               .filter(field -> !field.isSynthetic())
+              .filter(field -> (field.getModifiers() & Modifier.STATIC) == 0)
               .peek(field -> field.setAccessible(true))
               .collect(Collectors.toList()));
     }
