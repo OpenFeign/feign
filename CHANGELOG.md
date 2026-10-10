@@ -8,6 +8,9 @@
   URL-encoded fields use the request's `CollectionFormat`. In multipart requests, numeric and
   boolean arrays create repeated parts, and `byte[]` values stay as one binary part. Multipart
   `char[]` values are still passed to the delegate encoder (#3607).
+* Values supplied through `@HeaderMap` are sent as literals instead of being parsed as URI template
+  expressions. This bypasses URI expression parsing entirely, including the URI expression length
+  limit, so a long literal value such as a large JSON payload reaches the wire unchanged.
 
 ### Version 13.16
 
