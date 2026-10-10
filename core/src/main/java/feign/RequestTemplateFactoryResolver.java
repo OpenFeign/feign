@@ -171,7 +171,8 @@ final class RequestTemplateFactoryResolver {
           values.add(currValue == null ? null : currValue.toString());
         }
 
-        mutable.header(currEntry.getKey(), values);
+        /* runtime @HeaderMap values are literals, not URI template expressions */
+        mutable.headerLiteral(currEntry.getKey(), values);
       }
       return mutable;
     }
