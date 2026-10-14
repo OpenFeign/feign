@@ -107,7 +107,7 @@ Example:
 - `dropwizard-metrics5/` - Java 17 (for Metrics 5.x)
 - `apt-test-generator/` - Java 17 (for Handlebars 4.5.0+)
 - `soap-jakarta/`, `jaxb-jakarta/` - Java 11 (for Jakarta namespace)
-- `jdk-json/` - Java 28 (for `jdk.incubator.json`); lives in the `jdk28` profile so builds without a JDK 28 toolchain still work. CI installs the JDK 28 early-access build from jdk.java.net; bump the build number in `.circleci/config.yml` and `.circleci/toolchains.xml` when it disappears
+- `jdk-json/` - Java 28 (for `jdk.incubator.json`); lives in the `jdk28` profile so builds without a JDK 28 toolchain still work. CI extracts the JDK 28 early-access build from the digest-pinned `openjdk:28-ea-jdk` image in `.circleci/jdk28/Dockerfile`, which Dependabot keeps current
 
 ### Dependabot Configuration
 
