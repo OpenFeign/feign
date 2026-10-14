@@ -103,7 +103,6 @@ updates:
       - dependency-name: "io.vertx:*"
         update-types: ["version-update:semver-major"]
 
-  # JDK 28 early-access image used by CircleCI to build jdk-json
   - package-ecosystem: "docker"
     directory: "/.circleci/jdk28"
     schedule:

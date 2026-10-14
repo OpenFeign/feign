@@ -33,10 +33,10 @@ public class JdkJsonEncoder implements Encoder, PredicatedEncoder {
     if (object == null) {
       return;
     }
-    if (!(object instanceof JsonValue value)) {
+    if (!(object instanceof JsonValue jsonBody)) {
       throw new EncodeException(format("%s is not a type supported by this encoder.", bodyType));
     }
-    template.body(value.toString());
+    template.body(jsonBody.toString());
   }
 
   @Override

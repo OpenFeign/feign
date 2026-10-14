@@ -1,10 +1,10 @@
 JDK JSON Codec
 ===================
 
-This module adds support for encoding and decoding JSON via the JDK's built-in [Simple JSON API][JEP 540] (`jdk.incubator.json`).
-No third party JSON library is needed.
+This module lets you encode and decode JSON using the JDK's built-in [Simple JSON API][JEP 540] (`jdk.incubator.json`).
+You do not need to use any third party JSON libraries.
 
-The API is an incubator module targeted at JDK 28, so this module requires Java 28+ and the module must be resolved explicitly:
+This API is an incubator module for JDK 28, so this module requires Java 28 or higher. You also must resolve the module explicitly:
 
 ```
 java --add-modules jdk.incubator.json ...
@@ -53,17 +53,17 @@ JsonObject issue = github.createIssue("OpenFeign", "feign", JsonObject.of(Map.of
 
 The JDK API has no data binding, so the codec works with the JSON tree:
 
-* `JdkJsonDecoder` decodes into `JsonValue` or any of its subtypes (`JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`), or the raw `String` body.
-  Malformed JSON, including duplicate member names, fails with a `DecodeException` caused by `JsonParseException`; a document of the wrong JSON type (e.g. an array for a `JsonObject` method) fails with a `DecodeException`.
-  `404` (with `dismiss404()`), `204` and empty bodies decode to `null`.
+* `JdkJsonDecoder` decodes into `JsonValue` or any of its subtypes (`JsonObject`, `JsonArray`, `JsonString`, `JsonNumber`, `JsonBoolean`, `JsonNull`). It can also return the raw `String` body.
+  If the JSON is malformed (like having duplicate member names), it throws a `DecodeException` caused by a `JsonParseException`. If the JSON type is wrong (for example, you get an array but asked for a `JsonObject`), it throws a `DecodeException`.
+  `404` (if you use `dismiss404()`), `204`, and empty bodies decode to `null`.
 * `JdkJsonEncoder` writes any `JsonValue` as compact JSON.
 
 ## Building
 
-The module is part of the `jdk28` Maven profile and needs a JDK 28 entry in `~/.m2/toolchains.xml`:
+The module is part of the `jdk28-modules` Maven profile and needs a JDK 28 entry in `~/.m2/toolchains.xml`:
 
 ```
-./mvnw -Pjdk28 -pl jdk-json -am install
+./mvnw -Pjdk28-modules -pl jdk-json -am install
 ```
 
 [JEP 540]: https://openjdk.org/jeps/540

@@ -32,8 +32,6 @@
   <properties>
     <main.java.version>28</main.java.version>
     <latest.java.version>28</latest.java.version>
-    <maven.compiler.source>28</maven.compiler.source>
-    <maven.compiler.target>28</maven.compiler.target>
     <jvm.options>-Duser.language=en --add-modules jdk.incubator.json</jvm.options>
     <moditect.skip>true</moditect.skip>
   </properties>
@@ -61,6 +59,16 @@
             <arg>--add-modules</arg>
             <arg>jdk.incubator.json</arg>
           </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <additionalOptions>
+            <additionalOption>--add-modules</additionalOption>
+            <additionalOption>jdk.incubator.json</additionalOption>
+          </additionalOptions>
         </configuration>
       </plugin>
     </plugins>

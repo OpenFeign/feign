@@ -44,7 +44,7 @@ Feign is a declarative HTTP client library with a modular design:
 - `micrometer/`, `dropwizard-metrics4/5/` - Metrics integration
 - `validation/`, `validation-jakarta/` - JSR-303 / Jakarta Bean Validation via the `MethodInterceptor` extension point
 - `http-cache/` - Conditional revalidation (`ETag` / `Last-Modified` / `304 Not Modified`) via the `MethodInterceptor` extension point
-- `jdk-json/` - Codec for the JDK Simple JSON API (`jdk.incubator.json`, JEP 540); built only with `-Pjdk28` and a JDK 28 toolchain
+- `jdk-json/` - Codec for the JDK Simple JSON API (`jdk.incubator.json`, JEP 540). It only builds if you use `-Pjdk28-modules` and a JDK 28 toolchain.
 
 ### Key Design Patterns
 - **Builder Pattern**: `Feign.builder()` for configuring clients
@@ -107,7 +107,7 @@ Example:
 - `dropwizard-metrics5/` - Java 17 (for Metrics 5.x)
 - `apt-test-generator/` - Java 17 (for Handlebars 4.5.0+)
 - `soap-jakarta/`, `jaxb-jakarta/` - Java 11 (for Jakarta namespace)
-- `jdk-json/` - Java 28 (for `jdk.incubator.json`); lives in the `jdk28` profile so builds without a JDK 28 toolchain still work. CI extracts the JDK 28 early-access build from the digest-pinned `openjdk:28-ea-jdk` image in `.circleci/jdk28/Dockerfile`, which Dependabot keeps current
+- `jdk-json/` - This uses Java 28 (for `jdk.incubator.json`). It is in the `jdk28-modules` profile. This means builds without a JDK 28 toolchain still work. CI extracts the JDK 28 early-access build from the `openjdk:28-ea-jdk` image. This image is pinned to a specific digest in `.circleci/jdk28/Dockerfile`. Dependabot keeps this image up to date.
 
 ### Dependabot Configuration
 

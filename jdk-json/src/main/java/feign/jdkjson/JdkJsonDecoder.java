@@ -26,50 +26,74 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import jdk.incubator.json.Json;
+import jdk.incubator.json.JsonArray;
+import jdk.incubator.json.JsonBoolean;
+import jdk.incubator.json.JsonNull;
+import jdk.incubator.json.JsonNumber;
+import jdk.incubator.json.JsonObject;
 import jdk.incubator.json.JsonParseException;
+import jdk.incubator.json.JsonString;
 import jdk.incubator.json.JsonValue;
 
 public class JdkJsonDecoder implements Decoder, PredicatedDecoder {
 
   @Override
   public Object decode(Response response, Type type) throws IOException {
-    if (!(type instanceof Class<?> target)
-        || !(String.class.equals(target) || JsonValue.class.isAssignableFrom(target))) {
-      throw new DecodeException(
-          response.status(),
-          format("%s is not a type supported by this decoder.", type),
-          response.request());
+    Class<?> expectedClass = supportedTarget(response, type);
+    String bodyText = readBody(response);
+    if (bodyText == null || expectedClass == String.class) {
+      return bodyText;
     }
+    return parseJsonValueAs(expectedClass, bodyText, response);
+  }
+
+  private static Class<?> supportedTarget(Response response, Type type) {
+    if (type instanceof Class<?> expectedClass
+        && (expectedClass == String.class || JsonValue.class.isAssignableFrom(expectedClass))) {
+      return expectedClass;
+    }
+    throw new DecodeException(
+        response.status(),
+        format("%s is not a type supported by this decoder.", type),
+        response.request());
+  }
+
+  private static String readBody(Response response) throws IOException {
     if (response.status() == 404 || response.status() == 204 || response.body() == null) {
       return null;
     }
-    String body;
     try (Reader reader = response.body().asReader(response.charset())) {
-      body = Util.toString(reader);
+      String bodyText = Util.toString(reader);
+      return bodyText.isEmpty() ? null : bodyText;
     }
-    if (body.isEmpty()) {
-      return null;
-    }
-    if (String.class.equals(target)) {
-      return body;
-    }
-    return parse(response, target, body);
   }
 
-  private Object parse(Response response, Class<?> target, String body) {
-    JsonValue value;
+  private static Object parseJsonValueAs(
+      Class<?> expectedClass, String bodyText, Response response) {
+    JsonValue parsedJson;
     try {
-      value = Json.parse(body);
+      parsedJson = Json.parse(bodyText);
     } catch (JsonParseException e) {
       throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     }
-    if (!target.isInstance(value)) {
+    if (!expectedClass.isInstance(parsedJson)) {
       throw new DecodeException(
           response.status(),
-          format("Expected %s but got %s", target.getSimpleName(), value),
+          format("Expected %s but got a JSON %s", expectedClass.getSimpleName(), kind(parsedJson)),
           response.request());
     }
-    return value;
+    return parsedJson;
+  }
+
+  private static String kind(JsonValue parsedJson) {
+    return switch (parsedJson) {
+      case JsonObject _ -> "object";
+      case JsonArray _ -> "array";
+      case JsonString _ -> "string";
+      case JsonNumber _ -> "number";
+      case JsonBoolean _ -> "boolean";
+      case JsonNull _ -> "null";
+    };
   }
 
   @Override

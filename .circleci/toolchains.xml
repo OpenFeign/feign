@@ -65,7 +65,7 @@
             <version>28</version>
         </provides>
         <configuration>
-            <jdkHome>/home/circleci/.sdkman/candidates/java/28-ea</jdkHome>
+            <jdkHome>/home/circleci/jdk28</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>

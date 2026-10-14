@@ -23,6 +23,7 @@ import feign.Feign;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
+import feign.RequestTemplate;
 import feign.codec.DecodeException;
 import feign.codec.EncodeException;
 import feign.mock.HttpMethod;
@@ -44,26 +45,27 @@ class JdkJsonCodecTest {
   interface GitHub {
 
     @RequestLine("GET /repos/{owner}/{repo}/contributors")
-    JsonArray contributors(@Param("owner") String owner, @Param("repo") String repo);
+    JsonArray listContributors(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("GET /repos/{owner}/{repo}")
-    JsonObject repo(@Param("owner") String owner, @Param("repo") String repo);
+    JsonObject getRepo(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("GET /repos/{owner}/{repo}")
-    JsonValue repoValue(@Param("owner") String owner, @Param("repo") String repo);
+    JsonValue getRepoAsJsonValue(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("GET /repos/{owner}/{repo}")
-    String repoRaw(@Param("owner") String owner, @Param("repo") String repo);
+    String getRepoAsRawJson(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("GET /repos/{owner}/{repo}")
-    Map<String, Object> repoMap(@Param("owner") String owner, @Param("repo") String repo);
+    Map<String, Object> getRepoAsMap(@Param("owner") String owner, @Param("repo") String repo);
 
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
-    JsonObject create(
+    JsonObject createContributor(
         @Param("owner") String owner, @Param("repo") String repo, JsonValue contributor);
 
     @RequestLine("POST /repos/{owner}/{repo}/contributors")
-    void createRaw(@Param("owner") String owner, @Param("repo") String repo, Object contributor);
+    void createContributorWithObjectBody(
+        @Param("owner") String owner, @Param("repo") String repo, Object contributor);
   }
 
   private MockClient mockClient;
@@ -82,13 +84,13 @@ class JdkJsonCodecTest {
   }
 
   @Test
-  void decodesArray() {
+  void decodesJsonArray() {
     mockClient.ok(
         HttpMethod.GET,
         "/repos/openfeign/feign/contributors",
         "[{\"login\":\"velo\",\"contributions\":42},{\"login\":\"kdavisk6\",\"contributions\":7}]");
 
-    JsonArray contributors = github.contributors("openfeign", "feign");
+    JsonArray contributors = github.listContributors("openfeign", "feign");
 
     assertThat(contributors.asList()).hasSize(2);
     assertThat(contributors.get(0).get("login").asString()).isEqualTo("velo");
@@ -96,78 +98,85 @@ class JdkJsonCodecTest {
   }
 
   @Test
-  void decodesObject() {
+  void decodesJsonObject() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "{\"name\":\"feign\",\"stars\":9600}");
 
-    JsonObject repo = github.repo("openfeign", "feign");
+    JsonObject repo = github.getRepo("openfeign", "feign");
 
     assertThat(repo.get("name").asString()).isEqualTo("feign");
     assertThat(repo.get("stars").asLong()).isEqualTo(9600L);
   }
 
   @Test
-  void decodesAnyJsonValue() {
+  void decodesJsonValueReturnTypeAsJsonString() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "\"feign\"");
 
-    JsonValue value = github.repoValue("openfeign", "feign");
+    JsonValue repoName = github.getRepoAsJsonValue("openfeign", "feign");
 
-    assertThat(value).isInstanceOf(JsonString.class);
-    assertThat(value.asString()).isEqualTo("feign");
+    assertThat(repoName).isInstanceOf(JsonString.class);
+    assertThat(repoName.asString()).isEqualTo("feign");
   }
 
   @Test
-  void decodesRawString() {
+  void stringReturnTypeReturnsBodyVerbatim() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "{ \"name\" : \"feign\" }");
 
-    assertThat(github.repoRaw("openfeign", "feign")).isEqualTo("{ \"name\" : \"feign\" }");
+    assertThat(github.getRepoAsRawJson("openfeign", "feign")).isEqualTo("{ \"name\" : \"feign\" }");
   }
 
   @Test
   void notFoundDecodesToNull() {
     mockClient.add(HttpMethod.GET, "/repos/openfeign/feign", 404);
 
-    assertThat(github.repo("openfeign", "feign")).isNull();
+    assertThat(github.getRepo("openfeign", "feign")).isNull();
+  }
+
+  @Test
+  void noContentDecodesToNull() {
+    mockClient.add(HttpMethod.GET, "/repos/openfeign/feign", 204, "{}");
+
+    assertThat(github.getRepo("openfeign", "feign")).isNull();
   }
 
   @Test
   void emptyBodyDecodesToNull() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "");
 
-    assertThat(github.repo("openfeign", "feign")).isNull();
+    assertThat(github.getRepo("openfeign", "feign")).isNull();
   }
 
   @Test
   void malformedJsonFailsWithParseCause() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "{\"name\":");
 
-    assertThatThrownBy(() -> github.repo("openfeign", "feign"))
+    assertThatThrownBy(() -> github.getRepo("openfeign", "feign"))
         .isInstanceOf(DecodeException.class)
         .hasCauseInstanceOf(JsonParseException.class);
   }
 
   @Test
-  void duplicateMemberNamesAreRejected() {
+  void duplicateMemberNamesFailWithParseCause() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "{\"name\":\"a\",\"name\":\"b\"}");
 
-    assertThatThrownBy(() -> github.repo("openfeign", "feign"))
+    assertThatThrownBy(() -> github.getRepo("openfeign", "feign"))
         .isInstanceOf(DecodeException.class)
         .hasCauseInstanceOf(JsonParseException.class);
   }
 
   @Test
-  void mismatchedJsonTypeFails() {
+  void arrayBodyFailsToDecodeAsJsonObject() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "[1,2]");
 
-    assertThatThrownBy(() -> github.repo("openfeign", "feign"))
+    assertThatThrownBy(() -> github.getRepo("openfeign", "feign"))
         .isInstanceOf(DecodeException.class)
-        .hasMessage("Expected JsonObject but got [1,2]");
+        .hasMessage("Expected JsonObject but got a JSON array");
   }
 
   @Test
-  void unsupportedReturnTypeFails() {
+  void unsupportedReturnTypeFailsToDecode() {
     mockClient.ok(HttpMethod.GET, "/repos/openfeign/feign", "{}");
 
-    assertThatThrownBy(() -> github.repoMap("openfeign", "feign"))
+    assertThatThrownBy(() -> github.getRepoAsMap("openfeign", "feign"))
         .isInstanceOf(DecodeException.class)
         .hasMessageContaining("is not a type supported by this decoder");
   }
@@ -181,17 +190,29 @@ class JdkJsonCodecTest {
                 "login", JsonString.of("velo"),
                 "repos", JsonArray.of(List.of(JsonNumber.of(1), JsonNumber.of(2)))));
 
-    JsonObject created = github.create("openfeign", "feign", contributor);
+    JsonObject createdContributor = github.createContributor("openfeign", "feign", contributor);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/repos/openfeign/feign/contributors");
     assertThat(new String(request.body(), UTF_8)).isEqualTo(contributor.toString());
-    assertThat(created.get("id").asInt()).isEqualTo(1);
+    assertThat(createdContributor.get("id").asInt()).isEqualTo(1);
   }
 
   @Test
-  void unsupportedBodyTypeFails() {
-    assertThatThrownBy(() -> github.createRaw("openfeign", "feign", Map.of("login", "velo")))
+  void nonJsonValueBodyFailsToEncode() {
+    assertThatThrownBy(
+            () ->
+                github.createContributorWithObjectBody(
+                    "openfeign", "feign", Map.of("login", "velo")))
         .isInstanceOf(EncodeException.class)
         .hasMessageContaining("is not a type supported by this encoder");
+  }
+
+  @Test
+  void nullBodyEncodesNothing() {
+    RequestTemplate template = new RequestTemplate();
+
+    new JdkJsonEncoder().encode(null, JsonValue.class, template);
+
+    assertThat(template.body()).isNull();
   }
 }
