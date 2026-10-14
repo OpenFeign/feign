@@ -44,6 +44,7 @@ Feign is a declarative HTTP client library with a modular design:
 - `micrometer/`, `dropwizard-metrics4/5/` - Metrics integration
 - `validation/`, `validation-jakarta/` - JSR-303 / Jakarta Bean Validation via the `MethodInterceptor` extension point
 - `http-cache/` - Conditional revalidation (`ETag` / `Last-Modified` / `304 Not Modified`) via the `MethodInterceptor` extension point
+- `jdk-json/` - Codec for the JDK Simple JSON API (`jdk.incubator.json`, JEP 540); built only with `-Pjdk28` and a JDK 28 toolchain
 
 ### Key Design Patterns
 - **Builder Pattern**: `Feign.builder()` for configuring clients
@@ -106,6 +107,7 @@ Example:
 - `dropwizard-metrics5/` - Java 17 (for Metrics 5.x)
 - `apt-test-generator/` - Java 17 (for Handlebars 4.5.0+)
 - `soap-jakarta/`, `jaxb-jakarta/` - Java 11 (for Jakarta namespace)
+- `jdk-json/` - Java 28 (for `jdk.incubator.json`); lives in the `jdk28` profile so builds without a JDK 28 toolchain still work. CI installs the JDK 28 early-access build from jdk.java.net; bump the build number in `.circleci/config.yml` and `.circleci/toolchains.xml` when it disappears
 
 ### Dependabot Configuration
 

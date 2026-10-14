@@ -29,7 +29,7 @@ commands:
       - run:
           name: 'Check if cache was restored'
           command: |
-            if [ -d "$HOME/.sdkman/candidates/java/25.0.2-tem" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
+            if [ -d "$HOME/.sdkman/candidates/java/25.0.2-tem" ] && [ -d "$HOME/.sdkman/candidates/java/28-ea+19" ] && [ -d ~/.m2/repository/io/github/openfeign ]; then
               echo "Complete cache hit detected - SDKMAN and Maven dependencies available."
               circleci step halt
             elif [ -d "$HOME/.sdkman/candidates/java/21.0.2-tem" ]; then
@@ -58,6 +58,15 @@ commands:
             done
             sdk default java 25.0.2-tem
       - run:
+          name: 'Install JDK 28 early access'
+          command: |
+            jdk28="$HOME/.sdkman/candidates/java/28-ea+19"
+            if [ ! -d "$jdk28" ]; then
+              mkdir -p "$jdk28"
+              curl -sSfL https://download.java.net/java/early_access/jdk28/19/GPL/openjdk-28-ea+19_linux-x64_bin.tar.gz \
+                | tar xz --strip-components=1 -C "$jdk28"
+            fi
+      - run:
           name: 'Configure Maven Toolchain'
           command: |
             mkdir -p ~/.m2
@@ -69,7 +78,7 @@ commands:
             ./mvnw -ntp -B \
               org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline \
               de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies \
-              -T2 -pl -:feign-benchmark
+              -T2 -Pjdk28 -pl -:feign-benchmark
       - save_cache:
           paths:
             - ~/.sdkman
@@ -100,7 +109,7 @@ commands:
           no_output_timeout: 30m
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test,-:feign-example-github,-:feign-example-github-with-coroutine,-:feign-example-wikipedia,-:feign-example-wikipedia-with-springboot -DskipTests=true deploy
+            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release,jdk28 -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test,-:feign-example-github,-:feign-example-github-with-coroutine,-:feign-example-wikipedia,-:feign-example-wikipedia-with-springboot -DskipTests=true deploy
 
 # our job defaults
 defaults: &defaults
@@ -148,7 +157,7 @@ jobs:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify
+            ./mvnw -ntp -B -Pjdk28 verify
       - verify-formatting
 
   deploy:

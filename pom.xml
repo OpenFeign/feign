@@ -289,6 +289,12 @@
 
       <dependency>
         <groupId>${project.groupId}</groupId>
+        <artifactId>feign-jdk-json</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
         <artifactId>feign-httpclient</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -1002,6 +1008,13 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>jdk28</id>
+      <modules>
+        <module>jdk-json</module>
+      </modules>
+    </profile>
+
     <profile>
       <id>quickbuild</id>
       <properties>

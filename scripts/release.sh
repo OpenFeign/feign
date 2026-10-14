@@ -38,13 +38,13 @@ echo "release version is: ${tag} and next snapshot is: ${snapshot}"
 # Update the versions, removing the snapshots, then create a new tag for the release, this will
 # start the travis-ci release process.
 if [ -n "$1" ]; then
-  ./mvnw -B versions:set -DnewVersion="${tag}" -DgenerateBackupPoms=false
+  ./mvnw -B -Pjdk28 versions:set -DnewVersion="${tag}" -DgenerateBackupPoms=false
 fi
-./mvnw -B versions:set license:format scm:checkin -DremoveSnapshot -DgenerateBackupPoms=false -Dmessage="prepare release ${tag}" -DpushChanges=false
+./mvnw -B -Pjdk28 versions:set license:format scm:checkin -DremoveSnapshot -DgenerateBackupPoms=false -Dmessage="prepare release ${tag}" -DpushChanges=false
 
 # tag the release
 echo "pushing tag ${tag}"
 ./mvnw scm:tag
 
 # Update the versions to the next snapshot
-./mvnw -B versions:set scm:checkin -DnewVersion="${snapshot}" -DgenerateBackupPoms=false -Dmessage="[ci skip] updating versions to next development iteration ${snapshot}"
+./mvnw -B -Pjdk28 versions:set scm:checkin -DnewVersion="${snapshot}" -DgenerateBackupPoms=false -Dmessage="[ci skip] updating versions to next development iteration ${snapshot}"
