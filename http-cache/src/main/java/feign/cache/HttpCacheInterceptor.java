@@ -35,7 +35,8 @@ import java.util.regex.Pattern;
  * returns the previously decoded value from {@link HttpCacheStore} without re-decoding.
  *
  * <p>Successful responses (2xx) carrying an {@code ETag} or {@code Last-Modified} header are
- * stored. Responses with {@code Cache-Control: no-store} are skipped.
+ * stored, unless the response says it cannot be held in a cache shared by several callers: {@code
+ * Cache-Control: no-store}, {@code Cache-Control: private} and {@code Vary: *} are skipped.
  *
  * <p>Default scope is HTTP {@code GET}, {@code HEAD}, and {@code QUERY}; override via {@link
  * #cacheable(Function)}.
@@ -48,6 +49,8 @@ import java.util.regex.Pattern;
 public final class HttpCacheInterceptor implements MethodInterceptor {
 
   private static final Pattern NO_STORE = Pattern.compile("(?i)\\bno-store\\b");
+
+  private static final Pattern PRIVATE = Pattern.compile("(?i)\\bprivate\\b");
 
   private final HttpCacheStore store;
   private final Function<Invocation, String> keyFn;
@@ -118,7 +121,7 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
       return;
     }
     Map<String, Collection<String>> headers = response.headers();
-    if (containsNoStore(headers)) {
+    if (!shareable(headers)) {
       return;
     }
     String etag = firstHeader(headers, "ETag");
@@ -144,13 +147,31 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
         || "QUERY".equalsIgnoreCase(method);
   }
 
-  private static boolean containsNoStore(Map<String, Collection<String>> headers) {
+  /**
+   * Whether a {@link HttpCacheStore}, which every caller of the client shares, may hold this
+   * response. {@code no-store} and {@code private} mark a response that a shared cache must not
+   * store (RFC 9111 sections 5.2.2.5 and 5.2.2.7), and {@code Vary: *} marks one that never matches
+   * a later request (RFC 9111 section 4.1); the default key covers the method, url and body only,
+   * so storing any of them hands the entry and its validator to the next caller of the same method
+   * and url.
+   */
+  private static boolean shareable(Map<String, Collection<String>> headers) {
     for (String value : Util.valuesOrEmpty(headers, "Cache-Control")) {
-      if (value != null && NO_STORE.matcher(value).find()) {
-        return true;
+      if (value != null && (NO_STORE.matcher(value).find() || PRIVATE.matcher(value).find())) {
+        return false;
       }
     }
-    return false;
+    for (String value : Util.valuesOrEmpty(headers, "Vary")) {
+      if (value == null) {
+        continue;
+      }
+      for (String field : value.split(",")) {
+        if ("*".equals(field.trim())) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   private static String firstHeader(Map<String, Collection<String>> headers, String name) {
