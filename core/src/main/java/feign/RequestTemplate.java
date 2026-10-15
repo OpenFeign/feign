@@ -821,8 +821,12 @@ public final class RequestTemplate implements Serializable {
       // a client can only produce content of one single type, so always override Content-Type and
       // only add a single type
       this.headers.remove(name);
+      List<String> contentTypes = Collections.singletonList(values.iterator().next());
       this.headers.put(
-          name, HeaderTemplate.create(name, Collections.singletonList(values.iterator().next())));
+          name,
+          literal
+              ? HeaderTemplate.literal(name, contentTypes)
+              : HeaderTemplate.create(name, contentTypes));
       return this;
     }
     this.headers.compute(
