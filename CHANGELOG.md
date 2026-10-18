@@ -1,3 +1,11 @@
+### Version 13.18
+
+* Literal and scalar query values containing commas stay as one parameter value. Collection
+  expressions continue to expand according to the configured `CollectionFormat` (#3623).
+* Primitive-array `@QueryMap` values and default `@Param` array expressions expand their elements
+  instead of sending an array identity string. Custom `Param.Expander` array arguments keep being
+  passed as a whole value (#3623).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
