@@ -1,3 +1,10 @@
+### Version 13.18
+
+* `DefaultAsyncClient` completes its future exceptionally for any `Throwable` the synchronous
+  `Client` escapes with, not only `Exception`. A thrown `Error` used to leave the caller's future
+  pending forever, because it was captured only by the executor's task future, which is consulted
+  for cancellation only.
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
