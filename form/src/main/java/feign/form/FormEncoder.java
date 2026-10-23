@@ -62,7 +62,7 @@ public class FormEncoder implements Encoder {
 
   static {
     CONTENT_TYPE_HEADER = "Content-Type";
-    CHARSET_PATTERN = Pattern.compile("(?<=charset=)([\\w\\-]+)");
+    CHARSET_PATTERN = Pattern.compile("(?<=charset=)\"?([\\w\\-]+)", Pattern.CASE_INSENSITIVE);
   }
 
   Encoder delegate;

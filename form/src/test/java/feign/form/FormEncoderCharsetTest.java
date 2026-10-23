@@ -50,4 +50,34 @@ class FormEncoderCharsetTest {
 
     assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("foo=bar");
   }
+
+  @Test
+  void charsetParameterNameIsCaseInsensitive() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; Charset=ISO-8859-1");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.ISO_8859_1)).isEqualTo("name=%E9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
+  }
+
+  @Test
+  void quotedCharsetParameterIsHonored() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; charset=\"ISO-8859-1\"");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.ISO_8859_1)).isEqualTo("name=%E9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
+  }
 }
