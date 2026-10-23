@@ -190,6 +190,13 @@ We also have limited support for Level 3, Path Style Expressions, with the follo
 * Maps and Lists are expanded by default.
 * Only Single variable templates are supported.
 
+Literal and scalar query values containing commas remain one value. Bind an `Iterable` or array
+for repeated parameters. Keep comma data inside individual collection elements; literal commas
+around a collection expression are interpreted as collection separators.
+
+A custom `@Param` expander receives an array as a whole value. `Iterable` arguments are expanded
+one element at a time.
+
 *Examples:*
 
 ```
