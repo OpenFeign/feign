@@ -1,3 +1,11 @@
+### Version 13.18
+
+* `Response.charset()` reads the `Content-Type` `charset` parameter wherever it appears, not only as
+  the first parameter, so `text/plain; format=flowed; charset=ISO-8859-1` decodes as ISO-8859-1
+  instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
+  `charset=` inside a quoted parameter value stays data. Quoted charset values still work, and a
+  missing, illegal or unsupported charset still falls back to UTF-8 (#3626).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
