@@ -194,7 +194,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
     return client
         .connectTimeout()
         .map(timeout -> timeout.toMillis() != options.connectTimeoutMillis())
-        .orElse(true);
+        .orElse(options.connectTimeoutMillis() != 0);
   }
 
   /**
@@ -214,9 +214,14 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   private static java.net.http.HttpClient.Builder newClientBuilder(Options options) {
-    return HttpClient.newBuilder()
-        .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER)
-        .connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
+    final java.net.http.HttpClient.Builder builder =
+        HttpClient.newBuilder()
+            .followRedirects(options.isFollowRedirects() ? Redirect.ALWAYS : Redirect.NEVER);
+    // Omitting the timeout means unbounded; the JDK still rejects negative values.
+    if (options.connectTimeoutMillis() != 0) {
+      builder.connectTimeout(Duration.ofMillis(options.connectTimeoutMillis()));
+    }
+    return builder;
   }
 
   private Builder newRequestBuilder(Request request, Options options) throws URISyntaxException {
@@ -230,11 +235,10 @@ public class Http2Client implements Client, AsyncClient<Object> {
       body = BodyPublishers.ofByteArray(data);
     }
 
-    final Builder requestBuilder =
-        HttpRequest.newBuilder()
-            .uri(uri)
-            .timeout(Duration.ofMillis(options.readTimeoutMillis()))
-            .version(client.version());
+    final Builder requestBuilder = HttpRequest.newBuilder().uri(uri).version(client.version());
+    if (options.readTimeoutMillis() != 0) {
+      requestBuilder.timeout(Duration.ofMillis(options.readTimeoutMillis()));
+    }
 
     final Map<String, Collection<String>> headers = filterRestrictedHeaders(request.headers());
     if (!headers.isEmpty()) {
