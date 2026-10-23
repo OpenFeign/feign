@@ -30,3 +30,27 @@ val api = Feign.builder()
   .decoder(JacksonDecoder())
   .target(GitHubApi::class.java, "https://api.github.com")
 ```
+
+## Truly non-blocking execution
+
+By default `CoroutineFeign` wraps a blocking `Client` with
+`DefaultAsyncClient`, which runs the blocking I/O on a cached thread pool. The
+suspending call never blocks the caller, but a thread is still occupied per
+in-flight request.
+
+For fully non-blocking execution, plug in any `AsyncClient` implementation that
+completes its `CompletableFuture` without an extra thread, e.g.
+`feign-http2client` (`Http2Client`, Java 11+ `HttpClient`), `feign-hc5`
+(`AsyncApacheHttp5Client`), or `feign-vertx`:
+
+```kotlin
+val api = CoroutineFeign.builder<GitHubApi>()
+  .client(Http2Client() as AsyncClient<GitHubApi>) // or AsyncApacheHttp5Client()
+  .decoder(JacksonDecoder())
+  .target(GitHubApi::class.java, "https://api.github.com")
+```
+
+The HTTP request now runs on the async client's own I/O machinery, and response
+decoding happens on the thread that completes the future rather than on a
+dedicated pool thread. See `NonBlockingCoroutineFeignTest` for a runnable
+example.
