@@ -54,3 +54,23 @@ The HTTP request now runs on the async client's own I/O machinery, and response
 decoding happens on the thread that completes the future rather than on a
 dedicated pool thread. See `NonBlockingCoroutineFeignTest` for a runnable
 example.
+
+## Flow support
+
+`CoroutineFeign` supports `suspend` functions returning `kotlinx.coroutines.flow.Flow<T>`.
+
+The response body is decoded as a buffered `List<T>` (the same semantics applied to
+`Flux` returns by the reactive module) and bridged back into a cold `Flow`, so the
+`suspend` call still suspends until the full response arrives while the caller can
+consume elements as a stream:
+
+```kotlin
+interface EventsApi {
+  @GET("/events")
+  suspend fun events(): Flow<Event>
+}
+```
+
+Note that decoding is fully buffered on the server response, so this is not a true
+streaming/SSE transport; see [#971](https://github.com/OpenFeign/feign/issues/971) for
+the background discussion.
