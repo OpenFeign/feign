@@ -1,6 +1,6 @@
 # feign-webflux
 
-A truly non-blocking [AsyncClient](https://github.com/OpenFeign/feign/blob/master/core/src/main/java/feign/AsyncClient.java)
+A non-blocking [AsyncClient](https://github.com/OpenFeign/feign/blob/master/core/src/main/java/feign/AsyncClient.java)
 for Feign, backed by Spring's
 [WebClient](https://docs.spring.io/spring-framework/reference/integration/web-clients.html).
 
@@ -54,13 +54,15 @@ GitHub github = AsyncFeign.builder()
 
 ## Usage with CoroutineFeign
 
-Combined with the [`feign-kotlin`](../kotlin/README.md) module, `suspend` calls never block a
-thread: the request runs on the event loop and decoding happens on the thread that completes the
-future.
+Combined with the [`feign-kotlin`](../kotlin/README.md) module, `suspend` calls suspend the
+calling coroutine while the WebClient transport handles the pending HTTP I/O asynchronously.
+Response decoding runs on the thread that completes the future, normally a Reactor Netty event-loop
+thread; as with other `AsyncClient` implementations, decoders and callbacks should not perform
+blocking or long-running work on that thread.
 
 ```kotlin
 interface GitHubApi {
-  @RequestLine("GET /repos/{owner}/repos")
+  @RequestLine("GET /users/{owner}/repos")
   suspend fun listRepositories(@Param("owner") owner: String): List<Repo>
 }
 
@@ -69,7 +71,27 @@ val api = CoroutineFeign.builder<GitHubApi>()
   .decoder(JacksonDecoder())
   .target(GitHubApi::class.java, "https://api.github.com")
 
-val repositories = api.listRepositories("openfeign") // suspend fun
+val repositories = api.listRepositories("openfeign")
+```
+
+## Spring configuration
+
+A Spring-managed `WebClient.Builder` can be passed to the adapter so its connector, filters,
+codecs and other settings are reused. For a Reactor Netty connector, Spring Boot's default shared
+resources let the client share the application's event-loop resources.
+
+```kotlin
+@Configuration
+class GitHubClientConfiguration {
+  @Bean
+  fun gitHubApi(builder: WebClient.Builder): GitHubApi {
+    @Suppress("UNCHECKED_CAST")
+    return CoroutineFeign.builder<GitHubApi>()
+      .client(WebClientAsyncClient<Any>(builder) as AsyncClient<GitHubApi>)
+      .decoder(JacksonDecoder())
+      .target(GitHubApi::class.java, "https://api.github.com")
+  }
+}
 ```
 
 ## Reusing WebClient configuration
@@ -98,6 +120,8 @@ GitHub github = AsyncFeign.builder()
 - Response bodies are fully aggregated in memory before decoding; there is no streaming support.
 - Error statuses (4xx/5xx) are delivered as regular Feign `Response` objects and remain under the
   control of the `ErrorDecoder`; the WebClient is never allowed to turn them into exceptions.
-- Of the per-request `Request.Options`, only the read timeout is applied (as a reactive timeout
-  that cancels the request). Connect timeout, redirects and connection pool limits are transport
-  concerns: configure them on the connector as shown above.
+- The per-request read timeout is applied as an overall reactive timeout that cancels the request.
+  Connect timeout and redirect behavior must be configured on the WebClient connector; the adapter
+  does not translate Feign's per-request connect timeout or redirect option into connector settings.
+- The response decoder runs on the future completion thread, typically the Reactor Netty event loop.
+  Keep decoders and completion callbacks non-blocking and short.
