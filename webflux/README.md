@@ -19,7 +19,7 @@ thread is parked waiting for a response, so this client is a natural companion t
 </dependency>
 ```
 
-`feign-webflux` depends on `spring-webflux` only. The actual HTTP connector is a runtime choice:
+`feign-webflux` requires Java 17 or newer, matching Spring Framework 7; adding this optional module does not change Feign Core's Java baseline. It depends on `spring-webflux` only. The actual HTTP connector is a runtime choice:
 add [Reactor Netty](https://projectreactor.io/docs/netty/release/reference/index.html) (used by
 default when present), Jetty, Apache HttpComponents or rely on the JDK `HttpClient` connector
 provided by Spring.
@@ -125,3 +125,5 @@ GitHub github = AsyncFeign.builder()
   does not translate Feign's per-request connect timeout or redirect option into connector settings.
 - The response decoder runs on the future completion thread, typically the Reactor Netty event loop.
   Keep decoders and completion callbacks non-blocking and short.
+- The default Reactor Netty resources are shared globally. If supplying custom Netty resources or a
+  custom connector, the application remains responsible for their lifecycle and disposal.
