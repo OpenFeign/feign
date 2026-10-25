@@ -41,7 +41,8 @@ in-flight request.
 For fully non-blocking execution, plug in any `AsyncClient` implementation that
 completes its `CompletableFuture` without an extra thread, e.g.
 `feign-http2client` (`Http2Client`, Java 11+ `HttpClient`), `feign-hc5`
-(`AsyncApacheHttp5Client`), or `feign-vertx`:
+(`AsyncApacheHttp5Client`), `feign-vertx`, or `feign-webflux`
+(`WebClientAsyncClient`, Spring `WebClient` on Reactor Netty):
 
 ```kotlin
 val api = CoroutineFeign.builder<GitHubApi>()
