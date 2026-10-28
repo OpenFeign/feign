@@ -1,3 +1,9 @@
+### Version 13.18
+
+* `FieldQueryMapEncoder` and `BeanQueryMapEncoder` apply the `expander` of a `@Param` annotation on
+  a `@QueryMap` POJO field or getter, to each element when the value is a collection. A `@Param`
+  without a value keeps the field or property name instead of an empty query name (#1312).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a

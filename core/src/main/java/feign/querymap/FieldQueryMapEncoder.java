@@ -21,6 +21,7 @@ import feign.codec.EncodeException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,19 +49,35 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
         classToMetadata.computeIfAbsent(object.getClass(), ObjectParamMetadata::parseObjectType);
 
     return metadata.objectFields.stream()
-        .map(field -> this.FieldValuePair(object, field))
+        .map(field -> this.FieldValuePair(object, field, metadata.fieldToExpander.get(field)))
         .filter(fieldObjectPair -> fieldObjectPair.right.isPresent())
         .collect(Collectors.toMap(this::fieldName, fieldObjectPair -> fieldObjectPair.right.get()));
   }
 
   private String fieldName(Pair<Field, Optional<Object>> pair) {
     Param alias = pair.left.getAnnotation(Param.class);
-    return alias != null ? alias.value() : pair.left.getName();
+    return alias != null && !alias.value().isEmpty() ? alias.value() : pair.left.getName();
   }
 
-  private Pair<Field, Optional<Object>> FieldValuePair(Object object, Field field) {
+  private Object expand(Param.Expander expander, Object value) {
+    if (expander == null) {
+      return value;
+    }
+    if (value instanceof Iterable) {
+      List<String> values = new ArrayList<>();
+      for (Object element : (Iterable<?>) value) {
+        values.add(element == null ? null : expander.expand(element));
+      }
+      return values;
+    }
+    return expander.expand(value);
+  }
+
+  private Pair<Field, Optional<Object>> FieldValuePair(
+      Object object, Field field, Param.Expander expander) {
     try {
-      return Pair.pair(field, Optional.ofNullable(field.get(object)));
+      return Pair.pair(
+          field, Optional.ofNullable(field.get(object)).map(value -> expand(expander, value)));
     } catch (IllegalAccessException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
@@ -69,9 +86,12 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
   private static class ObjectParamMetadata {
 
     private final List<Field> objectFields;
+    private final Map<Field, Param.Expander> fieldToExpander;
 
-    private ObjectParamMetadata(List<Field> objectFields) {
+    private ObjectParamMetadata(
+        List<Field> objectFields, Map<Field, Param.Expander> fieldToExpander) {
       this.objectFields = Collections.unmodifiableList(objectFields);
+      this.fieldToExpander = Collections.unmodifiableMap(fieldToExpander);
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type) {
@@ -83,11 +103,29 @@ public class FieldQueryMapEncoder implements QueryMapEncoder {
         Collections.addAll(allFields, currentClass.getDeclaredFields());
       }
 
-      return new ObjectParamMetadata(
+      List<Field> objectFields =
           allFields.stream()
               .filter(field -> !field.isSynthetic())
               .peek(field -> field.setAccessible(true))
-              .collect(Collectors.toList()));
+              .collect(Collectors.toList());
+
+      Map<Field, Param.Expander> fieldToExpander = new HashMap<>();
+      for (Field field : objectFields) {
+        Param param = field.getAnnotation(Param.class);
+        if (param != null && param.expander() != Param.ToStringExpander.class) {
+          fieldToExpander.put(field, newExpander(param.expander()));
+        }
+      }
+
+      return new ObjectParamMetadata(objectFields, fieldToExpander);
+    }
+
+    private static Param.Expander newExpander(Class<? extends Param.Expander> expanderClass) {
+      try {
+        return expanderClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new EncodeException("Failure instantiating " + expanderClass.getName(), e);
+      }
     }
   }
 
