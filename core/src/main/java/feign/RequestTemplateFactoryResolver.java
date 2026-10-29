@@ -21,6 +21,7 @@ import static feign.Util.checkNotNull;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
 import feign.template.UriUtils;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -189,8 +190,11 @@ final class RequestTemplateFactoryResolver {
             Object nextObject = iter.next();
             values.add(nextObject == null ? null : UriUtils.encode(nextObject.toString()));
           }
-        } else if (currValue instanceof Object[]) {
-          for (Object value : (Object[]) currValue) {
+        } else if (currValue != null && currValue.getClass().isArray()) {
+          /* arrays of primitives are not Object[], read them reflectively */
+          int length = Array.getLength(currValue);
+          for (int i = 0; i < length; i++) {
+            Object value = Array.get(currValue, i);
             values.add(value == null ? null : UriUtils.encode(value.toString()));
           }
         } else {
