@@ -186,6 +186,50 @@ class HttpCacheInterceptorTest {
   }
 
   @Test
+  void privateCacheControlPreventsStorage() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "max-age=60, private")
+            .setBody("payload"));
+
+    api().fetch("42");
+
+    assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void varyAsteriskPreventsStorage() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Vary", "Accept-Encoding, *")
+            .setBody("payload"));
+
+    api().fetch("42");
+
+    assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void privateResponseIsNotRevalidatedForASecondCaller() throws Exception {
+    server.enqueue(
+        new MockResponse()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "private")
+            .setBody("caller-a-data"));
+    server.enqueue(new MockResponse().setResponseCode(304));
+
+    Api api = api();
+    assertThat(api.fetch("42")).isEqualTo("caller-a-data");
+    assertThatThrownBy(() -> api.fetch("42")).isInstanceOf(FeignException.class);
+
+    server.takeRequest(); // caller a
+    RecordedRequest second = server.takeRequest();
+    assertThat(second.getHeader("If-None-Match")).isNull();
+  }
+
+  @Test
   void serverErrorPropagatesAndDoesNotEvictExistingEntry() throws Exception {
     server.enqueue(new MockResponse().setHeader("ETag", "\"v1\"").setBody("payload-1"));
     server.enqueue(new MockResponse().setResponseCode(500).setBody("nope"));
