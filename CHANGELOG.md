@@ -1,3 +1,9 @@
+### Version 13.18
+
+* Replacing a request URI without a fragment clears the previous fragment; appending a URI and
+  resolving template variables preserve it. Target URL fragments retain their percent escapes
+  instead of being decoded (#3095).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a

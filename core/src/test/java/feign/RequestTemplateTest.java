@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request.HttpMethod;
 import feign.template.UriUtils;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -577,6 +578,114 @@ public class RequestTemplateTest {
 
     assertThat(template.url()).isEqualTo("/path?query=queryValue#fragment");
     assertThat(template.queryLine()).isEqualTo("?query=queryValue");
+  }
+
+  @Test
+  void resolvingUriShouldPreserveFragment() {
+    RequestTemplate template =
+        new RequestTemplate().method(HttpMethod.GET).uri("/path/{id}#anchor");
+
+    RequestTemplate resolved = template.resolve(Collections.singletonMap("id", "123"));
+
+    assertThat(resolved.url()).isEqualTo("/path/123#anchor");
+    assertThat(resolved.request().url()).isEqualTo("/path/123#anchor");
+    assertThat(template.url()).isEqualTo("/path/{id}#anchor");
+  }
+
+  @Test
+  void replacingUriShouldClearFragmentFromPreviousUri() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("/old#stale");
+    assertThat(template.url()).isEqualTo("/old#stale");
+
+    /* cannot set a fragment on the replacement uri, the previous one must not survive */
+    template.uri("/new?q=v");
+
+    assertThat(template.url()).isEqualTo("/new?q=v");
+    assertThat(template.queryLine()).isEqualTo("?q=v");
+  }
+
+  @Test
+  void explicitlyEmptyFragmentShouldReplacePreviousFragment() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("/old#stale");
+
+    /* a bare '#' is how a caller explicitly drops the fragment, without a fragment value */
+    template.uri("/new#");
+
+    /*
+     * RFC 3986 allows an empty fragment and java.net.URI reports it as "" rather than null, so an
+     * empty fragment is not asserted as stripped, only as no longer being the stale one.
+     */
+    String url = template.url();
+    assertThat(url).doesNotContain("stale");
+    assertThat(url).isEqualTo("/new#");
+    assertThat(URI.create(url).getRawFragment()).isNotNull().isEmpty();
+  }
+
+  @Test
+  void appendingUriShouldPreserveExistingFragment() {
+    RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("/base#anchor");
+
+    template.uri("/suffix", true);
+
+    assertThat(template.url()).isEqualTo("/base/suffix#anchor");
+  }
+
+  @Test
+  void incomingFragmentShouldReplaceExistingFragment() {
+    RequestTemplate replaced =
+        new RequestTemplate().method(HttpMethod.GET).uri("/old#stale").uri("/new#fresh");
+    assertThat(replaced.url()).isEqualTo("/new#fresh");
+
+    RequestTemplate appended =
+        new RequestTemplate().method(HttpMethod.GET).uri("/base#stale").uri("/suffix#fresh", true);
+    assertThat(appended.url()).isEqualTo("/base/suffix#fresh");
+  }
+
+  @Test
+  void targetShouldPreserveRawFragment() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("https://example.com/a#encoded%20value%2F");
+
+    /* the raw fragment is re-appended verbatim, not decoded into " " or "/" */
+    assertThat(template.url()).isEqualTo("https://example.com/a#encoded%20value%2F");
+    assertThat(template.headers()).isEmpty();
+    assertThat(template.queries()).isEmpty();
+  }
+
+  @Test
+  void targetShouldPreserveRawFragmentWhenQueryIsPresent() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("https://example.com/a?x=1#encoded%20fragment");
+
+    assertThat(template.url()).isEqualTo("https://example.com/a?x=1#encoded%20fragment");
+    assertThat(template.queries()).containsKey("x");
+  }
+
+  @Test
+  void targetWithoutFragmentShouldNotClearExistingFragment() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("/path#fragment")
+            .target("https://example.com");
+
+    assertThat(template.url()).isEqualTo("https://example.com/path#fragment");
+  }
+
+  @Test
+  void copyShouldPreserveAndIsolateFragment() {
+    RequestTemplate original = new RequestTemplate().method(HttpMethod.GET).uri("/path#fragment");
+
+    RequestTemplate copy = RequestTemplate.from(original);
+    assertThat(copy.url()).isEqualTo("/path#fragment");
+
+    copy.uri("/other#other-fragment");
+    assertThat(copy.url()).isEqualTo("/other#other-fragment");
+    assertThat(original.url()).isEqualTo("/path#fragment");
   }
 
   @Test
