@@ -40,6 +40,8 @@ public class RequestKey {
 
     private byte[] body;
 
+    private boolean matchHeadersBySubset;
+
     private Builder(HttpMethod method, String url) {
       this.method = method;
       this.url = url;
@@ -67,6 +69,18 @@ public class RequestKey {
 
     public Builder body(byte[] body) {
       this.body = body;
+      return this;
+    }
+
+    /**
+     * Match only the headers declared on this key, ignoring any additional header present on the
+     * incoming request, such as a generated {@code Content-Length} or a transport header. Without
+     * this opt-in, headers are compared for exact equality.
+     *
+     * @return this builder
+     */
+    public Builder matchHeadersBySubset() {
+      this.matchHeadersBySubset = true;
       return this;
     }
 
@@ -101,12 +115,15 @@ public class RequestKey {
 
   private final byte[] body;
 
+  private final boolean headerSubset;
+
   private RequestKey(Builder builder) {
     this.method = builder.method;
     this.url = builder.url;
     this.headers = builder.headers;
     this.charset = builder.charset;
     this.body = builder.body;
+    this.headerSubset = builder.matchHeadersBySubset;
   }
 
   private RequestKey(Request request) {
@@ -115,6 +132,7 @@ public class RequestKey {
     this.headers = RequestHeaders.of(request.headers());
     this.charset = request.charset();
     this.body = request.body();
+    this.headerSubset = false;
   }
 
   public HttpMethod getMethod() {
@@ -166,11 +184,26 @@ public class RequestKey {
     } else return url.equals(other.url);
   }
 
+  /**
+   * Extends {@link #equals(Object)} with charset, body and header checks.
+   *
+   * <p>Headers are compared exactly unless this key was built with {@link
+   * Builder#matchHeadersBySubset()}, in which case every header declared on this instance must be
+   * present on {@code obj} with the same values and headers carried only by {@code obj} are
+   * ignored.
+   *
+   * @param obj the key of the incoming request
+   * @return {@code true} when this key matches the incoming request
+   */
   public boolean equalsExtended(Object obj) {
     if (equals(obj)) {
       RequestKey other = (RequestKey) obj;
-      boolean headersEqual =
-          other.headers == null || headers == null || headers.equals(other.headers);
+      boolean headersEqual;
+      if (headerSubset) {
+        headersEqual = headers == null || headers.isSubsetOf(other.headers);
+      } else {
+        headersEqual = other.headers == null || headers == null || headers.equals(other.headers);
+      }
       boolean charsetEqual =
           other.charset == null || charset == null || charset.equals(other.charset);
       boolean bodyEqual = other.body == null || body == null || Arrays.equals(other.body, body);
