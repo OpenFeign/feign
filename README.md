@@ -1219,6 +1219,15 @@ public class CustomPojo {
 }
 ```
 
+The `expander` of a field's `@Param` annotation is applied as well, to each element when the value is a collection. The following field will generate "/find?since={millis}":
+
+```java
+public class CustomPojo {
+  @Param(value = "since", expander = DateToMillis.class)
+  private final Date date;
+}
+```
+
 To setup a custom `QueryMapEncoder`:
 
 ```java
