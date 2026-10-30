@@ -15,20 +15,23 @@
  */
 package feign.micrometer;
 
+import feign.RequestTemplate;
+import feign.Target;
 import io.micrometer.common.KeyValues;
-import io.micrometer.observation.Observation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * A {@link DefaultFeignObservationConvention} that additionally emits the target host and, when
- * explicitly present, the target port derived from the Feign {@code Target} url.
+ * A {@link DefaultFeignObservationConvention} that additionally emits the target host and port
+ * derived from the Feign {@code Target} url.
  *
  * <p>The host and port are taken from {@code
  * context.getCarrier().requestTemplate().feignTarget().url()} — the configured target url, not the
- * final resolved request url. Only a port that is explicitly present in that url is emitted; no
- * default port (80/443) is inferred and no scheme is added. The port is only emitted alongside a
- * valid host.
+ * final resolved request url. Only a port that is explicitly present in that url is reported as a
+ * number; when the url omits the port the {@code net.peer.port} key is still emitted with the
+ * placeholder value {@value #UNKNOWN} so that every meter produced by this convention carries the
+ * same set of tag keys (a requirement of registries such as Prometheus). No default port (80/443)
+ * is inferred and no scheme is added. The port is only emitted alongside a valid host.
  *
  * <p>This convention is strictly opt-in via {@link
  * MicrometerObservationCapability#MicrometerObservationCapability(io.micrometer.observation.ObservationRegistry,
@@ -43,9 +46,14 @@ import java.net.URISyntaxException;
  *
  * @author Henrique (henriquejsza)
  * @see DefaultFeignObservationConvention
- * @since 13.15
+ * @since 13.16
  */
 public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObservationConvention {
+
+  /**
+   * Placeholder emitted for {@code net.peer.port} when the target url declares no explicit port.
+   */
+  public static final String UNKNOWN = "UNKNOWN";
 
   /** Singleton instance of this convention. */
   public static final TargetHostAndPortFeignObservationConvention INSTANCE =
@@ -54,11 +62,6 @@ public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObs
   // There is no need to instantiate this class multiple times, but it may be extended,
   // hence protected visibility.
   protected TargetHostAndPortFeignObservationConvention() {}
-
-  @Override
-  public boolean supportsContext(Observation.Context context) {
-    return context instanceof FeignContext;
-  }
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
@@ -74,23 +77,27 @@ public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObs
     keyValues =
         keyValues.and(FeignObservationDocumentation.HttpClientTags.TARGET_HOST.withValue(host));
     int port = targetUri.getPort();
-    if (port != -1) {
-      keyValues =
-          keyValues.and(
-              FeignObservationDocumentation.HttpClientTags.TARGET_PORT.withValue(
-                  String.valueOf(port)));
-    }
+    String portValue = port != -1 ? String.valueOf(port) : UNKNOWN;
+    keyValues =
+        keyValues.and(
+            FeignObservationDocumentation.HttpClientTags.TARGET_PORT.withValue(portValue));
     return keyValues;
   }
 
   /**
-   * Parses the configured target url defensively. Returns {@code null} when the url is unavailable
-   * (for example an {@code EmptyTarget}) or is not a valid {@link URI}, so that a missing or
-   * invalid url never breaks the observation.
+   * Parses the configured target url defensively. Returns {@code null} when the target or its url
+   * is unavailable (for example an {@code EmptyTarget}, or a hand-built {@link RequestTemplate}
+   * whose {@code feignTarget()} is {@code null}) or when the url is not a valid {@link URI}, so
+   * that a missing or invalid url never breaks the observation.
    */
   private static URI targetUri(FeignContext context) {
+    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
+    Target<?> target = requestTemplate.feignTarget();
+    if (target == null) {
+      return null;
+    }
     try {
-      String url = context.getCarrier().requestTemplate().feignTarget().url();
+      String url = target.url();
       if (url == null || url.isEmpty()) {
         return null;
       }

@@ -15,13 +15,19 @@
  */
 package feign.micrometer;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import feign.Client;
 import feign.Feign;
+import feign.Request;
+import feign.Request.HttpMethod;
 import feign.RequestLine;
+import feign.RequestTemplate;
 import feign.Response;
 import feign.Retryer;
 import feign.Target.EmptyTarget;
 import feign.Target.HardCodedTarget;
+import io.micrometer.common.KeyValues;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;
 import java.net.URI;
@@ -114,7 +120,7 @@ class TargetHostAndPortFeignObservationConventionTest {
   }
 
   @Test
-  void optInConventionEmitsHostButNoPortWhenPortIsAbsent() {
+  void optInConventionEmitsHostWithUnknownPortWhenPortIsAbsent() {
     TestClient feignClient =
         Feign.builder()
             .client(okClient())
@@ -129,7 +135,8 @@ class TargetHostAndPortFeignObservationConventionTest {
         .hasSingleObservationThat()
         .hasBeenStopped()
         .hasLowCardinalityKeyValue(TARGET_HOST, "example.com")
-        .doesNotHaveLowCardinalityKeyValueWithKey(TARGET_PORT);
+        .hasLowCardinalityKeyValue(
+            TARGET_PORT, TargetHostAndPortFeignObservationConvention.UNKNOWN);
   }
 
   @Test
@@ -152,5 +159,77 @@ class TargetHostAndPortFeignObservationConventionTest {
         .hasBeenStopped()
         .doesNotHaveLowCardinalityKeyValueWithKey(TARGET_HOST)
         .doesNotHaveLowCardinalityKeyValueWithKey(TARGET_PORT);
+  }
+
+  @Test
+  void optInConventionIsSafeWhenTargetUrlIsNotAValidUri() {
+    // A target url with a raw space parses fine as a Feign Target but makes new URI(url) throw
+    // URISyntaxException; the convention must swallow it and omit host/port.
+    RequestTemplate captured = captureRequestTemplate();
+    RequestTemplate requestTemplate =
+        RequestTemplate.from(captured)
+            .feignTarget(new HardCodedTarget<>(TestClient.class, "http://exa mple.com:8080"));
+    FeignContext context = contextFor(requestTemplate);
+
+    KeyValues keyValues =
+        TargetHostAndPortFeignObservationConvention.INSTANCE.getLowCardinalityKeyValues(context);
+
+    assertThat(keyValues.stream().map(kv -> kv.getKey())).doesNotContain(TARGET_HOST, TARGET_PORT);
+  }
+
+  @Test
+  void optInConventionIsSafeWhenFeignTargetIsNull() {
+    // A RequestTemplate not routed through RequestTemplateFactoryResolver (e.g. a hand-built one
+    // from a custom Client or test double) has a null feignTarget(); neither the parent
+    // client-name tag nor this convention may throw.
+    RequestTemplate captured = captureRequestTemplate();
+    RequestTemplate requestTemplate = RequestTemplate.from(captured).feignTarget(null);
+    FeignContext context = contextFor(requestTemplate);
+
+    KeyValues keyValues =
+        TargetHostAndPortFeignObservationConvention.INSTANCE.getLowCardinalityKeyValues(context);
+
+    assertThat(keyValues.stream().map(kv -> kv.getKey())).doesNotContain(TARGET_HOST, TARGET_PORT);
+  }
+
+  /** Drives a real Feign call to capture a fully-formed {@link RequestTemplate}. */
+  private static RequestTemplate captureRequestTemplate() {
+    java.util.concurrent.atomic.AtomicReference<RequestTemplate> ref =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    Client capturing =
+        (request, options) -> {
+          ref.set(request.requestTemplate());
+          return Response.builder()
+              .status(200)
+              .reason("OK")
+              .request(request)
+              .headers(Collections.emptyMap())
+              .build();
+        };
+    TestClient feignClient =
+        Feign.builder()
+            .client(capturing)
+            .target(new HardCodedTarget<>(TestClient.class, "http://example.com:8080"));
+    feignClient.get();
+    return ref.get();
+  }
+
+  private static FeignContext contextFor(RequestTemplate requestTemplate) {
+    Request request =
+        Request.create(
+            HttpMethod.GET,
+            "http://localhost/",
+            Collections.emptyMap(),
+            Request.Body.empty(),
+            requestTemplate);
+    FeignContext context = new FeignContext(request);
+    context.setResponse(
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(request)
+            .headers(Collections.emptyMap())
+            .build());
+    return context;
   }
 }

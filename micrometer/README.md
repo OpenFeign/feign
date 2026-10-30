@@ -74,17 +74,20 @@ This adds the following low-cardinality key values on top of the defaults:
 | Key | Value |
 | --- | ----- |
 | `net.peer.host` | Host parsed from the configured `Target` url (e.g. `api.github.com`). |
-| `net.peer.port` | Port parsed from the configured `Target` url — **only when the url declares one explicitly**. |
+| `net.peer.port` | Port parsed from the configured `Target` url when one is declared explicitly, otherwise the placeholder `UNKNOWN`. |
 
 Port semantics:
 
 * The host and port are read from the configured `Target` url
   (`requestTemplate().feignTarget().url()`), not the final resolved request url.
-* A port is emitted **only if it is explicitly present** in the url. No default
-  port is inferred — `https://api.github.com` yields `net.peer.host` but no
-  `net.peer.port`, while `https://api.github.com:8443` yields both.
+* A numeric port is emitted **only if it is explicitly present** in the url. No
+  default port is inferred — `https://api.github.com` yields `net.peer.host` and
+  `net.peer.port=UNKNOWN`, while `https://api.github.com:8443` yields
+  `net.peer.port=8443`. The key is always present (alongside a valid host) so
+  that every meter this convention produces carries the same tag keys, which
+  registries such as Prometheus require.
 * The port is only emitted alongside a valid host. A missing, invalid, or
-  urless target (such as an `EmptyTarget`) simply omits both keys and never
+  url-less target (such as an `EmptyTarget`) simply omits both keys and never
   breaks the observation.
 
 > **Cardinality warning:** `net.peer.host` and `net.peer.port` are emitted as
