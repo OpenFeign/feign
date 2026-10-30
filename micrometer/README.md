@@ -54,6 +54,52 @@ pass it to the constructor:
 new MicrometerObservationCapability(observationRegistry, new MyFeignObservationConvention());
 ```
 
+#### Emitting the target host and port
+
+By default the observation does **not** carry the target host or port. If you
+want them, opt in with the bundled
+`TargetHostAndPortFeignObservationConvention`:
+
+```java
+GitHub github = Feign.builder()
+                     .addCapability(
+                         new MicrometerObservationCapability(
+                             observationRegistry,
+                             TargetHostAndPortFeignObservationConvention.INSTANCE))
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+This adds the following low-cardinality key values on top of the defaults:
+
+| Key | Value |
+| --- | ----- |
+| `net.peer.host` | Host parsed from the configured `Target` url (e.g. `api.github.com`). |
+| `net.peer.port` | Port parsed from the configured `Target` url when one is declared explicitly, otherwise the placeholder `UNKNOWN`. |
+
+Port semantics:
+
+* The host and port are read from the configured `Target` url
+  (`requestTemplate().feignTarget().url()`), not the final resolved request url.
+* A numeric port is emitted **only if it is explicitly present** in the url. No
+  default port is inferred — `https://api.github.com` yields `net.peer.host` and
+  `net.peer.port=UNKNOWN`, while `https://api.github.com:8443` yields
+  `net.peer.port=8443`. The key is always present (alongside a valid host) so
+  that every meter this convention produces carries the same tag keys, which
+  registries such as Prometheus require.
+* The port is only emitted alongside a valid host. A missing, invalid, or
+  url-less target (such as an `EmptyTarget`) simply omits both keys and never
+  breaks the observation.
+
+> **Cardinality warning:** `net.peer.host` and `net.peer.port` are emitted as
+> *low-cardinality* key values, so they become metric tags. Only enable this
+> convention when the set of target hosts is small and bounded. Against clients
+> that talk to a large or unbounded set of hosts (for example per-tenant
+> hostnames), this can cause a metric-tag cardinality explosion in your metrics
+> backend.
+
+The `DefaultFeignObservationConvention` and its output are unchanged; this
+behavior is strictly opt-in.
+
 ## Metrics published by `MicrometerCapability`
 
 The capability instruments five stages of a Feign call. Each stage emits a
