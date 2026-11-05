@@ -1,3 +1,9 @@
+### Version 13.18
+
+* HTTP and HTTPS URI schemes are recognized without regard to case, including target URLs and
+  per-request URI overrides. Uppercase or mixed-case schemes are no longer rejected or replaced by
+  the client's default target.
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
