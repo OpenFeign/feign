@@ -60,6 +60,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -757,6 +758,146 @@ public class AsyncFeignTest {
             });
 
     execs.shutdown();
+  }
+
+  /**
+   * A request that never leaves the JVM: every {@link Client} used below ignores it, so no
+   * connection is attempted and no server needs to be running.
+   */
+  private static Request unusedRequest() {
+    return Request.create(
+        HttpMethod.GET, "http://localhost/", Collections.emptyMap(), null, Util.UTF_8);
+  }
+
+  /**
+   * The default async adapter must complete the future for any throwable the sync {@link Client}
+   * escapes with, not only {@link Exception}s. A JVM {@link Error} (here a plain AssertionError,
+   * not a real {@code OutOfMemoryError}) currently escapes the {@code catch (Exception)} in {@link
+   * DefaultAsyncClient} and is stored only in the future task returned by the executor, which
+   * nobody reads, so the future handed back to the caller is never completed. The bounded {@code
+   * get(1, TimeUnit.SECONDS)} keeps this deterministic: before the fix this test fails with {@link
+   * java.util.concurrent.TimeoutException} instead of hanging the build.
+   */
+  @Test
+  void defaultAsyncClientCompletesExceptionallyOnNonExceptionThrowable() throws Exception {
+    final AssertionError failure = new AssertionError("client failed");
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    try {
+      final AsyncClient<Void> client =
+          new DefaultAsyncClient<Void>(
+              (request, options) -> {
+                throw failure;
+              },
+              execs);
+
+      final CompletableFuture<Response> future =
+          client.execute(unusedRequest(), new Request.Options(), Optional.empty());
+
+      final ExecutionException thrown =
+          assertThrows(ExecutionException.class, () -> future.get(1, TimeUnit.SECONDS));
+      assertThat(thrown.getCause()).isSameAs(failure);
+    } finally {
+      execs.shutdownNow();
+    }
+  }
+
+  /**
+   * Same expectation through the public {@link AsyncFeign} proxy and {@link TestInterfaceAsync}.
+   */
+  @Test
+  void asyncFeignCompletesExceptionallyOnNonExceptionThrowable() throws Exception {
+    final AssertionError failure = new AssertionError("client failed");
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    try {
+      final TestInterfaceAsync api =
+          AsyncFeign.<Void>builder()
+              .client(
+                  new DefaultAsyncClient<Void>(
+                      (request, options) -> {
+                        throw failure;
+                      },
+                      execs))
+              .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+      final ExecutionException thrown =
+          assertThrows(ExecutionException.class, () -> api.post().get(1, TimeUnit.SECONDS));
+      assertThat(thrown.getCause()).isSameAs(failure);
+    } finally {
+      execs.shutdownNow();
+    }
+  }
+
+  /** Control: the already-working {@code Exception} half of the adapter catch must not change. */
+  @Test
+  void defaultAsyncClientCompletesExceptionallyOnRuntimeException() throws Exception {
+    final IllegalStateException failure = new IllegalStateException("client failed");
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    try {
+      final AsyncClient<Void> client =
+          new DefaultAsyncClient<Void>(
+              (request, options) -> {
+                throw failure;
+              },
+              execs);
+
+      final CompletableFuture<Response> future =
+          client.execute(unusedRequest(), new Request.Options(), Optional.empty());
+
+      final ExecutionException thrown =
+          assertThrows(ExecutionException.class, () -> future.get(1, TimeUnit.SECONDS));
+      assertThat(thrown.getCause()).isSameAs(failure);
+    } finally {
+      execs.shutdownNow();
+    }
+  }
+
+  /** Control: a checked {@link IOException} keeps completing the future exceptionally as before. */
+  @Test
+  void defaultAsyncClientCompletesExceptionallyOnIOException() throws Exception {
+    final IOException failure = new IOException("client failed");
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    try {
+      final AsyncClient<Void> client =
+          new DefaultAsyncClient<Void>(
+              (request, options) -> {
+                throw failure;
+              },
+              execs);
+
+      final CompletableFuture<Response> future =
+          client.execute(unusedRequest(), new Request.Options(), Optional.empty());
+
+      final ExecutionException thrown =
+          assertThrows(ExecutionException.class, () -> future.get(1, TimeUnit.SECONDS));
+      assertThat(thrown.getCause()).isSameAs(failure);
+    } finally {
+      execs.shutdownNow();
+    }
+  }
+
+  /** Control: the happy path still hands the client's response straight back through the future. */
+  @Test
+  void defaultAsyncClientCompletesWithTheClientResponse() throws Exception {
+    final Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .headers(Collections.emptyMap())
+            .request(unusedRequest())
+            .body(new byte[0])
+            .build();
+    final ExecutorService execs = Executors.newSingleThreadExecutor();
+    try {
+      final AsyncClient<Void> client =
+          new DefaultAsyncClient<Void>((request, options) -> response, execs);
+
+      final CompletableFuture<Response> future =
+          client.execute(unusedRequest(), new Request.Options(), Optional.empty());
+
+      assertThat(future.get(1, TimeUnit.SECONDS)).isSameAs(response);
+    } finally {
+      execs.shutdownNow();
+    }
   }
 
   @Disabled("FIXME random test failures when building on ubuntu, need to investigate further")
