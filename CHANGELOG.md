@@ -1,3 +1,9 @@
+### Version 13.18
+
+* `Http2Client` treats a `0` connect or read timeout as "no timeout", as `Request.Options`
+  documents, instead of handing the zero `Duration` to the JDK client and request builders, which
+  reject it. Negative timeouts are still rejected.
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
