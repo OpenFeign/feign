@@ -234,6 +234,10 @@ public final class RequestTemplate implements Serializable {
 
     /* add the uri to result */
     resolved.uri(uri.toString());
+    // Fragment state is separate from the path and query expanded above.
+    if (resolved.fragment == null) {
+      resolved.fragment = this.fragment;
+    }
 
     /* headers */
     if (!this.headers.isEmpty()) {
@@ -430,6 +434,9 @@ public final class RequestTemplate implements Serializable {
   /**
    * Set the Uri for the request, replacing the existing uri if set.
    *
+   * <p>A fragment in the given uri replaces any existing fragment, even an empty one. Replacing the
+   * uri with one that has no fragment clears the existing fragment.
+   *
    * @param uri to use, must be a relative uri.
    * @return a RequestTemplate for chaining.
    */
@@ -463,8 +470,12 @@ public final class RequestTemplate implements Serializable {
 
     int fragmentIndex = uri.indexOf('#');
     if (fragmentIndex > -1) {
+      /* an incoming fragment, even an empty one, replaces any existing fragment */
       fragment = uri.substring(fragmentIndex);
       uri = uri.substring(0, fragmentIndex);
+    } else if (!append) {
+      /* replacing the uri without a fragment clears the existing fragment */
+      fragment = null;
     }
 
     /*
@@ -524,8 +535,9 @@ public final class RequestTemplate implements Serializable {
       /* strip the query string */
       this.target =
           targetUri.getScheme() + "://" + targetUri.getRawAuthority() + targetUri.getRawPath();
-      if (targetUri.getFragment() != null) {
-        this.fragment = "#" + targetUri.getFragment();
+      /* keep the fragment as it was written, the value is never decoded */
+      if (targetUri.getRawFragment() != null) {
+        this.fragment = "#" + targetUri.getRawFragment();
       }
     } catch (IllegalArgumentException iae) {
       /* the uri provided is not a valid one, we can't continue */
