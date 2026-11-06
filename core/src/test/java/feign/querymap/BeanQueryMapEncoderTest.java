@@ -16,12 +16,15 @@
 package feign.querymap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import feign.Param;
 import feign.QueryMapEncoder;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -88,6 +91,21 @@ class BeanQueryMapEncoderTest {
     final Map<String, Object> encodedMap = encoder.encode(normalObject);
 
     assertThat(encodedMap.keySet()).as("@Param ignored").isEqualTo(expectedNames);
+  }
+
+  @Test
+  void defaultEncoder_withParamExpander() {
+    final ObjectWithParamExpander object =
+        new ObjectWithParamExpander("fooz", Arrays.asList("a", null, "b"), "barz", "bazz");
+
+    final Map<String, Object> encodedMap = encoder.encode(object);
+
+    assertThat(encodedMap)
+        .as("@Param expander ignored")
+        .containsOnly(
+            entry("fooAlias", "FOOZ"),
+            entry("list", Arrays.asList("A", null, "B")),
+            entry("bar", "barz"));
   }
 
   class NormalObjectWithOverriddenParamName {
@@ -167,6 +185,56 @@ class BeanQueryMapEncoderTest {
 
     public void setQuery(String query) {
       this.query = query;
+    }
+  }
+
+  class ObjectWithParamExpander {
+
+    private ObjectWithParamExpander(String foo, List<String> list, String bar, String baz) {
+      this.foo = foo;
+      this.list = list;
+      this.bar = bar;
+      this.baz = baz;
+    }
+
+    private final String foo;
+    private final List<String> list;
+    private final String bar;
+    private final String baz;
+
+    @Param(value = "fooAlias", expander = UpperCaseExpander.class)
+    public String getFoo() {
+      return foo;
+    }
+
+    @Param(expander = UpperCaseExpander.class)
+    public List<String> getList() {
+      return list;
+    }
+
+    public String getBar() {
+      return bar;
+    }
+
+    @Param(expander = NullExpander.class)
+    public String getBaz() {
+      return baz;
+    }
+  }
+
+  static class UpperCaseExpander implements Param.Expander {
+
+    @Override
+    public String expand(Object value) {
+      return value.toString().toUpperCase();
+    }
+  }
+
+  static class NullExpander implements Param.Expander {
+
+    @Override
+    public String expand(Object value) {
+      return null;
     }
   }
 }
