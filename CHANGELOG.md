@@ -1,3 +1,10 @@
+### Version 13.18
+
+* `UriUtils.encode(value, allowReservedCharacters)` and
+  `UriUtils.encode(value, charset, allowReservedCharacters)` now honour a `false`
+  `allowReservedCharacters` for values without an already percent-encoded triplet. Those values
+  are now pct-encoded strictly instead of keeping their reserved characters (#3625).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
