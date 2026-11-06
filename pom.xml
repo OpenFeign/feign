@@ -133,6 +133,7 @@
     <module>validation</module>
     <module>validation-jakarta</module>
     <module>vertx</module>
+    <module>webflux</module>
     <module>feign-bom</module>
   </modules>
 

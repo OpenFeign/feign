@@ -43,6 +43,7 @@ Feign is a declarative HTTP client library with a modular design:
 - `hystrix/` - Circuit breaker integration
 - `micrometer/`, `dropwizard-metrics4/5/` - Metrics integration
 - `validation/`, `validation-jakarta/` - JSR-303 / Jakarta Bean Validation via the `MethodInterceptor` extension point
+- `webflux/` - Non-blocking `AsyncClient` (`WebClientAsyncClient`) based on Spring `WebClient`
 - `http-cache/` - Conditional revalidation (`ETag` / `Last-Modified` / `304 Not Modified`) via the `MethodInterceptor` extension point
 - `jdk-json/` - Codec for the JDK Simple JSON API (`jdk.incubator.json`, JEP 540). It only builds if you use `-Pjdk28-modules` and a JDK 28 toolchain.
 
