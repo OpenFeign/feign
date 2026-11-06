@@ -1,3 +1,12 @@
+### Version 13.18
+
+* `ApacheHttpClient` no longer sets an empty entity on requests without a body for the idempotent
+  methods `GET`, `HEAD`, `OPTIONS`, `TRACE` and `DELETE`. Apache HttpClient treats every request
+  without an entity as idempotent and retries it when the connection is lost before the response
+  arrives; as an entity-enclosing request, a bodyless `GET` was never retried. Bodyless `POST`,
+  `PUT`, `PATCH`, `CONNECT` and `QUERY` requests keep their empty entity, so their request shape is
+  unchanged and they gain no internal retry (#2115).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
