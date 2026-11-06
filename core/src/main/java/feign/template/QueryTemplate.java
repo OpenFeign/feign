@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -200,11 +201,11 @@ public final class QueryTemplate {
       }
 
       /*
-       * check for an iterable result, and if one is there, we need to split it into individual
-       * values
+       * a collection (iterable, array or map) is expanded into a single comma separated value and
+       * has to be split back into individual values. Literals and scalars are sent as written, so
+       * their commas belong to the value and are not separators.
        */
-      if (result.contains(",")) {
-        /* we need to split it */
+      if (hasCollectionExpression(template, variables)) {
         expanded.addAll(Arrays.asList(result.split(",")));
       } else {
         expanded.add(result);
@@ -212,6 +213,34 @@ public final class QueryTemplate {
     }
 
     return this.queryString(name, Collections.unmodifiableList(expanded));
+  }
+
+  /**
+   * Determine if the given value template expands a collection variable, which is joined into a
+   * single comma separated value.
+   *
+   * @param template to inspect.
+   * @param variables containing the values for expansion.
+   * @return true if a variable of the template holds a collection.
+   */
+  private static boolean hasCollectionExpression(Template template, Map<String, ?> variables) {
+    for (TemplateChunk chunk : template.getTemplateChunks()) {
+      if (!(chunk instanceof Expression)) {
+        continue;
+      }
+
+      Object value = variables.get(((Expression) chunk).getName());
+      if (value instanceof Optional<?>) {
+        value = ((Optional<?>) value).orElse(null);
+      }
+
+      if (value instanceof Iterable<?>
+          || value instanceof Map<?, ?>
+          || (value != null && value.getClass().isArray())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String queryString(String name, List<String> values) {
