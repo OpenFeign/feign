@@ -1,3 +1,10 @@
+### Version 13.18
+
+* The Java 11 client (`feign-java11`) now reports every response header value it received, in the
+  order it was received. Duplicate occurrences of a header are no longer collapsed into one, and
+  multi-valued headers are no longer reordered, matching the other clients and core's header
+  normalization. Request headers are unchanged.
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a

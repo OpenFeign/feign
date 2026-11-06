@@ -39,11 +39,11 @@ import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -285,7 +285,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   private Map<String, Collection<String>> castMapCollectType(Map<String, List<String>> map) {
     final Map<String, Collection<String>> result = new HashMap<>();
-    map.forEach((key, value) -> result.put(key, new HashSet<>(value)));
+    // a list keeps every received occurrence of a header, in the order it was received
+    map.forEach((key, value) -> result.put(key, new ArrayList<>(value)));
     return result;
   }
 
