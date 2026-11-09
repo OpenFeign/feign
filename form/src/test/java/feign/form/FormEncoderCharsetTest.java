@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import feign.Request;
 import feign.RequestTemplate;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -54,11 +55,45 @@ class FormEncoderCharsetTest {
   }
 
   private static String bodyAsUtf8String(RequestTemplate template) {
+    return bodyAsString(template, StandardCharsets.UTF_8);
+  }
+
+  private static String bodyAsString(RequestTemplate template, Charset charset) {
     Request.Body body = template.requestBody().orElseThrow();
     try {
-      return body.writeToString(StandardCharsets.UTF_8);
+      return body.writeToString(charset);
     } catch (IOException e) {
       throw new AssertionError("Failed to read request body", e);
     }
+  }
+
+  @Test
+  void charsetParameterNameIsCaseInsensitive() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; Charset=ISO-8859-1");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(bodyAsString(template, StandardCharsets.ISO_8859_1)).isEqualTo("name=%E9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
+  }
+
+  @Test
+  void quotedCharsetParameterIsHonored() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; charset=\"ISO-8859-1\"");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(bodyAsString(template, StandardCharsets.ISO_8859_1)).isEqualTo("name=%E9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
   }
 }

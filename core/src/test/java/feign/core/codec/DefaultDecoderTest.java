@@ -85,6 +85,30 @@ class DefaultDecoderTest {
   }
 
   @Test
+  void decodesToStringHonouringCharsetAfterOtherContentTypeParameters() throws Exception {
+    // "café" as ISO-8859-1 bytes; decoding them as UTF-8 yields a replacement character instead
+    byte[] body = new byte[] {'c', 'a', 'f', (byte) 0xE9};
+    Response response =
+        responseWith("text/plain;format=flowed;charset=ISO-8859-1", body, body.length);
+    assertThat(decoder.decode(response, String.class)).isEqualTo("café");
+  }
+
+  @Test
+  void decodesToStringHonouringQuotedCharsetAfterOtherContentTypeParameters() throws Exception {
+    byte[] body = new byte[] {'c', 'a', 'f', (byte) 0xE9};
+    Response response =
+        responseWith("text/plain; format=flowed; charset=\"ISO-8859-1\"", body, body.length);
+    assertThat(decoder.decode(response, String.class)).isEqualTo("café");
+  }
+
+  @Test
+  void decodesToStringUsingUtf8WhenCharsetParameterIsMissing() throws Exception {
+    byte[] body = "café".getBytes(UTF_8);
+    Response response = responseWith("text/plain; format=flowed", body, body.length);
+    assertThat(decoder.decode(response, String.class)).isEqualTo("café");
+  }
+
+  @Test
   void decodesToByteArray() throws Exception {
     Response response = knownResponse();
     Object decodedObject = decoder.decode(response, byte[].class);
@@ -117,6 +141,18 @@ class DefaultDecoderTest {
         .headers(headers)
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .body(inputStream, content.length())
+        .build();
+  }
+
+  private Response responseWith(String contentType, byte[] content, int length) {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("Content-Type", Collections.singleton(contentType));
+    return Response.builder()
+        .status(200)
+        .reason("OK")
+        .headers(headers)
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
+        .body(new ByteArrayInputStream(content), length)
         .build();
   }
 

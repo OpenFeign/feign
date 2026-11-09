@@ -6,6 +6,14 @@
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 
+### Version 13.18
+
+* `Response.charset()` reads the `Content-Type` `charset` parameter wherever it appears, not only as
+  the first parameter, so `text/plain; format=flowed; charset=ISO-8859-1` decodes as ISO-8859-1
+  instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
+  `charset=` inside a quoted parameter value stays data. Quoted charset values still work, and a
+  missing, illegal or unsupported charset still falls back to UTF-8 (#3626).
+
 ### Version 13.17
 
 * `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
@@ -16,6 +24,9 @@
   URL-encoded fields use the request's `CollectionFormat`. In multipart requests, numeric and
   boolean arrays create repeated parts, and `byte[]` values stay as one binary part. Multipart
   `char[]` values are still passed to the delegate encoder (#3607).
+* Values supplied through `@HeaderMap` are sent as literals instead of being parsed as URI template
+  expressions. This bypasses URI expression parsing entirely, including the URI expression length
+  limit, so a long literal value such as a large JSON payload reaches the wire unchanged.
 
 ### Version 13.16
 
