@@ -1,5 +1,9 @@
 ### Version 13.18
 
+* `feign-mock`: `RequestKey.Builder.matchHeadersBySubset()` matches only the headers declared on the
+  key and ignores any extra header on the request, such as a generated `Content-Length`. It applies
+  to both stubbing and `verifyOne`/`verifyTimes`/`verifyNever`. Without it, headers are still
+  compared exactly (#1552).
 * `Response.charset()` reads the `Content-Type` `charset` parameter wherever it appears, not only as
   the first parameter, so `text/plain; format=flowed; charset=ISO-8859-1` decodes as ISO-8859-1
   instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake

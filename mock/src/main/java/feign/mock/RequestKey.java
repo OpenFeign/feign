@@ -187,13 +187,12 @@ public class RequestKey {
   /**
    * Extends {@link #equals(Object)} with charset, body and header checks.
    *
-   * <p>Headers are compared exactly unless this key was built with {@link
-   * Builder#matchHeadersBySubset()}, in which case every header declared on this instance must be
-   * present on {@code obj} with the same values and headers carried only by {@code obj} are
-   * ignored.
+   * <p>Headers are compared exactly unless either key was built with {@link
+   * Builder#matchHeadersBySubset()}, in which case every header declared on that key must be
+   * present on the other key with the same values, and any additional header is ignored.
    *
-   * @param obj the key of the incoming request
-   * @return {@code true} when this key matches the incoming request
+   * @param obj the key to match against
+   * @return {@code true} when both keys match
    */
   public boolean equalsExtended(Object obj) {
     if (equals(obj)) {
@@ -201,6 +200,8 @@ public class RequestKey {
       boolean headersEqual;
       if (headerSubset) {
         headersEqual = headers == null || headers.isSubsetOf(other.headers);
+      } else if (other.headerSubset) {
+        headersEqual = other.headers == null || other.headers.isSubsetOf(headers);
       } else {
         headersEqual = other.headers == null || headers == null || headers.equals(other.headers);
       }

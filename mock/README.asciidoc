@@ -44,4 +44,21 @@ This simple test returns no content and verifies that the URL was truly invoked.
 
 On the mocked client, you can include all URLs and methods you want to mock.
 
+##### Matching a subset of headers
+
+By default a `RequestKey` with headers only matches a request that has exactly those headers. Use `matchHeadersBySubset()` to declare only the headers you care about and ignore extra headers such as a generated `Content-Length`. The flag applies both when stubbing and when verifying:
+
+```
+  RequestKey createContributor = RequestKey.builder(HttpMethod.POST, "/repos/velo/feign-mock/contributors")
+      .headers(RequestHeaders.builder().add("Content-Type", "application/json").build())
+      .matchHeadersBySubset()
+      .build();
+
+  mockClient.ok(createContributor, "{\"login\":\"velo\",\"contributions\":0}");
+
+  github.create("velo", "feign-mock", "velo", "hacker");
+
+  mockClient.verifyOne(createContributor);
+```
+
 For more comprehensive examples take a look at https://github.com/OpenFeign/feign/blob/master/mock/src/test/java/feign/mock/MockClientTest.java[MockClientTest].

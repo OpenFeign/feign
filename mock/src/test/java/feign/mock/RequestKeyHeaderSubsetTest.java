@@ -19,15 +19,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/**
- * Request#1552: matching the headers of an expected request must be possible without having to
- * enumerate every header the client generates.
- */
 class RequestKeyHeaderSubsetTest {
 
   private static RequestKey key(RequestHeaders headers, boolean subset) {
@@ -48,7 +45,7 @@ class RequestKeyHeaderSubsetTest {
   private static Map<String, Collection<String>> headersWith(String... pairs) {
     Map<String, Collection<String>> headers = new LinkedHashMap<>();
     for (int i = 0; i < pairs.length; i += 2) {
-      headers.computeIfAbsent(pairs[i], key -> new java.util.ArrayList<>()).add(pairs[i + 1]);
+      headers.computeIfAbsent(pairs[i], key -> new ArrayList<>()).add(pairs[i + 1]);
     }
     return headers;
   }
@@ -60,6 +57,14 @@ class RequestKeyHeaderSubsetTest {
         incoming(headersWith("my-header", "val", "Content-Length", "42", "Host", "localhost"));
 
     assertThat(key(expected, true).equalsExtended(actual)).isTrue();
+  }
+
+  @Test
+  void subsetMatchingAppliesWhenTheIncomingKeyIsTheReceiver() {
+    RequestHeaders expected = RequestHeaders.builder().add("my-header", "val").build();
+    RequestKey actual = incoming(headersWith("my-header", "val", "Content-Length", "42"));
+
+    assertThat(actual.equalsExtended(key(expected, true))).isTrue();
   }
 
   @Test
@@ -109,9 +114,9 @@ class RequestKeyHeaderSubsetTest {
   @Test
   void methodAndUrlAreStillCompared() {
     RequestHeaders expected = RequestHeaders.builder().add("my-header", "val").build();
-    RequestKey otherUrl =
+    RequestKey otherMethod =
         RequestKey.builder(HttpMethod.POST, "a").headers(expected).matchHeadersBySubset().build();
 
-    assertThat(key(expected, true).equalsExtended(otherUrl)).isFalse();
+    assertThat(key(expected, true).equalsExtended(otherMethod)).isFalse();
   }
 }
