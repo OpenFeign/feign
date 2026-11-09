@@ -18,6 +18,7 @@ package feign.micrometer;
 import feign.RequestTemplate;
 import feign.Target;
 import io.micrometer.common.KeyValues;
+import io.micrometer.observation.Observation;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -46,7 +47,7 @@ import java.net.URISyntaxException;
  *
  * @author Henrique (henriquejsza)
  * @see DefaultFeignObservationConvention
- * @since 13.16
+ * @since 13.18
  */
 public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObservationConvention {
 
@@ -62,6 +63,11 @@ public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObs
   // There is no need to instantiate this class multiple times, but it may be extended,
   // hence protected visibility.
   protected TargetHostAndPortFeignObservationConvention() {}
+
+  @Override
+  public boolean supportsContext(Observation.Context context) {
+    return context instanceof FeignContext;
+  }
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {

@@ -32,6 +32,7 @@ import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;
 import java.net.URI;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,8 @@ import org.junit.jupiter.api.Test;
  * <ul>
  *   <li>the {@link DefaultFeignObservationConvention} (the default) never emits host/port;
  *   <li>the opt-in convention emits host and port when the target url has an explicit port;
- *   <li>the opt-in convention emits host but no port when the target url has no explicit port;
+ *   <li>the opt-in convention emits host and an {@code UNKNOWN} port when the target url has no
+ *       explicit port;
  *   <li>an {@link EmptyTarget} (whose {@code url()} throws) never breaks the observation and simply
  *       omits host/port.
  * </ul>
@@ -194,8 +196,7 @@ class TargetHostAndPortFeignObservationConventionTest {
 
   /** Drives a real Feign call to capture a fully-formed {@link RequestTemplate}. */
   private static RequestTemplate captureRequestTemplate() {
-    java.util.concurrent.atomic.AtomicReference<RequestTemplate> ref =
-        new java.util.concurrent.atomic.AtomicReference<>();
+    AtomicReference<RequestTemplate> ref = new AtomicReference<>();
     Client capturing =
         (request, options) -> {
           ref.set(request.requestTemplate());

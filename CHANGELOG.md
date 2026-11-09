@@ -1,5 +1,9 @@
 ### Version 13.18
 
+* New opt-in `TargetHostAndPortFeignObservationConvention` in `feign-micrometer` adds `net.peer.host`
+  and `net.peer.port` tags taken from the `Target` url. The port is `UNKNOWN` when the url has no
+  explicit port. `DefaultFeignObservationConvention` no longer throws when a `RequestTemplate` has
+  no `feignTarget()`, and reports `UNKNOWN` as the client name instead (#3546).
 * `Response.charset()` reads the `Content-Type` `charset` parameter wherever it appears, not only as
   the first parameter, so `text/plain; format=flowed; charset=ISO-8859-1` decodes as ISO-8859-1
   instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
