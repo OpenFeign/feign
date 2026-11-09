@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Optional;
@@ -85,6 +86,7 @@ class SpringContractTest {
             .noContent(HttpMethod.GET, "/health/header")
             .noContent(HttpMethod.GET, "/health/header/map")
             .noContent(HttpMethod.GET, "/health/header/pojo")
+            .noContent(HttpMethod.GET, "/health/header/jdk")
             .ok(HttpMethod.GET, "/health/generic", "{}")
             .add(HttpMethod.POST, "/health/text", response);
     resource =
@@ -237,6 +239,15 @@ class SpringContractTest {
   }
 
   @Test
+  void requestHeaderOfJdkTypeIsNotAHeaderMap() {
+    resource.checkRequestHeaderJdkTypes(Arrays.asList("a", "b"), 6);
+
+    final Request request = mockClient.verifyOne(HttpMethod.GET, "/health/header/jdk");
+    assertThat(request.headers()).containsEntry("ids", Arrays.asList("a,b"));
+    assertThat(request.headers()).containsEntry("grade1", Arrays.asList("6"));
+  }
+
+  @Test
   void requestParam() {
     resource.check("1", true);
 
@@ -351,6 +362,10 @@ class SpringContractTest {
 
     @RequestMapping(value = "/header/pojo", method = RequestMethod.GET)
     void checkRequestHeaderPojo(@RequestHeader HeaderMapUserObject object);
+
+    @RequestMapping(value = "/header/jdk", method = RequestMethod.GET)
+    void checkRequestHeaderJdkTypes(
+        @RequestHeader(name = "ids") List<String> ids, @RequestHeader(name = "grade1") int grade);
   }
 
   class UserObject {

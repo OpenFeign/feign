@@ -46,7 +46,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -61,7 +60,6 @@ import javax.tools.Diagnostic;
 
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("feign.graphql.GraphqlSchema")
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class GraphqlSchemaProcessor extends AbstractProcessor {
 
   private Filer filer;
@@ -72,6 +70,11 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
     super.init(processingEnv);
     this.filer = processingEnv.getFiler();
     this.messager = processingEnv.getMessager();
+  }
+
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
   }
 
   @Override
@@ -139,6 +142,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
           method,
           queryAnnotation,
           graphqlSchema,
+          methodConfig.generateDeprecated(),
           registry,
           generator,
           validator,
@@ -216,6 +220,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       ExecutableElement method,
       GraphqlQuery queryAnnotation,
       GraphQLSchema graphqlSchema,
+      boolean generateDeprecated,
       TypeDefinitionRegistry registry,
       TypeGenerator generator,
       QueryValidator validator,
@@ -232,7 +237,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
-    if (!validator.validate(graphqlSchema, document, method) || !generateTypes) {
+    if (!validator.validate(graphqlSchema, document, method, generateDeprecated)
+        || !generateTypes) {
       return;
     }
 

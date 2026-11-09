@@ -1,0 +1,29 @@
+interface Node {
+  id: ID
+}
+
+type Legacy implements Node {
+  id: ID @deprecated(reason: "no longer exposed")
+}
+
+type Archived {
+  old: String @deprecated(reason: "archived")
+}
+
+enum Level {
+  LOW
+  HIGH @deprecated(reason: "use LOW")
+}
+
+input Filter {
+  name: String
+  legacy: String @deprecated(reason: "use name")
+}
+
+type Query {
+  ping: String
+  levels(level: Level = HIGH): [String]
+  filtered(filter: Filter = { legacy: "x" }): [String]
+  legacy: Legacy
+  archived: Archived
+}

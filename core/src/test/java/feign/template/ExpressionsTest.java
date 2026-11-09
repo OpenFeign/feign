@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -112,5 +114,21 @@ class ExpressionsTest {
     // To match close brace on Android, it must be escaped due to the simpler ICU regex engine
     String pattern = Expressions.EXPRESSION_PATTERN.pattern();
     assertThat(pattern.contains("}")).isEqualTo(pattern.contains("\\}"));
+  }
+
+  @Test
+  void variableListPatternDoesNotBacktrackExponentially() {
+    String repeated = ",$:".repeat(100_000);
+
+    assertTimeoutPreemptively(
+        Duration.ofSeconds(2),
+        () -> {
+          assertThat(Expressions.VARIABLE_LIST_PATTERN.matcher("$,$:" + repeated + "\n").matches())
+              .isFalse();
+          assertThat(Expressions.VARIABLE_LIST_PATTERN.matcher("$,$:" + repeated).matches())
+              .isTrue();
+          assertThat(Expressions.SimpleExpression.isSimpleExpression("{$,$:" + repeated + "}"))
+              .isTrue();
+        });
   }
 }
