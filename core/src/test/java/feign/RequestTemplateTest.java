@@ -608,7 +608,7 @@ public class RequestTemplateTest {
   void explicitlyEmptyFragmentShouldReplacePreviousFragment() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("/old#stale");
 
-    /* a bare '#' is how a caller explicitly drops the fragment, without a fragment value */
+    /* a bare '#' replaces the stale fragment with an empty one */
     template.uri("/new#");
 
     /*

@@ -234,10 +234,7 @@ public final class RequestTemplate implements Serializable {
 
     /* add the uri to result */
     resolved.uri(uri.toString());
-    // Fragment state is separate from the path and query expanded above.
-    if (resolved.fragment == null) {
-      resolved.fragment = this.fragment;
-    }
+    resolved.fragment = this.fragment;
 
     /* headers */
     if (!this.headers.isEmpty()) {
