@@ -18,6 +18,7 @@ package feign;
 import static feign.assertj.FeignAssertions.assertThat;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -112,6 +113,28 @@ public class RequestTemplateTest {
 
     assertThat(template)
         .hasUrl("https://route53.amazonaws.com/2012-12-12/hostedzone/Z1PA6795UKMFR9");
+  }
+
+  @Test
+  void canInsertAbsoluteHrefWithCaseInsensitiveScheme() {
+    for (String scheme : Arrays.asList("HTTP", "HTTPS", "hTtP", "hTtPs")) {
+      RequestTemplate template =
+          new RequestTemplate()
+              .method(HttpMethod.GET)
+              .uri("/resource")
+              .target(scheme + "://example.com/base?query=value#fragment");
+
+      assertThat(template).hasUrl(scheme + "://example.com/base/resource?query=value#fragment");
+    }
+  }
+
+  @Test
+  void rejectsAbsoluteUriWithCaseInsensitiveScheme() {
+    for (String scheme : Arrays.asList("HTTP", "HTTPS", "hTtP", "hTtPs")) {
+      assertThatExceptionOfType(IllegalArgumentException.class)
+          .isThrownBy(() -> new RequestTemplate().uri(scheme + "://example.com/path"))
+          .withMessage("url values must be not be absolute.");
+    }
   }
 
   @Test

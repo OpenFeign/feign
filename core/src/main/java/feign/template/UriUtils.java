@@ -97,7 +97,7 @@ public class UriUtils {
    * @return true if the uri is absolute.
    */
   public static boolean isAbsolute(String uri) {
-    return uri != null && !uri.isEmpty() && uri.startsWith("http");
+    return uri != null && uri.regionMatches(true, 0, "http", 0, 4);
   }
 
   /**

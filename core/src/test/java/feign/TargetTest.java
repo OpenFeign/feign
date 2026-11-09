@@ -24,6 +24,8 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation")
 public class TargetTest {
@@ -109,6 +111,43 @@ public class TargetTest {
     uriTarget.get(URI.create("http://" + host + ":" + port + "/path?query=param"));
 
     assertThat(server.takeRequest()).hasPath("/path?query=param").hasQueryParams("query=param");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"http", "HTTP", "hTtP"})
+  void hardCodedTargetWithCaseInsensitiveScheme(String scheme) throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    String base = scheme + "://" + server.getHostName() + ":" + server.getPort();
+    Feign.builder().target(TestQuery.class, base).get("path", "value");
+
+    assertThat(server.takeRequest()).hasPath("/path?query=value");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"http", "HTTP", "hTtP"})
+  void hardCodedTargetPreservesUriWithCaseInsensitiveScheme(String scheme)
+      throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    UriTarget uriTarget =
+        Feign.builder().target(UriTarget.class, server.url("/default").toString());
+    String base = scheme + "://" + server.getHostName() + ":" + server.getPort();
+    uriTarget.get(URI.create(base + "/path?query=param"));
+
+    assertThat(server.takeRequest()).hasPath("/path?query=param");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"http", "HTTP", "hTtP"})
+  void emptyTargetWithCaseInsensitiveScheme(String scheme) throws InterruptedException {
+    server.enqueue(new MockResponse());
+
+    UriTarget uriTarget = Feign.builder().target(Target.EmptyTarget.create(UriTarget.class));
+    String base = scheme + "://" + server.getHostName() + ":" + server.getPort();
+    uriTarget.get(URI.create(base + "/path?query=param"));
+
+    assertThat(server.takeRequest()).hasPath("/path?query=param");
   }
 
   @AfterEach

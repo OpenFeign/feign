@@ -18,6 +18,8 @@ package feign;
 import static feign.Util.checkNotNull;
 import static feign.Util.emptyToNull;
 
+import feign.template.UriUtils;
+
 /**
  * <br>
  * <br>
@@ -97,7 +99,7 @@ public interface Target<T> {
     /* no authentication or other special activity. just insert the url. */
     @Override
     public Request apply(RequestTemplate input) {
-      if (input.url().indexOf("http") != 0) {
+      if (!UriUtils.isAbsolute(input.url())) {
         input.target(url());
       }
       return input.request();
@@ -171,7 +173,7 @@ public interface Target<T> {
 
     @Override
     public Request apply(RequestTemplate input) {
-      if (input.url().indexOf("http") != 0) {
+      if (!UriUtils.isAbsolute(input.url())) {
         throw new UnsupportedOperationException(
             "Request with non-absolute URL not supported with empty target");
       }
