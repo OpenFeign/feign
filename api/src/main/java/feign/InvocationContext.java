@@ -24,6 +24,7 @@ import feign.codec.ErrorDecoder;
 import feign.codec.PredicatedDecoder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -101,6 +102,8 @@ public class InvocationContext {
     }
 
     Response response = this.response;
+    boolean shouldClose = closeAfterDecode;
+
     try {
       final boolean shouldDecodeResponseBody =
           (response.status() >= 200 && response.status() < 300)
@@ -117,29 +120,51 @@ public class InvocationContext {
         }
         Exception error = errorDecoder.decode(configKey, response);
         if (error instanceof RetryableException) {
-          ensureClosed(response.body());
           throw error;
         }
         return decodeErrorResponseBody(response, error);
       }
 
-      if (isVoidType(returnType) && !decodeVoid) {
-        ensureClosed(response.body());
-        return kotlinUnitInstance(returnType);
+      // By default, Closeable return types will leave the body stream open, but there may be
+      // downstream logic that reverses this decision
+      if (isReturnTypeCloseable()) {
+        shouldClose = false;
       }
 
-      Class<?> rawType = Types.getRawType(returnType);
-      if (TypedResponse.class.isAssignableFrom(rawType)) {
+      if (isVoidType(returnType)) {
+        shouldClose = true; // override closeAfterDecode if void return type
+        if (!decodeVoid) return kotlinUnitInstance(returnType);
+      }
+
+      if (TypedResponse.class.isAssignableFrom(Types.getRawType(returnType))) {
         Type bodyType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
-        return TypedResponse.builder(response).body(decode(response, bodyType)).build();
+        Object decodeResult = decode(response, bodyType);
+        if (decodeResult == null) shouldClose = true;
+        return TypedResponse.builder(response).body(decodeResult).build();
+      } else {
+        Object result = decode(response, returnType);
+        if (result == null) shouldClose = true;
+        return result;
       }
 
-      return decode(response, returnType);
     } finally {
-      if (closeAfterDecode) {
+      if (shouldClose) {
         ensureClosed(response.body());
       }
     }
+  }
+
+  private boolean isReturnTypeCloseable() {
+
+    if (isVoidType(returnType)) return false;
+
+    Type rawType = Types.getRawType(returnType);
+
+    if (TypedResponse.class.isAssignableFrom(Types.getRawType(rawType))) {
+      rawType = Types.resolveLastTypeParameter(returnType, TypedResponse.class);
+    }
+
+    return Closeable.class.isAssignableFrom(Types.getRawType(rawType));
   }
 
   private boolean shouldDecodeErrorResponseBody(Response response) {

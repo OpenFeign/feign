@@ -19,17 +19,27 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import feign.Feign;
 import feign.Request;
 import feign.Request.HttpMethod;
+import feign.RequestLine;
 import feign.Response;
+import feign.TypedResponse;
+import feign.Util;
 import feign.codec.DecodeException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.internal.BufferMockResponseBody;
+import okio.Buffer;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
@@ -117,5 +127,139 @@ class DefaultDecoderTest {
         .headers(Collections.<String, Collection<String>>emptyMap())
         .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, null))
         .build();
+  }
+
+  interface LargeStreamTestInterface {
+
+    @RequestLine("GET /")
+    InputStream getLargeStream();
+
+    @RequestLine("GET /")
+    Reader getLargeReader();
+
+    @RequestLine("GET /")
+    TypedResponse<InputStream> getLargeStreamTypedResponse();
+  }
+
+  @Test
+  void streamingResponse() throws Exception {
+
+    try (MockWebServer server = new MockWebServer()) {
+
+      server.start();
+
+      byte[] expectedResponse = new byte[16184];
+      new Random().nextBytes(expectedResponse);
+      server.enqueue(
+          new MockResponse.Builder()
+              .body(new BufferMockResponseBody(new Buffer().write(expectedResponse)))
+              .build());
+
+      LargeStreamTestInterface api =
+          Feign.builder()
+              .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+      try (InputStream is = api.getLargeStream()) {
+        byte[] out = is.readAllBytes();
+        assertThat(out.length).isEqualTo(expectedResponse.length);
+        assertThat(out).isEqualTo(expectedResponse);
+      }
+    }
+  }
+
+  @Test
+  void streamingReaderResponse() throws Exception {
+    try (MockWebServer server = new MockWebServer()) {
+
+      server.start();
+
+      String expectedResponse =
+          new Random()
+              .ints(1, 1500 + 1)
+              .limit(16184)
+              .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+              .toString();
+
+      server.enqueue(
+          new MockResponse.Builder()
+              .body(
+                  new BufferMockResponseBody(
+                      new Buffer().write(expectedResponse.getBytes(StandardCharsets.UTF_16))))
+              .addHeader("content-type", "text/plan; charset=utf-16")
+              .build());
+
+      LargeStreamTestInterface api =
+          Feign.builder()
+              .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+      try (Reader r = api.getLargeReader()) {
+        String out = Util.toString(r);
+        assertThat(out.length()).isEqualTo(expectedResponse.length());
+        assertThat(out).isEqualTo(expectedResponse);
+      }
+    }
+  }
+
+  @Test
+  void streamingReaderResponseWithNoCharset() throws Exception {
+
+    try (MockWebServer server = new MockWebServer()) {
+
+      server.start();
+
+      String expectedResponse =
+          new Random()
+              .ints(1, 1500 + 1)
+              .limit(16184)
+              .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+              .toString();
+
+      server.enqueue(
+          new MockResponse.Builder()
+              .body(
+                  new BufferMockResponseBody(
+                      new Buffer().write(expectedResponse.getBytes(Util.UTF_8))))
+              .addHeader("content-type", "text/plan")
+              .build());
+
+      LargeStreamTestInterface api =
+          Feign.builder()
+              .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+      try (Reader r = api.getLargeReader()) {
+        String out = Util.toString(r);
+        assertThat(out.length()).isEqualTo(expectedResponse.length());
+        assertThat(out).isEqualTo(expectedResponse);
+      }
+    }
+  }
+
+  @Test
+  void streamingTypedResponse() throws Exception {
+
+    try (MockWebServer server = new MockWebServer()) {
+
+      server.start();
+
+      byte[] expectedResponse = new byte[16184];
+      new Random().nextBytes(expectedResponse);
+      server.enqueue(
+          new MockResponse.Builder()
+              .body(new BufferMockResponseBody(new Buffer().write(expectedResponse)))
+              .build());
+
+      LargeStreamTestInterface api =
+          Feign.builder()
+              .target(LargeStreamTestInterface.class, "http://localhost:" + server.getPort());
+
+      TypedResponse<InputStream> resp = api.getLargeStreamTypedResponse();
+      try {
+        byte[] out = resp.body().readAllBytes();
+        assertThat(out.length).isEqualTo(expectedResponse.length);
+        assertThat(out).isEqualTo(expectedResponse);
+      } finally {
+        resp.body().close();
+      }
+    }
   }
 }
