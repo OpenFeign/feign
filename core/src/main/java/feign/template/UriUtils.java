@@ -101,12 +101,13 @@ public class UriUtils {
   }
 
   /**
-   * Encodes the value, preserving all reserved characters.. Values that are already pct-encoded are
-   * ignored.
+   * Encodes the value, preserving reserved characters only when they are allowed. Values that are
+   * already pct-encoded are ignored.
    *
    * @param value inspect.
    * @param charset to use.
-   * @return a new String with the reserved characters preserved.
+   * @param allowReservedCharacters whether reserved characters are preserved instead of encoded.
+   * @return a new String with the reserved characters preserved when allowed, encoded otherwise.
    */
   public static String encodeInternal(
       String value, Charset charset, boolean allowReservedCharacters) {
@@ -114,7 +115,7 @@ public class UriUtils {
     Matcher matcher = PCT_ENCODED_PATTERN.matcher(value);
 
     if (!matcher.find()) {
-      return encodeChunk(value, charset, true);
+      return encodeChunk(value, charset, allowReservedCharacters);
     }
 
     int length = value.length();
