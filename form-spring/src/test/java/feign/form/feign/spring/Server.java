@@ -20,6 +20,7 @@ import static org.springframework.http.HttpStatus.I_AM_A_TEAPOT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
+import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import java.io.IOException;
 import java.util.Map;
@@ -50,7 +51,10 @@ import org.springframework.web.util.HtmlUtils;
 @SuppressWarnings("checkstyle:DesignForExtension")
 public class Server {
 
-  @PostMapping(path = "/multipart/upload1/{folder}", consumes = MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(
+      path = "/multipart/upload1/{folder}",
+      consumes = MULTIPART_FORM_DATA_VALUE,
+      produces = TEXT_PLAIN_VALUE)
   public String upload1(
       @PathVariable("folder") String folder,
       @RequestPart("file") MultipartFile file,
@@ -59,7 +63,10 @@ public class Server {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }
 
-  @PostMapping(path = "/multipart/upload2/{folder}", consumes = MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(
+      path = "/multipart/upload2/{folder}",
+      consumes = MULTIPART_FORM_DATA_VALUE,
+      produces = TEXT_PLAIN_VALUE)
   public String upload2(
       @RequestBody MultipartFile file,
       @PathVariable("folder") String folder,
@@ -68,7 +75,10 @@ public class Server {
     return new String(file.getBytes()) + ':' + message + ':' + folder;
   }
 
-  @PostMapping(path = "/multipart/upload3/{folder}", consumes = MULTIPART_FORM_DATA_VALUE)
+  @PostMapping(
+      path = "/multipart/upload3/{folder}",
+      consumes = MULTIPART_FORM_DATA_VALUE,
+      produces = TEXT_PLAIN_VALUE)
   public String upload3(
       @RequestBody MultipartFile file,
       @PathVariable("folder") String folder,

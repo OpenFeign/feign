@@ -26,7 +26,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -148,7 +147,7 @@ public final class Request implements Serializable {
    * @param httpMethod for the request.
    * @param url for the request.
    * @param headers to include.
-   * @param body of the request, can be {@literal null}
+   * @param body of the request, can be {@literal null}, meaning the request has no body.
    * @return a Request
    */
   public static Request create(
@@ -185,7 +184,7 @@ public final class Request implements Serializable {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
     this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
+    this.body = body != null ? body : Body.empty();
     this.requestTemplate = requestTemplate;
     protocolVersion = ProtocolVersion.HTTP_1_1;
   }
@@ -309,7 +308,7 @@ public final class Request implements Serializable {
         builder.append(field).append(": ").append(value).append('\n');
       }
     }
-    if (body != null) {
+    if (body() != null) {
       builder.append('\n').append(body.asString());
     }
     return builder.toString();
@@ -328,6 +327,11 @@ public final class Request implements Serializable {
     private final boolean followRedirects;
     private final Map<String, Map<String, Options>> threadToMethodOptions;
 
+    /** Returns the key used to bucket per-thread method options. */
+    String threadIdentifier() {
+      return getThreadIdentifier();
+    }
+
     /**
      * Get an Options by methodName
      *
@@ -336,9 +340,12 @@ public final class Request implements Serializable {
      */
     @Experimental
     public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions =
-          threadToMethodOptions.getOrDefault(getThreadIdentifier(), new HashMap<>());
-      return methodOptions.getOrDefault(methodName, this);
+      Map<String, Options> methodOptions = threadToMethodOptions.get(threadIdentifier());
+      if (methodOptions == null) {
+        return this;
+      }
+      Options options = methodOptions.get(methodName);
+      return options != null ? options : this;
     }
 
     /**
@@ -349,11 +356,9 @@ public final class Request implements Serializable {
      */
     @Experimental
     public void setMethodOptions(String methodName, Options options) {
-      String threadIdentifier = getThreadIdentifier();
-      Map<String, Request.Options> methodOptions =
-          threadToMethodOptions.getOrDefault(threadIdentifier, new HashMap<>());
-      threadToMethodOptions.put(threadIdentifier, methodOptions);
-      methodOptions.put(methodName, options);
+      threadToMethodOptions
+          .computeIfAbsent(threadIdentifier(), key -> new ConcurrentHashMap<>())
+          .put(methodName, options);
     }
 
     /**
@@ -518,10 +523,10 @@ public final class Request implements Serializable {
 
     private transient Charset encoding;
 
-    private byte[] data;
+    private final byte[] data;
 
     private Body() {
-      super();
+      this(null);
     }
 
     private Body(byte[] data) {

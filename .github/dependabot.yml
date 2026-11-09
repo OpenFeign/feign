@@ -102,3 +102,8 @@ updates:
     ignore:
       - dependency-name: "io.vertx:*"
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "docker"
+    directory: "/.circleci/jdk28"
+    schedule:
+      interval: "daily"

@@ -43,7 +43,19 @@ public class GsonEncoder implements Encoder, PredicatedEncoder, JsonEncoder {
 
   @Override
   public void encode(Object object, Type bodyType, RequestTemplate template) {
-    template.body(gson.toJson(object, bodyType));
+    template.body(gson.toJson(object, typeToEncode(object, bodyType)));
+  }
+
+  /**
+   * Gson honors the supplied type, so {@code toJson(subclass, Abstract.class)} drops subclass
+   * fields. Use the runtime class when {@code bodyType} is a raw {@link Class}. Parameterized types
+   * (TypeToken / generics) keep {@code bodyType} so type arguments are not erased.
+   */
+  private static Type typeToEncode(Object object, Type bodyType) {
+    if (object != null && bodyType instanceof Class) {
+      return object.getClass();
+    }
+    return bodyType;
   }
 
   @Override

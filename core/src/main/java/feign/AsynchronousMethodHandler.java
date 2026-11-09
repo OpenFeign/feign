@@ -114,18 +114,29 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
   }
 
   private static class CancellableFuture<T> extends CompletableFuture<T> {
-    private CompletableFuture<T> inner = null;
+    private volatile CompletableFuture<T> inner;
 
+    /**
+     * Registers {@code value} as the active inner future and pipes its result into this future.
+     *
+     * <p>Side-effect: if this future has already been cancelled before {@code setInner} is called,
+     * the cancellation is immediately forwarded to {@code value} so that the in-flight async work
+     * is also cancelled rather than completing silently.
+     */
     public void setInner(CompletableFuture<T> value) {
       inner = value;
-      inner.whenComplete(pipeTo(this));
+      value.whenComplete(pipeTo(this));
+      if (isCancelled()) {
+        value.cancel(true);
+      }
     }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
       final boolean result = super.cancel(mayInterruptIfRunning);
-      if (inner != null) {
-        inner.cancel(mayInterruptIfRunning);
+      CompletableFuture<T> current = inner;
+      if (current != null) {
+        current.cancel(mayInterruptIfRunning);
       }
       return result;
     }
