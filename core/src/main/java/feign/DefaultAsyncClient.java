@@ -42,8 +42,6 @@ public class DefaultAsyncClient<C> implements AsyncClient<C> {
               try {
                 result.complete(client.execute(request, options));
               } catch (final Throwable throwable) {
-                // Throwable, not Exception: the future is the only completion channel, so an
-                // Error escaping the client must fail it rather than leave it pending.
                 result.completeExceptionally(throwable);
               }
             });
