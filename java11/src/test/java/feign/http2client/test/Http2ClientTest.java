@@ -176,6 +176,36 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
+  void timeoutReadingResponseBody() {
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
+
+    final TestInterface api =
+        newBuilder()
+            .retryer(Retryer.NEVER_RETRY)
+            .options(
+                new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
+            .target(TestInterface.class, server.url("/").toString());
+
+    FeignException exception = assertThrows(FeignException.class, () -> api.timeout());
+    assertThat(exception).hasCauseInstanceOf(HttpTimeoutException.class);
+  }
+
+  @Test
+  void readTimeoutIsIdleTimeoutNotWholeBodyDeadline() {
+    server.enqueue(
+        new MockResponse().setBody("0123456789").throttleBody(1, 100, TimeUnit.MILLISECONDS));
+
+    final TestInterface api =
+        newBuilder()
+            .retryer(Retryer.NEVER_RETRY)
+            .options(
+                new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
+            .target(TestInterface.class, server.url("/").toString());
+
+    assertThat(api.get()).isEqualTo("0123456789");
+  }
+
+  @Test
   void getWithRequestBody() throws Exception {
     // MockWebServer rejects GET requests carrying a body ("Request must not have a body"),
     // so this test runs against a minimal local socket server instead.

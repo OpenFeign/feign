@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.SSLSession;
 import org.junit.jupiter.api.Test;
@@ -184,5 +185,44 @@ class Http2ClientContentLengthTest {
     assertThat(response.body().length()).isNull();
     assertThat(Util.toString(response.body().asReader(StandardCharsets.UTF_8)))
         .isEqualTo("Compressed Data");
+  }
+
+  @Test
+  void readTimeoutPreservesStreamOperations() throws Exception {
+    final Response response =
+        Response.builder()
+            .status(200)
+            .request(request())
+            .body(new ByteArrayInputStream(new byte[] {1, 2, 3}), 3)
+            .build();
+    final Request.Options options =
+        new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.MINUTES, true);
+
+    final Response timed = new Http2Client().withReadTimeout(response, options);
+    final InputStream body = timed.body().asInputStream();
+
+    assertThat(timed.body().length()).isEqualTo(3);
+    assertThat(body.markSupported()).isTrue();
+    body.mark(3);
+    assertThat(body.read()).isEqualTo(1);
+    assertThat(body.skip(1)).isEqualTo(1);
+    assertThat(body.read()).isEqualTo(3);
+    body.reset();
+    assertThat(body.read()).isEqualTo(1);
+    body.close();
+  }
+
+  @Test
+  void zeroReadTimeoutLeavesBodyUnwrapped() {
+    final Response response =
+        Response.builder()
+            .status(200)
+            .request(request())
+            .body(new ByteArrayInputStream(new byte[] {1}), 1)
+            .build();
+    final Request.Options options =
+        new Request.Options(1, TimeUnit.SECONDS, 0, TimeUnit.MILLISECONDS, true);
+
+    assertThat(new Http2Client().withReadTimeout(response, options)).isSameAs(response);
   }
 }

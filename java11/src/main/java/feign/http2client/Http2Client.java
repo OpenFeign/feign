@@ -24,8 +24,10 @@ import feign.Request.Options;
 import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.lang.ref.SoftReference;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,6 +40,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,6 +55,11 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -62,6 +70,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
   private final HttpClient client;
 
   private final Map<Integer, SoftReference<HttpClient>> clients = new ConcurrentHashMap<>();
+
+  private volatile ScheduledExecutorService readTimeoutScheduler;
 
   /**
    * Creates the new Http2Client using following defaults:
@@ -109,7 +119,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       throw new IOException(e);
     }
 
-    return toFeignResponse(request, httpResponse);
+    return withReadTimeout(toFeignResponse(request, httpResponse), options);
   }
 
   @Override
@@ -125,7 +135,8 @@ public class Http2Client implements Client, AsyncClient<Object> {
     HttpClient clientForRequest = getOrCreateClient(options);
     CompletableFuture<HttpResponse<InputStream>> future =
         clientForRequest.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-    return future.thenApply(httpResponse -> toFeignResponse(request, httpResponse));
+    return future.thenApply(
+        httpResponse -> withReadTimeout(toFeignResponse(request, httpResponse), options));
   }
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
@@ -157,6 +168,179 @@ public class Http2Client implements Client, AsyncClient<Object> {
         .status(httpResponse.statusCode())
         .headers(castMapCollectType(httpResponse.headers().map()))
         .build();
+  }
+
+  Response withReadTimeout(Response response, Options options) {
+    if (response.body() == null || options.readTimeout() <= 0) {
+      return response;
+    }
+    final InputStream body;
+    try {
+      body = response.body().asInputStream();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    return response.toBuilder()
+        .body(
+            new ReadTimeoutInputStream(
+                body,
+                readTimeoutScheduler(),
+                options.readTimeoutUnit().toNanos(options.readTimeout())),
+            response.body().length())
+        .build();
+  }
+
+  private ScheduledExecutorService readTimeoutScheduler() {
+    ScheduledExecutorService scheduler = readTimeoutScheduler;
+    if (scheduler == null) {
+      synchronized (this) {
+        scheduler = readTimeoutScheduler;
+        if (scheduler == null) {
+          final ScheduledThreadPoolExecutor executor =
+              new ScheduledThreadPoolExecutor(
+                  1,
+                  runnable -> {
+                    final Thread thread = new Thread(runnable, "feign-http2client-read-timeout");
+                    thread.setDaemon(true);
+                    return thread;
+                  });
+          executor.setKeepAliveTime(1, TimeUnit.MINUTES);
+          executor.allowCoreThreadTimeOut(true);
+          executor.setRemoveOnCancelPolicy(true);
+          readTimeoutScheduler = scheduler = executor;
+        }
+      }
+    }
+    return scheduler;
+  }
+
+  private static final class ReadTimeoutInputStream extends FilterInputStream {
+
+    private final ScheduledExecutorService scheduler;
+    private final long timeoutNanos;
+    private final AtomicBoolean armed = new AtomicBoolean();
+    private volatile long readStartedNanos;
+    private volatile boolean reading;
+    private volatile boolean timedOut;
+    private volatile boolean closed;
+    private volatile ScheduledFuture<?> expiry;
+
+    private ReadTimeoutInputStream(
+        InputStream in, ScheduledExecutorService scheduler, long timeoutNanos) {
+      super(in);
+      this.scheduler = scheduler;
+      this.timeoutNanos = timeoutNanos;
+    }
+
+    @Override
+    public int read() throws IOException {
+      beforeRead();
+      try {
+        return afterRead(in.read());
+      } catch (IOException e) {
+        throw translate(e);
+      } finally {
+        reading = false;
+      }
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+      beforeRead();
+      try {
+        return afterRead(in.read(b, off, len));
+      } catch (IOException e) {
+        throw translate(e);
+      } finally {
+        reading = false;
+      }
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+      beforeRead();
+      try {
+        return in.skip(n);
+      } catch (IOException e) {
+        throw translate(e);
+      } finally {
+        reading = false;
+      }
+    }
+
+    @Override
+    public int available() throws IOException {
+      checkTimedOut();
+      return super.available();
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+      checkTimedOut();
+      super.reset();
+    }
+
+    @Override
+    public void close() throws IOException {
+      closed = true;
+      cancelExpiry();
+      super.close();
+    }
+
+    private void beforeRead() throws IOException {
+      checkTimedOut();
+      readStartedNanos = System.nanoTime();
+      reading = true;
+      if (armed.compareAndSet(false, true)) {
+        expiry = scheduler.schedule(this::expire, timeoutNanos, TimeUnit.NANOSECONDS);
+      }
+    }
+
+    private int afterRead(int result) {
+      if (result == -1) {
+        cancelExpiry();
+      }
+      return result;
+    }
+
+    private void expire() {
+      armed.set(false);
+      if (closed || !reading) {
+        return;
+      }
+      final long idleNanos = System.nanoTime() - readStartedNanos;
+      if (idleNanos >= timeoutNanos) {
+        timedOut = true;
+        try {
+          in.close();
+        } catch (IOException ignored) {
+        }
+      } else if (armed.compareAndSet(false, true)) {
+        expiry = scheduler.schedule(this::expire, timeoutNanos - idleNanos, TimeUnit.NANOSECONDS);
+      }
+    }
+
+    private void cancelExpiry() {
+      final ScheduledFuture<?> current = expiry;
+      if (current != null) {
+        current.cancel(false);
+      }
+    }
+
+    private void checkTimedOut() throws HttpTimeoutException {
+      if (timedOut) {
+        throw new HttpTimeoutException("response body read timed out");
+      }
+    }
+
+    private IOException translate(IOException e) {
+      if (!timedOut) {
+        return e;
+      }
+      final HttpTimeoutException timeout = new HttpTimeoutException("response body read timed out");
+      timeout.initCause(e);
+      return timeout;
+    }
   }
 
   private HttpClient getOrCreateClient(Options options) {
