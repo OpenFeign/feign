@@ -19,7 +19,9 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import feign.Request.Body;
+import feign.Request.HttpMethod;
 import java.io.IOException;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 public class RequestTest {
@@ -33,5 +35,36 @@ public class RequestTest {
     assertThat(body.writeToByteArray()).isEqualTo(content.getBytes(UTF_8));
     assertThat(body.writeToString(UTF_8)).isEqualTo(content);
     assertThat(body.contentLength()).isEqualTo(content.getBytes(UTF_8).length);
+  }
+
+  @Test
+  void requestWithoutBodyHasEmptyBody() {
+    Request request = createGetRequestWithNullBody();
+
+    assertThat(request.body()).isEmpty();
+  }
+
+  @Test
+  void toStringOfRequestWithoutBodyOmitsBodySection() {
+    Request request = createGetRequestWithNullBody();
+
+    assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
+  }
+
+  @Test
+  void requestBuiltFromTemplateWithoutBodyOmitsBodyFromToString() {
+    Request request =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("http://example.com")
+            .resolve(Collections.emptyMap())
+            .request();
+
+    assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
+  }
+
+  private static Request createGetRequestWithNullBody() {
+    return Request.create(
+        HttpMethod.GET, "http://example.com", Collections.emptyMap(), (Body) null, null);
   }
 }

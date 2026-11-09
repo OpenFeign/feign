@@ -6,6 +6,17 @@
   avoiding in-memory buffering. New `Request.PathBody` and `Request.InputStreamBody` implementations are provided for
   these cases. (https://github.com/OpenFeign/feign/pull/3396)
 
+### Version 13.17
+
+* `Request` now accepts a `null` `Request.Body` and treats it as "no body", instead of throwing a
+  `NullPointerException` from `body()`, `charset()`, `isBinary()` and `length()`. A request with no
+  body reports a `null` body and charset, is binary, and has length 0. Its `toString()` prints the
+  request line and headers without a body (#1210).
+* Form encoders can process primitive array fields without failing on an `Object[]` cast.
+  URL-encoded fields use the request's `CollectionFormat`. In multipart requests, numeric and
+  boolean arrays create repeated parts, and `byte[]` values stay as one binary part. Multipart
+  `char[]` values are still passed to the delegate encoder (#3607).
+
 ### Version 13.16
 
 * Path-style expansion repeats the entry name for each collection or array value inside a map,

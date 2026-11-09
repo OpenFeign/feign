@@ -25,6 +25,25 @@ commands:
     steps:
       - restore_cache:
           keys:
+            - jdk28-v1-{{ checksum ".circleci/jdk28/Dockerfile" }}
+      - run:
+          name: 'Install JDK 28 early access'
+          command: |
+            jdk28_home="$HOME/jdk28"
+            if [ ! -d "$jdk28_home" ]; then
+              image=$(sed -n 's/^FROM //p' .circleci/jdk28/Dockerfile)
+              docker pull -q "$image"
+              image_java_home=$(docker run --rm --entrypoint sh "$image" -c 'echo "$JAVA_HOME"')
+              container=$(docker create "$image")
+              docker cp "$container:$image_java_home" "$jdk28_home"
+              docker rm "$container"
+            fi
+      - save_cache:
+          paths:
+            - ~/jdk28
+          key: jdk28-v1-{{ checksum ".circleci/jdk28/Dockerfile" }}
+      - restore_cache:
+          keys:
             - dependencies-v1-{{ checksum "pom.xml" }}
       - run:
           name: 'Check if cache was restored'
@@ -69,7 +88,7 @@ commands:
             ./mvnw -ntp -B \
               org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline \
               de.qaware.maven:go-offline-maven-plugin:1.2.8:resolve-dependencies \
-              -T2 -pl -:feign-benchmark
+              -T2 -Pjdk28-modules -pl -:feign-benchmark
       - save_cache:
           paths:
             - ~/.sdkman
@@ -78,6 +97,9 @@ commands:
   restore-build-environment:
     description: 'Restore cached build environment'
     steps:
+      - restore_cache:
+          keys:
+            - jdk28-v1-{{ checksum ".circleci/jdk28/Dockerfile" }}
       - restore_cache:
           keys:
             - dependencies-v1-{{ checksum "pom.xml" }}
@@ -100,7 +122,7 @@ commands:
           no_output_timeout: 30m
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test,-:feign-example-github,-:feign-example-github-with-coroutine,-:feign-example-wikipedia,-:feign-example-wikipedia-with-springboot -DskipTests=true deploy
+            ./mvnw -ntp -nsu --serial -s .circleci/settings.xml -P release,jdk28-modules -pl -:feign-benchmark,-:feign-vertx4-test,-:feign-vertx5-test,-:feign-example-github,-:feign-example-github-with-coroutine,-:feign-example-wikipedia,-:feign-example-wikipedia-with-springboot -DskipTests=true deploy
 
 # our job defaults
 defaults: &defaults
@@ -148,7 +170,7 @@ jobs:
           name: 'Test'
           command: |
             source "$HOME/.sdkman/bin/sdkman-init.sh"
-            ./mvnw -ntp -B verify
+            ./mvnw -ntp -B -Pjdk28-modules verify
       - verify-formatting
 
   deploy:

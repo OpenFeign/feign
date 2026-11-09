@@ -142,6 +142,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
           method,
           queryAnnotation,
           graphqlSchema,
+          methodConfig.generateDeprecated(),
           registry,
           generator,
           validator,
@@ -219,6 +220,7 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       ExecutableElement method,
       GraphqlQuery queryAnnotation,
       GraphQLSchema graphqlSchema,
+      boolean generateDeprecated,
       TypeDefinitionRegistry registry,
       TypeGenerator generator,
       QueryValidator validator,
@@ -235,7 +237,8 @@ public class GraphqlSchemaProcessor extends AbstractProcessor {
       return;
     }
 
-    if (!validator.validate(graphqlSchema, document, method) || !generateTypes) {
+    if (!validator.validate(graphqlSchema, document, method, generateDeprecated)
+        || !generateTypes) {
       return;
     }
 

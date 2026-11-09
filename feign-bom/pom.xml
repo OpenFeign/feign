@@ -61,6 +61,11 @@
       </dependency>
       <dependency>
         <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-jdk-json</artifactId>
+        <version>14.0-alpha1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
         <artifactId>feign-jaxrs</artifactId>
         <version>14.0-alpha1-SNAPSHOT</version>
       </dependency>
@@ -252,16 +257,6 @@
       <dependency>
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-vertx</artifactId>
-        <version>14.0-alpha1-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-vertx4-test</artifactId>
-        <version>14.0-alpha1-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>io.github.openfeign</groupId>
-        <artifactId>feign-vertx5-test</artifactId>
         <version>14.0-alpha1-SNAPSHOT</version>
       </dependency>
     </dependencies>

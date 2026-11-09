@@ -15,6 +15,7 @@
  */
 package feign.form.multipart;
 
+import static feign.form.util.Elements.elementsOf;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.codec.EncodeException;
@@ -32,31 +33,15 @@ public class ManyParametersWriter extends AbstractWriter {
 
   @Override
   public boolean isApplicable(Object value) {
-    if (value.getClass().isArray()) {
-      Object[] values = (Object[]) value;
-      return values.length > 0 && parameterWriter.isApplicable(values[0]);
-    }
-    if (!(value instanceof Iterable)) {
-      return false;
-    }
-    final var iterable = (Iterable<?>) value;
-    final var iterator = iterable.iterator();
+    final var iterator = elementsOf(value).iterator();
     return iterator.hasNext() && parameterWriter.isApplicable(iterator.next());
   }
 
   @Override
   public void write(Output output, String boundary, String key, Object value)
       throws EncodeException {
-    if (value.getClass().isArray()) {
-      final var objects = (Object[]) value;
-      for (var object : objects) {
-        parameterWriter.write(output, boundary, key, object);
-      }
-    } else if (value instanceof Iterable) {
-      final var iterable = (Iterable<?>) value;
-      for (var object : iterable) {
-        parameterWriter.write(output, boundary, key, object);
-      }
+    for (var object : elementsOf(value)) {
+      parameterWriter.write(output, boundary, key, object);
     }
   }
 }
