@@ -22,7 +22,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-parent</artifactId>
-    <version>13.17-SNAPSHOT</version>
+    <version>13.18-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-kotlin</artifactId>
@@ -30,7 +30,7 @@
   <description>Feign Kotlin</description>
 
   <properties>
-    <kotlin.version>2.4.20</kotlin.version>
+    <kotlin.version>2.4.21</kotlin.version>
     <kotlinx.coroutines.version>1.11.0</kotlinx.coroutines.version>
   </properties>
 
