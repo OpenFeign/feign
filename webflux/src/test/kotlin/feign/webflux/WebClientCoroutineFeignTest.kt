@@ -15,6 +15,7 @@
  */
 package feign.webflux
 
+import feign.AsyncClient
 import feign.RequestLine
 import feign.Response
 import feign.codec.Decoder
@@ -48,7 +49,7 @@ class WebClientCoroutineFeignTest {
     val decodingThread = AtomicReference<Thread>()
     @Suppress("UNCHECKED_CAST")
     val api = CoroutineFeign.builder<TestApi>()
-      .client(WebClientAsyncClient<Any>() as feign.AsyncClient<TestApi>)
+      .client(WebClientAsyncClient<Any>() as AsyncClient<TestApi>)
       .decoder(
         object : Decoder {
           private val delegate: Decoder = Decoder.Default()

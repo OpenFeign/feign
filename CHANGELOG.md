@@ -5,6 +5,10 @@
   instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
   `charset=` inside a quoted parameter value stays data. Quoted charset values still work, and a
   missing, illegal or unsupported charset still falls back to UTF-8 (#3626).
+* New `feign-webflux` module with `WebClientAsyncClient`, a non-blocking `AsyncClient` built on
+  Spring `WebClient` that can back `AsyncFeign` and `CoroutineFeign`. `feign-kotlin` adds the opt-in
+  `KotlinDelegatingContract`, so the blocking `Feign.builder()` passes the declared return type of
+  `suspend` functions to decoders instead of `Object` (#2019).
 
 ### Version 13.17
 

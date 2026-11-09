@@ -15,6 +15,7 @@
  */
 package feign.kotlin
 
+import feign.AsyncClient
 import feign.RequestLine
 import feign.Response
 import feign.codec.Decoder
@@ -23,7 +24,9 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.lang.reflect.Type
 import java.util.concurrent.atomic.AtomicReference
 
@@ -34,6 +37,19 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class NonBlockingCoroutineFeignTest {
 
+  private lateinit var server: MockWebServer
+
+  @BeforeEach
+  fun beforeEach() {
+    server = MockWebServer()
+    server.start()
+  }
+
+  @AfterEach
+  fun afterEach() {
+    server.shutdown()
+  }
+
   interface TestApi {
     @RequestLine("GET /")
     suspend fun get(): String
@@ -41,14 +57,12 @@ class NonBlockingCoroutineFeignTest {
 
   @Test
   fun `suspend calls with Http2Client decode off the caller thread`() {
-    val server = MockWebServer()
-    server.start()
     server.enqueue(MockResponse().setBody("\"hello\""))
 
     val decodingThread = AtomicReference<Thread>()
     @Suppress("UNCHECKED_CAST")
     val api = CoroutineFeign.builder<TestApi>()
-      .client(Http2Client() as feign.AsyncClient<TestApi>)
+      .client(Http2Client() as AsyncClient<TestApi>)
       .decoder(
         object : Decoder {
           private val delegate: Decoder = Decoder.Default()
@@ -67,7 +81,5 @@ class NonBlockingCoroutineFeignTest {
     // The response was decoded on the async client's completion thread,
     // not on the thread that invoked the suspend function.
     assertThat(decodingThread.get()).isNotSameAs(callerThread)
-
-    server.shutdown()
   }
 }

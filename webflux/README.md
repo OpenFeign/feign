@@ -15,7 +15,7 @@ thread is parked waiting for a response, so this client is a natural companion t
 <dependency>
   <groupId>io.github.openfeign</groupId>
   <artifactId>feign-webflux</artifactId>
-  <version>13.18-SNAPSHOT</version>
+  <version>${feign.version}</version>
 </dependency>
 ```
 

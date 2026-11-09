@@ -15,6 +15,8 @@
  */
 package feign.kotlin
 
+import feign.Contract
+import feign.Feign
 import feign.RequestLine
 import feign.codec.Decoder
 import kotlinx.coroutines.runBlocking
@@ -71,11 +73,11 @@ class SuspendDecoderTypeTest {
     }
 
     @Test
-    fun `blocking builder decoder type for suspend function (documents issue 2019)`(): Unit = runBlocking {
+    fun `blocking builder with KotlinDelegatingContract passes suspend return type to decoder`(): Unit = runBlocking {
         server.enqueue(MockResponse().setBody("""{"name":"ok"}"""))
 
-        val api = feign.Feign.builder()
-            .contract(feign.kotlin.KotlinDelegatingContract(feign.Contract.Default()))
+        val api = Feign.builder()
+            .contract(KotlinDelegatingContract(Contract.Default()))
             .decoder { response, type ->
                 recordedTypes.add(type)
                 response.close()
