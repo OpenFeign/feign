@@ -17,6 +17,7 @@ package feign.form;
 
 import static feign.Logger.Level.FULL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
 import feign.Feign;
@@ -24,8 +25,11 @@ import feign.Headers;
 import feign.Logger.JavaLogger;
 import feign.RequestLine;
 import feign.Response;
+import feign.codec.EncodeException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -83,10 +87,42 @@ class WildCardMapTest {
     assertThat(api.wildCardMap(param)).isNotNull().extracting(Response::status).isEqualTo(418);
   }
 
+  @Test
+  void testMapStringStringIsFormUrlEncoded() {
+    Map<String, String> formFields = new HashMap<>();
+
+    formFields.put("key1", "1");
+    formFields.put("key2", "1");
+
+    assertThat(api.postFormFields(formFields))
+        .isNotNull()
+        .extracting(Response::status)
+        .isEqualTo(200);
+  }
+
+  @Test
+  void testListIsDelegatedToDefaultEncoder() {
+    List<String> keys = new ArrayList<>();
+    keys.add("key1");
+    keys.add("key2");
+
+    assertThatThrownBy(() -> api.postFormList(keys))
+        .isInstanceOf(EncodeException.class)
+        .hasMessageContaining("ArrayList is not a type supported by this encoder.");
+  }
+
   interface FormUrlEncodedApi {
 
     @RequestLine("POST /wild-card-map")
     @Headers("Content-Type: application/x-www-form-urlencoded")
     Response wildCardMap(Map<String, ?> param);
+
+    @RequestLine("POST /wild-card-map")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    Response postFormFields(Map<String, String> formFields);
+
+    @RequestLine("POST /wild-card-map")
+    @Headers("Content-Type: application/x-www-form-urlencoded")
+    Response postFormList(List<String> keys);
   }
 }

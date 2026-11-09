@@ -123,6 +123,42 @@ class GsonCodecTest {
             """);
   }
 
+  @Test
+  void encodesSubclassFieldsWhenBodyTypeIsAbstract() {
+    SimpleTextMessage message = new SimpleTextMessage("user", "hello", 1);
+
+    RequestTemplate template = new RequestTemplate();
+    new GsonEncoder().encode(message, Message.class, template);
+
+    assertThat(template)
+        .hasBody(
+            """
+            {
+              "content": "hello",
+              "type": 1,
+              "toUser": "user"
+            }            """);
+  }
+
+  abstract static class Message {
+    final String toUser;
+
+    Message(String toUser) {
+      this.toUser = toUser;
+    }
+  }
+
+  static class SimpleTextMessage extends Message {
+    final String content;
+    final Integer type;
+
+    SimpleTextMessage(String toUser, String content, Integer type) {
+      super(toUser);
+      this.content = content;
+      this.type = type;
+    }
+  }
+
   static class Zone extends LinkedHashMap<String, Object> {
 
     Zone() {

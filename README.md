@@ -1,8 +1,10 @@
+<p align="center"><img src="src/docs/feign-logo.svg" alt="Feign logo" width="160"></p>
+
 # Feign simplifies the process of writing Java HTTP clients
 
 [![Join the chat at https://gitter.im/OpenFeign/feign](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OpenFeign/feign?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![CI](https://github.com/OpenFeign/feign/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/OpenFeign/feign/actions/workflows/build.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign/feign-core/badge.png)](https://search.maven.org/artifact/io.github.openfeign/feign-core/)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/OpenFeign/feign/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/OpenFeign/feign/tree/master)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.openfeign/feign-core)](https://central.sonatype.com/artifact/io.github.openfeign/feign-core)
 
 Feign is a Java to HTTP client binder inspired by [Retrofit](https://github.com/square/retrofit), [JAXRS-2.0](https://jax-rs-spec.java.net/nonav/2.0/apidocs/index.html), and [WebSocket](http://www.oracle.com/technetwork/articles/java/jsr356-1937161.html).  Feign's first goal was reducing the complexity of binding [Denominator](https://github.com/Netflix/Denominator) uniformly to HTTP APIs regardless of [ReSTfulness](http://www.slideshare.net/adrianfcole/99problems).
 
@@ -1260,6 +1262,34 @@ you to handle the response, wrap the failure into a custom exception or perform 
 If you want to retry the request again, throw a `RetryableException`.  This will invoke the registered
 `Retryer`.
 
+#### Error responses as values
+Some APIs describe a failure in the response body, using the same envelope as a success. Call
+`decodeErrorResponses()` to decode that body into the method's return type instead of throwing:
+
+```java
+interface MyApi {
+  @RequestLine("POST /users")
+  BaseResponse createUser(NewUser user);
+}
+
+MyApi myApi = Feign.builder()
+                 .decoder(new JacksonDecoder())
+                 .decodeErrorResponses()
+                 .target(MyApi.class, "https://api.hostname.com");
+```
+
+The error body is returned as a value only when all of these hold. Otherwise the call throws, as it does without the flag:
+
+* the status is 400 or above, other than 404 (use `dismiss404()` for 404);
+* the method returns a value. `void` methods always throw;
+* the body is between 1 and 8192 bytes;
+* the decoder accepts the response (`PredicatedDecoder.canDecode`), so a JSON decoder is never handed an HTML error page;
+* the `ErrorDecoder` did not return a `RetryableException`, so the `Retryer` keeps working;
+* the body decodes. If it doesn't, the `ErrorDecoder`'s exception is thrown with the decode failure attached as suppressed.
+
+The flag applies to every method on the client, and the decoder sees the status the server sent. With the default
+decoder and a `String` return type, the error body is returned as the string. This option is experimental.
+
 ### Retry
 Feign, by default, will automatically retry `IOException`s, regardless of HTTP method, treating them as transient network
 related exceptions, and any `RetryableException` thrown from an `ErrorDecoder`.  To customize this
@@ -1342,7 +1372,7 @@ public class Example {
 
 `Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
 `false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be
-created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
+created for each `Client` execution, allowing you to maintain state between each request if desired.
 
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
 cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
@@ -1527,10 +1557,6 @@ The Bill Of Material is a special POM file that groups dependency versions that 
 ```
 # Form Encoder
 
-[![build_status](https://travis-ci.org/OpenFeign/feign-form.svg?branch=master)](https://travis-ci.org/OpenFeign/feign-form)
-[![maven_central](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.openfeign.form/feign-form)
-[![License](http://img.shields.io/:license-apache-brightgreen.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
-
 This module adds support for encoding **application/x-www-form-urlencoded** and **multipart/form-data** forms.
 
 ## Add dependency
@@ -1564,7 +1590,7 @@ The `feign-form` extension depend on `OpenFeign` and its *concrete* versions:
 - all `feign-form` releases before **3.5.0** works with `OpenFeign` **9.\*** versions;
 - starting from `feign-form`'s version **3.5.0**, the module works with `OpenFeign` **10.1.0** versions and greater.
 
-> **IMPORTANT:** there is no backward compatibility and no any gurantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
+> **IMPORTANT:** there is no backward compatibility and no any guarantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
 
 Notes:
 

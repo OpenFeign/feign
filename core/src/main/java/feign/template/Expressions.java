@@ -17,6 +17,10 @@ package feign.template;
 
 import feign.Param.Expander;
 import feign.Util;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -69,9 +73,9 @@ public final class Expressions {
    * specification. Feign deviates from the rfc in that the ':' value modifier is used to mark a
    * regular expression.
    */
-  private static final Pattern VARIABLE_LIST_PATTERN =
+  static final Pattern VARIABLE_LIST_PATTERN =
       Pattern.compile(
-          "(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?)(,(([\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(\\.?([\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*(:.*|\\*)?))*");
+          "(?:(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(?:\\.?(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*+\\*?,)*+(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2})(?:\\.?(?:[\\w-\\[\\]$]|%[0-9A-Fa-f]{2}))*+(?::.*|\\*)?");
 
   public static Expression create(final String value) {
 
@@ -242,22 +246,40 @@ public final class Expressions {
       StringBuilder result = new StringBuilder();
 
       for (Entry<String, ?> entry : values.entrySet()) {
-        StringBuilder expanded = new StringBuilder();
         String name = this.encode(entry.getKey());
-        String value = this.encode(entry.getValue().toString());
-
-        expanded.append(name).append("=");
-        if (!value.isEmpty()) {
-          expanded.append(value);
+        for (Object value : valuesOf(entry.getValue())) {
+          if (value != null) {
+            this.appendNamedValue(result, name, value.toString());
+          }
         }
-
-        if (result.length() != 0) {
-          result.append(this.separator);
-        }
-
-        result.append(expanded);
       }
       return result.toString();
+    }
+
+    private static Iterable<?> valuesOf(Object raw) {
+      if (raw instanceof Iterable) {
+        return (Iterable<?>) raw;
+      }
+      if (raw != null && raw.getClass().isArray()) {
+        int length = Array.getLength(raw);
+        List<Object> values = new ArrayList<>(length);
+        for (int i = 0; i < length; i++) {
+          values.add(Array.get(raw, i));
+        }
+        return values;
+      }
+      return Collections.singletonList(raw);
+    }
+
+    private void appendNamedValue(StringBuilder result, String encodedName, String value) {
+      String encoded = this.encode(value);
+      if (result.length() != 0) {
+        result.append(this.separator);
+      }
+      result.append(encodedName).append("=");
+      if (!encoded.isEmpty()) {
+        result.append(encoded);
+      }
     }
 
     protected static boolean isSimpleExpression(String expressionCandidate) {

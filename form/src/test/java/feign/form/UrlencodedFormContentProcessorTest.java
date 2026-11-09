@@ -28,7 +28,11 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class UrlencodedFormContentProcessorTest {
 
@@ -114,6 +118,36 @@ class UrlencodedFormContentProcessorTest {
     assertEncodedBody(
         "from=%2B987654321&to=%2B123456789&tags=one%7Ctwo",
         Arrays.asList("one", "two"), Client::mapPipes);
+  }
+
+  static Stream<Arguments> primitiveArrays() {
+    return Stream.of(
+        Arguments.of(new boolean[] {true, false}, "tags=true&tags=false"),
+        Arguments.of(new byte[] {1, 2}, "tags=1&tags=2"),
+        Arguments.of(new char[] {'a', 'b'}, "tags=a&tags=b"),
+        Arguments.of(new double[] {1.25, 2.5}, "tags=1.25&tags=2.5"),
+        Arguments.of(new float[] {1.5F, 2.5F}, "tags=1.5&tags=2.5"),
+        Arguments.of(new int[] {1, 2}, "tags=1&tags=2"),
+        Arguments.of(new long[] {10L, 20L}, "tags=10&tags=20"),
+        Arguments.of(new short[] {3, 4}, "tags=3&tags=4"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("primitiveArrays")
+  void primitiveArrayValueUsesDefaultExplodedCollectionFormat(
+      Object tags, String expectedTagFields) {
+    assertEncodedBody("from=%2B987654321&to=%2B123456789&" + expectedTagFields, tags, Client::map);
+  }
+
+  @Test
+  void primitiveArrayIsJoinedIntoOneFieldWithCsvCollectionFormat() {
+    assertEncodedBody(
+        "from=%2B987654321&to=%2B123456789&tags=1%2C2", new int[] {1, 2}, Client::mapCsv);
+  }
+
+  @Test
+  void emptyPrimitiveArrayValueAddsNoTagsField() {
+    assertEncodedBody("from=%2B987654321&to=%2B123456789&", new int[0], Client::map);
   }
 
   private void assertEncodedBody(
