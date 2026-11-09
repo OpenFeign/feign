@@ -91,6 +91,34 @@ class FieldQueryMapEncoderTest {
             entry("bar", "barz"));
   }
 
+  @Test
+  void defaultEncoder_ignoresStaticNonnullFields() {
+    final StaticFieldObject object = new StaticFieldObject("presentValue", null, "aliasedValue");
+
+    final Map<String, Object> encodedMap = encoder.encode(object);
+
+    assertThat(encodedMap)
+        .as("Non-null static fields must not be encoded")
+        .doesNotContainKeys("serialVersionUID", "staticMutable", "staticAlias")
+        .containsOnly(entry("present", "presentValue"), entry("instanceAlias", "aliasedValue"));
+  }
+
+  @Test
+  void defaultEncoder_ignoresInheritedStaticConstant() {
+    final SubClassWithStaticConstant object =
+        new SubClassWithStaticConstant("inheritedValue", "own");
+    assertThat(encoder.encode(object))
+        .as("Inherited static constant must not be encoded")
+        .doesNotContainKey("INHERITED_STATIC")
+        .containsOnly(entry("inheritedInstance", "inheritedValue"), entry("ownAlias", "own"));
+
+    object.own = "changed";
+
+    assertThat(encoder.encode(object))
+        .as("Re-encoding must reflect changed instance values")
+        .containsOnly(entry("inheritedInstance", "inheritedValue"), entry("ownAlias", "changed"));
+  }
+
   class NormalObject {
 
     private NormalObject(String foo, String bar) {
@@ -149,6 +177,50 @@ class FieldQueryMapEncoderTest {
     @Override
     public String expand(Object value) {
       return null;
+    }
+  }
+
+  private static class StaticFieldObject {
+
+    private static final long serialVersionUID = 1L;
+    private static String staticMutable = "staticValue";
+
+    @Param("staticAlias")
+    private static String staticAlias = "staticAliasValue";
+
+    private final String present;
+
+    private final String absent;
+
+    @Param("instanceAlias")
+    private final String aliased;
+
+    private StaticFieldObject(String present, String absent, String aliased) {
+      this.present = present;
+      this.absent = absent;
+      this.aliased = aliased;
+    }
+  }
+
+  private static class BaseClassWithStaticConstant {
+
+    private static final String INHERITED_STATIC = "inheritedStaticValue";
+
+    private final String inheritedInstance;
+
+    private BaseClassWithStaticConstant(String inheritedInstance) {
+      this.inheritedInstance = inheritedInstance;
+    }
+  }
+
+  private static class SubClassWithStaticConstant extends BaseClassWithStaticConstant {
+
+    @Param("ownAlias")
+    private String own;
+
+    private SubClassWithStaticConstant(String inheritedInstance, String own) {
+      super(inheritedInstance);
+      this.own = own;
     }
   }
 }
