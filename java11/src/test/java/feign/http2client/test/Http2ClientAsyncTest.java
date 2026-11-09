@@ -514,7 +514,7 @@ public class Http2ClientAsyncTest {
 
   @Test
   void timeoutReadingResponseBody() throws Throwable {
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(1, TimeUnit.SECONDS));
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
     final TestInterfaceAsync api =
         newAsyncBuilder()

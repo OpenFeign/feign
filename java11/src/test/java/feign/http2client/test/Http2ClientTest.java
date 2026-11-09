@@ -177,7 +177,7 @@ public class Http2ClientTest extends AbstractClientTest {
 
   @Test
   void timeoutReadingResponseBody() {
-    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(1, TimeUnit.SECONDS));
+    server.enqueue(new MockResponse().setBody("foo").setBodyDelay(3, TimeUnit.SECONDS));
 
     final TestInterface api =
         newBuilder()
@@ -191,29 +191,18 @@ public class Http2ClientTest extends AbstractClientTest {
   }
 
   @Test
-  void invokesTwoArgumentResponseOverride() {
-    server.enqueue(new MockResponse().setBody("foo"));
-    final TwoArgumentOverrideClient client = new TwoArgumentOverrideClient();
+  void readTimeoutIsIdleTimeoutNotWholeBodyDeadline() {
+    server.enqueue(
+        new MockResponse().setBody("0123456789").throttleBody(1, 100, TimeUnit.MILLISECONDS));
+
     final TestInterface api =
-        Feign.builder()
-            .client(client)
-            .target(TestInterface.class, "http://localhost:" + server.getPort());
+        newBuilder()
+            .retryer(Retryer.NEVER_RETRY)
+            .options(
+                new Request.Options(500, TimeUnit.MILLISECONDS, 500, TimeUnit.MILLISECONDS, true))
+            .target(TestInterface.class, server.url("/").toString());
 
-    assertThat(api.get()).isEqualTo("foo");
-    assertThat(client.invoked).isTrue();
-  }
-
-  @Test
-  void invokesThreeArgumentResponseOverride() {
-    server.enqueue(new MockResponse().setBody("foo"));
-    final ThreeArgumentOverrideClient client = new ThreeArgumentOverrideClient();
-    final TestInterface api =
-        Feign.builder()
-            .client(client)
-            .target(TestInterface.class, "http://localhost:" + server.getPort());
-
-    assertThat(api.get()).isEqualTo("foo");
-    assertThat(client.invoked).isTrue();
+    assertThat(api.get()).isEqualTo("0123456789");
   }
 
   @Test
@@ -419,31 +408,5 @@ public class Http2ClientTest extends AbstractClientTest {
   @Override
   public Feign.Builder newBuilder() {
     return Feign.builder().client(new Http2Client());
-  }
-
-  private static final class TwoArgumentOverrideClient extends Http2Client {
-
-    private boolean invoked;
-
-    @Override
-    protected Response toFeignResponse(
-        Request request, java.net.http.HttpResponse<InputStream> response) {
-      invoked = true;
-      return super.toFeignResponse(request, response);
-    }
-  }
-
-  private static final class ThreeArgumentOverrideClient extends Http2Client {
-
-    private boolean invoked;
-
-    @Override
-    protected Response toFeignResponse(
-        Request request,
-        java.net.http.HttpResponse<InputStream> response,
-        Request.Options options) {
-      invoked = true;
-      return super.toFeignResponse(request, response, options);
-    }
   }
 }

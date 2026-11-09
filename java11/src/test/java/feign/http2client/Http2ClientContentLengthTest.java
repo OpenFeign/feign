@@ -16,7 +16,6 @@
 package feign.http2client;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -24,20 +23,17 @@ import feign.Response;
 import feign.Util;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.SSLSession;
@@ -46,11 +42,6 @@ import org.junit.jupiter.api.Test;
 class Http2ClientContentLengthTest {
 
   private static HttpResponse<InputStream> responseWithContentLength(String contentLength) {
-    return responseWithContentLength(contentLength, new ByteArrayInputStream(new byte[0]));
-  }
-
-  private static HttpResponse<InputStream> responseWithContentLength(
-      String contentLength, InputStream body) {
     final HttpHeaders headers =
         HttpHeaders.of(Map.of("Content-Length", List.of(contentLength)), (name, value) -> true);
     return new HttpResponse<>() {
@@ -76,7 +67,7 @@ class Http2ClientContentLengthTest {
 
       @Override
       public InputStream body() {
-        return body;
+        return new ByteArrayInputStream(new byte[0]);
       }
 
       @Override
@@ -197,37 +188,20 @@ class Http2ClientContentLengthTest {
   }
 
   @Test
-  void responseBodyTimeoutUsesOneStreamDeadline() throws Exception {
-    final CountDownLatch closed = new CountDownLatch(1);
-    final InputStream body =
-        new ByteArrayInputStream(new byte[] {1}) {
-          @Override
-          public void close() throws IOException {
-            closed.countDown();
-            super.close();
-          }
-        };
-    final Request.Options options =
-        new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.MILLISECONDS, true);
+  void readTimeoutPreservesStreamOperations() throws Exception {
     final Response response =
-        new Http2Client().toFeignResponse(request(), responseWithContentLength("1", body), options);
-
-    assertThat(closed.await(5, TimeUnit.SECONDS)).isTrue();
-    assertThrows(HttpTimeoutException.class, response.body().asInputStream()::read);
-  }
-
-  @Test
-  void responseBodyTimeoutPreservesStreamOperations() throws Exception {
+        Response.builder()
+            .status(200)
+            .request(request())
+            .body(new ByteArrayInputStream(new byte[] {1, 2, 3}), 3)
+            .build();
     final Request.Options options =
         new Request.Options(1, TimeUnit.SECONDS, 1, TimeUnit.MINUTES, true);
-    final Response response =
-        new Http2Client()
-            .toFeignResponse(
-                request(),
-                responseWithContentLength("3", new ByteArrayInputStream(new byte[] {1, 2, 3})),
-                options);
-    final InputStream body = response.body().asInputStream();
 
+    final Response timed = new Http2Client().withReadTimeout(response, options);
+    final InputStream body = timed.body().asInputStream();
+
+    assertThat(timed.body().length()).isEqualTo(3);
     assertThat(body.markSupported()).isTrue();
     body.mark(3);
     assertThat(body.read()).isEqualTo(1);
@@ -236,5 +210,19 @@ class Http2ClientContentLengthTest {
     body.reset();
     assertThat(body.read()).isEqualTo(1);
     body.close();
+  }
+
+  @Test
+  void zeroReadTimeoutLeavesBodyUnwrapped() {
+    final Response response =
+        Response.builder()
+            .status(200)
+            .request(request())
+            .body(new ByteArrayInputStream(new byte[] {1}), 1)
+            .build();
+    final Request.Options options =
+        new Request.Options(1, TimeUnit.SECONDS, 0, TimeUnit.MILLISECONDS, true);
+
+    assertThat(new Http2Client().withReadTimeout(response, options)).isSameAs(response);
   }
 }

@@ -5,6 +5,10 @@
   instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
   `charset=` inside a quoted parameter value stays data. Quoted charset values still work, and a
   missing, illegal or unsupported charset still falls back to UTF-8 (#3626).
+* `Http2Client` now enforces `Request.Options.readTimeout` while the response body is read. As in
+  `Client.Default`, it is an idle timeout: a single read that blocks longer than `readTimeout` fails
+  with `HttpTimeoutException`, while a body that keeps arriving can take longer in total. A
+  `readTimeout` of 0 still means no timeout (#3068, #3462).
 
 ### Version 13.17
 
