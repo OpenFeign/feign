@@ -32,7 +32,14 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
-/** Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}. */
+/**
+ * Simple logging abstraction for debug messages. Adapted from {@code retrofit.RestAdapter.Log}.
+ *
+ * <p>Request logging reflects the {@link Request} that Feign builds from the method invocation,
+ * captured before it is handed to the {@link Client}. Depending on the {@link Client}
+ * implementation, what is actually sent over the wire may differ from what is logged here; see
+ * {@link DefaultClient} for a concrete example.
+ */
 public abstract class Logger {
 
   protected static String methodTag(String configKey) {
