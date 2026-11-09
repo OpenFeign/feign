@@ -295,6 +295,77 @@ public class FeignTest {
   }
 
   @Test
+  void headerMapWithJsonValueIsTreatedAsLiteral() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    String json = "{\"test\":[\"123:861\"]}";
+    Map<String, Object> headerMap = new LinkedHashMap<>();
+    headerMap.put("Custom-Header", json);
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("Custom-Header", Collections.singletonList(json)));
+  }
+
+  @Test
+  void headerMapAcceptsLargeLiteralJson() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    String value = "{\"payload\":\"" + "a".repeat(10001) + "\"}";
+    Map<String, Object> headerMap = new LinkedHashMap<>();
+    headerMap.put("Custom-Header", value);
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("Custom-Header", Collections.singletonList(value)));
+  }
+
+  @Test
+  void headerMapDoesNotStopAnnotatedHeaderExpansion() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    api.supportComplexHttpHeaders("value");
+
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("Custom", Collections.singletonList("value")));
+  }
+
+  @Test
+  void headerMapAcceptsLargeQuotedProfileMediaContentType() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    String value = "application/json; note=\"{" + "a".repeat(10001) + "}\"";
+    Map<String, Object> headerMap = new LinkedHashMap<>();
+    headerMap.put("Content-Type", value);
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("Content-Type", Collections.singletonList(value)));
+  }
+
+  @Test
+  void headerMapContentTypeOnlyFirstValueSent() throws Exception {
+    server.enqueue(new MockResponse());
+
+    TestInterface api = new TestInterfaceBuilder().target("http://localhost:" + server.getPort());
+
+    Map<String, Object> headerMap = new LinkedHashMap<>();
+    headerMap.put("Content-Type", Arrays.asList("application/json", "text/plain"));
+    api.headerMap(headerMap);
+
+    assertThat(server.takeRequest())
+        .hasHeaders(entry("Content-Type", Collections.singletonList("application/json")));
+  }
+
+  @Test
   void HeaderMapUserObject() throws Exception {
     server.enqueue(new MockResponse());
 
