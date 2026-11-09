@@ -35,6 +35,8 @@ Customising
 - `keyFn`: derive the cache key from an `Invocation` (e.g. include a tenant header).
 - `cacheable`: decide which `RequestTemplate`s participate. The default is `GET` /
   `HEAD` only.
+- `sharedCache`: when `true`, responses marked `Cache-Control: private` are not stored.
+  Off by default, since a client built per credential acts as a private cache.
 
 ```java
 HttpCacheInterceptor configured = new HttpCacheInterceptor(store)
@@ -56,7 +58,10 @@ Caveats
   if that matters.
 - Freshness windows (`max-age`, etc.) are not enforced. Every cached entry triggers
   revalidation.
-- A store is shared by every caller of the client, so responses marked
-  `Cache-Control: no-store`, `Cache-Control: private` or `Vary: *` are never stored.
-  Other `Vary` field names are not matched against the request, so include them in
-  `keyFn` when a response varies on a header the default key ignores.
+- Responses marked `Cache-Control: no-store` or `Vary: *` are never stored. Other
+  `Vary` field names are not matched against the request, so include them in `keyFn`
+  when a response varies on a header the default key ignores.
+- `Cache-Control: private` responses are stored by default. A client that sends
+  requests for several principals through one store must either enable
+  `sharedCache(true)` or include the credential in `keyFn`; otherwise one caller's
+  entry can be served to another.

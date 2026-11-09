@@ -35,8 +35,8 @@ import java.util.regex.Pattern;
  * returns the previously decoded value from {@link HttpCacheStore} without re-decoding.
  *
  * <p>Successful responses (2xx) carrying an {@code ETag} or {@code Last-Modified} header are
- * stored, unless the response says it cannot be held in a cache shared by several callers: {@code
- * Cache-Control: no-store}, {@code Cache-Control: private} and {@code Vary: *} are skipped.
+ * stored. Responses with {@code Cache-Control: no-store} or {@code Vary: *} are skipped, and so are
+ * responses with {@code Cache-Control: private} when {@link #sharedCache(boolean)} is enabled.
  *
  * <p>Default scope is HTTP {@code GET}, {@code HEAD}, and {@code QUERY}; override via {@link
  * #cacheable(Function)}.
@@ -55,28 +55,39 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
   private final HttpCacheStore store;
   private final Function<Invocation, String> keyFn;
   private final Function<RequestTemplate, Boolean> cacheable;
+  private final boolean sharedCache;
 
   public HttpCacheInterceptor(HttpCacheStore store) {
-    this(store, HttpCacheInterceptor::defaultKey, HttpCacheInterceptor::defaultCacheable);
+    this(store, HttpCacheInterceptor::defaultKey, HttpCacheInterceptor::defaultCacheable, false);
   }
 
   private HttpCacheInterceptor(
       HttpCacheStore store,
       Function<Invocation, String> keyFn,
-      Function<RequestTemplate, Boolean> cacheable) {
+      Function<RequestTemplate, Boolean> cacheable,
+      boolean sharedCache) {
     this.store = store;
     this.keyFn = keyFn;
     this.cacheable = cacheable;
+    this.sharedCache = sharedCache;
   }
 
   /** Override how cache keys are derived from an invocation. */
   public HttpCacheInterceptor key(Function<Invocation, String> keyFn) {
-    return new HttpCacheInterceptor(store, keyFn, cacheable);
+    return new HttpCacheInterceptor(store, keyFn, cacheable, sharedCache);
   }
 
   /** Override which requests participate in the cache. */
   public HttpCacheInterceptor cacheable(Function<RequestTemplate, Boolean> cacheable) {
-    return new HttpCacheInterceptor(store, keyFn, cacheable);
+    return new HttpCacheInterceptor(store, keyFn, cacheable, sharedCache);
+  }
+
+  /**
+   * Treat the store as shared by several principals, so {@code Cache-Control: private} responses
+   * are not stored.
+   */
+  public HttpCacheInterceptor sharedCache(boolean sharedCache) {
+    return new HttpCacheInterceptor(store, keyFn, cacheable, sharedCache);
   }
 
   @Override
@@ -121,7 +132,7 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
       return;
     }
     Map<String, Collection<String>> headers = response.headers();
-    if (!shareable(headers)) {
+    if (!storable(headers)) {
       return;
     }
     String etag = firstHeader(headers, "ETag");
@@ -147,17 +158,12 @@ public final class HttpCacheInterceptor implements MethodInterceptor {
         || "QUERY".equalsIgnoreCase(method);
   }
 
-  /**
-   * Whether a {@link HttpCacheStore}, which every caller of the client shares, may hold this
-   * response. {@code no-store} and {@code private} mark a response that a shared cache must not
-   * store (RFC 9111 sections 5.2.2.5 and 5.2.2.7), and {@code Vary: *} marks one that never matches
-   * a later request (RFC 9111 section 4.1); the default key covers the method, url and body only,
-   * so storing any of them hands the entry and its validator to the next caller of the same method
-   * and url.
-   */
-  private static boolean shareable(Map<String, Collection<String>> headers) {
+  private boolean storable(Map<String, Collection<String>> headers) {
     for (String value : Util.valuesOrEmpty(headers, "Cache-Control")) {
-      if (value != null && (NO_STORE.matcher(value).find() || PRIVATE.matcher(value).find())) {
+      if (value == null) {
+        continue;
+      }
+      if (NO_STORE.matcher(value).find() || (sharedCache && PRIVATE.matcher(value).find())) {
         return false;
       }
     }

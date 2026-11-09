@@ -1,5 +1,8 @@
 ### Version 13.18
 
+* `HttpCacheInterceptor` no longer stores responses with `Vary: *`. A new `sharedCache(true)` option
+  also skips `Cache-Control: private` responses, for clients that share one store across several
+  principals. `private` responses are still stored by default (#3610).
 * `Response.charset()` reads the `Content-Type` `charset` parameter wherever it appears, not only as
   the first parameter, so `text/plain; format=flowed; charset=ISO-8859-1` decodes as ISO-8859-1
   instead of falling back to UTF-8. Parameters are scanned quote-aware, so a `;` or a fake
