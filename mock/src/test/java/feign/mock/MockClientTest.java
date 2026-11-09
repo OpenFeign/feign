@@ -364,4 +364,32 @@ class MockClientTest {
 
     mockClient.verifyNever(HttpMethod.POST, "/repos/netflix/feign/contributors");
   }
+
+  @Test
+  void matchHeadersBySubsetWhenStubbingAndVerifying() {
+    RequestKey contentTypeOnly =
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .headers(RequestHeaders.builder().add("Content-Type", "application/json").build())
+            .matchHeadersBySubset()
+            .build();
+    MockClient subsetClient =
+        new MockClient().ok(contentTypeOnly, "{\"login\":\"velo\",\"contributions\":0}");
+    GitHub subsetGithub =
+        Feign.builder()
+            .decoder(new GsonDecoder())
+            .client(subsetClient)
+            .target(new MockTarget<>(GitHub.class));
+
+    Contributor contributor =
+        subsetGithub.create("netflix", "feign", "velo_at_github", "preposterous hacker");
+
+    assertThat(contributor.login).isEqualTo("velo");
+    assertThat(subsetClient.verifyOne(contentTypeOnly).headers())
+        .containsKeys("Content-Type", "Content-Length");
+    subsetClient.verifyNever(
+        RequestKey.builder(HttpMethod.POST, "/repos/netflix/feign/contributors")
+            .headers(RequestHeaders.builder().add("X-Header", "qwerty").build())
+            .matchHeadersBySubset()
+            .build());
+  }
 }
