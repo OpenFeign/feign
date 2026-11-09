@@ -1372,7 +1372,7 @@ public class Example {
 
 `Retryer`s are responsible for determining if a retry should occur by returning either a `true` or
 `false` from the method `continueOrPropagate(RetryableException e);`  A `Retryer` instance will be
-created for each `Client` execution, allowing you to maintain state bewteen each request if desired.
+created for each `Client` execution, allowing you to maintain state between each request if desired.
 
 If the retry is determined to be unsuccessful, the last `RetryException` will be thrown.  To throw the original
 cause that led to the unsuccessful retry, build your Feign client with the `exceptionPropagationPolicy()` option.
@@ -1590,7 +1590,7 @@ The `feign-form` extension depend on `OpenFeign` and its *concrete* versions:
 - all `feign-form` releases before **3.5.0** works with `OpenFeign` **9.\*** versions;
 - starting from `feign-form`'s version **3.5.0**, the module works with `OpenFeign` **10.1.0** versions and greater.
 
-> **IMPORTANT:** there is no backward compatibility and no any gurantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
+> **IMPORTANT:** there is no backward compatibility and no any guarantee that the `feign-form`'s versions after **3.5.0** work with `OpenFeign` before **10.\***. `OpenFeign` was refactored in 10th release, so the best approach - use the freshest `OpenFeign` and `feign-form` versions.
 
 Notes:
 
