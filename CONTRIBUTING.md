@@ -13,8 +13,6 @@ Pull requests eventually need to resolve to a single commit. The commit log shou
   * This isn't in lieu of comments, and it assumes the reader isn't intimately familiar with code structure.
 * If the change closes an issue, note that at the end of the commit description ex. "Fixes #345"
   * GitHub will automatically close change with this syntax.
-* If the change is notable, also update the [change log](./CHANGELOG.md) with your summary description.
-  * The unreleased minor version is often a good default.
 
 ## Code Style
 
