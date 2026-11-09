@@ -285,7 +285,6 @@ public class Http2Client implements Client, AsyncClient<Object> {
 
   private Map<String, Collection<String>> castMapCollectType(Map<String, List<String>> map) {
     final Map<String, Collection<String>> result = new HashMap<>();
-    // a list keeps every received occurrence of a header, in the order it was received
     map.forEach((key, value) -> result.put(key, new ArrayList<>(value)));
     return result;
   }
