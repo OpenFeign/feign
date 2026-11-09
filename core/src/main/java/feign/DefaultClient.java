@@ -41,6 +41,18 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+/**
+ * {@link Client} backed by {@link HttpURLConnection}.
+ *
+ * <p>The request sent over the wire may differ from the {@link Request} reported by {@link Logger}.
+ * The JDK treats some headers as restricted (for example {@code Host}, {@code Connection} and
+ * {@code Content-Length}) and, unless the {@code sun.net.http.allowRestrictedHeaders} system
+ * property is set, ignores the values supplied for them, so the value on the wire may differ from
+ * the logged one. {@code Content-Length} is passed to {@link
+ * HttpURLConnection#setFixedLengthStreamingMode(int)} or computed by the JDK. An <code>
+ * Accept: *&#47;*</code> header is added when none is present, and a {@code Content-Encoding} of
+ * {@code gzip} or {@code deflate} compresses the body after it is logged.
+ */
 public class DefaultClient implements Client {
 
   private final SSLSocketFactory sslContextFactory;

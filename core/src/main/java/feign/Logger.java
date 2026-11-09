@@ -37,12 +37,8 @@ import java.util.logging.SimpleFormatter;
  *
  * <p>Request logging reflects the {@link Request} that Feign builds from the method invocation,
  * captured before it is handed to the {@link Client}. Depending on the {@link Client}
- * implementation, the bytes actually sent over the wire may differ from what is logged here. In
- * particular the default {@link Client.Default} is backed by {@link java.net.HttpURLConnection},
- * which silently drops headers the JDK treats as restricted (for example {@code Host}, {@code
- * Connection} and {@code Content-Length}) unless the {@code sun.net.http.allowRestrictedHeaders}
- * system property is set, so such a header can appear in the log without being present in the
- * outgoing request.
+ * implementation, what is actually sent over the wire may differ from what is logged here; see
+ * {@link DefaultClient} for a concrete example.
  */
 public abstract class Logger {
 
