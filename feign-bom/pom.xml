@@ -254,6 +254,11 @@
         <artifactId>feign-vertx</artifactId>
         <version>13.18-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>io.github.openfeign</groupId>
+        <artifactId>feign-webflux</artifactId>
+        <version>13.18-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
