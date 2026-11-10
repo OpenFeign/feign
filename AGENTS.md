@@ -128,6 +128,46 @@ Some modules define the same Maven property name (e.g., `jersey.version`, `vertx
 2. Add a per-directory entry for the new module with `allow` for the specific dependency and `ignore` for `version-update:semver-major`
 3. Verify existing modules with the same property also have their own per-directory entries
 
+## Consolidating master into 14.x
+
+`master` is the binary-compatible 13.x line. `14.x` is the breaking v14 line (`14.0-alpha1-SNAPSHOT`) and must periodically absorb `master`. Merge, never rebase: `git merge origin/master` on an up-to-date `14.x`. `master` is always an ancestor after each merge, so only new master commits come in.
+
+### What differs on 14.x
+
+| Area | master (13.x) | 14.x |
+|---|---|---|
+| Module layout | everything in `core/` (`feign.*`) | public API in `api/` (`feign.*`); default implementations in `core/` (`feign.core.*`). Tests that build a Feign client live in `core/src/test` |
+| Defaults | `Client.Default`, `Contract.Default`, `Retryer.Default`, `Encoder.Default`, `Decoder.Default`, `ErrorDecoder.Default` | `feign.core.DefaultClient`, `DefaultContract`, `DefaultRetryer`, `feign.core.codec.DefaultEncoder`, `DefaultDecoder`, `DefaultErrorDecoder` |
+| Other moves | `feign.querymap.*`, `feign.codec.StringDecoder` | `feign.core.querymap.*`, `feign.core.codec.StringDecoder` |
+| Request body | `byte[]` + `Charset` | streaming `Request.Body` interface, see `MIGRATION-v14.md` |
+| `Request.create` | `(method, url, headers, byte[], Charset, template)` | `(method, url, headers, Request.Body, template)`; there is no `Request.charset()` or `Request.Body.empty()` (pass `null`) |
+| Reading bodies | `request.body()` / `template.body()` return `byte[]` | `request.body()` / `template.requestBody()` return `Optional<Request.Body>`; read with `writeToByteArray()` / `writeToString(charset)` |
+| Mock server | `okhttp3.mockwebserver` | `mockwebserver3` (`<artifactId>mockwebserver3</artifactId>`) |
+| Main Java level | 8 | 11 (`final var` instead of lombok `val`, `Optional.isEmpty()` is fine) |
+
+### mockwebserver → mockwebserver3
+
+| master | 14.x |
+|---|---|
+| `new MockResponse().setBody(x).setResponseCode(c)` | `new MockResponse.Builder().body(x).code(c).build()` |
+| `setChunkedBody`, `setBodyDelay`, `setHeadersDelay` | `chunkedBody`, `bodyDelay`, `headersDelay` |
+| `setSocketPolicy(DISCONNECT_AFTER_REQUEST)` | `onResponseStart(new SocketEffect.CloseSocket())` |
+| `server.useHttps(factory, false)` | `server.useHttps(factory)` |
+| `server.shutdown()` | `server.close()`, and call `server.start()` explicitly |
+| `recorded.getPath()` / `getHeader(h)` / `getSequenceNumber()` | `getTarget()` / `getHeaders().get(h)` / `getExchangeIndex()` |
+| `recorded.getBody().readUtf8()` | `getBody().utf8()` |
+
+### Merge recipe
+
+1. Pom conflicts are almost always only the project version. Resolve them hunk by hunk and keep the `14.x` side. Never use `git checkout --ours` on whole poms, because that drops dependabot bumps that merged cleanly. `feign-bom/pom.xml` needs a union: keep new master module entries, but use the 14.x version.
+2. New master modules arrive with master's parent version. After resolving, run `grep -rn '13\.[0-9]*-SNAPSHOT' --include=pom.xml .` and fix every hit.
+3. For source conflicts, keep the 14.x structure (moved package, streaming body) and re-apply the master fix on top. Auto-merged master tests usually still use the 13.x APIs from the tables above. Port them.
+4. Do not reintroduce `@Deprecated` API or 13.x body semantics. Drop master tests that only assert 13.x behaviour, such as charset on `Request` or binary-body logging.
+5. If master deleted a file that 14.x edited (e.g. `CHANGELOG.md`), follow master.
+6. Loop `mvn -o install -DskipTests -Dgcf.skip=true -Dlicense.skip=true -Djapicmp.skip=true` until it compiles, adding `-rf :<module>` each round. Then format with `mvn -Pdev initialize`, then run the full `mvn install`.
+7. Modules behind JDK profiles (`jdk-json`, `-Pjdk28-modules`) are not compiled by the loop above. Check them separately.
+8. Keep the parent `pom.xml` japicmp `<excludes>` for the v14 breaking types. Master does not have them.
+
 ## Releasing
 
 The release script is at `scripts/release.sh`. It handles version updates, tagging, and pushing.
