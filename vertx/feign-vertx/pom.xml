@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.github.openfeign</groupId>
     <artifactId>feign-vertx-parent</artifactId>
-    <version>14.0-alpha1</version>
+    <version>14.0-alpha2-SNAPSHOT</version>
   </parent>
 
   <artifactId>feign-vertx</artifactId>

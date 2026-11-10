@@ -21,7 +21,7 @@
 
   <groupId>io.github.openfeign</groupId>
   <artifactId>feign-parent</artifactId>
-  <version>14.0-alpha1</version>
+  <version>14.0-alpha2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Feign (Parent)</name>
