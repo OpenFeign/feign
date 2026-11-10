@@ -250,12 +250,13 @@ class MultiEncoderTest {
             () -> encoder.encode("body", String.class, templateWithContentType("text/plain")))
         .isInstanceOf(EncodeException.class)
         .hasMessage(
-            "Unable to encode java.lang.String (Content-Type: text/plain)."
-                + " Encoders tried, in order:"
-                + "\n  - SelfDeclaringJsonEncoder"
-                + "\n  - RecordingEncoder when Content-Type is XML"
-                + "\nRegister an encoder that accepts it, or add a catch-all"
-                + " (EncoderPredicate.any()) last.");
+            """
+            Unable to encode java.lang.String (Content-Type: text/plain).\
+             Encoders tried, in order:
+              - SelfDeclaringJsonEncoder
+              - RecordingEncoder when Content-Type is XML
+            Register an encoder that accepts it, or add a catch-all\
+             (EncoderPredicate.any()) last.""");
   }
 
   @Test
@@ -350,11 +351,12 @@ class MultiEncoderTest {
             () -> encoder.encode("body", String.class, templateWithContentType("text/plain")))
         .isInstanceOf(EncodeException.class)
         .hasMessageContaining(
-            "Encoders tried, in order:"
-                + "\n  - SelfDeclaringJsonEncoder"
-                + "\n  - MultiEncoder:"
-                + "\n    - SelfDeclaringJsonEncoder"
-                + "\n    - RecordingEncoder when Content-Type is XML");
+            """
+            Encoders tried, in order:
+              - SelfDeclaringJsonEncoder
+              - MultiEncoder:
+                - SelfDeclaringJsonEncoder
+                - RecordingEncoder when Content-Type is XML""");
   }
 
   @Test

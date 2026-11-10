@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +37,7 @@ class DefaultClientContentLengthTest {
    */
   private static HttpURLConnection connectionWithContentLength(int contentLength)
       throws IOException {
-    return new HttpURLConnection(new URL("http://localhost")) {
+    return new HttpURLConnection(URI.create("http://localhost").toURL()) {
 
       @Override
       public int getResponseCode() {

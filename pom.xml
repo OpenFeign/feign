@@ -1186,7 +1186,7 @@
                   </activeRecipes>
                   <exclusions>
                     <exclusion>**/src/main/java/**</exclusion>
-                    <exclusion>pom.xml</exclusion>
+                    <exclusion>**/pom.xml</exclusion>
                   </exclusions>
                 </configuration>
               </execution>
@@ -1201,6 +1201,9 @@
                   <activeRecipes>
                     <recipe>org.openrewrite.java.migrate.UpgradeToJava8</recipe>
                   </activeRecipes>
+                  <exclusions>
+                    <exclusion>**/src/test/java/**</exclusion>
+                  </exclusions>
                 </configuration>
               </execution>
             </executions>

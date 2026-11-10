@@ -68,7 +68,7 @@ class CancellableFutureTest {
 
     CompletableFuture<String> result = api.get();
     Thread firstCallFailure =
-        new Thread(() -> clientCalls.get(0).completeExceptionally(new IOException("first")));
+        new Thread(() -> clientCalls.getFirst().completeExceptionally(new IOException("first")));
     firstCallFailure.start();
     assertThat(retryDecisionStarted.await(5, TimeUnit.SECONDS)).isTrue();
 
@@ -90,7 +90,7 @@ class CancellableFutureTest {
             .target(Api.class, "http://localhost:0");
 
     CompletableFuture<String> result = api.get();
-    clientCalls.get(0).completeExceptionally(new IOException("first"));
+    clientCalls.getFirst().completeExceptionally(new IOException("first"));
     assertThat(clientCalls).hasSize(2);
 
     result.cancel(true);

@@ -181,7 +181,8 @@ class GraphqlSubscriptionTest {
     assertThat(prices).extracting(price -> price.symbol).containsExactly("ACME", "ACME");
     assertThat(prices).extracting(price -> price.price).containsExactly(10.5, 11.25);
 
-    assertThat(mapper.readTree(received.get(0)).get("type").asText()).isEqualTo("connection_init");
+    assertThat(mapper.readTree(received.getFirst()).get("type").asText())
+        .isEqualTo("connection_init");
 
     var subscribe = mapper.readTree(received.get(1));
     assertThat(subscribe.get("type").asText()).isEqualTo("subscribe");

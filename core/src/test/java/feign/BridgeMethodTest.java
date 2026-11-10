@@ -40,8 +40,8 @@ class BridgeMethodTest {
     List<MethodMetadata> metadata = new Contract.Default().parseAndValidateMetadata(UserApi.class);
 
     assertThat(metadata).hasSize(1);
-    assertThat(metadata.get(0).configKey()).isEqualTo("UserApi#get(String)");
-    assertThat(metadata.get(0).template()).hasMethod("GET").hasUrl("/users/{id}");
+    assertThat(metadata.getFirst().configKey()).isEqualTo("UserApi#get(String)");
+    assertThat(metadata.getFirst().template()).hasMethod("GET").hasUrl("/users/{id}");
   }
 
   @Test

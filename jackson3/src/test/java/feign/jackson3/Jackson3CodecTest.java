@@ -293,7 +293,7 @@ class Jackson3CodecTest {
             .decode(response, new TypeReference<Iterator<Zone>>() {}.getType());
     List<?> zones = asList((Iterator<?>) decoded);
     assertThat(zones).hasSize(1);
-    assertThat((Zone) zones.get(0)).containsEntry("id", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
+    assertThat((Zone) zones.getFirst()).containsEntry("id", "ÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÑ");
   }
 
   private <T> List<T> asList(Iterator<T> iter) {

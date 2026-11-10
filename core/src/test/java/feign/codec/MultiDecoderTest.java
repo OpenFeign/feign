@@ -238,12 +238,13 @@ class MultiDecoderTest {
     assertThatThrownBy(() -> decoder.decode(responseWithContentType("text/plain"), String.class))
         .isInstanceOf(DecodeException.class)
         .hasMessage(
-            "Unable to decode 200 response (Content-Type: text/plain) as java.lang.String."
-                + " Decoders tried, in order:"
-                + "\n  - SelfDeclaringJsonDecoder"
-                + "\n  - RecordingDecoder when Content-Type is XML"
-                + "\nRegister a decoder that accepts it, or add a catch-all"
-                + " (DecoderPredicate.any()) last.");
+            """
+            Unable to decode 200 response (Content-Type: text/plain) as java.lang.String.\
+             Decoders tried, in order:
+              - SelfDeclaringJsonDecoder
+              - RecordingDecoder when Content-Type is XML
+            Register a decoder that accepts it, or add a catch-all\
+             (DecoderPredicate.any()) last.""");
   }
 
   @Test
@@ -338,11 +339,12 @@ class MultiDecoderTest {
     assertThatThrownBy(() -> decoder.decode(responseWithContentType("text/plain"), String.class))
         .isInstanceOf(DecodeException.class)
         .hasMessageContaining(
-            "Decoders tried, in order:"
-                + "\n  - SelfDeclaringJsonDecoder"
-                + "\n  - MultiDecoder:"
-                + "\n    - SelfDeclaringJsonDecoder"
-                + "\n    - RecordingDecoder when Content-Type is XML");
+            """
+            Decoders tried, in order:
+              - SelfDeclaringJsonDecoder
+              - MultiDecoder:
+                - SelfDeclaringJsonDecoder
+                - RecordingDecoder when Content-Type is XML""");
   }
 
   @Test
