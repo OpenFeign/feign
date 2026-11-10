@@ -20,9 +20,7 @@ import static feign.Util.*;
 import feign.Request.ProtocolVersion;
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
 
 /** An immutable response to an http invocation which only returns string content. */
@@ -216,7 +214,7 @@ public final class Response implements Closeable {
 
     if (contentTypeHeaders != null) {
       for (String contentTypeHeader : contentTypeHeaders) {
-        Charset charset = charsetOf(contentTypeHeader);
+        Charset charset = Util.charsetOfContentType(contentTypeHeader);
         if (charset != null) {
           return charset;
         }
@@ -224,84 +222,6 @@ public final class Response implements Closeable {
     }
 
     return Util.UTF_8;
-  }
-
-  /**
-   * Reads the charset parameter of a single Content-Type header value, in whatever position it
-   * appears. Parameters are scanned quote-aware, so a {@code ;} inside a quoted-string parameter
-   * value is data rather than a parameter separator (rfc9110 - 5.6.4). Returns null when the header
-   * carries no charset parameter, and UTF-8 when it carries an illegal or unsupported one.
-   */
-  private static Charset charsetOf(String contentTypeHeader) {
-    int length = contentTypeHeader.length();
-    int start = 0;
-    while (start <= length) {
-      int end = nextUnquoted(contentTypeHeader, start, length, ';');
-      Charset charset = charsetParameterOf(contentTypeHeader, start, end);
-      if (charset != null) {
-        return charset;
-      }
-      if (end >= length) {
-        return null;
-      }
-      start = end + 1;
-    }
-    return null;
-  }
-
-  /** Reads {@code name=value} between the given bounds, or null if the name is not charset. */
-  private static Charset charsetParameterOf(String contentTypeHeader, int start, int end) {
-    int equals = nextUnquoted(contentTypeHeader, start, end, '=');
-    if (equals >= end) {
-      return null;
-    }
-    if (!"charset".equalsIgnoreCase(contentTypeHeader.substring(start, equals).trim())) {
-      return null;
-    }
-    try {
-      return Charset.forName(unquote(contentTypeHeader.substring(equals + 1, end).trim()));
-    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
-      return Util.UTF_8;
-    }
-  }
-
-  /** Index of the first {@code separator} between the given bounds outside a quoted-string. */
-  private static int nextUnquoted(String value, int start, int end, char separator) {
-    boolean quoted = false;
-    for (int i = start; i < end; i++) {
-      char c = value.charAt(i);
-      if (quoted) {
-        if (c == '\\' && i + 1 < end) {
-          i++; // a backslash escapes the next character inside a quoted-string, e.g. \" or \\
-        } else if (c == '"') {
-          quoted = false;
-        }
-      } else if (c == '"') {
-        quoted = true;
-      } else if (c == separator) {
-        return i;
-      }
-    }
-    return end;
-  }
-
-  /** Removes the surrounding quotes of a quoted-string value and resolves its escapes. */
-  private static String unquote(String value) {
-    if (value.isEmpty() || value.charAt(0) != '"') {
-      return value;
-    }
-    StringBuilder unquoted = new StringBuilder(value.length());
-    for (int i = 1; i < value.length(); i++) {
-      char c = value.charAt(i);
-      if (c == '"') {
-        return unquoted.toString(); // anything after the closing quote is not part of the value
-      }
-      if (c == '\\' && i + 1 < value.length()) {
-        c = value.charAt(++i);
-      }
-      unquoted.append(c);
-    }
-    return unquoted.toString(); // unterminated quoted-string, tolerate it
   }
 
   @Override
