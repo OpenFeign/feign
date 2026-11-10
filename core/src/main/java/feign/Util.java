@@ -34,7 +34,9 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -469,6 +471,96 @@ public class Util {
   @Experimental
   public static boolean hasContentType(Response response, String mediaType) {
     return matchesMediaType(contentTypes(response), mediaType);
+  }
+
+  /**
+   * Reads the {@code charset} parameter of a single {@code Content-Type} header value, wherever it
+   * appears among the parameters.
+   *
+   * <p>Parameters are scanned quote-aware: a {@code ;} inside a quoted parameter value is data
+   * rather than a parameter separator, and an escaped quote does not end the quoted value. Charset
+   * text inside a quoted parameter value, or inside another parameter's name, is therefore data and
+   * not the charset parameter. Parameter names are matched ignoring case, and whitespace around the
+   * name, the {@code =} and the value is ignored.
+   *
+   * @param contentType a single {@code Content-Type} header value, may be {@code null}
+   * @return the declared charset, {@link #UTF_8} if the declared one is illegal or unsupported, or
+   *     {@code null} if the value declares no charset at all
+   */
+  @Experimental
+  public static Charset charsetOfContentType(String contentType) {
+    if (contentType == null) {
+      return null;
+    }
+    int length = contentType.length();
+    int start = 0;
+    while (start <= length) {
+      int end = nextUnquoted(contentType, start, length, ';');
+      Charset charset = charsetParameterOf(contentType, start, end);
+      if (charset != null) {
+        return charset;
+      }
+      if (end >= length) {
+        return null;
+      }
+      start = end + 1;
+    }
+    return null;
+  }
+
+  /** Reads {@code name=value} between the given bounds, or null if the name is not charset. */
+  private static Charset charsetParameterOf(String contentType, int start, int end) {
+    int equals = nextUnquoted(contentType, start, end, '=');
+    if (equals >= end) {
+      return null;
+    }
+    if (!"charset".equalsIgnoreCase(contentType.substring(start, equals).trim())) {
+      return null;
+    }
+    try {
+      return Charset.forName(unquote(contentType.substring(equals + 1, end).trim()));
+    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+      return UTF_8;
+    }
+  }
+
+  /** Index of the first {@code separator} between the given bounds outside a quoted-string. */
+  private static int nextUnquoted(String value, int start, int end, char separator) {
+    boolean quoted = false;
+    for (int i = start; i < end; i++) {
+      char c = value.charAt(i);
+      if (quoted) {
+        if (c == '\\' && i + 1 < end) {
+          i++; // a backslash escapes the next character inside a quoted-string, e.g. \" or \\
+        } else if (c == '"') {
+          quoted = false;
+        }
+      } else if (c == '"') {
+        quoted = true;
+      } else if (c == separator) {
+        return i;
+      }
+    }
+    return end;
+  }
+
+  /** Removes the surrounding quotes of a quoted-string value and resolves its escapes. */
+  private static String unquote(String value) {
+    if (value.isEmpty() || value.charAt(0) != '"') {
+      return value;
+    }
+    StringBuilder unquoted = new StringBuilder(value.length());
+    for (int i = 1; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c == '"') {
+        return unquoted.toString(); // anything after the closing quote is not part of the value
+      }
+      if (c == '\\' && i + 1 < value.length()) {
+        c = value.charAt(++i);
+      }
+      unquoted.append(c);
+    }
+    return unquoted.toString(); // unterminated quoted-string, tolerate it
   }
 
   private static boolean matchesMediaType(Stream<String> contentTypes, String mediaType) {

@@ -80,4 +80,84 @@ class FormEncoderCharsetTest {
     assertThat(template.headers().get("Content-Type"))
         .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
   }
+
+  @Test
+  void charsetTextInsideAnotherQuotedParameterIsData() {
+    RequestTemplate template = new RequestTemplate();
+    template.header(
+        "Content-Type", "application/x-www-form-urlencoded; note=\"x;charset=ISO-8859-1\"");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("name=%C3%A9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=UTF-8");
+  }
+
+  @Test
+  void charsetTextInQuotedParameterBeforeRealCharsetIsData() {
+    RequestTemplate template = new RequestTemplate();
+    template.header(
+        "Content-Type",
+        "application/x-www-form-urlencoded; note=\"charset=ISO-8859-1\"; charset=UTF-8");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "café");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("name=caf%C3%A9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=UTF-8");
+  }
+
+  @Test
+  void escapedQuoteKeepsFakeCharsetInsideQuotedValue() {
+    RequestTemplate template = new RequestTemplate();
+    template.header(
+        "Content-Type",
+        "application/x-www-form-urlencoded; note=\"a\\\";charset=ISO-8859-1\"; charset=UTF-8");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("name=%C3%A9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=UTF-8");
+  }
+
+  @Test
+  void charsetTextInAnotherParameterNameIsNotTheCharsetParameter() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; xcharset=ISO-8859-1");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "é");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.UTF_8)).isEqualTo("name=%C3%A9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=UTF-8");
+  }
+
+  @Test
+  void charsetParameterWithWhitespaceAroundEqualsIsHonored() {
+    RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/x-www-form-urlencoded; charset = ISO-8859-1 ");
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "café");
+
+    new FormEncoder().encode(data, Map.class, template);
+
+    assertThat(new String(template.body(), StandardCharsets.ISO_8859_1)).isEqualTo("name=caf%E9");
+    assertThat(template.headers().get("Content-Type"))
+        .containsExactly("application/x-www-form-urlencoded; charset=ISO-8859-1");
+  }
 }

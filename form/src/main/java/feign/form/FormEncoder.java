@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static lombok.AccessLevel.PRIVATE;
 
 import feign.RequestTemplate;
+import feign.Util;
 import feign.codec.DefaultEncoder;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
@@ -29,12 +30,9 @@ import feign.codec.EncoderPredicate;
 import feign.codec.PredicatedEncoder;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 import lombok.experimental.FieldDefaults;
 import lombok.val;
 
@@ -48,8 +46,6 @@ public class FormEncoder implements Encoder {
 
   private static final String CONTENT_TYPE_HEADER;
 
-  private static final Pattern CHARSET_PATTERN;
-
   /** Stands in for a delegate that was never supplied, see {@link #FormEncoder(Encoder)}. */
   private static final Encoder NO_DELEGATE =
       (object, bodyType, template) -> {
@@ -62,7 +58,6 @@ public class FormEncoder implements Encoder {
 
   static {
     CONTENT_TYPE_HEADER = "Content-Type";
-    CHARSET_PATTERN = Pattern.compile("(?<=charset=)\"?([\\w\\-]+)", Pattern.CASE_INSENSITIVE);
   }
 
   Encoder delegate;
@@ -179,15 +174,8 @@ public class FormEncoder implements Encoder {
     return null;
   }
 
-  private Charset getCharset(String contentTypeValue) {
-    val matcher = CHARSET_PATTERN.matcher(contentTypeValue);
-    if (!matcher.find()) {
-      return UTF_8;
-    }
-    try {
-      return Charset.forName(matcher.group(1));
-    } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
-      return UTF_8;
-    }
+  private static Charset getCharset(String contentTypeValue) {
+    val charset = Util.charsetOfContentType(contentTypeValue);
+    return charset == null ? UTF_8 : charset;
   }
 }
