@@ -20,11 +20,14 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
+import feign.Feign;
 import feign.Response;
+import feign.form.spring.SpringFormEncoder;
+import feign.jackson.JacksonEncoder;
+import feign.spring.SpringContract;
 import java.util.HashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
@@ -34,15 +37,15 @@ import org.springframework.web.multipart.MultipartFile;
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
-    properties = {
-      "server.port=8080",
-      "feign.hystrix.enabled=false",
-      "logging.level.feign.form.feign.spring.Client=DEBUG"
-    })
+    properties = "server.port=8080")
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class SpringFormEncoderTest {
 
-  @Autowired private Client client;
+  private final Client client =
+      Feign.builder()
+          .contract(new SpringContract())
+          .encoder(new SpringFormEncoder(new JacksonEncoder()))
+          .target(Client.class, "http://localhost:8080");
 
   @Test
   void upload1Test() throws Exception {

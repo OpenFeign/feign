@@ -88,20 +88,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>${spring-cloud-starter-openfeign.version}</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-spring</artifactId>
+      <version>${project.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>${project.groupId}</groupId>
-          <artifactId>feign-form-spring</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.github.openfeign.form</groupId>
-          <artifactId>feign-form-spring</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>

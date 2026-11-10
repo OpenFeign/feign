@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.Map;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -46,7 +45,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.HtmlUtils;
 
 @RestController
-@EnableFeignClients
 @SpringBootApplication
 @SuppressWarnings("checkstyle:DesignForExtension")
 public class Server {
