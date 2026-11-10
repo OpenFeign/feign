@@ -114,7 +114,8 @@ public class DefaultClientTest extends AbstractClientTest {
     String json = "{\"name\":\"feign\"}";
     server.enqueue(new MockResponse().setChunkedBody(json, 4));
     server.enqueue(new MockResponse().setChunkedBody(json, 4));
-    DefaultClient client = new DefaultClient(TrustingSSLSocketFactory.get(), (_, _) -> true);
+    DefaultClient client =
+        new DefaultClient(TrustingSSLSocketFactory.get(), (host, _) -> "localhost".equals(host));
 
     assertThat(readPrefixAndClose(client, "https", json.length())).isEqualTo(json);
     assertThat(readPrefixAndClose(client, "https", json.length())).isEqualTo(json);
@@ -130,7 +131,8 @@ public class DefaultClientTest extends AbstractClientTest {
     server.enqueue(
         new MockResponse().addHeader("Content-Encoding", "gzip").setChunkedBody(gzipped, 4));
     server.enqueue(new MockResponse().setBody("next"));
-    DefaultClient client = new DefaultClient(TrustingSSLSocketFactory.get(), (_, _) -> true);
+    DefaultClient client =
+        new DefaultClient(TrustingSSLSocketFactory.get(), (host, _) -> "localhost".equals(host));
 
     assertThat(readPrefixAndClose(client, "https", "Compressed".length())).isEqualTo("Compressed");
     assertThat(readPrefixAndClose(client, "https", "next".length())).isEqualTo("next");
