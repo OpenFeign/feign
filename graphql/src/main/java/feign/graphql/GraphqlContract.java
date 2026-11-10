@@ -16,6 +16,7 @@
 package feign.graphql;
 
 import feign.Experimental;
+import feign.MethodMetadata;
 import feign.Request.HttpMethod;
 import feign.RequestTemplate;
 import feign.core.DefaultContract;
@@ -57,10 +58,11 @@ public class GraphqlContract extends DefaultContract {
   }
 
   QueryMetadata lookupMetadata(RequestTemplate template) {
-    if (template.methodMetadata() == null) {
-      return null;
-    }
-    return metadata.get(template.methodMetadata().configKey());
+    return lookupMetadata(template.methodMetadata());
+  }
+
+  QueryMetadata lookupMetadata(MethodMetadata methodMetadata) {
+    return methodMetadata == null ? null : metadata.get(methodMetadata.configKey());
   }
 
   static String extractOperationField(String query) {

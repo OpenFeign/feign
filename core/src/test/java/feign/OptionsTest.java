@@ -20,9 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import org.junit.jupiter.api.Test;
@@ -33,29 +31,9 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation")
 class OptionsTest {
 
-  static class ChildOptions extends Request.Options {
-    public ChildOptions(int connectTimeoutMillis, int readTimeoutMillis) {
-      super(connectTimeoutMillis, readTimeoutMillis);
-    }
-  }
-
-  static class SharedKeyOptions extends Request.Options {
-    public SharedKeyOptions(int connectTimeoutMillis, int readTimeoutMillis) {
-      super(connectTimeoutMillis, readTimeoutMillis);
-    }
-
-    @Override
-    String threadIdentifier() {
-      return "shared-key";
-    }
-  }
-
   interface OptionsInterface {
     @RequestLine("GET /")
     String get(Request.Options options);
-
-    @RequestLine("POST /")
-    String getChildOptions(ChildOptions options);
 
     @RequestLine("GET /")
     String get();
@@ -94,104 +72,14 @@ class OptionsTest {
   }
 
   @Test
-  void normalResponseForChildOptionsTest() throws IOException {
-    final MockWebServer server = new MockWebServer();
+  void optionsAreValues() {
+    Request.Options millis =
+        new Request.Options(1000, TimeUnit.MILLISECONDS, 2, TimeUnit.SECONDS, true);
+    Request.Options seconds =
+        new Request.Options(1, TimeUnit.SECONDS, 2000, TimeUnit.MILLISECONDS, true);
 
-    server.start();
-    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(3, TimeUnit.SECONDS).build());
-
-    final OptionsInterface api =
-        Feign.builder()
-            .options(new ChildOptions(1000, 1000))
-            .target(OptionsInterface.class, server.url("/").toString());
-
-    assertThat(api.getChildOptions(new ChildOptions(1000, 4 * 1000))).isEqualTo("foo");
-  }
-
-  @Test
-  void socketTimeoutWithMethodOptionsTest() throws Exception {
-    final MockWebServer server = new MockWebServer();
-
-    server.start();
-    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(2, TimeUnit.SECONDS).build());
-    Request.Options options = new Request.Options(1000, 3000);
-    final OptionsInterface api =
-        Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());
-
-    AtomicReference<Exception> exceptionAtomicReference = new AtomicReference<>();
-    Thread thread =
-        new Thread(
-            () -> {
-              try {
-                options.setMethodOptions("get", new Request.Options(1000, 1000));
-                api.get();
-              } catch (Exception exception) {
-                exceptionAtomicReference.set(exception);
-              }
-            });
-    thread.start();
-    thread.join();
-
-    Exception exception = exceptionAtomicReference.get();
-    assertThat(exception)
-        .isInstanceOf(FeignException.class)
-        .hasCauseInstanceOf(SocketTimeoutException.class);
-  }
-
-  @Test
-  void normalResponseWithMethodOptionsTest() throws Exception {
-    final MockWebServer server = new MockWebServer();
-
-    server.start();
-    server.enqueue(new MockResponse.Builder().body("foo").bodyDelay(2, TimeUnit.SECONDS).build());
-    Request.Options options = new Request.Options(1000, 1000);
-    final OptionsInterface api =
-        Feign.builder().options(options).target(OptionsInterface.class, server.url("/").toString());
-
-    CountDownLatch countDownLatch = new CountDownLatch(1);
-    Thread thread =
-        new Thread(
-            () -> {
-              options.setMethodOptions("get", new Request.Options(1000, 3000));
-              api.get();
-              countDownLatch.countDown();
-            });
-    thread.start();
-    thread.join();
-  }
-
-  @Test
-  void concurrentSetMethodOptionsOnSameKeyDoesNotLoseEntries() throws Exception {
-    SharedKeyOptions options = new SharedKeyOptions(1000, 1000);
-    int threadCount = 20;
-    CountDownLatch start = new CountDownLatch(1);
-    CountDownLatch done = new CountDownLatch(threadCount);
-    AtomicReference<Throwable> error = new AtomicReference<>();
-
-    for (int i = 0; i < threadCount; i++) {
-      final String method = "method" + i;
-      new Thread(
-              () -> {
-                try {
-                  start.await();
-                  options.setMethodOptions(method, new Request.Options(1000, 2000));
-                } catch (Throwable t) {
-                  error.set(t);
-                } finally {
-                  done.countDown();
-                }
-              })
-          .start();
-    }
-
-    start.countDown();
-    assertThat(done.await(5, TimeUnit.SECONDS)).isTrue();
-
-    assertThat(error.get()).isNull();
-    for (int i = 0; i < threadCount; i++) {
-      assertThat(options.getMethodOptions("method" + i))
-          .as("entry for method%d must not have been lost", i)
-          .isNotSameAs(options);
-    }
+    assertThat(millis).isEqualTo(seconds).hasSameHashCodeAs(seconds);
+    assertThat(millis)
+        .isNotEqualTo(new Request.Options(1000, TimeUnit.MILLISECONDS, 2, TimeUnit.SECONDS, false));
   }
 }

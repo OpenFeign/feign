@@ -16,7 +16,7 @@
 package feign.micrometer;
 
 import feign.FeignException;
-import feign.RequestTemplate;
+import feign.Request;
 import feign.Response;
 import feign.codec.Decoder;
 import feign.codec.PredicatedDecoder;
@@ -84,21 +84,21 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
 
   protected Timer createTimer(Response response, Type type, Exception e) {
     final Tag[] extraTags = extraTags(response, type, e);
-    final RequestTemplate template = response.request().requestTemplate();
+    final Request request = response.request();
     final Tags allTags =
-        metricTagResolver.tag(template.methodMetadata(), template.feignTarget(), e, extraTags);
+        metricTagResolver.tag(request.methodMetadata(), request.feignTarget(), e, extraTags);
     return meterRegistry.timer(metricName.name(e), allTags);
   }
 
   protected Counter createExceptionCounter(Response response, Type type, Exception e) {
     final Tag[] extraTags = extraTags(response, type, e);
-    final RequestTemplate template = response.request().requestTemplate();
+    final Request request = response.request();
     final Tags allTags =
         metricTagResolver
             .tag(
-                template.methodMetadata(),
-                template.feignTarget(),
-                Tag.of("uri", template.methodMetadata().template().path()),
+                request.methodMetadata(),
+                request.feignTarget(),
+                Tag.of("uri", request.methodMetadata().template().path()),
                 Tag.of("exception_name", e.getClass().getSimpleName()),
                 Tag.of(
                     "root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName()))
@@ -108,15 +108,15 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
 
   protected DistributionSummary createSummary(Response response, Type type) {
     final Tag[] tags = extraTags(response, type, null);
-    final RequestTemplate template = response.request().requestTemplate();
+    final Request request = response.request();
     final Tags allTags =
-        metricTagResolver.tag(template.methodMetadata(), template.feignTarget(), tags);
+        metricTagResolver.tag(request.methodMetadata(), request.feignTarget(), tags);
     return meterRegistry.summary(metricName.name("response_size"), allTags);
   }
 
   protected Tag[] extraTags(Response response, Type type, Exception e) {
-    RequestTemplate template = response.request().requestTemplate();
-    return new Tag[] {Tag.of("uri", template.methodMetadata().template().path())};
+    Request request = response.request();
+    return new Tag[] {Tag.of("uri", request.methodMetadata().template().path())};
   }
 
   @Override

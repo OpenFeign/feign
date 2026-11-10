@@ -18,7 +18,7 @@ package feign.metrics4;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import feign.FeignException;
-import feign.RequestTemplate;
+import feign.Request;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -45,7 +45,7 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
   @Override
   public Object decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
-    final RequestTemplate template = response.request().requestTemplate();
+    final Request request = response.request();
     final MeteredBody body = response.body() == null ? null : new MeteredBody(response.body());
 
     response = response.toBuilder().body(body).build();
@@ -55,9 +55,9 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
         metricRegistry
             .timer(
                 MetricRegistry.name(
-                    metricName.metricName(template.methodMetadata(), template.feignTarget()),
+                    metricName.metricName(request.methodMetadata(), request.feignTarget()),
                     "uri",
-                    template.methodMetadata().template().path()),
+                    request.methodMetadata().template().path()),
                 metricSuppliers.timers())
             .time()) {
       decoded = decoder.decode(response, type);
@@ -67,7 +67,7 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
       metricRegistry
           .histogram(
               metricName.metricName(
-                  template.methodMetadata(), template.feignTarget(), "response_size"),
+                  request.methodMetadata(), request.feignTarget(), "response_size"),
               metricSuppliers.histograms())
           .update(body.count());
     }

@@ -19,7 +19,6 @@ import static feign.micrometer.MetricTagResolver.EMPTY_TAGS_ARRAY;
 
 import feign.Request;
 import feign.Request.Options;
-import feign.RequestTemplate;
 import feign.Response;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -43,30 +42,28 @@ abstract class BaseMeteredClient {
   protected void countResponseCode(
       Request request, Response response, Options options, int responseStatus, Exception e) {
     final Tag[] extraTags = extraTags(request, response, options, e);
-    final RequestTemplate template = request.requestTemplate();
     final Tags allTags =
         metricTagResolver
             .tag(
-                template.methodMetadata(),
-                template.feignTarget(),
+                request.methodMetadata(),
+                request.feignTarget(),
                 e,
                 Tag.of("http_status", String.valueOf(responseStatus)),
                 Tag.of("status_group", responseStatus / 100 + "xx"),
-                Tag.of("http_method", template.methodMetadata().template().method()),
-                Tag.of("uri", template.methodMetadata().template().path()))
+                Tag.of("http_method", request.methodMetadata().template().method()),
+                Tag.of("uri", request.methodMetadata().template().path()))
             .and(extraTags);
     meterRegistry.counter(metricName.name("http_response_code"), allTags).increment();
   }
 
   protected Timer createTimer(Request request, Response response, Options options, Exception e) {
-    final RequestTemplate template = request.requestTemplate();
     final Tags allTags =
         metricTagResolver
             .tag(
-                template.methodMetadata(),
-                template.feignTarget(),
+                request.methodMetadata(),
+                request.feignTarget(),
                 e,
-                Tag.of("uri", template.methodMetadata().template().path()))
+                Tag.of("uri", request.methodMetadata().template().path()))
             .and(extraTags(request, response, options, e));
     return meterRegistry.timer(metricName.name(e), allTags);
   }

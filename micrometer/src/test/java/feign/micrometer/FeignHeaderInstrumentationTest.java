@@ -42,6 +42,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.transport.RequestReplySenderContext;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
@@ -170,8 +171,7 @@ class FeignHeaderInstrumentationTest {
 
     @Override
     public void onStart(RequestReplySenderContext<Request, Response> context) {
-      Request carrier = context.getCarrier();
-      carrier.header("foo", "bar");
+      context.setCarrier(context.getCarrier().withHeader("foo", List.of("bar")));
     }
 
     @Override

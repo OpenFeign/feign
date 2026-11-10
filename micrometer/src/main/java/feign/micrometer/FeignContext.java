@@ -19,6 +19,8 @@ import feign.Request;
 import feign.Response;
 import io.micrometer.observation.transport.RequestReplySenderContext;
 import io.micrometer.observation.transport.SenderContext;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A {@link SenderContext} for Feign.
@@ -29,7 +31,18 @@ import io.micrometer.observation.transport.SenderContext;
 public class FeignContext extends RequestReplySenderContext<Request, Response> {
 
   public FeignContext(Request request) {
-    super(Request::header);
+    this(request, new AtomicReference<>());
+  }
+
+  /**
+   * The carrier is immutable, so each propagated header replaces it with a copy carrying that
+   * header; send {@link #getCarrier()} rather than the original request.
+   */
+  private FeignContext(Request request, AtomicReference<FeignContext> self) {
+    super(
+        (carrier, key, value) ->
+            self.get().setCarrier(self.get().getCarrier().withHeader(key, List.of(value))));
+    self.set(this);
     setCarrier(request);
   }
 }

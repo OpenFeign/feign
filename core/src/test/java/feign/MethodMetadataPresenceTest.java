@@ -42,9 +42,8 @@ public class MethodMetadataPresenceTest {
         Feign.builder()
             .client(
                 (request, options) -> {
-                  assertThat(request.requestTemplate()).isNotNull();
-                  assertThat(request.requestTemplate().methodMetadata()).isNotNull();
-                  assertThat(request.requestTemplate().feignTarget()).isNotNull();
+                  assertThat(request.methodMetadata()).isNotNull();
+                  assertThat(request.feignTarget()).isNotNull();
                   return new DefaultClient(null, null).execute(request, options);
                 })
             .target(TestInterface.class, url);
@@ -86,10 +85,9 @@ public class MethodMetadataPresenceTest {
         Feign.builder()
             .decoder(
                 (response, type) -> {
-                  final RequestTemplate template = response.request().requestTemplate();
-                  assertThat(template).isNotNull();
-                  assertThat(template.methodMetadata()).isNotNull();
-                  assertThat(template.feignTarget()).isNotNull();
+                  final Request request = response.request();
+                  assertThat(request.methodMetadata()).isNotNull();
+                  assertThat(request.feignTarget()).isNotNull();
                   return new DefaultDecoder().decode(response, type);
                 })
             .target(TestInterface.class, url);

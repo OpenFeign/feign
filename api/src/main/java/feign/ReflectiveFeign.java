@@ -139,6 +139,7 @@ public class ReflectiveFeign<C> extends Feign {
 
       final List<MethodMetadata> metadataList = contract.parseAndValidateMetadata(target.type());
       for (MethodMetadata md : metadataList) {
+        md.freeze();
         final Method method = md.method();
         if (method.getDeclaringClass() == Object.class) {
           continue;

@@ -16,7 +16,6 @@
 package feign.micrometer;
 
 import feign.Request;
-import feign.RequestTemplate;
 import feign.Response;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.lang.Nullable;
@@ -49,27 +48,27 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
-    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
+    Request request = context.getCarrier();
     return KeyValues.of(
         FeignObservationDocumentation.HttpClientTags.METHOD.withValue(
             getMethodString(context.getCarrier())),
         FeignObservationDocumentation.HttpClientTags.URI.withValue(
-            requestTemplate.methodMetadata().template().url()),
+            request.methodMetadata().template().url()),
         FeignObservationDocumentation.HttpClientTags.STATUS.withValue(
             getStatusValue(context.getResponse())),
         FeignObservationDocumentation.HttpClientTags.CLIENT_NAME.withValue(
-            getClientNameString(requestTemplate)));
+            getClientNameString(request)));
   }
 
   String getStatusValue(@Nullable Response response) {
     return response != null ? String.valueOf(response.status()) : "CLIENT_ERROR";
   }
 
-  String getClientNameString(RequestTemplate requestTemplate) {
-    if (requestTemplate.feignTarget() == null) {
+  String getClientNameString(Request request) {
+    if (request.feignTarget() == null) {
       return "UNKNOWN";
     }
-    return requestTemplate.feignTarget().type().getName();
+    return request.feignTarget().type().getName();
   }
 
   String getMethodString(@Nullable Request request) {

@@ -19,7 +19,6 @@ import feign.AsyncClient;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.Options;
-import feign.RequestTemplate;
 import feign.Response;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer;
@@ -52,20 +51,19 @@ public class MeteredAsyncClient extends BaseMeteredClient implements AsyncClient
   @Override
   public CompletableFuture<Response> execute(
       Request request, Options options, Optional<Object> requestContext) {
-    final RequestTemplate template = request.requestTemplate();
-    final Timer.Context timer = createTimer(template);
+    final Timer.Context timer = createTimer(request);
     return asyncClient
         .execute(request, options, requestContext)
         .whenComplete(
             (response, th) -> {
               if (th == null) {
-                recordSuccess(template, response);
+                recordSuccess(request, response);
               } else if (th instanceof FeignException) {
                 FeignException e = (FeignException) th;
-                recordFailure(template, e);
+                recordFailure(request, e);
               } else if (th instanceof Exception) {
                 Exception e = (Exception) th;
-                recordFailure(template, e);
+                recordFailure(request, e);
               }
             })
         .whenComplete((response, th) -> timer.close());

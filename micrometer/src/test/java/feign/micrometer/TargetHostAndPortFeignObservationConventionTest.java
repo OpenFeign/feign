@@ -199,7 +199,10 @@ class TargetHostAndPortFeignObservationConventionTest {
     AtomicReference<RequestTemplate> ref = new AtomicReference<>();
     Client capturing =
         (request, options) -> {
-          ref.set(request.requestTemplate());
+          ref.set(
+              new RequestTemplate()
+                  .methodMetadata(request.methodMetadata())
+                  .feignTarget(request.feignTarget()));
           return Response.builder()
               .status(200)
               .reason("OK")
