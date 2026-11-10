@@ -1213,7 +1213,7 @@
                   </activeRecipes>
                   <exclusions>
                     <exclusion>**/src/main/java/**</exclusion>
-                    <exclusion>pom.xml</exclusion>
+                    <exclusion>**/pom.xml</exclusion>
                   </exclusions>
                 </configuration>
               </execution>
@@ -1230,7 +1230,7 @@
                   </activeRecipes>
                   <exclusions>
                     <exclusion>**/src/test/java/**</exclusion>
-                    <exclusion>pom.xml</exclusion>
+                    <exclusion>**/pom.xml</exclusion>
                   </exclusions>
                 </configuration>
               </execution>

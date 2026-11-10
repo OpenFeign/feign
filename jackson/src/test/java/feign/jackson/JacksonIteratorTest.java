@@ -184,7 +184,7 @@ class JacksonIteratorTest {
     List<Object> users = new ArrayList<>();
     ((Iterator<?>) decoded).forEachRemaining(users::add);
     assertThat(users).hasSize(1);
-    assertThat((User) users.get(0)).containsEntry("login", "ÁÉÍÓÚ");
+    assertThat((User) users.getFirst()).containsEntry("login", "ÁÉÍÓÚ");
   }
 
   static class User extends LinkedHashMap<String, Object> {
