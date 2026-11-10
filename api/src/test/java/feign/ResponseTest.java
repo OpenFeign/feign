@@ -218,9 +218,27 @@ class ResponseTest {
     assertThat(response.toString()).startsWith("HTTP/1.1 200");
   }
 
+  @Test
+  void charsetComesFromLaterHeaderValueWhenFirstHasNoCharset() {
+    Response response =
+        responseWithContentTypes("text/plain; format=flowed", "text/plain; charset=ISO-8859-1");
+    assertThat(response.charset()).isEqualTo(StandardCharsets.ISO_8859_1);
+  }
+
+  @Test
+  void invalidCharsetInFirstHeaderValueStopsBeforeLaterValidValue() {
+    Response response =
+        responseWithContentTypes("text/plain; charset=@", "text/plain; charset=ISO-8859-1");
+    assertThat(response.charset()).isEqualTo(Util.UTF_8);
+  }
+
   private Response responseWithContentType(String contentType) {
+    return responseWithContentTypes(contentType);
+  }
+
+  private Response responseWithContentTypes(String... contentTypes) {
     Map<String, Collection<String>> headersMap = new LinkedHashMap<>();
-    headersMap.put("Content-Type", Collections.singletonList(contentType));
+    headersMap.put("Content-Type", Arrays.asList(contentTypes));
     return Response.builder()
         .status(200)
         .headers(headersMap)

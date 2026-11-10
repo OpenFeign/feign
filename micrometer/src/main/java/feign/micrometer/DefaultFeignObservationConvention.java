@@ -58,11 +58,18 @@ public class DefaultFeignObservationConvention implements FeignObservationConven
         FeignObservationDocumentation.HttpClientTags.STATUS.withValue(
             getStatusValue(context.getResponse())),
         FeignObservationDocumentation.HttpClientTags.CLIENT_NAME.withValue(
-            requestTemplate.feignTarget().type().getName()));
+            getClientNameString(requestTemplate)));
   }
 
   String getStatusValue(@Nullable Response response) {
     return response != null ? String.valueOf(response.status()) : "CLIENT_ERROR";
+  }
+
+  String getClientNameString(RequestTemplate requestTemplate) {
+    if (requestTemplate.feignTarget() == null) {
+      return "UNKNOWN";
+    }
+    return requestTemplate.feignTarget().type().getName();
   }
 
   String getMethodString(@Nullable Request request) {

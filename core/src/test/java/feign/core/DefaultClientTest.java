@@ -33,6 +33,7 @@ import feign.client.AbstractClientTest;
 import feign.client.TrustingSSLSocketFactory;
 import feign.core.DefaultClient.Proxied;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -100,6 +101,66 @@ public class DefaultClientTest extends AbstractClientTest {
       gzip.write(data.getBytes(StandardCharsets.UTF_8));
     }
     return bos.toByteArray();
+  }
+
+  @Test
+  void reusesHttpsConnectionWhenChunkedBodyIsNotReadToTheEnd() throws Exception {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    String json = "{\"name\":\"feign\"}";
+    server.enqueue(new MockResponse.Builder().chunkedBody(json, 4).build());
+    server.enqueue(new MockResponse.Builder().chunkedBody(json, 4).build());
+    DefaultClient client =
+        new DefaultClient(TrustingSSLSocketFactory.get(), (host, _) -> "localhost".equals(host));
+
+    assertThat(readPrefixAndClose(client, "https", json.length())).isEqualTo(json);
+    assertThat(readPrefixAndClose(client, "https", json.length())).isEqualTo(json);
+
+    assertThat(server.takeRequest().getExchangeIndex()).isZero();
+    assertThat(server.takeRequest().getExchangeIndex()).isOne();
+  }
+
+  @Test
+  void reusesHttpsConnectionWhenGzipBodyIsNotReadToTheEnd() throws Exception {
+    server.useHttps(TrustingSSLSocketFactory.get("localhost"));
+    Buffer gzipped = new Buffer().write(gzip("Compressed Data"));
+    server.enqueue(
+        new MockResponse.Builder()
+            .addHeader("Content-Encoding", "gzip")
+            .chunkedBody(gzipped, 4)
+            .build());
+    server.enqueue(new MockResponse.Builder().body("next").build());
+    DefaultClient client =
+        new DefaultClient(TrustingSSLSocketFactory.get(), (host, _) -> "localhost".equals(host));
+
+    assertThat(readPrefixAndClose(client, "https", "Compressed".length())).isEqualTo("Compressed");
+    assertThat(readPrefixAndClose(client, "https", "next".length())).isEqualTo("next");
+
+    assertThat(server.takeRequest().getExchangeIndex()).isZero();
+    assertThat(server.takeRequest().getExchangeIndex()).isOne();
+  }
+
+  @Test
+  void closingLargeUnreadChunkedBodyStillAllowsNextRequest() throws Exception {
+    server.enqueue(new MockResponse.Builder().chunkedBody("x".repeat(1024 * 1024), 8192).build());
+    server.enqueue(new MockResponse.Builder().body("next").build());
+    DefaultClient client = new DefaultClient(null, null);
+
+    assertThat(readPrefixAndClose(client, "http", 1)).isEqualTo("x");
+    assertThat(readPrefixAndClose(client, "http", "next".length())).isEqualTo("next");
+  }
+
+  private String readPrefixAndClose(DefaultClient client, String scheme, int length)
+      throws IOException {
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    headers.put("Accept-Encoding", Collections.singletonList("gzip"));
+    Request request =
+        Request.create(
+            HttpMethod.GET, scheme + "://localhost:" + server.getPort(), headers, null, null);
+    try (Response response = client.execute(request, new Options())) {
+      byte[] prefix = new byte[length];
+      new DataInputStream(response.body().asInputStream()).readFully(prefix);
+      return new String(prefix, StandardCharsets.UTF_8);
+    }
   }
 
   @Test

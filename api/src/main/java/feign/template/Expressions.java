@@ -184,6 +184,9 @@ public final class Expressions {
       StringBuilder expanded = new StringBuilder();
       if (Iterable.class.isAssignableFrom(variable.getClass())) {
         expanded.append(this.expandIterable((Iterable<?>) variable));
+      } else if (variable.getClass().isArray()) {
+        /* arrays, including arrays of primitives, are expanded like any other collection */
+        expanded.append(this.expandIterable(valuesOf(variable)));
       } else if (Map.class.isAssignableFrom(variable.getClass())) {
         expanded.append(this.expandMap((Map<String, ?>) variable));
       } else if (Optional.class.isAssignableFrom(variable.getClass())) {

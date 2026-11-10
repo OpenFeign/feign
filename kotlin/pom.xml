@@ -30,7 +30,6 @@
   <description>Feign Kotlin</description>
 
   <properties>
-    <kotlin.version>2.4.21</kotlin.version>
     <kotlinx.coroutines.version>1.11.0</kotlinx.coroutines.version>
   </properties>
 
@@ -62,6 +61,13 @@
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-coroutines-reactor</artifactId>
       <version>${kotlinx.coroutines.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-java11</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

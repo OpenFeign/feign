@@ -41,8 +41,8 @@ public class DefaultAsyncClient<C> implements AsyncClient<C> {
             () -> {
               try {
                 result.complete(client.execute(request, options));
-              } catch (final Exception e) {
-                result.completeExceptionally(e);
+              } catch (final Throwable throwable) {
+                result.completeExceptionally(throwable);
               }
             });
     result.whenComplete(

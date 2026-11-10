@@ -202,6 +202,13 @@ We also have limited support for Level 3, Path Style Expressions, with the follo
 * Maps and Lists are expanded by default.
 * Only Single variable templates are supported.
 
+Literal and scalar query values containing commas remain one value. Bind an `Iterable` or array
+for repeated parameters. Keep comma data inside individual collection elements; literal commas
+around a collection expression are interpreted as collection separators.
+
+A custom `@Param` expander receives an array as a whole value. `Iterable` arguments are expanded
+one element at a time.
+
 *Examples:*
 
 ```
@@ -1228,6 +1235,15 @@ public class CustomPojo {
     this.number = number;
     this.regionId = regionId;
   }
+}
+```
+
+The `expander` of a field's `@Param` annotation is applied as well, to each element when the value is a collection. The following field will generate "/find?since={millis}":
+
+```java
+public class CustomPojo {
+  @Param(value = "since", expander = DateToMillis.class)
+  private final Date date;
 }
 ```
 

@@ -64,4 +64,70 @@ class UriUtilsTest {
             "foo!\"/$%?&   *( )  _%20^¨  >`:É.   ',.  é ;`^ ¸< nasty stuff here!",
             "foo%21%22%2F%24%25%3F%26%20%20%20%2A%28%20%29%20%20_%2520%5E%C2%A8%20%20%3E%60%3A%C3%89.%20%20%20%27%2C.%20%20%C3%A9%20%3B%60%5E%20%C2%B8%3C%20nasty%20stuff%20here%21"));
   }
+
+  /**
+   * pct-encode, ensuring that reserved characters are encoded when they are not allowed, even if
+   * the value contains no already encoded characters.
+   */
+  @Test
+  void pctEncodeReservedCharactersWhenNotAllowed() {
+    assertThat(UriUtils.encode("a&b=c", false)).isEqualTo("a%26b%3Dc");
+    assertThat(UriUtils.encode("a&b=c", UTF_8, false)).isEqualTo("a%26b%3Dc");
+  }
+
+  /** pct-encode with reserved characters disallowed, on both boolean overloads. */
+  @ParameterizedTest
+  @MethodSource("provideValuesToEncodeWithoutReservedCharacters")
+  void encodeWithoutAllowingReservedCharacters(String input, String expected) {
+    assertThat(UriUtils.encode(input, false)).isEqualTo(expected);
+    assertThat(UriUtils.encode(input, UTF_8, false)).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> provideValuesToEncodeWithoutReservedCharacters() {
+    return Stream.of(
+        Arguments.of("", ""),
+        Arguments.of("foo", "foo"),
+        /* no already encoded character: reserved characters must still be encoded */
+        Arguments.of("a&b=c", "a%26b%3Dc"),
+        Arguments.of("a&b=c\u0001", "a%26b%3Dc%01"),
+        /* already encoded characters are preserved, raw reserved characters are encoded */
+        Arguments.of("a&b=c%20d", "a%26b%3Dc%20d"),
+        Arguments.of("foo%2520bar & baz", "foo%2520bar%20%26%20baz"),
+        Arguments.of("café & tea", "caf%C3%A9%20%26%20tea"));
+  }
+
+  /** pct-encode with reserved characters allowed, on both boolean overloads. */
+  @ParameterizedTest
+  @MethodSource("provideValuesToEncodeWithReservedCharacters")
+  void encodeAllowingReservedCharacters(String input, String expected) {
+    assertThat(UriUtils.encode(input, true)).isEqualTo(expected);
+    assertThat(UriUtils.encode(input, UTF_8, true)).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> provideValuesToEncodeWithReservedCharacters() {
+    return Stream.of(
+        Arguments.of("", ""),
+        Arguments.of("foo", "foo"),
+        Arguments.of("a&b=c", "a&b=c"),
+        Arguments.of("a&b=c def", "a&b=c%20def"),
+        Arguments.of("a&b=c%20d", "a&b=c%20d"),
+        Arguments.of("a@b:c/d?e#f[g]", "a@b:c/d?e#f[g]"),
+        Arguments.of("café & tea", "caf%C3%A9%20&%20tea"));
+  }
+
+  /** the default (strict) overload remains the control for the flagless behavior. */
+  @ParameterizedTest
+  @MethodSource("provideStrictControlValues")
+  void encodeWithoutReservedFlagIsStrictControl(String input, String expected) {
+    assertThat(UriUtils.encode(input, UTF_8)).isEqualTo(expected);
+  }
+
+  private static Stream<Arguments> provideStrictControlValues() {
+    return Stream.of(
+        Arguments.of("", ""),
+        Arguments.of("foo", "foo"),
+        Arguments.of("a&b=c", "a%26b%3Dc"),
+        Arguments.of("a&b=c\u0001", "a%26b%3Dc%01"),
+        Arguments.of("café & tea", "caf%C3%A9%20%26%20tea"));
+  }
 }

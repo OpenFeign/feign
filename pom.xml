@@ -134,6 +134,7 @@
     <module>validation</module>
     <module>validation-jakarta</module>
     <module>vertx</module>
+    <module>webflux</module>
     <module>feign-bom</module>
   </modules>
 
@@ -197,7 +198,7 @@
     <bom-generator.version>0.400.1</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.2.1</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.23.0</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.24.0</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
@@ -206,11 +207,11 @@
     <maven-toolchains-plugin.version>3.3.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
+    <flatten-maven-plugin.version>1.9.0</flatten-maven-plugin.version>
     <rewrite-maven-plugin.version>6.46.1</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.44.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.42.1</rewrite-migrate-java.version>
-    <japicmp-maven-plugin.version>0.26.5</japicmp-maven-plugin.version>
+    <japicmp-maven-plugin.version>0.27.0</japicmp-maven-plugin.version>
     <java18-signature.version>1.0</java18-signature.version>
 
     <!-- Third-party dependency versions -->
@@ -239,12 +240,13 @@
     <jaxws-api.version>2.3.3</jaxws-api.version>
     <javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
     <jakarta.validation-api.version>3.1.1</jakarta.validation-api.version>
-    <hibernate-validator-javax.version>6.2.5.Final</hibernate-validator-javax.version>
+    <hibernate-validator-javax.version>6.2.6.Final</hibernate-validator-javax.version>
     <hibernate-validator-jakarta.version>9.1.0.Final</hibernate-validator-jakarta.version>
     <jakarta.el-3.version>3.0.4</jakarta.el-3.version>
     <expressly.version>6.0.0</expressly.version>
     <jersey-client.version>1.19.4</jersey-client.version>
     <jsr311-api.version>1.1.1</jsr311-api.version>
+    <kotlin.version>2.4.21</kotlin.version>
     <lombok.version>1.18.48</lombok.version>
     <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
     <metrics-core-4.version>4.2.40</metrics-core-4.version>
@@ -1015,6 +1017,8 @@
               <exclude>feign.vertx.VertxHttpClient</exclude>
               <!-- builder-only since 13.x; japicmp 0.26.2 reports it as newly not extendable -->
               <exclude>feign.sax.SAXDecoder</exclude>
+              <!-- java 8 baseline has a synthetic constructor that java 11 nestmates no longer emit -->
+              <exclude>feign.mock.RequestHeaders</exclude>
             </excludes>
             <accessModifier>public</accessModifier>
           </parameter>

@@ -93,6 +93,28 @@ public class RequestHeaders {
     return headers.get(key);
   }
 
+  /**
+   * Returns whether every header declared by this instance is also present in {@code actual} with
+   * the same values. Headers that only {@code actual} carries, such as a generated {@code
+   * Content-Length} or a transport-specific header, are ignored, so a test only has to declare the
+   * headers it cares about.
+   *
+   * @param actual headers of the request being matched, may be {@code null}
+   * @return {@code true} when this instance is a subset of {@code actual}
+   */
+  public boolean isSubsetOf(RequestHeaders actual) {
+    if (actual == null) {
+      return headers.isEmpty();
+    }
+    for (Map.Entry<String, Collection<String>> entry : headers.entrySet()) {
+      Collection<String> actualValues = actual.headers.get(entry.getKey());
+      if (actualValues == null || !actualValues.containsAll(entry.getValue())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {

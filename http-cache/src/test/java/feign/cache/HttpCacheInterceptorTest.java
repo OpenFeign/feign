@@ -65,8 +65,16 @@ class HttpCacheInterceptorTest {
   }
 
   private Api api() {
+    return api(new HttpCacheInterceptor(store));
+  }
+
+  private Api sharedCacheApi() {
+    return api(new HttpCacheInterceptor(store).sharedCache(true));
+  }
+
+  private Api api(HttpCacheInterceptor interceptor) {
     return Feign.builder()
-        .methodInterceptor(new HttpCacheInterceptor(store))
+        .methodInterceptor(interceptor)
         .target(Api.class, "http://localhost:" + server.getPort());
   }
 
@@ -196,6 +204,86 @@ class HttpCacheInterceptorTest {
     api().fetch("42");
 
     assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void privateCacheControlIsStoredByDefault() throws Exception {
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "private, max-age=60")
+            .body("payload")
+            .build());
+    server.enqueue(new MockResponse.Builder().code(304).build());
+
+    Api api = api();
+    assertThat(api.fetch("42")).isEqualTo("payload");
+    assertThat(api.fetch("42")).isEqualTo("payload");
+
+    assertThat(store.size()).isEqualTo(1);
+    server.takeRequest();
+    assertThat(server.takeRequest().getHeaders().get("If-None-Match")).isEqualTo("\"v1\"");
+  }
+
+  @Test
+  void privateCacheControlPreventsStorageInSharedCache() throws Exception {
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "max-age=60, private")
+            .body("payload")
+            .build());
+
+    sharedCacheApi().fetch("42");
+
+    assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void privateFieldCacheControlPreventsStorageInSharedCache() throws Exception {
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "private=\"Set-Cookie\", max-age=60")
+            .body("payload")
+            .build());
+
+    sharedCacheApi().fetch("42");
+
+    assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void varyAsteriskPreventsStorage() throws Exception {
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Vary", "Accept-Encoding, *")
+            .body("payload")
+            .build());
+
+    api().fetch("42");
+
+    assertThat(store.size()).isZero();
+  }
+
+  @Test
+  void privateResponseIsNotRevalidatedForASecondCaller() throws Exception {
+    server.enqueue(
+        new MockResponse.Builder()
+            .setHeader("ETag", "\"v1\"")
+            .setHeader("Cache-Control", "private")
+            .body("caller-a-data")
+            .build());
+    server.enqueue(new MockResponse.Builder().code(304).build());
+
+    Api api = sharedCacheApi();
+    assertThat(api.fetch("42")).isEqualTo("caller-a-data");
+    assertThatThrownBy(() -> api.fetch("42")).isInstanceOf(FeignException.class);
+
+    server.takeRequest(); // caller a
+    RecordedRequest second = server.takeRequest();
+    assertThat(second.getHeaders().get("If-None-Match")).isNull();
   }
 
   @Test

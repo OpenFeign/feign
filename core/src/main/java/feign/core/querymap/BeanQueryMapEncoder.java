@@ -51,14 +51,31 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
         Object value = method.invoke(object);
         if (value != null && value != object) {
           Param alias = method.getAnnotation(Param.class);
-          String name = alias != null ? alias.value() : pd.getName();
-          propertyNameToValue.put(name, value);
+          String name = alias != null && !alias.value().isEmpty() ? alias.value() : pd.getName();
+          Object expanded = expand(metadata.propertyToExpander.get(pd), value);
+          if (expanded != null) {
+            propertyNameToValue.put(name, expanded);
+          }
         }
       }
       return propertyNameToValue;
     } catch (IllegalAccessException | IntrospectionException | InvocationTargetException e) {
       throw new EncodeException("Failure encoding object into query map", e);
     }
+  }
+
+  private Object expand(Param.Expander expander, Object value) {
+    if (expander == null) {
+      return value;
+    }
+    if (value instanceof Iterable) {
+      List<String> values = new ArrayList<String>();
+      for (Object element : (Iterable<?>) value) {
+        values.add(element == null ? null : expander.expand(element));
+      }
+      return values;
+    }
+    return expander.expand(value);
   }
 
   private ObjectParamMetadata getMetadata(Class<?> objectType) throws IntrospectionException {
@@ -73,23 +90,41 @@ public class BeanQueryMapEncoder implements QueryMapEncoder {
   private static class ObjectParamMetadata {
 
     private final List<PropertyDescriptor> objectProperties;
+    private final Map<PropertyDescriptor, Param.Expander> propertyToExpander;
 
-    private ObjectParamMetadata(List<PropertyDescriptor> objectProperties) {
+    private ObjectParamMetadata(
+        List<PropertyDescriptor> objectProperties,
+        Map<PropertyDescriptor, Param.Expander> propertyToExpander) {
       this.objectProperties = Collections.unmodifiableList(objectProperties);
+      this.propertyToExpander = Collections.unmodifiableMap(propertyToExpander);
     }
 
     private static ObjectParamMetadata parseObjectType(Class<?> type)
         throws IntrospectionException {
       List<PropertyDescriptor> properties = new ArrayList<PropertyDescriptor>();
+      Map<PropertyDescriptor, Param.Expander> propertyToExpander =
+          new HashMap<PropertyDescriptor, Param.Expander>();
 
       for (PropertyDescriptor pd : Introspector.getBeanInfo(type).getPropertyDescriptors()) {
         boolean isGetterMethod = pd.getReadMethod() != null && !"class".equals(pd.getName());
         if (isGetterMethod) {
           properties.add(pd);
+          Param param = pd.getReadMethod().getAnnotation(Param.class);
+          if (param != null && param.expander() != Param.ToStringExpander.class) {
+            propertyToExpander.put(pd, newExpander(param.expander()));
+          }
         }
       }
 
-      return new ObjectParamMetadata(properties);
+      return new ObjectParamMetadata(properties, propertyToExpander);
+    }
+
+    private static Param.Expander newExpander(Class<? extends Param.Expander> expanderClass) {
+      try {
+        return expanderClass.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new EncodeException("Failure instantiating " + expanderClass.getName(), e);
+      }
     }
   }
 }

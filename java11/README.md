@@ -9,3 +9,7 @@ GitHub github = Feign.builder()
                      .client(new Http2Client())
                      .target(GitHub.class, "https://api.github.com");
 ```
+
+`Request.Options.readTimeout` applies to reading the response body as well as waiting for the
+headers. It is an idle timeout: a body read that blocks for longer than `readTimeout` fails with
+`HttpTimeoutException`. A `readTimeout` of 0 disables it.

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import feign.codec.Decoder;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -311,6 +312,53 @@ class UtilTest {
     Map<String, Collection<String>> actualMap = caseInsensitiveCopyOf(null);
     // Assert result
     assertThat(actualMap).isEmpty();
+  }
+
+  @Test
+  void charsetOfContentTypeIsNullWithoutCharset() {
+    assertThat(Util.charsetOfContentType(null)).isNull();
+    assertThat(Util.charsetOfContentType("text/plain")).isNull();
+    assertThat(Util.charsetOfContentType("text/plain; format=flowed")).isNull();
+  }
+
+  @Test
+  void charsetOfContentTypeReadsNameIgnoringCaseAndQuotes() {
+    assertThat(Util.charsetOfContentType("text/plain; CHARSET=UTF-16BE"))
+        .isEqualTo(StandardCharsets.UTF_16BE);
+    assertThat(Util.charsetOfContentType("text/plain; charset=\"ISO-8859-1\""))
+        .isEqualTo(StandardCharsets.ISO_8859_1);
+  }
+
+  @Test
+  void charsetOfContentTypeReadsRealParameterAfterQuotedCharsetText() {
+    String contentType = "text/plain; note=\"x;charset=ISO-8859-1\"; charset=UTF-16LE";
+    assertThat(Util.charsetOfContentType(contentType)).isEqualTo(StandardCharsets.UTF_16LE);
+  }
+
+  @Test
+  void charsetOfContentTypeIgnoresEscapedQuoteInQuotedParameterValue() {
+    String contentType = "text/plain; note=\"a\\\";charset=UTF-8\"; charset=ISO-8859-1";
+    assertThat(Util.charsetOfContentType(contentType)).isEqualTo(StandardCharsets.ISO_8859_1);
+  }
+
+  @Test
+  void charsetOfContentTypeIgnoresParameterNamePrefix() {
+    assertThat(Util.charsetOfContentType("text/plain; xcharset=ISO-8859-1")).isNull();
+  }
+
+  @Test
+  void charsetOfContentTypeFallsBackToUtf8ForUnusableCharset() {
+    assertThat(Util.charsetOfContentType("text/plain; charset=")).isEqualTo(StandardCharsets.UTF_8);
+    assertThat(Util.charsetOfContentType("text/plain; charset=@"))
+        .isEqualTo(StandardCharsets.UTF_8);
+    assertThat(Util.charsetOfContentType("text/plain; charset=x-no-such-charset"))
+        .isEqualTo(StandardCharsets.UTF_8);
+  }
+
+  @Test
+  void charsetOfContentTypeToleratesWhitespaceAroundEquals() {
+    assertThat(Util.charsetOfContentType("text/plain; charset = ISO-8859-1 "))
+        .isEqualTo(StandardCharsets.ISO_8859_1);
   }
 
   interface LastTypeParameter {

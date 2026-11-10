@@ -138,13 +138,12 @@ public final class ApacheHttpClient implements Client {
     }
 
     // request body
-    HttpEntity entity =
-        request
-            .body()
-            .map(body -> toHttpEntity(body, getContentType(request)))
-            .orElseGet(() -> new ByteArrayEntity(new byte[0]));
-
-    requestBuilder.setEntity(entity);
+    final var body = request.body();
+    if (body.isPresent()) {
+      requestBuilder.setEntity(toHttpEntity(body.get(), getContentType(request)));
+    } else if (!canOmitEmptyEntity(request.httpMethod())) {
+      requestBuilder.setEntity(new ByteArrayEntity(new byte[0]));
+    }
 
     return requestBuilder.build();
   }
@@ -181,6 +180,25 @@ public final class ApacheHttpClient implements Client {
     httpEntity.setContentType(contentType != null ? contentType.toString() : null);
     httpEntity.setChunked(body.contentLength() < 0);
     return httpEntity;
+  }
+
+  /**
+   * Whether a request without a body can be sent without an (empty) entity. Apache HttpClient's
+   * retry handler treats every request without an entity as idempotent and retries it when the
+   * connection is lost, so only idempotent methods may omit the entity. Every other method keeps
+   * the empty entity, so its request shape stays as before.
+   */
+  private static boolean canOmitEmptyEntity(Request.HttpMethod httpMethod) {
+    switch (httpMethod) {
+      case GET:
+      case HEAD:
+      case OPTIONS:
+      case TRACE:
+      case DELETE:
+        return true;
+      default:
+        return false;
+    }
   }
 
   private ContentType getContentType(Request request) {

@@ -24,9 +24,11 @@ import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.format;
 
 import feign.Client;
+import feign.Logger;
 import feign.Request;
 import feign.Request.Options;
 import feign.Response;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,7 +47,22 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
+/**
+ * {@link Client} backed by {@link HttpURLConnection}.
+ *
+ * <p>The request sent over the wire may differ from the {@link Request} reported by {@link Logger}.
+ * The JDK treats some headers as restricted (for example {@code Host}, {@code Connection} and
+ * {@code Content-Length}) and, unless the {@code sun.net.http.allowRestrictedHeaders} system
+ * property is set, ignores the values supplied for them, so the value on the wire may differ from
+ * the logged one. {@code Content-Length} is passed to {@link
+ * HttpURLConnection#setFixedLengthStreamingMode(int)} or computed by the JDK. An <code>
+ * Accept: *&#47;*</code> header is added when none is present, and a {@code Content-Encoding} of
+ * {@code gzip} or {@code deflate} compresses the body after it is logged.
+ */
 public class DefaultClient implements Client {
+
+  private static final int MAX_DRAIN_BYTES = 64 * 1024;
+  private static final int DRAIN_BUFFER_SIZE = 512;
 
   private final SSLSocketFactory sslContextFactory;
   private final HostnameVerifier hostnameVerifier;
@@ -130,6 +147,9 @@ public class DefaultClient implements Client {
       stream = connection.getErrorStream();
     } else {
       stream = connection.getInputStream();
+    }
+    if (stream != null && length == null) {
+      stream = new DrainOnCloseInputStream(stream);
     }
     if (stream != null && this.isGzip(headers.get(CONTENT_ENCODING))) {
       stream = new GZIPInputStream(stream);
@@ -238,6 +258,41 @@ public class DefaultClient implements Client {
     }
 
     return connection;
+  }
+
+  private static final class DrainOnCloseInputStream extends FilterInputStream {
+
+    private boolean closed;
+
+    DrainOnCloseInputStream(InputStream in) {
+      super(in);
+    }
+
+    @Override
+    public void close() throws IOException {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      try {
+        drain();
+      } catch (IOException ignored) { // NOPMD
+      } finally {
+        super.close();
+      }
+    }
+
+    private void drain() throws IOException {
+      if (in.read() == -1) {
+        return;
+      }
+      byte[] buffer = new byte[DRAIN_BUFFER_SIZE];
+      long drained = 1;
+      int read;
+      while (drained < MAX_DRAIN_BYTES && (read = in.read(buffer)) != -1) {
+        drained += read;
+      }
+    }
   }
 
   private boolean isGzip(Collection<String> contentEncodingValues) {
