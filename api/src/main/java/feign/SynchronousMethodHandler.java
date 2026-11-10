@@ -118,7 +118,7 @@ final class SynchronousMethodHandler implements MethodHandler {
     try {
       response = client.execute(request, options);
       // ensure the request is set. TODO: remove in Feign 12
-      response = response.toBuilder().request(request).requestTemplate(template).build();
+      response = response.toBuilder().request(request).build();
     } catch (IOException e) {
       if (methodHandlerConfiguration.getLogLevel() != Logger.Level.NONE) {
         methodHandlerConfiguration
@@ -153,18 +153,13 @@ final class SynchronousMethodHandler implements MethodHandler {
 
   Options findOptions(Object[] argv) {
     if (argv == null || argv.length == 0) {
-      return this.methodHandlerConfiguration
-          .getOptions()
-          .getMethodOptions(methodHandlerConfiguration.getMetadata().method().getName());
+      return methodHandlerConfiguration.getOptions();
     }
     return Stream.of(argv)
         .filter(Options.class::isInstance)
         .map(Options.class::cast)
         .findFirst()
-        .orElse(
-            this.methodHandlerConfiguration
-                .getOptions()
-                .getMethodOptions(methodHandlerConfiguration.getMetadata().method().getName()));
+        .orElse(methodHandlerConfiguration.getOptions());
   }
 
   static class Factory implements MethodHandler.Factory<Object> {
@@ -193,8 +188,9 @@ final class SynchronousMethodHandler implements MethodHandler {
         Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors");
+      this.requestInterceptors =
+          List.copyOf(checkNotNull(requestInterceptors, "requestInterceptors"));
+      this.methodInterceptors = List.copyOf(checkNotNull(methodInterceptors, "methodInterceptors"));
       this.responseHandler = checkNotNull(responseHandler, "responseHandler");
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");

@@ -56,7 +56,7 @@ public class MicrometerObservationCapability implements Capability {
               .start();
 
       try (Observation.Scope scope = observation.openScope()) {
-        Response response = client.execute(request, options);
+        Response response = client.execute(feignContext.getCarrier(), options);
         feignContext.setResponse(response);
         return response;
       } catch (Throwable ex) {

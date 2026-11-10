@@ -202,7 +202,7 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         .thenApply(
             response -> {
               // TODO: remove in Feign 12
-              Response withRequest = ensureRequestIsSet(response, template, request);
+              Response withRequest = ensureRequestIsSet(response, request);
               invocation.response(withRequest);
               return withRequest;
             })
@@ -232,9 +232,8 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         .thenCompose(response -> handleResponse(response, elapsedTime(start)));
   }
 
-  private static Response ensureRequestIsSet(
-      Response response, RequestTemplate template, Request request) {
-    return response.toBuilder().request(request).requestTemplate(template).build();
+  private static Response ensureRequestIsSet(Response response, Request request) {
+    return response.toBuilder().request(request).build();
   }
 
   private CompletableFuture<Object> handleResponse(Response response, long elapsedTime) {
@@ -293,8 +292,9 @@ final class AsynchronousMethodHandler<C> implements MethodHandler {
         Options options) {
       this.client = checkNotNull(client, "client");
       this.retryer = checkNotNull(retryer, "retryer");
-      this.requestInterceptors = checkNotNull(requestInterceptors, "requestInterceptors");
-      this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors");
+      this.requestInterceptors =
+          List.copyOf(checkNotNull(requestInterceptors, "requestInterceptors"));
+      this.methodInterceptors = List.copyOf(checkNotNull(methodInterceptors, "methodInterceptors"));
       this.responseHandler = responseHandler;
       this.logger = checkNotNull(logger, "logger");
       this.logLevel = checkNotNull(logLevel, "logLevel");

@@ -58,7 +58,6 @@ public final class Response implements Closeable {
     private Map<String, Collection<String>> headers;
     private Body body;
     private Request request;
-    private RequestTemplate requestTemplate;
     private ProtocolVersion protocolVersion = DEFAULT_PROTOCOL_VERSION;
 
     Builder() {}
@@ -140,18 +139,6 @@ public final class Response implements Closeable {
     /** HTTP protocol version */
     public Builder protocolVersion(ProtocolVersion protocolVersion) {
       this.protocolVersion = (protocolVersion != null) ? protocolVersion : DEFAULT_PROTOCOL_VERSION;
-      return this;
-    }
-
-    /**
-     * The Request Template used for the original request.
-     *
-     * @param requestTemplate used.
-     * @return builder reference.
-     */
-    @Experimental
-    public Builder requestTemplate(RequestTemplate requestTemplate) {
-      this.requestTemplate = requestTemplate;
       return this;
     }
 

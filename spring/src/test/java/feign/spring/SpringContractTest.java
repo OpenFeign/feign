@@ -183,8 +183,7 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(null);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String))
-        .hasValue("null");
+    assertThat(request.body().map(this::bodyAsUtf8String)).hasValue("null");
   }
 
   @Test
@@ -194,7 +193,7 @@ class SpringContractTest {
     resource.checkWithNonRequiredRequestBody(object);
 
     Request request = mockClient.verifyOne(HttpMethod.POST, "/health/withNonRequiredRequestBody");
-    assertThat(request.requestTemplate().requestBody().map(this::bodyAsUtf8String).orElse(null))
+    assertThat(request.body().map(this::bodyAsUtf8String).orElse(null))
         .contains("\"name\" : \"hello\"");
   }
 
@@ -203,8 +202,7 @@ class SpringContractTest {
     resource.checkRequestPart("1", "hello", "6");
 
     final Request request = mockClient.verifyOne(HttpMethod.POST, "/health/part/1");
-    assertThat(request.requestTemplate().methodMetadata().formParams())
-        .containsExactly("name1", "grade1");
+    assertThat(request.methodMetadata().formParams()).containsExactly("name1", "grade1");
   }
 
   @Test

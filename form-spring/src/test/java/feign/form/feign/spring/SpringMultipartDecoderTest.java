@@ -18,9 +18,11 @@ package feign.form.feign.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
+import feign.Feign;
+import feign.form.spring.converter.SpringManyMultipartFilesReader;
+import feign.spring.SpringContract;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -30,11 +32,17 @@ import org.springframework.web.multipart.MultipartFile;
 @SpringBootTest(
     webEnvironment = DEFINED_PORT,
     classes = Server.class,
-    properties = {"server.port=8080", "feign.hystrix.enabled=false"})
+    properties = "server.port=8080")
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class SpringMultipartDecoderTest {
 
-  @Autowired private DownloadClient downloadClient;
+  private final DownloadClient downloadClient =
+      Feign.builder()
+          .contract(new SpringContract())
+          .decoder(
+              new HttpMessageConverterDecoder<>(
+                  new SpringManyMultipartFilesReader(4096), MultipartFile[].class))
+          .target(DownloadClient.class, "http://localhost:8080");
 
   @Test
   void downloadTest() throws Exception {

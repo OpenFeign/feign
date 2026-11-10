@@ -17,11 +17,18 @@ package feign;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 
 import feign.Request.Body;
 import feign.Request.HttpMethod;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class RequestTest {
@@ -61,6 +68,40 @@ public class RequestTest {
             .request();
 
     assertThat(request).hasToString("GET http://example.com HTTP/1.1\n");
+  }
+
+  @Test
+  void headersAreCopiedOnCreation() {
+    Map<String, Collection<String>> headers = new LinkedHashMap<>();
+    List<String> values = new ArrayList<>(List.of("a"));
+    headers.put("X-Header", values);
+
+    Request request = Request.create(HttpMethod.GET, "http://example.com", headers, null, null);
+    headers.put("X-Other", List.of("b"));
+    values.add("c");
+
+    assertThat(request.headers()).containsOnly(entry("X-Header", List.of("a")));
+    assertThatThrownBy(() -> request.headers().put("X-Other", List.of("b")))
+        .isInstanceOf(UnsupportedOperationException.class);
+    assertThatThrownBy(() -> request.headers().get("X-Header").add("c"))
+        .isInstanceOf(UnsupportedOperationException.class);
+  }
+
+  @Test
+  void withHeaderReturnsCopyAndKeepsCaseInsensitiveLookup() {
+    Request request =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .target("http://example.com")
+            .header("Accept", "text/plain")
+            .resolve(Collections.emptyMap())
+            .request();
+
+    Request traced = request.withHeader("traceparent", List.of("00-abc"));
+
+    assertThat(request.headers()).doesNotContainKey("traceparent");
+    assertThat(traced.headers().get("TRACEPARENT")).containsExactly("00-abc");
+    assertThat(traced.headers().get("accept")).containsExactly("text/plain");
   }
 
   private static Request createGetRequestWithNullBody() {

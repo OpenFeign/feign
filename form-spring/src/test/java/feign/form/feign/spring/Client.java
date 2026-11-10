@@ -19,17 +19,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import feign.Logger;
 import feign.Response;
-import feign.codec.Encoder;
-import feign.form.spring.SpringFormEncoder;
 import java.util.List;
 import java.util.Map;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.support.FeignHttpMessageConverters;
-import org.springframework.cloud.openfeign.support.SpringEncoder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,10 +29,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
-@FeignClient(
-    name = "multipart-support-service",
-    url = "http://localhost:8080",
-    configuration = Client.ClientConfiguration.class)
 interface Client {
 
   @RequestMapping(
@@ -57,7 +45,7 @@ interface Client {
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE)
   String upload2(
-      @RequestBody MultipartFile file,
+      MultipartFile file,
       @PathVariable("folder") String folder,
       @RequestParam(name = "message", required = false) String message);
 
@@ -66,7 +54,7 @@ interface Client {
       method = POST,
       consumes = MULTIPART_FORM_DATA_VALUE)
   String upload3(
-      @RequestBody MultipartFile file,
+      MultipartFile file,
       @PathVariable("folder") String folder,
       @RequestParam(name = "message", required = false) String message);
 
@@ -87,17 +75,4 @@ interface Client {
 
   @RequestMapping(path = "/multipart/upload6", method = POST, consumes = MULTIPART_FORM_DATA_VALUE)
   String upload6Collection(List<MultipartFile> files);
-
-  class ClientConfiguration {
-
-    @Bean
-    Encoder feignEncoder(ObjectProvider<FeignHttpMessageConverters> messageConverters) {
-      return new SpringFormEncoder(new SpringEncoder(messageConverters));
-    }
-
-    @Bean
-    Logger.Level feignLogger() {
-      return Logger.Level.FULL;
-    }
-  }
 }

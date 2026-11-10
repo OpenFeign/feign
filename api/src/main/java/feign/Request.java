@@ -16,7 +16,6 @@
 package feign;
 
 import static feign.Util.checkNotNull;
-import static feign.Util.getThreadIdentifier;
 import static feign.Util.valuesOrEmpty;
 
 import java.io.ByteArrayOutputStream;
@@ -30,13 +29,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 /** An immutable request to an http server. */
@@ -45,7 +46,8 @@ public final class Request implements Serializable {
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final transient Body body;
-  private final RequestTemplate requestTemplate;
+  private final transient MethodMetadata methodMetadata;
+  private final transient Target<?> feignTarget;
   private final ProtocolVersion protocolVersion;
 
   /**
@@ -65,14 +67,42 @@ public final class Request implements Serializable {
       RequestTemplate requestTemplate) {
     this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
     this.url = checkNotNull(url, "url");
-    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
+    this.headers = copyOf(checkNotNull(headers, "headers of %s %s", method, url));
     this.body = body;
-    this.requestTemplate = requestTemplate;
+    this.methodMetadata = requestTemplate != null ? requestTemplate.methodMetadata() : null;
+    this.feignTarget = requestTemplate != null ? requestTemplate.feignTarget() : null;
     protocolVersion = ProtocolVersion.HTTP_1_1;
   }
 
+  private Request(Request source, Map<String, Collection<String>> headers) {
+    this.httpMethod = source.httpMethod;
+    this.url = source.url;
+    this.headers = copyOf(headers);
+    this.body = source.body;
+    this.methodMetadata = source.methodMetadata;
+    this.feignTarget = source.feignTarget;
+    this.protocolVersion = source.protocolVersion;
+  }
+
+  private static Map<String, Collection<String>> copyOf(Map<String, Collection<String>> headers) {
+    final Map<String, Collection<String>> copy = emptyLike(headers);
+    headers.forEach(
+        (name, values) -> copy.put(name, Collections.unmodifiableList(new ArrayList<>(values))));
+    return copy instanceof SortedMap
+        ? Collections.unmodifiableSortedMap((SortedMap<String, Collection<String>>) copy)
+        : Collections.unmodifiableMap(copy);
+  }
+
+  private static Map<String, Collection<String>> emptyLike(
+      Map<String, Collection<String>> headers) {
+    return headers instanceof SortedMap
+        ? new TreeMap<>(((SortedMap<String, Collection<String>>) headers).comparator())
+        : new LinkedHashMap<>();
+  }
+
   /**
-   * Builds a Request. All parameters must be effectively immutable, via safe copies.
+   * Builds a Request. Headers are copied; only the method metadata and target of the {@code
+   * requestTemplate} are retained.
    *
    * @param httpMethod for the request.
    * @param url for the request.
@@ -99,23 +129,18 @@ public final class Request implements Serializable {
   }
 
   /**
-   * Add new entries to request Headers. It overrides existing entries
+   * Returns a copy of this request with the header set to the given values, replacing any values it
+   * had before.
    *
-   * @param key
-   * @param values
+   * @param name of the header.
+   * @param values of the header.
+   * @return a new request carrying the header.
    */
-  public void header(String key, Collection<String> values) {
-    headers.put(key, values);
-  }
-
-  /**
-   * Add new entries to request Headers. It overrides existing entries
-   *
-   * @param key
-   * @param value
-   */
-  public void header(String key, String value) {
-    header(key, Arrays.asList(value));
+  public Request withHeader(String name, Collection<String> values) {
+    final Map<String, Collection<String>> copy = emptyLike(headers);
+    copy.putAll(headers);
+    copy.put(checkNotNull(name, "name"), checkNotNull(values, "values of %s", name));
+    return new Request(this, copy);
   }
 
   /**
@@ -124,7 +149,7 @@ public final class Request implements Serializable {
    * @return the request headers.
    */
   public Map<String, Collection<String>> headers() {
-    return Collections.unmodifiableMap(headers);
+    return headers;
   }
 
   /**
@@ -145,9 +170,22 @@ public final class Request implements Serializable {
     return protocolVersion;
   }
 
-  @Experimental
-  public RequestTemplate requestTemplate() {
-    return this.requestTemplate;
+  /**
+   * Metadata of the interface method this request was built from.
+   *
+   * @return the method metadata, or {@code null} when the request was not built by Feign.
+   */
+  public MethodMetadata methodMetadata() {
+    return methodMetadata;
+  }
+
+  /**
+   * Target this request was built for.
+   *
+   * @return the target, or {@code null} when the request was not built by Feign.
+   */
+  public Target<?> feignTarget() {
+    return feignTarget;
   }
 
   /**
@@ -469,21 +507,16 @@ public final class Request implements Serializable {
 
   /**
    * Controls the per-request settings currently required to be implemented by all {@link Client
-   * clients}
+   * clients}. Instances are immutable; to override them for a single call, declare an {@code
+   * Options} parameter on the interface method.
    */
-  public static class Options {
+  public static final class Options {
 
     private final long connectTimeout;
     private final TimeUnit connectTimeoutUnit;
     private final long readTimeout;
     private final TimeUnit readTimeoutUnit;
     private final boolean followRedirects;
-    private final Map<String, Map<String, Options>> threadToMethodOptions;
-
-    /** Returns the key used to bucket per-thread method options. */
-    String threadIdentifier() {
-      return getThreadIdentifier();
-    }
 
     /**
      * Creates a new Options instance.
@@ -518,13 +551,11 @@ public final class Request implements Serializable {
         long readTimeout,
         TimeUnit readTimeoutUnit,
         boolean followRedirects) {
-      super();
       this.connectTimeout = connectTimeout;
       this.connectTimeoutUnit = connectTimeoutUnit;
       this.readTimeout = readTimeout;
       this.readTimeoutUnit = readTimeoutUnit;
       this.followRedirects = followRedirects;
-      this.threadToMethodOptions = new ConcurrentHashMap<>();
     }
 
     /**
@@ -596,22 +627,6 @@ public final class Request implements Serializable {
     }
 
     /**
-     * Get an Options by methodName
-     *
-     * @param methodName it's your FeignInterface method name.
-     * @return method Options
-     */
-    @Experimental
-    public Options getMethodOptions(String methodName) {
-      Map<String, Options> methodOptions = threadToMethodOptions.get(threadIdentifier());
-      if (methodOptions == null) {
-        return this;
-      }
-      Options options = methodOptions.get(methodName);
-      return options != null ? options : this;
-    }
-
-    /**
      * Defaults to true. {@code false} tells the client to not follow the redirections.
      *
      * @see HttpURLConnection#getFollowRedirects()
@@ -647,17 +662,34 @@ public final class Request implements Serializable {
       return readTimeoutUnit;
     }
 
-    /**
-     * Set methodOptions by methodKey and options
-     *
-     * @param methodName it's your FeignInterface method name.
-     * @param options it's the Options for this method.
-     */
-    @Experimental
-    public void setMethodOptions(String methodName, Options options) {
-      threadToMethodOptions
-          .computeIfAbsent(threadIdentifier(), key -> new ConcurrentHashMap<>())
-          .put(methodName, options);
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (!(obj instanceof Options)) {
+        return false;
+      }
+      final Options other = (Options) obj;
+      return connectTimeoutMillis() == other.connectTimeoutMillis()
+          && readTimeoutMillis() == other.readTimeoutMillis()
+          && followRedirects == other.followRedirects;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(connectTimeoutMillis(), readTimeoutMillis(), followRedirects);
+    }
+
+    @Override
+    public String toString() {
+      return "Options{connectTimeoutMillis="
+          + connectTimeoutMillis()
+          + ", readTimeoutMillis="
+          + readTimeoutMillis()
+          + ", followRedirects="
+          + followRedirects
+          + '}';
     }
   }
 

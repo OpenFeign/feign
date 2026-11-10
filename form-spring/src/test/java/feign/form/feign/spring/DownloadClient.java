@@ -15,43 +15,12 @@
  */
 package feign.form.feign.spring;
 
-import feign.Logger;
-import feign.codec.Decoder;
-import feign.form.spring.converter.SpringManyMultipartFilesReader;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.support.FeignHttpMessageConverters;
-import org.springframework.cloud.openfeign.support.HttpMessageConverterCustomizer;
-import org.springframework.cloud.openfeign.support.SpringDecoder;
-import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
-@FeignClient(
-    name = "multipart-download-support-service",
-    url = "http://localhost:8080",
-    configuration = DownloadClient.ClientConfiguration.class)
 interface DownloadClient {
 
-  @RequestMapping("/multipart/download/{fileId}")
+  @GetMapping("/multipart/download/{fileId}")
   MultipartFile[] download(@PathVariable("fileId") String fileId);
-
-  class ClientConfiguration {
-
-    @Bean
-    HttpMessageConverterCustomizer multipartConverterCustomizer() {
-      return converters -> converters.add(new SpringManyMultipartFilesReader(4096));
-    }
-
-    @Bean
-    Decoder feignDecoder(ObjectProvider<FeignHttpMessageConverters> messageConverters) {
-      return new SpringDecoder(messageConverters);
-    }
-
-    @Bean
-    Logger.Level feignLoggerLevel() {
-      return Logger.Level.FULL;
-    }
-  }
 }

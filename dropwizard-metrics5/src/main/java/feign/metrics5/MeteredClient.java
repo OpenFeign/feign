@@ -19,7 +19,6 @@ import feign.Client;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.Options;
-import feign.RequestTemplate;
 import feign.Response;
 import io.dropwizard.metrics5.MetricRegistry;
 import io.dropwizard.metrics5.Timer;
@@ -48,19 +47,18 @@ public class MeteredClient extends BaseMeteredClient implements Client {
 
   @Override
   public Response execute(Request request, Options options) throws IOException {
-    final RequestTemplate template = request.requestTemplate();
-    try (final Timer.Context timer = createTimer(template)) {
+    try (final Timer.Context timer = createTimer(request)) {
       Response response = client.execute(request, options);
-      recordSuccess(template, response);
+      recordSuccess(request, response);
       return response;
     } catch (FeignException e) {
-      recordFailure(template, e);
+      recordFailure(request, e);
       throw e;
     } catch (IOException | RuntimeException e) {
-      recordFailure(template, e);
+      recordFailure(request, e);
       throw e;
     } catch (Exception e) {
-      recordFailure(template, e);
+      recordFailure(request, e);
       throw new IOException(e);
     }
   }

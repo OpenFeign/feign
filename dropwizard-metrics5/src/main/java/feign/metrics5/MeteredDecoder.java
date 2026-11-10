@@ -16,7 +16,7 @@
 package feign.metrics5;
 
 import feign.FeignException;
-import feign.RequestTemplate;
+import feign.Request;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
@@ -58,7 +58,7 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
   @Override
   public Object decode(Response response, Type type)
       throws IOException, DecodeException, FeignException {
-    final RequestTemplate template = response.request().requestTemplate();
+    final Request request = response.request();
     final MeteredBody body = response.body() == null ? null : new MeteredBody(response.body());
 
     response = response.toBuilder().body(body).build();
@@ -68,8 +68,8 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
         metricRegistry
             .timer(
                 metricName
-                    .metricName(template.methodMetadata(), template.feignTarget())
-                    .tagged("uri", template.methodMetadata().template().path()),
+                    .metricName(request.methodMetadata(), request.feignTarget())
+                    .tagged("uri", request.methodMetadata().template().path()),
                 metricSuppliers.timers())
             .time()) {
       decoded = decoder.decode(response, type);
@@ -77,11 +77,11 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
       metricRegistry
           .meter(
               metricName
-                  .metricName(template.methodMetadata(), template.feignTarget(), "error_count")
+                  .metricName(request.methodMetadata(), request.feignTarget(), "error_count")
                   .tagged("exception_name", e.getClass().getSimpleName())
                   .tagged(
                       "root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
-                  .tagged("uri", template.methodMetadata().template().path()),
+                  .tagged("uri", request.methodMetadata().template().path()),
               metricSuppliers.meters())
           .mark();
       throw e;
@@ -89,11 +89,11 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
       metricRegistry
           .meter(
               metricName
-                  .metricName(template.methodMetadata(), template.feignTarget(), "error_count")
+                  .metricName(request.methodMetadata(), request.feignTarget(), "error_count")
                   .tagged("exception_name", e.getClass().getSimpleName())
                   .tagged(
                       "root_cause_name", ExceptionUtils.getRootCause(e).getClass().getSimpleName())
-                  .tagged("uri", template.methodMetadata().template().path()),
+                  .tagged("uri", request.methodMetadata().template().path()),
               metricSuppliers.meters())
           .mark();
       throw new IOException(e);
@@ -103,8 +103,8 @@ public class MeteredDecoder implements Decoder, PredicatedDecoder {
       metricRegistry
           .histogram(
               metricName
-                  .metricName(template.methodMetadata(), template.feignTarget(), "response_size")
-                  .tagged("uri", template.methodMetadata().template().path()),
+                  .metricName(request.methodMetadata(), request.feignTarget(), "response_size")
+                  .tagged("uri", request.methodMetadata().template().path()),
               metricSuppliers.histograms())
           .update(body.count());
     }

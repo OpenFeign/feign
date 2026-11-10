@@ -518,3 +518,48 @@ public class ExampleStreamingDecoder implements PredicatedDecoder {
 ```
 
 ---
+
+## Immutability
+
+Objects that one client shares across threads are now read-only once they are built.
+
+### Breaking Changes
+
+#### 1. `Request` is immutable
+
+- `Request.header(String, String)` and `Request.header(String, Collection)` are removed. Use `request.withHeader(name, values)`, which returns a copy.
+- `Request.create(...)` copies the headers. Later changes to the map you passed have no effect, and `request.headers()` cannot be modified.
+- `Request.requestTemplate()` is removed. Use `request.methodMetadata()` and `request.feignTarget()` instead. Both are `null` for a request Feign did not build.
+- `Response.Builder.requestTemplate(RequestTemplate)` is removed. It was never read.
+
+**Before:**
+
+```java
+RequestTemplate template = response.request().requestTemplate();
+String uri = template.methodMetadata().template().path();
+Target<?> target = template.feignTarget();
+```
+
+**After:**
+
+```java
+Request request = response.request();
+String uri = request.methodMetadata().template().path();
+Target<?> target = request.feignTarget();
+```
+
+The micrometer `FeignContext` carrier works the same way. A propagated header replaces the carrier with a copy, so send `context.getCarrier()`, not the original request.
+
+#### 2. `Request.Options` is a final value class
+
+- `Options.setMethodOptions(...)` and `Options.getMethodOptions(...)` are removed. They kept options per thread in a map that was never cleared. To override options for one call, declare an `Options` parameter on the interface method.
+- `Options` is `final` and implements `equals`/`hashCode`.
+- `Util.getThreadIdentifier()` is removed.
+
+#### 3. `MethodMetadata` is read-only once the contract has parsed it
+
+Once Feign has parsed an interface, the setters on its `MethodMetadata` throw `IllegalStateException`. Examples are `configKey(...)`, `setBodyRequired(...)` and `ignoreMethod()`. The collection getters, such as `formParams()` and `indexToName()`, return unmodifiable views. A `Contract` still builds metadata as before.
+
+#### 4. Built clients no longer share the builder's interceptor lists
+
+`target(...)`/`build()` copies the request and method interceptors. Adding an interceptor to a builder after a client was built no longer affects that client.

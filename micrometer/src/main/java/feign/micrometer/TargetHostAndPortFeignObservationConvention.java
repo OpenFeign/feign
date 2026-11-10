@@ -15,6 +15,7 @@
  */
 package feign.micrometer;
 
+import feign.Request;
 import feign.RequestTemplate;
 import feign.Target;
 import io.micrometer.common.KeyValues;
@@ -97,8 +98,8 @@ public class TargetHostAndPortFeignObservationConvention extends DefaultFeignObs
    * that a missing or invalid url never breaks the observation.
    */
   private static URI targetUri(FeignContext context) {
-    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
-    Target<?> target = requestTemplate.feignTarget();
+    Request request = context.getCarrier();
+    Target<?> target = request.feignTarget();
     if (target == null) {
       return null;
     }

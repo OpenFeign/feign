@@ -93,10 +93,7 @@ public class GraphqlSubscriptionClient implements Client {
 
   @Override
   public Response execute(Request request, Request.Options options) throws IOException {
-    var meta =
-        request.requestTemplate() == null
-            ? null
-            : contract.lookupMetadata(request.requestTemplate());
+    var meta = contract.lookupMetadata(request.methodMetadata());
     if (meta == null || !meta.subscription) {
       return delegate.execute(request, options);
     }

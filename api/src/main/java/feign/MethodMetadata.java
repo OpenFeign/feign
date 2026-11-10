@@ -48,6 +48,7 @@ public final class MethodMetadata implements Serializable {
   private transient Class<?> targetType;
   private transient Method method;
   private final transient List<String> warnings = new ArrayList<>();
+  private transient boolean frozen;
 
   MethodMetadata() {
     template.methodMetadata(this);
@@ -64,6 +65,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata configKey(String configKey) {
+    checkNotFrozen();
     this.configKey = configKey;
     return this;
   }
@@ -73,6 +75,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata returnType(Type returnType) {
+    checkNotFrozen();
     this.returnType = returnType;
     return this;
   }
@@ -82,6 +85,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata urlIndex(Integer urlIndex) {
+    checkNotFrozen();
     this.urlIndex = urlIndex;
     return this;
   }
@@ -91,6 +95,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata bodyIndex(Integer bodyIndex) {
+    checkNotFrozen();
     this.bodyIndex = bodyIndex;
     return this;
   }
@@ -100,6 +105,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata headerMapIndex(Integer headerMapIndex) {
+    checkNotFrozen();
     this.headerMapIndex = headerMapIndex;
     return this;
   }
@@ -109,6 +115,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata queryMapIndex(Integer queryMapIndex) {
+    checkNotFrozen();
     this.queryMapIndex = queryMapIndex;
     return this;
   }
@@ -118,6 +125,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata queryMapEncoder(QueryMapEncoder queryMapEncoder) {
+    checkNotFrozen();
     this.queryMapEncoder = queryMapEncoder;
     return this;
   }
@@ -129,6 +137,7 @@ public final class MethodMetadata implements Serializable {
 
   @Experimental
   MethodMetadata alwaysEncodeBody(boolean alwaysEncodeBody) {
+    checkNotFrozen();
     this.alwaysEncodeBody = alwaysEncodeBody;
     return this;
   }
@@ -139,6 +148,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public MethodMetadata bodyType(Type bodyType) {
+    checkNotFrozen();
     this.bodyType = bodyType;
     return this;
   }
@@ -148,20 +158,20 @@ public final class MethodMetadata implements Serializable {
   }
 
   public List<String> formParams() {
-    return formParams;
+    return frozen ? Collections.unmodifiableList(formParams) : formParams;
   }
 
   public Map<Integer, Collection<String>> indexToName() {
-    return indexToName;
+    return frozen ? Collections.unmodifiableMap(indexToName) : indexToName;
   }
 
   public Map<Integer, Boolean> indexToEncoded() {
-    return indexToEncoded;
+    return frozen ? Collections.unmodifiableMap(indexToEncoded) : indexToEncoded;
   }
 
   /** If {@link #indexToExpander} is null, classes here will be instantiated by newInstance. */
   public Map<Integer, Class<? extends Expander>> indexToExpanderClass() {
-    return indexToExpanderClass;
+    return frozen ? Collections.unmodifiableMap(indexToExpanderClass) : indexToExpanderClass;
   }
 
   /**
@@ -169,13 +179,16 @@ public final class MethodMetadata implements Serializable {
    * injection.
    */
   public MethodMetadata indexToExpander(Map<Integer, Expander> indexToExpander) {
+    checkNotFrozen();
     this.indexToExpander = indexToExpander;
     return this;
   }
 
   /** When not null, this value will be used instead of {@link #indexToExpander()}. */
   public Map<Integer, Expander> indexToExpander() {
-    return indexToExpander;
+    return frozen && indexToExpander != null
+        ? Collections.unmodifiableMap(indexToExpander)
+        : indexToExpander;
   }
 
   /**
@@ -183,15 +196,17 @@ public final class MethodMetadata implements Serializable {
    * @return this instance
    */
   public MethodMetadata ignoreParamater(int i) {
+    checkNotFrozen();
     this.parameterToIgnore.set(i);
     return this;
   }
 
   public BitSet parameterToIgnore() {
-    return parameterToIgnore;
+    return frozen ? (BitSet) parameterToIgnore.clone() : parameterToIgnore;
   }
 
   public MethodMetadata parameterToIgnore(BitSet parameterToIgnore) {
+    checkNotFrozen();
     this.parameterToIgnore = parameterToIgnore;
     return this;
   }
@@ -222,6 +237,7 @@ public final class MethodMetadata implements Serializable {
   }
 
   public void ignoreMethod() {
+    checkNotFrozen();
     this.ignored = true;
   }
 
@@ -234,11 +250,13 @@ public final class MethodMetadata implements Serializable {
   }
 
   public void setBodyRequired(boolean bodyRequired) {
+    checkNotFrozen();
     this.bodyRequired = bodyRequired;
   }
 
   @Experimental
   public MethodMetadata targetType(Class<?> targetType) {
+    checkNotFrozen();
     this.targetType = targetType;
     return this;
   }
@@ -250,6 +268,7 @@ public final class MethodMetadata implements Serializable {
 
   @Experimental
   public MethodMetadata method(Method method) {
+    checkNotFrozen();
     this.method = method;
     return this;
   }
@@ -260,10 +279,26 @@ public final class MethodMetadata implements Serializable {
   }
 
   public void addWarning(String warning) {
+    checkNotFrozen();
     warnings.add(warning);
   }
 
   public String warnings() {
     return warnings.stream().collect(Collectors.joining("\n- ", "\nWarnings:\n- ", ""));
+  }
+
+  /**
+   * Makes this metadata read-only once the {@link Contract} has parsed it, as one instance is
+   * shared by every invocation of the method on every thread.
+   */
+  void freeze() {
+    frozen = true;
+  }
+
+  private void checkNotFrozen() {
+    if (frozen) {
+      throw new IllegalStateException(
+          "MethodMetadata of " + configKey + " is read-only once the contract has parsed it");
+    }
   }
 }

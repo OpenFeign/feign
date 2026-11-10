@@ -120,8 +120,9 @@ public class MethodHandlerConfiguration {
     this.target = checkNotNull(target, "target");
     this.retryer = checkNotNull(retryer, "retryer for %s", target);
     this.requestInterceptors =
-        checkNotNull(requestInterceptors, "requestInterceptors for %s", target);
-    this.methodInterceptors = checkNotNull(methodInterceptors, "methodInterceptors for %s", target);
+        List.copyOf(checkNotNull(requestInterceptors, "requestInterceptors for %s", target));
+    this.methodInterceptors =
+        List.copyOf(checkNotNull(methodInterceptors, "methodInterceptors for %s", target));
     this.logger = checkNotNull(logger, "logger for %s", target);
     this.logLevel = checkNotNull(logLevel, "logLevel for %s", target);
     this.metadata = checkNotNull(metadata, "metadata for %s", target);
