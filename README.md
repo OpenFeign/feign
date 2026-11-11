@@ -533,6 +533,28 @@ public class Example {
 }
 ```
 
+#### Combining contracts
+`CompositeContract` lets one interface use the annotations of several declarative contracts, for
+example while moving it from Feign's annotations to Spring MVC ones:
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @GetMapping("/repos/{owner}/{repo}/issues")
+  List<Issue> issues(@PathVariable("owner") String owner, @PathVariable("repo") String repo);
+}
+
+GitHub github = Feign.builder()
+                     .contract(new CompositeContract(new DefaultContract(), new SpringContract()))
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+Each annotation is handled by the first contract in the list that understands it, so put the
+contract whose interpretation should win first. Clients configured with a single contract are not
+affected.
+
 ### Client
 
 #### OkHttp
