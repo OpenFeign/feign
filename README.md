@@ -355,6 +355,33 @@ public class BankService {
 }
 ```
 
+### Per-Call Timeouts
+
+A synchronous client method can take a `Request.Options` argument to override the
+builder settings for one invocation. Feign uses a non-null argument as request
+configuration and does not serialize it into the request body.
+
+```java
+interface AccountApi {
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id, Request.Options options);
+
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id);
+}
+
+AccountApi api = Feign.builder()
+    .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
+    .target(AccountApi.class, "https://api.examplebank.com");
+
+String account = api.getAccount("42",
+    new Request.Options(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS, true));
+```
+
+`getAccount("42", options)` uses the supplied timeouts for that invocation.
+In this example, `getAccount("42")` uses the builder defaults of 10 seconds to
+connect and 60 seconds to read.
+
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
