@@ -33,7 +33,10 @@ import java.util.Map;
  * </pre>
  *
  * <br>
- * Note that if you'd like curly braces literally in the body, urlencode them first.
+ * When using {@link Param} parameters in a JSON template, escape literal JSON curly braces as
+ * {@code %7B} and {@code %7D}. This escaping does not decode static bodies such as {@code %7B%7D}.
+ * To send literal JSON without template expansion, use an unannotated {@code String} or {@code
+ * byte[]} parameter with the default encoder and specify the {@code Content-Type} header.
  *
  * @see RequestTemplate#expand(String, Map)
  */
