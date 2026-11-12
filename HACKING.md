@@ -10,6 +10,59 @@ Code design is opinionated including below:
 * Changing certain implementation classes may be unsupported.
 * 3rd-party dependencies, and gnarly apis like java.beans are avoided.
 
+## Building from source
+
+Run the Maven wrapper from the repository root with `JAVA_HOME` pointing to JDK 25.
+The JVM options in `.mvn/jvm.config` require a recent launcher JDK. Maven selects
+separate toolchains to compile main code and run tests.
+
+Main compilation follows each module's `main.java.version`, which defaults to
+`1.8` and is overridden by Java 11 and Java 17 modules. Tests use the root POM's
+`latest.java.version`, currently `25`. The default reactor uses these keys:
+
+| Version key | Used for |
+| --- | --- |
+| `1.8` | Main code in core and other Java 8 modules |
+| `11` | Main code in Java 11 modules |
+| `17` | Main code in Java 17 modules |
+| `25` | Test compilation and execution |
+
+Use [.circleci/toolchains.xml](.circleci/toolchains.xml) as a reference. Merge the
+required entries into `~/.m2/toolchains.xml`, replacing each `jdkHome` with your
+installation path. For a macOS `.jdk` bundle, use its `Contents/Home` directory.
+Use `11` for JDK 11, not `1.11`.
+
+The version key describes the binary at `jdkHome`; Maven can select an incorrect
+binary if its declared version is wrong. Check each installation with
+`"/path/to/jdkHome/bin/java" -version` and `"/path/to/jdkHome/bin/javac" -version`.
+The CI template also contains JDK 21 and 28 entries. JDK 28 is required when
+selecting the optional `jdk28-modules` profile.
+
+Build and test all standard modules with the development profile:
+
+```shell
+./mvnw -Pdev clean install
+```
+
+For a focused core build, include its reactor dependencies with `-am`:
+
+```shell
+./mvnw -Pdev -pl core -am clean install
+```
+
+To use a separate toolchains file, pass it explicitly:
+
+```shell
+./mvnw --toolchains /path/to/toolchains.xml -Pdev -pl core -am clean install
+```
+
+If Maven fails at startup with `Unrecognized option: --sun-misc-unsafe-memory-access=allow`,
+check `"$JAVA_HOME/bin/java" -version` and select JDK 25 for the launcher. If it
+reports a missing toolchain, check the requested version key and the corresponding
+`jdkHome`. Changing Feign's Java version properties is not needed for local setup.
+See [.circleci/config.yml](.circleci/config.yml) for CI's JDK setup and verification
+with the optional profile.
+
 ## How to request change
 The best way to approach something not yet supported is to ask on
 [gitter](https://gitter.im/OpenFeign/feign) or [raise an issue](https://github.com/OpenFeign/feign/issues).
