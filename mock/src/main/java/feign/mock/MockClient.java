@@ -47,16 +47,33 @@ public class MockClient implements Client, AsyncClient<Object> {
 
   private Iterator<RequestResponse> responseIterator;
 
+  private boolean matchEncodedUrls;
+
   public MockClient() {}
 
   public MockClient(boolean sequential) {
     this.sequential = sequential;
   }
 
+  /**
+   * Match request URLs as the client sends them, still percent-encoded. By default the URL of each
+   * request is decoded before it is matched, so a request sent to {@code /files/a%2Fb} matches
+   * {@code /files/a/b} and cannot be told apart from a request sent to {@code /files/a/b}. Once
+   * enabled, stubs and verifications use the encoded form, such as {@code /files/a%2Fb}.
+   *
+   * <p>Call this before the client executes any request.
+   *
+   * @return this client
+   */
+  public MockClient matchEncodedUrls() {
+    this.matchEncodedUrls = true;
+    return this;
+  }
+
   @Override
   public synchronized Response execute(Request request, Request.Options options)
       throws IOException {
-    RequestKey requestKey = RequestKey.create(request);
+    RequestKey requestKey = RequestKey.create(request, !matchEncodedUrls);
     Response.Builder responseBuilder;
     if (sequential) {
       responseBuilder = executeSequential(requestKey);
@@ -71,7 +88,7 @@ public class MockClient implements Client, AsyncClient<Object> {
   @Override
   public CompletableFuture<Response> execute(
       Request request, Request.Options options, Optional<Object> requestContext) {
-    RequestKey requestKey = RequestKey.create(request);
+    RequestKey requestKey = RequestKey.create(request, !matchEncodedUrls);
     Response.Builder responseBuilder;
     if (sequential) {
       responseBuilder = executeSequential(requestKey);
