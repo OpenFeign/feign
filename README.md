@@ -21,6 +21,8 @@ Feign works by processing annotations into a templatized request. Arguments are 
 
 Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11.  For those that need JDK 6 compatibility, please use Feign 9.x
 
+To compile Feign itself from a checkout, see [Building from source](HACKING.md#building-from-source).
+
 ## Feature overview
 
 This is a map with current key features provided by feign:
