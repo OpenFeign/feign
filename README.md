@@ -1142,8 +1142,31 @@ public class Example {
 
 The SLF4JLogger (see above) may also be of interest.
 
-To filter out sensitive information like authorization or tokens
-override methods `shouldLogRequestHeader` or `shouldLogResponseHeader`.
+To omit selected HTTP headers from the log, override `shouldLogRequestHeader`
+and `shouldLogResponseHeader`. Header names are case-insensitive. For example:
+
+```java
+Logger logger = new Logger.JavaLogger("GitHub.Logger") {
+  @Override
+  protected boolean shouldLogRequestHeader(String header) {
+    return !"Authorization".equalsIgnoreCase(header)
+        && !"Cookie".equalsIgnoreCase(header);
+  }
+
+  @Override
+  protected boolean shouldLogResponseHeader(String header) {
+    return !"Set-Cookie".equalsIgnoreCase(header);
+  }
+};
+```
+
+Configure the builder with `.logger(logger).logLevel(Logger.Level.HEADERS)` to log
+headers without request or response bodies.
+
+These hooks filter HTTP header lines only. They do not inspect or redact bodies.
+At `FULL`, a server that echoes request headers in a JSON response body can still
+expose those values in the log. Use `HEADERS` to omit bodies, or provide a custom
+`Logger` if you need to redact body content.
 
 #### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.
