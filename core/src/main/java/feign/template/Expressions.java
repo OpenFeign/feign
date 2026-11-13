@@ -217,28 +217,25 @@ public final class Expressions {
 
     protected String expandIterable(Iterable<?> values) {
       StringBuilder result = new StringBuilder();
+      boolean first = true;
       for (Object value : values) {
         if (value == null) {
           /* skip */
           continue;
         }
 
-        /* expand the value */
-        String expanded = this.encode(value);
-        if (expanded.isEmpty()) {
-          /* always append the separator */
+        /* separate members, but never add a leading or trailing separator */
+        if (!first) {
           result.append(this.separator);
-        } else {
-          if (result.length() != 0) {
-            if (!result.toString().equalsIgnoreCase(this.separator)) {
-              result.append(this.separator);
-            }
-          }
-          if (this.nameRequired) {
-            result.append(this.encode(this.getName())).append("=");
-          }
-          result.append(expanded);
         }
+        first = false;
+
+        if (this.nameRequired) {
+          result.append(this.encode(this.getName())).append("=");
+        }
+
+        /* empty members expand to an empty string, they still count as a member */
+        result.append(this.encode(value));
       }
 
       /* return the expanded value */
