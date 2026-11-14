@@ -51,6 +51,7 @@ import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -643,6 +644,34 @@ public class FeignTest {
 
     assertThat("success!").isEqualTo(api.post());
     assertThat(server.getRequestCount()).isEqualTo(2);
+  }
+
+  @Test
+  void retriesOnSocketTimeoutException() throws Exception {
+    int[] attempts = {0};
+
+    TestInterface api =
+        Feign.builder()
+            .client(
+                (request, options) -> {
+                  if (attempts[0]++ == 0) {
+                    throw new SocketTimeoutException("Read timed out");
+                  }
+
+                  return Response.builder()
+                      .status(200)
+                      .reason("OK")
+                      .request(request)
+                      .headers(Collections.emptyMap())
+                      .body("success!", Util.UTF_8)
+                      .build();
+                })
+            .decoder(new StringDecoder())
+            .retryer(new DefaultRetryer(1, 1, 2))
+            .target(TestInterface.class, "http://localhost");
+
+    assertThat(api.post()).isEqualTo("success!");
+    assertThat(attempts[0]).isEqualTo(2);
   }
 
   @Test
