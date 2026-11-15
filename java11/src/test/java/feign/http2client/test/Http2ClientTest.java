@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -403,6 +404,129 @@ public class Http2ClientTest extends AbstractClientTest {
     assertThat(recordedRequest.getHeader("Accept")).isEqualToIgnoringCase("*/*");
     assertThat(recordedRequest.getHeader("Content-Length")).isEqualToIgnoringCase("3");
     assertThat(recordedRequest.getBody().readUtf8()).isEqualToIgnoringCase("foo");
+  }
+
+  /**
+   * Regression test for issue #2689: since the client switched to {@code
+   * BodyHandlers.ofInputStream()}, a malformed response chunk fails only when the (now lazy) body
+   * is read, after {@code Http2Client#execute} returned. The IOException then escaped the feign
+   * invocation instead of being classified as a retryable {@link RetryableException}, so retries
+   * never fired.
+   *
+   * <p>Emulates WireMock's {@code Fault.MALFORMED_RESPONSE_CHUNK}: valid headers with chunked
+   * transfer encoding followed by garbage where a chunk size line belongs. OkHttp's MockWebServer
+   * no longer ships a policy for malformed chunks, so this uses a raw socket, like {@code
+   * getWithRequestBody()}.
+   */
+  @Test
+  void malformedResponseChunkSurfacesAsRetryableException() throws Exception {
+    // three attempts per invocation, two invocations: a retryer that makes an attempt only
+    // after the previous failure was classified as retryable
+    final int expectedAttempts = 6;
+    try (ServerSocket httpServer = new ServerSocket(0, 10, InetAddress.getLoopbackAddress())) {
+      final AtomicInteger attempts = new AtomicInteger();
+      final Thread serverThread =
+          new Thread(
+              () -> {
+                while (true) {
+                  try (Socket socket = httpServer.accept()) {
+                    socket.setSoTimeout(5000);
+                    drainRequest(socket.getInputStream());
+                    // the headers are valid, the chunk framing is not: the client reads
+                    // "Malformed response chunk!" where a chunk size line belongs
+                    socket
+                        .getOutputStream()
+                        .write(
+                            ("HTTP/1.1 200 OK\r\n"
+                                    + "Transfer-Encoding: chunked\r\n"
+                                    + "\r\n"
+                                    + "Malformed response chunk!\r\n")
+                                .getBytes(UTF_8));
+                    socket.getOutputStream().flush();
+                    Thread.sleep(200); // keep the socket open, so the failure is parsing, not EOF
+                  } catch (IOException | InterruptedException e) {
+                    return;
+                  }
+                }
+              });
+      serverThread.start();
+
+      final TestInterface api =
+          newBuilder()
+              .retryer(new CountingRetryer(attempts))
+              .target(TestInterface.class, "http://localhost:" + httpServer.getLocalPort());
+
+      // a Response return type reads the body outside of feign: the malformed chunk must not
+      // escape as a raw IOException, it must surface as a retryable exception
+      assertThrows(RetryableException.class, () -> api.post("some text"));
+
+      // a decoded return type must fail as retryable too, not as the non-retryable
+      // FeignException that errorReading produces once execute() has returned
+      assertThrows(RetryableException.class, () -> api.get());
+
+      // every attempt failed as retryable and was retried until the retryer gave up
+      assertThat(attempts.get()).isEqualTo(expectedAttempts);
+
+      httpServer.close();
+      serverThread.join(5000);
+    }
+  }
+
+  /** A bounded retryer that counts every attempt it handles, across all invocations. */
+  private static final class CountingRetryer implements Retryer {
+    private final AtomicInteger attempts;
+    private int invocationAttempts;
+
+    private CountingRetryer(AtomicInteger attempts) {
+      this.attempts = attempts;
+    }
+
+    @Override
+    public void continueOrPropagate(RetryableException e) {
+      attempts.incrementAndGet();
+      if (invocationAttempts++ >= 2) {
+        throw e;
+      }
+      try {
+        Thread.sleep(1);
+      } catch (InterruptedException interruptedException) {
+        Thread.currentThread().interrupt();
+        throw e;
+      }
+    }
+
+    @Override
+    public Retryer clone() {
+      return new CountingRetryer(attempts);
+    }
+  }
+
+  /** Reads the request head and, if present, the Content-Length framed body. */
+  private static void drainRequest(InputStream in) throws IOException {
+    final StringBuilder head = new StringBuilder();
+    final byte[] buffer = new byte[8192];
+    while (head.indexOf("\r\n\r\n") == -1) {
+      final int read = in.read(buffer);
+      if (read == -1) {
+        return;
+      }
+      head.append(new String(buffer, 0, read, UTF_8));
+    }
+    long contentLength = 0;
+    for (String line : head.substring(0, head.indexOf("\r\n\r\n")).split("\r\n")) {
+      if (line.toLowerCase().startsWith("content-length:")) {
+        contentLength = Long.parseLong(line.substring(line.indexOf(':') + 1).trim());
+      }
+    }
+    long consumed = head.length() - head.indexOf("\r\n\r\n") - 4;
+    final byte[] sink = new byte[8192];
+    while (consumed < contentLength) {
+      final int read = in.read(sink, 0, (int) Math.min(sink.length, contentLength - consumed));
+      if (read == -1) {
+        return;
+      }
+      consumed += read;
+    }
   }
 
   @Override
