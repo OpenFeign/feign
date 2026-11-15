@@ -1266,6 +1266,27 @@ public class FeignTest {
   }
 
   @Test
+  void responseInterceptorSeesElapsedTime() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    AtomicReference<Long> elapsedTimeRef = new AtomicReference<>();
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(
+                (invocationContext, chain) -> {
+                  elapsedTimeRef.set(invocationContext.elapsedTime());
+                  return chain.next(invocationContext);
+                })
+            .target("http://localhost:" + server.getPort());
+
+    assertThat(api.post()).isEqualTo("foo");
+    assertThat(elapsedTimeRef.get())
+        .as("ResponseInterceptor did not see the request elapsed time")
+        .isNotNull()
+        .isGreaterThanOrEqualTo(0L);
+  }
+
+  @Test
   void responseInterceptorChain() throws Exception {
     String location = "https://redirect.example.com";
     server.enqueue(new MockResponse().setResponseCode(302).setHeader("Location", location));

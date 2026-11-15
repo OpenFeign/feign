@@ -101,7 +101,8 @@ public class ResponseHandler {
               decodeVoid,
               decodeErrorResponses,
               response,
-              returnType));
+              returnType,
+              elapsedTime));
     } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
