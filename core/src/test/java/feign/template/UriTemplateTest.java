@@ -334,6 +334,39 @@ class UriTemplateTest {
   }
 
   @Test
+  void simpleListExpansionKeepsEmptyMembersWithoutExtraSeparators() {
+    UriTemplate uriTemplate = UriTemplate.create("/path/{ids}/end", Util.UTF_8);
+
+    /* a single empty member expands to nothing, not a stray comma */
+    assertThat(uriTemplate.expand(Collections.singletonMap("ids", Collections.singletonList(""))))
+        .isEqualToIgnoringCase("/path//end");
+
+    /* leading empty members must not produce more separators than members */
+    List<String> values = new ArrayList<>();
+    values.add("");
+    values.add("");
+    values.add("c");
+    assertThat(uriTemplate.expand(Collections.singletonMap("ids", values)))
+        .isEqualToIgnoringCase("/path/,,c/end");
+  }
+
+  @Test
+  void pathStyleListExpansionKeepsEmptyMembers() {
+    UriTemplate uriTemplate = UriTemplate.create("{;list}", Util.UTF_8);
+
+    /* a single empty member still carries the variable name */
+    assertThat(uriTemplate.expand(Collections.singletonMap("list", Collections.singletonList(""))))
+        .isEqualToIgnoringCase(";list=");
+
+    List<String> values = new ArrayList<>();
+    values.add("red");
+    values.add("");
+    values.add("blue");
+    assertThat(uriTemplate.expand(Collections.singletonMap("list", values)))
+        .isEqualToIgnoringCase(";list=red;list=;list=blue");
+  }
+
+  @Test
   void pathStyleExpansionSupportedWithMap() {
     String template = "/server/matrixParams{;parameters}";
     Map<String, Object> parameters = new LinkedHashMap<>();
