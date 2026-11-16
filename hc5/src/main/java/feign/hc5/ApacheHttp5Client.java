@@ -156,7 +156,13 @@ public final class ApacheHttp5Client implements Client {
     // request body
     // final Body requestBody = request.requestBody();
     byte[] data = request.body();
-    if (data != null) {
+    // GET and HEAD are bodyless by RFC 7231 semantics; when their body is absent or
+    // empty, no entity is set so the Apache client does not send a 'Content-Length: 0'
+    // header, which picky load balancers reject (see #2085). Every other method keeps
+    // the empty entity, so an intentionally empty body still sends 'Content-Length: 0'.
+    boolean omitEmptyEntity =
+        canOmitEmptyEntity(request.httpMethod()) && (data == null || data.length == 0);
+    if (data != null && !omitEmptyEntity) {
       HttpEntity entity;
       if (request.isBinary()) {
         entity = new ByteArrayEntity(data, null);
@@ -176,11 +182,27 @@ public final class ApacheHttp5Client implements Client {
         entity = new DeflateCompressingEntity(entity);
       }
       requestBuilder.setEntity(entity);
-    } else {
+    } else if (!omitEmptyEntity) {
       requestBuilder.setEntity(new ByteArrayEntity(new byte[0], null));
     }
 
     return requestBuilder.build();
+  }
+
+  /**
+   * Whether a request whose body is absent or empty can be sent without an (empty) entity. GET and
+   * HEAD are bodyless per RFC 7231, and Apache HttpClient advertises 'Content-Length: 0' for an
+   * empty entity, which picky load balancers reject (see #2085). Every other method keeps the empty
+   * entity, so its request shape stays as before.
+   */
+  private static boolean canOmitEmptyEntity(Request.HttpMethod httpMethod) {
+    switch (httpMethod) {
+      case GET:
+      case HEAD:
+        return true;
+      default:
+        return false;
+    }
   }
 
   private ContentType getContentType(Request request) {
