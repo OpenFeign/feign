@@ -61,4 +61,28 @@ By default a `RequestKey` with headers only matches a request that has exactly t
   mockClient.verifyOne(createContributor);
 ```
 
+##### Matching encoded URLs
+
+By default the URL of each request is decoded before it is matched, so a request sent to `/files/a%2Fb` matches `/files/a/b`. Use `matchEncodedUrls()` to match URLs exactly as the client sends them. Stubs and verifications then use the encoded form. Call it before the client executes any request:
+
+```
+  interface Files {
+    @RequestLine(value = "GET /files/{path}", decodeSlash = false)
+    String file(@Param("path") String path);
+  }
+
+  mockClient = new MockClient()
+      .matchEncodedUrls()
+      .ok(HttpMethod.GET, "/files/a%2Fb", "contents");
+
+  Files files = Feign.builder()
+      .client(mockClient)
+      .target(new MockTarget<>(Files.class));
+
+  files.file("a/b");
+
+  mockClient.verifyOne(HttpMethod.GET, "/files/a%2Fb");
+  mockClient.verifyNever(HttpMethod.GET, "/files/a/b");
+```
+
 For more comprehensive examples take a look at https://github.com/OpenFeign/feign/blob/master/mock/src/test/java/feign/mock/MockClientTest.java[MockClientTest].
