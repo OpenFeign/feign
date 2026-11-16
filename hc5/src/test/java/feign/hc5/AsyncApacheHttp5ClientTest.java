@@ -83,7 +83,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.concurrent.FutureCallback;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -638,6 +640,63 @@ public class AsyncApacheHttp5ClientTest {
           .isEqualTo("timeout reading POST http://localhost:" + server.getPort() + "/");
       assertThat(e.contentUTF8()).isEqualTo("");
     }
+  }
+
+  /**
+   * The callback created by the client runs on one of the http client's I/O dispatch threads, where
+   * thread-local state of the calling thread is no longer available. The future callback factory is
+   * applied on the calling thread and may wrap the callback to carry that state over, for example
+   * SLF4J's MDC. See <a href="https://github.com/OpenFeign/feign/issues/2439">#2439</a>.
+   */
+  @Test
+  void futureCallbackFactoryDecoratesCallback() throws Throwable {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    final AtomicReference<FutureCallback<SimpleHttpResponse>> delegateSeen =
+        new AtomicReference<>();
+    final AtomicReference<Thread> factoryThread = new AtomicReference<>();
+    final AtomicReference<String> contextSeenOnCallbackThread = new AtomicReference<>();
+    // stands in for slf4j MDC, which is not on the test classpath
+    final ThreadLocal<String> callerContext = new ThreadLocal<>();
+    callerContext.set("request-42");
+
+    final AsyncApacheHttp5Client client = new AsyncApacheHttp5Client();
+    client.setFutureCallbackFactory(
+        delegate -> {
+          delegateSeen.set(delegate);
+          factoryThread.set(Thread.currentThread());
+          // captured on the request thread, restored on the callback thread
+          final String context = callerContext.get();
+          return new FutureCallback<SimpleHttpResponse>() {
+
+            @Override
+            public void completed(SimpleHttpResponse httpResponse) {
+              contextSeenOnCallbackThread.set(context);
+              delegate.completed(httpResponse);
+            }
+
+            @Override
+            public void failed(Exception ex) {
+              delegate.failed(ex);
+            }
+
+            @Override
+            public void cancelled() {
+              delegate.cancelled();
+            }
+          };
+        });
+
+    final TestInterfaceAsync api =
+        AsyncFeign.<HttpClientContext>builder()
+            .client(client)
+            .target(TestInterfaceAsync.class, "http://localhost:" + server.getPort());
+
+    assertThat(unwrap(api.post())).isEqualTo("foo");
+
+    assertThat(delegateSeen.get()).isNotNull();
+    assertThat(factoryThread.get()).isEqualTo(Thread.currentThread());
+    assertThat(contextSeenOnCallbackThread.get()).isEqualTo("request-42");
   }
 
   @SuppressWarnings("deprecation")
