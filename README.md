@@ -979,6 +979,14 @@ public class Example {
 }
 ```
 
+`@Body` parses values containing `{` as templates. In particular, `@Body("{}")` is rejected
+as an empty expression at client creation. A static `@Body("%7B%7D")` value is sent as written
+and is not URL-decoded.
+
+For a literal JSON document, including `{}`, use an unannotated `String` or `byte[]` body
+parameter with the default encoder, and specify a `Content-Type` header. See
+[Encoders](#encoders) for an example. A custom encoder may serialize a `String` differently.
+
 ### Headers
 Feign supports settings headers on requests either as part of the api or as part of the client
 depending on the use case.
