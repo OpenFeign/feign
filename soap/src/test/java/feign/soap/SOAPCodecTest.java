@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPFactory;
@@ -473,6 +474,142 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
                 new SOAPDecoder(new JAXBContextFactory.Builder().build())
                     .decode(response, byte[].class))
         .isEmpty();
+  }
+
+  @Test
+  void decodesMultipartSoapWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(multipartXopResponse(), GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void doesntDecodeMultipartSoapWithoutContentTypePropagation() {
+    SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
+
+    assertThrows(
+        feign.codec.DecodeException.class,
+        () -> decoder.decode(multipartXopResponse(), GetPrice.class));
+  }
+
+  @Test
+  void decodesSoap1_2WithDynamicProtocolWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    String mockSoapEnvelop =
+"""
+<?xml version="1.0" encoding="UTF-8" ?>\
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">\
+<env:Header/>\
+<env:Body>\
+<GetPrice>\
+<Item>Apples</Item>\
+</GetPrice>\
+</env:Body>\
+</env:Envelope>\
+""";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(
+                Collections.singletonMap(
+                    Util.CONTENT_TYPE,
+                    Collections.singletonList("application/soap+xml; charset=UTF-8")))
+            .body(mockSoapEnvelop, UTF_8)
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .withSOAPProtocol(SOAPConstants.DYNAMIC_SOAP_PROTOCOL)
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void decodesSoapWithoutContentTypeHeaderWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .body(
+                """
+                <?xml version="1.0" encoding="UTF-8" ?>\
+                <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+                <SOAP-ENV:Body>\
+                <GetPrice>\
+                <Item>Apples</Item>\
+                </GetPrice>\
+                </SOAP-ENV:Body>\
+                </SOAP-ENV:Envelope>\
+                """,
+                UTF_8)
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
+  }
+
+  /** A SOAP 1.1 envelope packaged as MTOM/XOP, as sent by e.g. JAX-WS services with MTOM on. */
+  private static Response multipartXopResponse() {
+    String body =
+        """
+        --uuid:boundary\r
+        Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"\r
+        Content-Transfer-Encoding: binary\r
+        Content-ID: <root.message@example.com>\r
+        \r
+        <?xml version="1.0" encoding="UTF-8" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Body>\
+        <GetPrice>\
+        <Item>Apples</Item>\
+        </GetPrice>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\r
+        --uuid:boundary--\r
+        """;
+
+    return Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(
+            Collections.singletonMap(
+                Util.CONTENT_TYPE,
+                Collections.singletonList(
+                    "multipart/related; type=\"application/xop+xml\"; boundary=\"uuid:boundary\";"
+                        + " start=\"<root.message@example.com>\"; start-info=\"text/xml\"")))
+        .body(body, UTF_8)
+        .build();
   }
 
   @Test
