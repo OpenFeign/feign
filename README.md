@@ -1858,3 +1858,28 @@ public interface DownloadClient {
   }
 }
 ```
+
+### Reusing native request binding in custom transports
+
+A custom method handler can reuse Feign's argument expansion and body encoding without
+executing a `Client`. This is useful for subscription-based transports such as SSE,
+where the response must remain a live stream rather than a buffered `Response` body:
+
+```java
+RequestTemplateFactory factory = RequestTemplateFactory.forMethod(
+    target, methodMetadata, encoder, queryMapEncoder);
+
+// Run this on each invocation or subscription, not when creating the API proxy.
+RequestTemplate template = factory.create(arguments);
+for (RequestInterceptor interceptor : interceptors) {
+  interceptor.apply(template);
+}
+Request request = target.apply(template);
+// Dispatch request through the custom transport.
+```
+
+The factory sends no HTTP request and defines no response decoding or retry policy.
+Each call produces an independent template with the same binding rules as standard Feign
+(including body encoding, parameter expanders, URI arguments, query maps, and header maps).
+Interceptors and target application remain the custom handler's responsibility. This is
+an extension point for transports, not built-in SSE parsing or connection-pool management.
