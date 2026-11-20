@@ -641,6 +641,35 @@ public class Example {
 }
 ```
 
+A `ResponseMapper` can also add headers before decoding. `Response.headers()` is read-only, so
+copy the headers and return a rebuilt response.
+
+```java
+import feign.Feign;
+import feign.codec.Decoder;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
+
+class HeaderExample {
+  static Feign.Builder withClientSource(Decoder decoder) {
+    return Feign.builder().mapAndDecode(
+        (response, type) -> {
+          Map<String, Collection<String>> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+          headers.putAll(response.headers());
+          headers.put("X-Client-Source", Collections.singletonList("feign"));
+          return response.toBuilder().headers(headers).build();
+        },
+        decoder);
+  }
+}
+```
+
+The mapper runs when Feign calls the decoder. To enrich headers returned to callers through
+`Response` or `TypedResponse.headers()`, decorate the `Client` and return the enriched response
+from `Client.execute`.
+
 If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
 
 Here's how to configure Stream decoder without delegate decoder:
