@@ -74,6 +74,40 @@ val api = CoroutineFeign.builder<GitHubApi>()
 val repositories = api.listRepositories("openfeign")
 ```
 
+## Server-Sent Events (SSE) streaming
+
+`WebClientSseClient` implements the `SseTransport` interface from
+[`feign-kotlin`](../kotlin/README.md). It executes `@Sse` methods of a `CoroutineFeign` client as
+live streams: Spring's standard SSE codec decodes the events incrementally and nothing aggregates
+a 2xx response body. Requests are translated with the same shared rules as the buffered
+`WebClientAsyncClient` (identical header and body semantics).
+
+```kotlin
+interface AiApi {
+  @RequestLine("POST /chat/completions")
+  @Headers("Content-Type: application/json", "Accept: text/event-stream")
+  @Sse
+  suspend fun chatStream(body: ChatRequest): Flow<SseEvent>
+}
+
+val api = CoroutineFeign.builder<AiApi>()
+  .client(WebClientAsyncClient<Any>(builder) as AsyncClient<AiApi>) // buffered methods
+  .sseTransport(WebClientSseClient(builder))                       // @Sse methods
+  .encoder(JacksonEncoder(objectMapper))
+  .target(AiApi::class.java, "https://ai.example.com/v1")
+```
+
+Behavior notes for the streaming transport:
+
+- Only error responses (4xx/5xx) are buffered — error bodies are bounded — and surfaced as a
+  `FeignException` carrying the status and body, mirroring how the buffered client keeps error
+  statuses under Feign's control. 2xx bodies are never aggregated.
+- The per-request read timeout is deliberately not applied as an overall timeout: it would cap
+  the duration of the whole stream instead of protecting against a stalled one. Connect timeouts,
+  idle timeouts and response shaping belong to the configured WebClient connector.
+- Cancelling the flow cancels the exchange and closes the connection.
+- Each subscription sends a new request; partially consumed streams are never retried.
+
 ## Spring configuration
 
 A Spring-managed `WebClient.Builder` can be passed to the adapter so its connector, filters,
@@ -117,7 +151,9 @@ GitHub github = AsyncFeign.builder()
 
 ## Behavior notes
 
-- Response bodies are fully aggregated in memory before decoding; there is no streaming support.
+- Response bodies of buffered `AsyncClient` requests are fully aggregated in memory before
+  decoding. `@Sse` methods executed through `WebClientSseClient` stream instead; see the section
+  above.
 - Error statuses (4xx/5xx) are delivered as regular Feign `Response` objects and remain under the
   control of the `ErrorDecoder`; the WebClient is never allowed to turn them into exceptions.
 - The per-request read timeout is applied as an overall reactive timeout that cancels the request.

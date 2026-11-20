@@ -33,12 +33,20 @@
     <!-- Spring Framework 7 requires Java 17 -->
     <main.java.version>17</main.java.version>
     <reactor-netty.version>1.3.8</reactor-netty.version>
+    <kotlinx.coroutines.version>1.11.0</kotlinx.coroutines.version>
+    <reactor.version>3.8.8</reactor.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-core</artifactId>
+    </dependency>
+
+    <!-- The SseTransport SPI and SseEvent type implemented by WebClientSseClient. -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-kotlin</artifactId>
     </dependency>
 
     <dependency>
@@ -69,7 +77,19 @@
     <!-- testing -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-kotlin</artifactId>
+      <artifactId>feign-jackson</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-test</artifactId>
+      <version>${kotlinx.coroutines.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-test</artifactId>
+      <version>${reactor.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

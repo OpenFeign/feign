@@ -28,6 +28,8 @@ import feign.Target.HardCodedTarget;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -62,10 +64,14 @@ public class CoroutineFeign<C> {
 
   private static class CoroutineFeignInvocationHandler<T> implements InvocationHandler {
 
-    private final T instance;
+    private static final Object[] NO_ARGS = {};
 
-    CoroutineFeignInvocationHandler(T instance) {
+    private final T instance;
+    private final Map<Method, SseMethodHandler> sseHandlers;
+
+    CoroutineFeignInvocationHandler(T instance, Map<Method, SseMethodHandler> sseHandlers) {
       this.instance = instance;
+      this.sseHandlers = sseHandlers;
     }
 
     @Override
@@ -83,6 +89,13 @@ public class CoroutineFeign<C> {
         return hashCode();
       } else if ("toString".equals(method.getName()) && method.getParameterCount() == 0) {
         return toString();
+      }
+
+      final SseMethodHandler sseHandler = sseHandlers.getOrDefault(method, null);
+      if (sseHandler != null) {
+        // Streaming methods return the cold flow directly; a suspend declaration only changes
+        // the JVM signature and adds a continuation argument that must not be awaited here.
+        return sseHandler.invoke(args != null ? args : NO_ARGS);
       }
 
       if (MethodKt.isSuspend(method)) {
@@ -122,6 +135,7 @@ public class CoroutineFeign<C> {
         new DefaultAsyncClient<>(
             new DefaultClient(null, null), LazyInitializedExecutorService.instance);
     private MethodInfoResolver methodInfoResolver = KotlinMethodInfo::createInstance;
+    private SseTransport sseTransport;
 
     @Deprecated
     public CoroutineBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
@@ -131,6 +145,24 @@ public class CoroutineFeign<C> {
 
     public CoroutineBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
+      return this;
+    }
+
+    /**
+     * Registers the transport that executes {@link Sse}-annotated methods, for example {@code
+     * feign-webflux}'s {@code WebClientSseClient}. The buffered {@link AsyncClient} configured
+     * through {@link #client(AsyncClient)} keeps handling every other method unchanged.
+     *
+     * <p>Required when the target interface declares {@code @Sse} methods; creating a proxy for
+     * such an interface without a transport fails with an explanatory {@link
+     * IllegalStateException}. Interfaces without {@code @Sse} methods do not need one.
+     *
+     * <p>Unlike the buffered {@link AsyncClient}, a transport does not receive the request context
+     * supplied through {@link #defaultContextSupplier(AsyncContextSupplier)}; requests that need it
+     * should resolve it in a {@link feign.RequestInterceptor} instead.
+     */
+    public CoroutineBuilder<C> sseTransport(SseTransport sseTransport) {
+      this.sseTransport = Objects.requireNonNull(sseTransport, "sseTransport must not be null");
       return this;
     }
 
@@ -184,31 +216,48 @@ public class CoroutineFeign<C> {
         asyncBuilder.dismiss404();
       }
       AsyncFeign<C> asyncFeign = (AsyncFeign<C>) asyncBuilder.build();
-      return new CoroutineFeign<>(asyncFeign);
+      SseMethodSupport sseMethodSupport =
+          sseTransport == null
+              ? null
+              : new SseMethodSupport(
+                  sseTransport, contract, encoder, queryMapEncoder, options, requestInterceptors);
+      return new CoroutineFeign<>(asyncFeign, sseMethodSupport);
     }
   }
 
   private final AsyncFeign<C> feign;
+  private final SseMethodSupport sseMethodSupport;
 
   protected CoroutineFeign(AsyncFeign<C> feign) {
+    this(feign, null);
+  }
+
+  protected CoroutineFeign(AsyncFeign<C> feign, SseMethodSupport sseMethodSupport) {
     this.feign = feign;
+    this.sseMethodSupport = sseMethodSupport;
   }
 
   public <T> T newInstance(Target<T> target) {
     T instance = feign.newInstance(target);
-    return wrap(target.type(), instance);
+    return wrap(target, instance);
   }
 
   public <T> T newInstance(Target<T> target, C context) {
     T instance = feign.newInstance(target, context);
-    return wrap(target.type(), instance);
+    return wrap(target, instance);
   }
 
-  private <T> T wrap(Class<T> type, T instance) {
-    return type.cast(
-        Proxy.newProxyInstance(
-            type.getClassLoader(),
-            new Class<?>[] {type},
-            new CoroutineFeignInvocationHandler<>(instance)));
+  private <T> T wrap(Target<T> target, T instance) {
+    // Fails fast when @Sse methods are declared without a configured transport, and validates
+    // their return types before any request is attempted.
+    Map<Method, SseMethodHandler> sseHandlers =
+        SseMethodSupport.handlersFor(target, sseMethodSupport);
+    return target
+        .type()
+        .cast(
+            Proxy.newProxyInstance(
+                target.type().getClassLoader(),
+                new Class<?>[] {target.type()},
+                new CoroutineFeignInvocationHandler<>(instance, sseHandlers)));
   }
 }

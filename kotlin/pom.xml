@@ -63,10 +63,24 @@
       <version>${kotlinx.coroutines.version}</version>
     </dependency>
 
+    <!-- Publisher, the return type of the SseTransport SPI. -->
+    <dependency>
+      <groupId>org.reactivestreams</groupId>
+      <artifactId>reactive-streams</artifactId>
+      <version>1.0.4</version>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-java11</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-test</artifactId>
+      <version>${kotlinx.coroutines.version}</version>
       <scope>test</scope>
     </dependency>
 
