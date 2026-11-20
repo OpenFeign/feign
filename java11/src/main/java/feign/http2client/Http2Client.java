@@ -24,9 +24,12 @@ import feign.Request.Options;
 import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.UncheckedIOException;
 import java.lang.ref.SoftReference;
 import java.net.URI;
@@ -74,6 +77,12 @@ public class Http2Client implements Client, AsyncClient<Object> {
   private volatile ScheduledExecutorService readTimeoutScheduler;
 
   /**
+   * Maximum number of response body bytes read eagerly, mirroring the size bound feign core uses
+   * when it buffers response bodies ({@code InvocationContext.MAX_RESPONSE_BUFFER_SIZE}).
+   */
+  private static final int MAX_RESPONSE_HEAD_SIZE = 8192;
+
+  /**
    * Creates the new Http2Client using following defaults:
    *
    * <ul>
@@ -119,7 +128,7 @@ public class Http2Client implements Client, AsyncClient<Object> {
       throw new IOException(e);
     }
 
-    return withReadTimeout(toFeignResponse(request, httpResponse), options);
+    return toFeignResponse(request, httpResponse, bufferResponseHead(httpResponse.body(), options));
   }
 
   @Override
@@ -140,13 +149,16 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   protected Response toFeignResponse(Request request, HttpResponse<InputStream> httpResponse) {
+    return toFeignResponse(request, httpResponse, httpResponse.body());
+  }
+
+  protected Response toFeignResponse(
+      Request request, HttpResponse<InputStream> httpResponse, InputStream body) {
     final OptionalLong length = httpResponse.headers().firstValueAsLong("Content-Length");
     Integer contentLength =
         length.isPresent() && length.getAsLong() >= 0 && length.getAsLong() <= Integer.MAX_VALUE
             ? (int) length.getAsLong()
             : null;
-
-    InputStream body = httpResponse.body();
 
     if (httpResponse.headers().allValues(CONTENT_ENCODING).contains(ENCODING_GZIP)) {
       try {
@@ -188,6 +200,65 @@ public class Http2Client implements Client, AsyncClient<Object> {
                 options.readTimeoutUnit().toNanos(options.readTimeout())),
             response.body().length())
         .build();
+  }
+
+  /**
+   * Buffers the head (up to {@value #MAX_RESPONSE_HEAD_SIZE} bytes) of the raw response body, so
+   * that transport level failures on small responses - eg a malformed chunked transfer encoding -
+   * surface as an IOException from {@link #execute(Request, Options)}.
+   *
+   * <p>Since the body is delivered with {@link BodyHandlers#ofInputStream()}, {@link
+   * HttpClient#send} returns as soon as the headers arrive and the body is only read later. A
+   * malformed or truncated body then fails during decoding, after {@link #execute(Request,
+   * Options)} returned successfully; feign classifies such failures as {@code errorReading} instead
+   * of the retryable {@code errorExecuting}, and with a {@link Response} return type the raw
+   * IOException escapes the invocation entirely. Reading the head here restores the retryable
+   * classification responses had when the client buffered the full body via {@code
+   * BodyHandlers.ofByteArray()}.
+   *
+   * <p>The read is applied to the raw, pre-decompression body: decompression failures are decoder
+   * concerns and keep surfacing where they did before. Bodies larger than the buffer keep streaming
+   * - the buffered head is re-attached in front of the remaining stream - preserving the memory
+   * behavior that motivated the switch to {@code ofInputStream()}. The read timeout guards both the
+   * eager read and the remaining stream, which is returned with the timeout wrapper already in
+   * place.
+   */
+  private InputStream bufferResponseHead(InputStream body, Options options) throws IOException {
+    final InputStream stream = withReadTimeout(body, options);
+    if (stream == null) {
+      return null;
+    }
+    final byte[] head;
+    try {
+      head = readAtMost(stream, MAX_RESPONSE_HEAD_SIZE + 1);
+    } catch (IOException e) {
+      ensureClosed(stream);
+      throw e;
+    }
+    if (head.length > MAX_RESPONSE_HEAD_SIZE) {
+      return new SequenceInputStream(new ByteArrayInputStream(head), stream);
+    }
+    ensureClosed(stream);
+    return new ByteArrayInputStream(head);
+  }
+
+  private InputStream withReadTimeout(InputStream body, Options options) {
+    if (body == null || options.readTimeout() <= 0) {
+      return body;
+    }
+    return new ReadTimeoutInputStream(
+        body, readTimeoutScheduler(), options.readTimeoutUnit().toNanos(options.readTimeout()));
+  }
+
+  private static byte[] readAtMost(InputStream stream, int limit) throws IOException {
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final byte[] chunk = new byte[1024];
+    int read;
+    while (out.size() < limit
+        && (read = stream.read(chunk, 0, Math.min(chunk.length, limit - out.size()))) != -1) {
+      out.write(chunk, 0, read);
+    }
+    return out.toByteArray();
   }
 
   private ScheduledExecutorService readTimeoutScheduler() {
