@@ -961,16 +961,20 @@ public class FeignTest {
   @Test
   void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
+    RuntimeException cause = new RuntimeException();
 
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
                 (_, _, _) -> {
-                  throw new RuntimeException();
+                  throw cause;
                 })
             .target("http://localhost:" + server.getPort());
 
-    assertThrows(EncodeException.class, () -> api.body(Arrays.asList("foo")));
+    EncodeException exception =
+        assertThrows(EncodeException.class, () -> api.body(Arrays.asList("foo")));
+    assertThat(exception.getMessage()).isNull();
+    assertThat(exception.getCause()).isSameAs(cause);
   }
 
   @Test
