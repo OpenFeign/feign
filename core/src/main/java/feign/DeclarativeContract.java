@@ -215,6 +215,40 @@ public abstract class DeclarativeContract extends BaseContract {
         (Class) annotation, (DeclarativeContract.ParameterAnnotationProcessor) processor);
   }
 
+  /**
+   * Registers every processor of {@code delegate} on this contract, except for annotations that one
+   * of {@code precedingDelegates} already handles at the same position (class, method or
+   * parameter). Used by {@link CompositeContract}.
+   */
+  void registerProcessorsOf(
+      DeclarativeContract delegate, List<DeclarativeContract> precedingDelegates) {
+    for (GuardedAnnotationProcessor processor : delegate.classAnnotationProcessors) {
+      registerClassAnnotation(
+          (Annotation annotation) ->
+              processor.test(annotation)
+                  && precedingDelegates.stream()
+                      .noneMatch(preceding -> preceding.handlesClassAnnotation(annotation)),
+          processor);
+    }
+    for (GuardedAnnotationProcessor processor : delegate.methodAnnotationProcessors) {
+      registerMethodAnnotation(
+          (Annotation annotation) ->
+              processor.test(annotation)
+                  && precedingDelegates.stream()
+                      .noneMatch(preceding -> preceding.handlesMethodAnnotation(annotation)),
+          processor);
+    }
+    delegate.parameterAnnotationProcessors.forEach(parameterAnnotationProcessors::putIfAbsent);
+  }
+
+  private boolean handlesClassAnnotation(Annotation annotation) {
+    return classAnnotationProcessors.stream().anyMatch(processor -> processor.test(annotation));
+  }
+
+  private boolean handlesMethodAnnotation(Annotation annotation) {
+    return methodAnnotationProcessors.stream().anyMatch(processor -> processor.test(annotation));
+  }
+
   @FunctionalInterface
   public interface AnnotationProcessor<E extends Annotation> {
 
