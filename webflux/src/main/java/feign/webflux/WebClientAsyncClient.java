@@ -21,8 +21,6 @@ import feign.AsyncClient;
 import feign.Request;
 import feign.Request.Options;
 import feign.Response;
-import feign.Util;
-import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,9 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -108,33 +104,7 @@ public class WebClientAsyncClient<C> implements AsyncClient<C> {
   }
 
   private WebClient.RequestHeadersSpec<?> toWebClientRequest(final Request request) {
-    final WebClient.RequestBodySpec spec =
-        webClient
-            .method(HttpMethod.valueOf(request.httpMethod().name()))
-            .uri(URI.create(request.url()));
-
-    boolean hasContentType = false;
-    for (final Map.Entry<String, Collection<String>> header : request.headers().entrySet()) {
-      // the transport computes Content-Length from the body it sends
-      if (Util.CONTENT_LENGTH.equalsIgnoreCase(header.getKey())) {
-        continue;
-      }
-      if (Util.CONTENT_TYPE.equalsIgnoreCase(header.getKey())) {
-        hasContentType = true;
-      }
-      spec.header(header.getKey(), header.getValue().toArray(new String[0]));
-    }
-
-    final byte[] body = request.body();
-    if (body == null) {
-      return spec;
-    }
-
-    if (!hasContentType) {
-      // writing a byte[] body requires a content type to select an HttpMessageWriter
-      spec.contentType(MediaType.APPLICATION_OCTET_STREAM);
-    }
-    return spec.bodyValue(body);
+    return WebClientRequests.create(webClient, request);
   }
 
   private Response toFeignResponse(final ResponseEntity<byte[]> entity, final Request request) {

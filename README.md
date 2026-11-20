@@ -1883,3 +1883,9 @@ Each call produces an independent template with the same binding rules as standa
 (including body encoding, parameter expanders, URI arguments, query maps, and header maps).
 Interceptors and target application remain the custom handler's responsibility. This is
 an extension point for transports, not built-in SSE parsing or connection-pool management.
+
+A built-in streaming path for Kotlin `CoroutineFeign` clients exists out of the box: methods
+annotated `@Sse` returning `Flow<SseEvent>` stream through the `SseTransport` SPI, with
+`feign-webflux`'s `WebClientSseClient` as the standard implementation. See the
+[`feign-kotlin`](https://github.com/OpenFeign/feign/blob/master/kotlin/README.md#server-sent-events-sse-streaming)
+README.
