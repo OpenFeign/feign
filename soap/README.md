@@ -62,3 +62,17 @@ troublesome when it is not possible to correct the XML at the source.
 To account for this situation, use the `useFirstChild` option on the `SOAPDecoder` builder.  This will instruct JAX be to use `SOAPBody#getFirstChild()`
 instead of `SOAPBody#extractContentAsDocument()`.  This will allow users to supply a `package-info.java` to manage the element namespaces
 explicitly and define what should occur if the namespace declarations are missing.
+
+Some services answer with a response that is not a plain SOAP envelope, for example an MTOM/XOP response sent as `multipart/related`.
+`SOAPMessage` can only read such a response when it knows its `Content-Type`. Use the `propagateContentType` option on the `SOAPDecoder`
+builder to pass the `Content-Type` header of the response to the `MessageFactory`. The content type must match the configured SOAP protocol;
+use `SOAPConstants.DYNAMIC_SOAP_PROTOCOL` to let it select the protocol.
+
+```java
+api = Feign.builder()
+     .decoder(new SOAPDecoder.Builder()
+         .withJAXBContextFactory(jaxbFactory)
+         .propagateContentType()
+         .build())
+     .target(MyApi.class, "http://api");
+```
