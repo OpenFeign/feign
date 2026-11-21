@@ -21,6 +21,7 @@ import feign.Response;
 import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 import io.micrometer.common.lang.Nullable;
+import io.micrometer.observation.Observation;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Pattern;
@@ -81,6 +82,11 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
   // There is no need to instantiate this class multiple times, but it may be extended,
   // hence protected visibility.
   protected SpringCompatibleFeignObservationConvention() {}
+
+  @Override
+  public boolean supportsContext(Observation.Context context) {
+    return context instanceof FeignContext;
+  }
 
   @Override
   public KeyValues getLowCardinalityKeyValues(FeignContext context) {
