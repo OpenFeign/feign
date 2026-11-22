@@ -364,6 +364,18 @@ public abstract class AbstractClientTest {
   }
 
   @Test
+  public void bodyKeepsRequestCharsetWithoutContentType() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.postWithoutContentType("日本語 àáâ");
+
+    String body = server.takeRequest().getBody().readUtf8();
+    assertThat(body).isEqualTo("日本語 àáâ");
+  }
+
+  @Test
   public void defaultCollectionFormat() throws Exception {
     server.enqueue(new MockResponse().setBody("body"));
 
@@ -624,6 +636,9 @@ public abstract class AbstractClientTest {
 
     @RequestLine("POST /")
     String postEmptyStringBody(String body);
+
+    @RequestLine("POST /")
+    String postWithoutContentType(String body);
 
     @RequestLine("PUT")
     String noPutBody();
