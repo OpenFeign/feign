@@ -163,7 +163,12 @@ public final class Request implements Serializable {
   private final String url;
   private final Map<String, Collection<String>> headers;
   private final Body body;
-  private final RequestTemplate requestTemplate;
+  /*
+   * Transient on purpose: the template references non-serializable types (Target implementations,
+   * compiled template patterns), which would make any serialized FeignException carrying this
+   * Request fail with NotSerializableException (gh-1465).
+   */
+  private final transient RequestTemplate requestTemplate;
   private final ProtocolVersion protocolVersion;
 
   /**
