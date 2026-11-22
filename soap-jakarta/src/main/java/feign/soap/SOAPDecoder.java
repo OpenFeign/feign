@@ -28,6 +28,7 @@ import jakarta.xml.ws.soap.SOAPFaultException;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 /**
  * Decodes SOAP responses using SOAPMessage and JAXB for the body part. <br>
@@ -81,17 +82,20 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
   private final JAXBContextFactory jaxbContextFactory;
   private final String soapProtocol;
   private final boolean useFirstChild;
+  private final boolean propagateContentType;
 
   public SOAPDecoder(JAXBContextFactory jaxbContextFactory) {
     this.jaxbContextFactory = jaxbContextFactory;
     this.soapProtocol = SOAPConstants.DEFAULT_SOAP_PROTOCOL;
     this.useFirstChild = false;
+    this.propagateContentType = false;
   }
 
   private SOAPDecoder(Builder builder) {
     this.soapProtocol = builder.soapProtocol;
     this.jaxbContextFactory = builder.jaxbContextFactory;
     this.useFirstChild = builder.useFirstChild;
+    this.propagateContentType = builder.propagateContentType;
   }
 
   @Override
@@ -110,7 +114,7 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
     try {
       SOAPMessage message =
           MessageFactory.newInstance(soapProtocol)
-              .createMessage(null, response.body().asInputStream());
+              .createMessage(mimeHeaders(response), response.body().asInputStream());
       if (message.getSOAPBody() != null) {
         if (message.getSOAPBody().hasFault()) {
           throw new SOAPFaultException(message.getSOAPBody().getFault());
@@ -134,10 +138,25 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
     return Util.emptyValueOf(type);
   }
 
+  private MimeHeaders mimeHeaders(Response response) {
+    if (!propagateContentType) {
+      return null;
+    }
+    MimeHeaders mimeHeaders = new MimeHeaders();
+    Collection<String> contentTypes = response.headers().get(Util.CONTENT_TYPE);
+    if (contentTypes != null) {
+      for (String contentType : contentTypes) {
+        mimeHeaders.addHeader(Util.CONTENT_TYPE, contentType);
+      }
+    }
+    return mimeHeaders;
+  }
+
   public static class Builder {
     String soapProtocol = SOAPConstants.DEFAULT_SOAP_PROTOCOL;
     JAXBContextFactory jaxbContextFactory;
     boolean useFirstChild = false;
+    boolean propagateContentType = false;
 
     public Builder withJAXBContextFactory(JAXBContextFactory jaxbContextFactory) {
       this.jaxbContextFactory = jaxbContextFactory;
@@ -166,6 +185,22 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
      */
     public Builder useFirstChild() {
       this.useFirstChild = true;
+      return this;
+    }
+
+    /**
+     * Passes the {@code Content-Type} header of the response to the {@link MessageFactory} when
+     * creating the {@link SOAPMessage}. This is required to read responses that are not a plain
+     * SOAP envelope, such as MTOM/XOP responses sent as {@code multipart/related}.
+     *
+     * <p>The propagated content type must match the configured SOAP protocol, e.g. {@code text/xml}
+     * for SOAP 1.1. Use {@link SOAPConstants#DYNAMIC_SOAP_PROTOCOL} to let the content type select
+     * the protocol. Disabled by default.
+     *
+     * @return the builder instance.
+     */
+    public Builder propagateContentType() {
+      this.propagateContentType = true;
       return this;
     }
 
