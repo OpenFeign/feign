@@ -29,15 +29,20 @@ public class EncodeException extends FeignException {
   private static final long serialVersionUID = 1L;
 
   /**
-   * @param message the reason for the failure.
+   * Creates an encoding failure with a required detail message.
+   *
+   * @param message the non-null reason for the failure.
    */
   public EncodeException(String message) {
     super(-1, checkNotNull(message, "message"));
   }
 
   /**
-   * @param message possibly null reason for the failure.
-   * @param cause the cause of the error.
+   * Creates an encoding failure with an underlying cause. Feign wraps exceptions from encoders
+   * using their original detail messages, which may be {@code null}.
+   *
+   * @param message the reason for the failure, which may be {@code null}.
+   * @param cause the non-null cause of the error.
    */
   public EncodeException(String message, Throwable cause) {
     super(-1, message, checkNotNull(cause, "cause"));

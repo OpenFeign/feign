@@ -357,6 +357,33 @@ public class BankService {
 }
 ```
 
+### Per-Call Timeouts
+
+A synchronous client method can take a `Request.Options` argument to override the
+builder settings for one invocation. Feign uses a non-null argument as request
+configuration and does not serialize it into the request body.
+
+```java
+interface AccountApi {
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id, Request.Options options);
+
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id);
+}
+
+AccountApi api = Feign.builder()
+    .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
+    .target(AccountApi.class, "https://api.examplebank.com");
+
+String account = api.getAccount("42",
+    new Request.Options(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS, true));
+```
+
+`getAccount("42", options)` uses the supplied timeouts for that invocation.
+In this example, `getAccount("42")` uses the builder defaults of 10 seconds to
+connect and 60 seconds to read.
+
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
@@ -640,6 +667,35 @@ public class Example {
   }
 }
 ```
+
+A `ResponseMapper` can also add headers before decoding. `Response.headers()` is read-only, so
+copy the headers and return a rebuilt response.
+
+```java
+import feign.Feign;
+import feign.codec.Decoder;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
+
+class HeaderExample {
+  static Feign.Builder withClientSource(Decoder decoder) {
+    return Feign.builder().mapAndDecode(
+        (response, type) -> {
+          Map<String, Collection<String>> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+          headers.putAll(response.headers());
+          headers.put("X-Client-Source", Collections.singletonList("feign"));
+          return response.toBuilder().headers(headers).build();
+        },
+        decoder);
+  }
+}
+```
+
+The mapper runs when Feign calls the decoder. To enrich headers returned to callers through
+`Response` or `TypedResponse.headers()`, decorate the `Client` and return the enriched response
+from `Client.execute`.
 
 If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
 
