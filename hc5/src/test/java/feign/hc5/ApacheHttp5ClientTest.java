@@ -18,7 +18,6 @@ package feign.hc5;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -197,16 +196,6 @@ public class ApacheHttp5ClientTest extends AbstractClientTest {
 
   private Request.Options buildRequestOptions(boolean followRedirects) {
     return new Request.Options(1, SECONDS, 1, SECONDS, followRedirects);
-  }
-
-  @Override
-  public void veryLongResponseNullLength() {
-    assumeTrue(false, "HC5 client seems to hang with response size equalto Long.MAX");
-  }
-
-  @Override
-  public void contentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue(false, "this test is flaky on windows, but works fine.");
   }
 
   @Path("/")

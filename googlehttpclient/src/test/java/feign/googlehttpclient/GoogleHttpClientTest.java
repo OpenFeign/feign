@@ -18,7 +18,6 @@ package feign.googlehttpclient;
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -28,6 +27,7 @@ import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
 import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class GoogleHttpClientTest extends AbstractClientTest {
@@ -36,49 +36,35 @@ public class GoogleHttpClientTest extends AbstractClientTest {
     return Feign.builder().client(new GoogleHttpClient());
   }
 
-  // Google http client doesn't support PATCH. See:
-  // https://github.com/googleapis/google-http-java-client/issues/167
-  @Override
-  public void noResponseBodyForPatch() {}
-
+  @Test
+  @Disabled("NetHttpTransport does not support PATCH")
   @Override
   public void patch() {}
 
-  // NetHttpTransport is backed by HttpURLConnection, which does not support QUERY.
+  @Test
+  @Disabled("NetHttpTransport does not support PATCH")
   @Override
-  public void query() throws Exception {}
+  public void noResponseBodyForPatch() {}
 
+  @Test
+  @Disabled("NetHttpTransport does not support QUERY")
+  @Override
+  public void query() {}
+
+  @Test
+  @Disabled("NetHttpTransport returns an empty body for 401 responses")
   @Override
   public void parsesUnauthorizedResponseBody() {}
 
-  /*
-   * Google HTTP client with NetHttpTransport does not support gzip and deflate compression
-   * out-of-the-box. You can replace the transport with Apache HTTP Client.
-   */
+  @Test
+  @Disabled("NetHttpTransport decompresses gzip but not deflate")
   @Override
-  public void canSupportGzip() throws Exception {
-    assumeFalse(false, "Google HTTP client client do not support gzip compression");
-  }
+  public void canSupportDeflate() {}
 
+  @Test
+  @Disabled("NetHttpTransport decompresses gzip but not deflate")
   @Override
-  public void canSupportGzipOnError() throws Exception {
-    assumeFalse(false, "Google HTTP client client do not support gzip compression");
-  }
-
-  @Override
-  public void canSupportDeflate() throws Exception {
-    assumeFalse(false, "Google HTTP client client do not support deflate compression");
-  }
-
-  @Override
-  public void canSupportDeflateOnError() throws Exception {
-    assumeFalse(false, "Google HTTP client client do not support deflate compression");
-  }
-
-  @Override
-  public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse(false, "Google HTTP client client do not support gzip compression");
-  }
+  public void canSupportDeflateOnError() {}
 
   @Test
   void contentTypeHeaderGetsAddedOnce() throws Exception {
