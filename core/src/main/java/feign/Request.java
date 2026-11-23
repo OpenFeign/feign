@@ -159,6 +159,12 @@ public final class Request implements Serializable {
     return new Request(httpMethod, url, headers, body, requestTemplate);
   }
 
+  /*
+   * Pinned to the value computed for 13.6 through 13.18, so Requests (and FeignExceptions carrying
+   * them) serialized by those versions stay readable now that requestTemplate is transient.
+   */
+  private static final long serialVersionUID = -4693079906963879248L;
+
   private final HttpMethod httpMethod;
   private final String url;
   private final Map<String, Collection<String>> headers;
@@ -513,6 +519,15 @@ public final class Request implements Serializable {
     }
   }
 
+  /**
+   * The {@link RequestTemplate} this request was built from.
+   *
+   * <p>May be {@code null}: it is not carried across serialization, so a deserialized request (for
+   * example, one attached to a deserialized {@link FeignException}) has none, and neither does a
+   * request created directly without a template.
+   *
+   * @return the originating template, or {@code null} if not available.
+   */
   @Experimental
   public RequestTemplate requestTemplate() {
     return this.requestTemplate;
@@ -525,6 +540,8 @@ public final class Request implements Serializable {
    */
   @Experimental
   public static class Body implements Serializable {
+
+    private static final long serialVersionUID = 7978564938517946659L;
 
     private transient Charset encoding;
 
