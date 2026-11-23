@@ -19,7 +19,6 @@ import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -96,16 +95,5 @@ public class GoogleHttpClientTest extends AbstractClientTest {
             entry("Content-Type", Collections.singletonList("text/plain")),
             entry("Content-Length", Collections.singletonList("3")))
         .hasMethod("POST");
-  }
-
-  /*
-   * NetHttpTransport hangs reading a response that declares a huge Content-Length but sends
-   * only a few bytes. The old shim used assumeFalse(false, ...) with JUnit 5's
-   * (condition, message) argument order, which never skipped anything: the test actually hangs
-   * on JDK 21 and below and passes on JDK 22+. Skip it explicitly on the JDKs where it hangs.
-   */
-  @Override
-  public void veryLongResponseNullLength() {
-    assumeTrue(Runtime.version().feature() >= 22, "NetHttpTransport hangs on JDK 21 and below");
   }
 }
