@@ -66,7 +66,10 @@ explicitly and define what should occur if the namespace declarations are missin
 Some services answer with a response that is not a plain SOAP envelope, for example an MTOM/XOP response sent as `multipart/related`.
 `SOAPMessage` can only read such a response when it knows its `Content-Type`. Use the `propagateContentType` option on the `SOAPDecoder`
 builder to pass the `Content-Type` header of the response to the `MessageFactory`. The content type must match the configured SOAP protocol;
-use `SOAPConstants.DYNAMIC_SOAP_PROTOCOL` to let it select the protocol.
+use `SOAPConstants.DYNAMIC_SOAP_PROTOCOL` to let it select the protocol. With the option on, `xop:Include` references in the
+envelope are resolved against the other MIME parts, so MTOM content can be bound to `byte[]` or `DataHandler` properties.
+A content type that does not match, or a reference to a missing part, fails with a `DecodeException`.
+This option is experimental and may change in a future release.
 
 ```java
 api = Feign.builder()

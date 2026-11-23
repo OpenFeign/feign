@@ -15,20 +15,32 @@
  */
 package feign.soap;
 
+import feign.Experimental;
 import feign.Response;
 import feign.Util;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
 import feign.codec.PredicatedDecoder;
 import feign.jaxb.JAXBContextFactory;
+import jakarta.activation.DataHandler;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
-import jakarta.xml.soap.*;
+import jakarta.xml.bind.attachment.AttachmentUnmarshaller;
+import jakarta.xml.soap.AttachmentPart;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.MimeHeaders;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPConstants;
+import jakarta.xml.soap.SOAPException;
+import jakarta.xml.soap.SOAPMessage;
 import jakarta.xml.ws.soap.SOAPFaultException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URLDecoder;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Decodes SOAP responses using SOAPMessage and JAXB for the body part. <br>
@@ -121,6 +133,9 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
         }
 
         Unmarshaller unmarshaller = jaxbContextFactory.createUnmarshaller((Class<?>) type);
+        if (message.countAttachments() > 0) {
+          unmarshaller.setAttachmentUnmarshaller(new SOAPAttachmentUnmarshaller(message));
+        }
 
         if (this.useFirstChild) {
           return unmarshaller.unmarshal(message.getSOAPBody().getFirstChild());
@@ -130,6 +145,8 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
       }
     } catch (SOAPException | JAXBException e) {
       throw new DecodeException(response.status(), e.toString(), response.request(), e);
+    } catch (AttachmentException e) {
+      throw new DecodeException(response.status(), e.getMessage(), response.request(), e);
     } finally {
       if (response.body() != null) {
         response.body().close();
@@ -150,6 +167,79 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
       }
     }
     return mimeHeaders;
+  }
+
+  /**
+   * Resolves XOP {@code <xop:Include href="cid:..."/>} references against the attachments of the
+   * {@link SOAPMessage}, so MTOM content can be bound to {@code byte[]} or {@link DataHandler}.
+   */
+  private static final class SOAPAttachmentUnmarshaller extends AttachmentUnmarshaller {
+
+    private final SOAPMessage message;
+
+    SOAPAttachmentUnmarshaller(SOAPMessage message) {
+      this.message = message;
+    }
+
+    @Override
+    public boolean isXOPPackage() {
+      return true;
+    }
+
+    @Override
+    public DataHandler getAttachmentAsDataHandler(String cid) {
+      try {
+        return attachment(cid).getDataHandler();
+      } catch (SOAPException e) {
+        throw new AttachmentException("Cannot read attachment " + cid, e);
+      }
+    }
+
+    @Override
+    public byte[] getAttachmentAsByteArray(String cid) {
+      try {
+        return attachment(cid).getRawContentBytes();
+      } catch (SOAPException e) {
+        throw new AttachmentException("Cannot read attachment " + cid, e);
+      }
+    }
+
+    private AttachmentPart attachment(String cid) {
+      String contentId = contentId(cid);
+      Iterator<?> attachments = message.getAttachments();
+      while (attachments.hasNext()) {
+        AttachmentPart part = (AttachmentPart) attachments.next();
+        if (part.getContentId() != null && contentId.equals(contentId(part.getContentId()))) {
+          return part;
+        }
+      }
+      throw new AttachmentException("No attachment found for " + cid, null);
+    }
+
+    /** Normalizes a {@code cid:} URL (RFC 2392) or a {@code Content-ID} header to a bare id. */
+    private static String contentId(String value) {
+      String id = value.trim();
+      if (id.regionMatches(true, 0, "cid:", 0, 4)) {
+        try {
+          id = URLDecoder.decode(id.substring(4).replace("+", "%2B"), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+          throw new IllegalStateException(e);
+        }
+      }
+      if (id.startsWith("<") && id.endsWith(">")) {
+        id = id.substring(1, id.length() - 1);
+      }
+      return id;
+    }
+  }
+
+  /** Carries attachment failures out of JAXB, which does not wrap unchecked exceptions. */
+  private static final class AttachmentException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    AttachmentException(String message, Throwable cause) {
+      super(message, cause);
+    }
   }
 
   public static class Builder {
@@ -191,7 +281,9 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
     /**
      * Passes the {@code Content-Type} header of the response to the {@link MessageFactory} when
      * creating the {@link SOAPMessage}. This is required to read responses that are not a plain
-     * SOAP envelope, such as MTOM/XOP responses sent as {@code multipart/related}.
+     * SOAP envelope, such as MTOM/XOP responses sent as {@code multipart/related}. XOP {@code
+     * xop:Include} references in the root part are resolved against the other MIME parts, so MTOM
+     * content can be bound to {@code byte[]} or {@link DataHandler} properties.
      *
      * <p>The propagated content type must match the configured SOAP protocol, e.g. {@code text/xml}
      * for SOAP 1.1. Use {@link SOAPConstants#DYNAMIC_SOAP_PROTOCOL} to let the content type select
@@ -199,6 +291,7 @@ public class SOAPDecoder implements Decoder, PredicatedDecoder {
      *
      * @return the builder instance.
      */
+    @Experimental
     public Builder propagateContentType() {
       this.propagateContentType = true;
       return this;
