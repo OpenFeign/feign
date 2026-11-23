@@ -15,6 +15,7 @@
  */
 package feign.micrometer;
 
+import feign.Experimental;
 import feign.Request;
 import feign.RequestTemplate;
 import feign.Response;
@@ -24,6 +25,7 @@ import io.micrometer.common.lang.Nullable;
 import io.micrometer.observation.Observation;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -39,23 +41,42 @@ import java.util.regex.Pattern;
  * status}, {@code client.name}, {@code exception} and {@code outcome}. When both kinds of clients
  * observe {@code http.client.requests} in the same application, whichever registers the meter first
  * wins and the other client's observations are silently dropped. This convention emits exactly the
- * Spring key set, with values derived the same way Spring derives them:
+ * Spring key set. The values follow Spring's rules where Feign exposes the same information:
  *
  * <ul>
- *   <li>{@code method}: the HTTP method name;
- *   <li>{@code uri}: the path of the request template url (or {@value KeyValue#NONE_VALUE} when
- *       unavailable), like Spring's URI template handling - only the path is reported, never the
- *       full url;
+ *   <li>{@code method}: the HTTP method name (or {@value KeyValue#NONE_VALUE} without a request);
+ *   <li>{@code uri}: the path of the Feign method's request line template, with any protocol, host
+ *       and port stripped (or {@value KeyValue#NONE_VALUE} when unavailable) - only the path is
+ *       reported, never the full url;
  *   <li>{@code status}: the raw response status code, or {@code CLIENT_ERROR} when no response was
  *       received;
- *   <li>{@code outcome}: {@code SUCCESS} for a 2xx response, otherwise the HTTP status series name
- *       (for example {@code CLIENT_ERROR} or {@code SERVER_ERROR}), or {@code UNKNOWN} when no
- *       response was received;
+ *   <li>{@code outcome}: {@code SUCCESS} for any 2xx response; the series name ({@code
+ *       INFORMATIONAL}, {@code REDIRECTION}, {@code CLIENT_ERROR}, {@code SERVER_ERROR}) for a
+ *       status code known to Spring Framework 6.2's {@code HttpStatus}; {@code UNKNOWN} for any
+ *       other status code (for example 499 or 599) or when no response was received;
  *   <li>{@code client.name}: the host of the request url (or {@value KeyValue#NONE_VALUE}) - note
  *       that unlike the default convention's {@code clientName} this is not the Feign target type
  *       name;
- *   <li>{@code exception}: the simple name of the thrown exception (or {@value
+ *   <li>{@code exception}: the simple name of the exception thrown by the client (or {@value
  *       KeyValue#NONE_VALUE}).
+ * </ul>
+ *
+ * <p>Known differences from Spring's own clients, for the same request:
+ *
+ * <ul>
+ *   <li>{@code exception} is {@value KeyValue#NONE_VALUE} for 4xx/5xx responses. The observation
+ *       covers the {@link feign.Client} call only; the {@link feign.FeignException} for an error
+ *       status is raised afterwards, by the error decoder, once the observation has stopped. {@code
+ *       RestTemplate} and {@code RestClient} run their status handlers inside the observation and
+ *       report the resulting exception (for example {@code NotFound}).
+ *   <li>{@code uri} is taken from the Feign method template only: a path carried by the target url
+ *       is not included, and a method invoked with an absolute {@link java.net.URI} argument
+ *       reports {@code /}. Spring reports {@value KeyValue#NONE_VALUE} for requests that were not
+ *       built from a URI template.
+ *   <li>{@code status} is never {@code IO_ERROR}: Feign always has the status code at hand.
+ *   <li>{@code outcome} follows Spring Framework 6.2. Spring Framework 7 removed the deprecated
+ *       {@code 305}, {@code 419} and {@code 420} from {@code HttpStatus}, so it reports {@code
+ *       UNKNOWN} for those three codes where this convention reports the series name.
  * </ul>
  *
  * <p>Only the metric key names and values are aligned; the observation name and the contextual name
@@ -68,19 +89,30 @@ import java.util.regex.Pattern;
  *
  * @author Inf1mum
  * @see DefaultFeignObservationConvention
- * @see FeignObservationDocumentation.SpringHttpClientTags
  * @since 13.19
  */
+@Experimental
 public class SpringCompatibleFeignObservationConvention extends DefaultFeignObservationConvention {
 
   private static final Pattern PATTERN_BEFORE_PATH = Pattern.compile("^https?://[^/]+");
+
+  /**
+   * The non-2xx status codes declared by Spring Framework 6.2's {@code HttpStatus}; Spring reports
+   * {@code UNKNOWN} as the outcome of any other non-2xx code.
+   */
+  private static final int[] SPRING_HTTP_STATUS_CODES = {
+    100, 101, 102, 103, //
+    300, 301, 302, 303, 304, 305, 307, 308, //
+    400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
+    419, 420, 421, 422, 423, 424, 425, 426, 428, 429, 431, 451, //
+    500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511
+  };
 
   /** Singleton instance of this convention. */
   public static final SpringCompatibleFeignObservationConvention INSTANCE =
       new SpringCompatibleFeignObservationConvention();
 
-  // There is no need to instantiate this class multiple times, but it may be extended,
-  // hence protected visibility.
+  /** Use {@link #INSTANCE}; the constructor is only visible so the convention can be extended. */
   protected SpringCompatibleFeignObservationConvention() {}
 
   @Override
@@ -123,8 +155,9 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
   }
 
   private KeyValue method(FeignContext context) {
+    Request request = context.getCarrier();
     return FeignObservationDocumentation.SpringHttpClientTags.METHOD.withValue(
-        getMethodString(context.getCarrier()));
+        request != null ? request.httpMethod().name() : KeyValue.NONE_VALUE);
   }
 
   private KeyValue outcome(FeignContext context) {
@@ -147,7 +180,8 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
   }
 
   private KeyValue uri(FeignContext context) {
-    RequestTemplate requestTemplate = context.getCarrier().requestTemplate();
+    Request request = context.getCarrier();
+    RequestTemplate requestTemplate = request != null ? request.requestTemplate() : null;
     String url =
         requestTemplate != null && requestTemplate.methodMetadata() != null
             ? requestTemplate.methodMetadata().template().url()
@@ -167,9 +201,13 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
     return (path.startsWith("/") ? path : "/" + path);
   }
 
+  /** Mirrors Spring's {@code DefaultClientRequestObservationConvention.HttpOutcome}. */
   private static String outcomeForStatus(int statusCode) {
-    if (statusCode >= 200 && statusCode < 300) {
+    if (statusCode / 100 == 2) {
       return "SUCCESS";
+    }
+    if (Arrays.binarySearch(SPRING_HTTP_STATUS_CODES, statusCode) < 0) {
+      return "UNKNOWN";
     }
     switch (statusCode / 100) {
       case 1:
@@ -178,10 +216,8 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
         return "REDIRECTION";
       case 4:
         return "CLIENT_ERROR";
-      case 5:
-        return "SERVER_ERROR";
       default:
-        return "UNKNOWN";
+        return "SERVER_ERROR";
     }
   }
 
