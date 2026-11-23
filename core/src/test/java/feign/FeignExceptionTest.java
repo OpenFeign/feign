@@ -18,7 +18,11 @@ package feign;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +65,38 @@ class FeignExceptionTest {
     assertThat(exception.responseHeaders()).containsKeys("content-type");
     assertThat(exception.hasRequest()).isTrue();
     assertThat(exception.request()).isNotNull();
+  }
+
+  @Test
+  void exceptionWithRequestAndRequestTemplateIsSerializable() throws Exception {
+    Target<?> target = new Target.HardCodedTarget<>(Object.class, "http://example.com");
+    RequestTemplate requestTemplate = new RequestTemplate().feignTarget(target);
+    Request request =
+        Request.create(
+            Request.HttpMethod.GET,
+            "http://example.com/home",
+            Collections.emptyMap(),
+            "data".getBytes(StandardCharsets.UTF_8),
+            StandardCharsets.UTF_8,
+            requestTemplate);
+
+    FeignException exception =
+        FeignException.errorExecuting(request, new IOException("connection timeout"));
+
+    byte[] serialized;
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos)) {
+      out.writeObject(exception);
+      serialized = bos.toByteArray();
+    }
+
+    try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serialized))) {
+      FeignException deserialized = (FeignException) in.readObject();
+      assertThat(deserialized.request()).isNotNull();
+      assertThat(deserialized.request().url()).isEqualTo("http://example.com/home");
+      // the originating RequestTemplate is intentionally not carried across serialization
+      assertThat(deserialized.request().requestTemplate()).isNull();
+    }
   }
 
   @Test
