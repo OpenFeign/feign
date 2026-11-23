@@ -164,6 +164,10 @@ class SpringCompatibleFeignObservationConventionTest {
     // Spring's HttpOutcome only maps codes that are HttpStatus constants; any 2xx is SUCCESS.
     assertThat(outcomeFor(299)).isEqualTo("SUCCESS");
     assertThat(outcomeFor(306)).isEqualTo("UNKNOWN");
+    // removed from HttpStatus in Spring Framework 7
+    assertThat(outcomeFor(305)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(419)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(420)).isEqualTo("UNKNOWN");
     assertThat(outcomeFor(499)).isEqualTo("UNKNOWN");
     assertThat(outcomeFor(599)).isEqualTo("UNKNOWN");
     assertThat(outcomeFor(418)).isEqualTo("CLIENT_ERROR");

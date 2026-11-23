@@ -52,8 +52,8 @@ import java.util.regex.Pattern;
  *       received;
  *   <li>{@code outcome}: {@code SUCCESS} for any 2xx response; the series name ({@code
  *       INFORMATIONAL}, {@code REDIRECTION}, {@code CLIENT_ERROR}, {@code SERVER_ERROR}) for a
- *       status code known to Spring Framework 6.2's {@code HttpStatus}; {@code UNKNOWN} for any
- *       other status code (for example 499 or 599) or when no response was received;
+ *       status code known to Spring Framework 7's {@code HttpStatus}; {@code UNKNOWN} for any other
+ *       status code (for example 305, 499 or 599) or when no response was received;
  *   <li>{@code client.name}: the host of the request url (or {@value KeyValue#NONE_VALUE}) - note
  *       that unlike the default convention's {@code clientName} this is not the Feign target type
  *       name;
@@ -74,9 +74,9 @@ import java.util.regex.Pattern;
  *       reports {@code /}. Spring reports {@value KeyValue#NONE_VALUE} for requests that were not
  *       built from a URI template.
  *   <li>{@code status} is never {@code IO_ERROR}: Feign always has the status code at hand.
- *   <li>{@code outcome} follows Spring Framework 6.2. Spring Framework 7 removed the deprecated
- *       {@code 305}, {@code 419} and {@code 420} from {@code HttpStatus}, so it reports {@code
- *       UNKNOWN} for those three codes where this convention reports the series name.
+ *   <li>{@code outcome} follows Spring Framework 7. Spring Framework 6.x still declared {@code
+ *       305}, {@code 419} and {@code 420} in {@code HttpStatus} and reports their series name,
+ *       where this convention reports {@code UNKNOWN}.
  * </ul>
  *
  * <p>Only the metric key names and values are aligned; the observation name and the contextual name
@@ -97,14 +97,14 @@ public class SpringCompatibleFeignObservationConvention extends DefaultFeignObse
   private static final Pattern PATTERN_BEFORE_PATH = Pattern.compile("^https?://[^/]+");
 
   /**
-   * The non-2xx status codes declared by Spring Framework 6.2's {@code HttpStatus}; Spring reports
+   * The non-2xx status codes declared by Spring Framework 7's {@code HttpStatus}; Spring reports
    * {@code UNKNOWN} as the outcome of any other non-2xx code.
    */
   private static final int[] SPRING_HTTP_STATUS_CODES = {
     100, 101, 102, 103, //
-    300, 301, 302, 303, 304, 305, 307, 308, //
+    300, 301, 302, 303, 304, 307, 308, //
     400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
-    419, 420, 421, 422, 423, 424, 425, 426, 428, 429, 431, 451, //
+    421, 422, 423, 424, 425, 426, 428, 429, 431, 451, //
     500, 501, 502, 503, 504, 505, 506, 507, 508, 509, 510, 511
   };
 
