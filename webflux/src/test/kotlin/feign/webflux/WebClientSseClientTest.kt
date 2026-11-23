@@ -23,6 +23,7 @@ import feign.Param
 import feign.Request
 import feign.RequestInterceptor
 import feign.RequestLine
+import feign.codec.ErrorDecoder
 import feign.jackson.JacksonEncoder
 import feign.kotlin.CoroutineFeign
 import feign.kotlin.Sse
@@ -185,6 +186,33 @@ class WebClientSseClientTest {
         assertThat(exception.contentUTF8()).isEqualTo("service exploded")
         assertThat(exception.message).contains("StreamApi#events")
       }
+
+  @Test
+  fun `http errors use the configured Feign error decoder`() = runBlocking {
+    server.enqueue(MockResponse().setResponseCode(422).setBody("invalid event request"))
+    val api =
+        api(
+            configure = {
+              errorDecoder(
+                  ErrorDecoder { methodKey, response ->
+                    assertThat(methodKey).contains("StreamApi#events")
+                    assertThat(response.status()).isEqualTo(422)
+                    val body = response.body().asInputStream().use { it.readBytes().decodeToString() }
+                    assertThat(body).isEqualTo("invalid event request")
+                    IllegalArgumentException("decoded ${response.status()}")
+                  })
+            })
+
+    val exception =
+        try {
+          withTimeout(10_000) { api.events().toList() }
+          null
+        } catch (e: IllegalArgumentException) {
+          e
+        }!!
+
+    assertThat(exception).hasMessage("decoded 422")
+  }
 
   @Test
   fun `first event is delivered while the response is still open and demand is controlled`() {

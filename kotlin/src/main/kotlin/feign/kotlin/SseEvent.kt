@@ -15,6 +15,7 @@
  */
 package feign.kotlin
 
+import feign.Experimental
 import java.time.Duration
 
 /**
@@ -25,9 +26,11 @@ import java.time.Duration
  *   comment-only keep-alive frames.
  * @property event value of the `event` field, or null when the server did not name the event.
  * @property id value of the `id` field, or null when the server did not send one.
- * @property retry reconnection hint sent by the server in milliseconds, or null.
+ * @property retry reconnection delay sent by the server as a [Duration], or null. The client does
+ *   not automatically reconnect based on this value.
  * @property comment text of the frame's comment lines, or null.
  */
+@Experimental
 data class SseEvent(
     val data: String?,
     val event: String? = null,

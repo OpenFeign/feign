@@ -17,6 +17,7 @@ package feign.kotlin
 
 import feign.Contract
 import feign.Feign
+import feign.codec.ErrorDecoder
 import feign.MethodMetadata
 import feign.QueryMapEncoder
 import feign.Request
@@ -43,13 +44,13 @@ import kotlinx.coroutines.reactive.asFlow
  * events is never silently replayed. Feign's [feign.Logger] is not invoked on this path; request
  * logging is the transport's responsibility.
  */
-class SseMethodHandler
-internal constructor(
+internal class SseMethodHandler(
     private val configKey: String,
     private val target: Target<*>,
     private val buildTemplate: RequestTemplateFactory,
     private val transport: SseTransport,
     private val options: Request.Options,
+    private val errorDecoder: ErrorDecoder,
     private val requestInterceptors: List<RequestInterceptor>,
 ) {
 
@@ -58,7 +59,7 @@ internal constructor(
     val template = buildTemplate.create(argv)
     requestInterceptors.forEach { it.apply(template) }
     val request = target.apply(template)
-    emitAll(transport.stream(request, findOptions(argv), configKey).asFlow())
+    emitAll(transport.stream(request, findOptions(argv), configKey, errorDecoder).asFlow())
   }
 
   // Same convention as AsynchronousMethodHandler: an Options argument overrides the builder's.
@@ -71,13 +72,13 @@ internal constructor(
  * methods can be routed to an [SseMethodHandler] when a proxy is created. Instances are created
  * by [CoroutineFeign] itself; they are not meant to be constructed directly.
  */
-class SseMethodSupport
-internal constructor(
+internal class SseMethodSupport(
     private val transport: SseTransport,
     private val contract: Contract,
     private val encoder: Encoder,
     private val queryMapEncoder: QueryMapEncoder,
     private val options: Request.Options,
+    private val errorDecoder: ErrorDecoder,
     private val requestInterceptors: List<RequestInterceptor>,
 ) {
 
@@ -105,6 +106,7 @@ internal constructor(
               RequestTemplateFactory.forMethod(target, metadata, encoder, queryMapEncoder),
           transport = transport,
           options = options,
+          errorDecoder = errorDecoder,
           requestInterceptors = requestInterceptors,
       )
     }

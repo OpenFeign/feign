@@ -28,6 +28,7 @@ import feign.codec.Encoder;
  * <p>The caller owns request interception and applying the target after binding, as in Feign's
  * standard method handlers. No HTTP request is sent by this factory.
  */
+@Experimental
 @FunctionalInterface
 public interface RequestTemplateFactory {
 

@@ -115,6 +115,7 @@ the WebClient transport uses Spring's standard SSE codec.
 - A `Request.Options` argument overrides the builder options for that invocation, as with any
   Feign method; how much of it a stream can honor is up to the transport (the WebClient transport
   documents what it ignores).
-- Feign's `Logger` is not invoked on `@Sse` paths; request logging belongs to the transport.
-- Errors during streaming surface as errors of the flow. HTTP error statuses surface as
-  `FeignException`s (see the transport's behavior notes for buffering of error bodies).
+- Feign's `Logger` and `Retryer` are not invoked on `@Sse` paths; request logging/retry policy
+  belongs to the transport. There is no automatic reconnection or `Last-Event-ID` tracking/replay.
+- Errors during streaming surface as flow errors. HTTP error statuses are decoded with Feign's
+  configured `ErrorDecoder` (see the transport's behavior notes for bounded error-body buffering).

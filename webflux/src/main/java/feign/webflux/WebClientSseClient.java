@@ -17,10 +17,12 @@ package feign.webflux;
 
 import static feign.Util.checkNotNull;
 
+import feign.Experimental;
 import feign.FeignException;
 import feign.Request;
 import feign.Request.Options;
 import feign.Response;
+import feign.codec.ErrorDecoder;
 import feign.kotlin.SseEvent;
 import feign.kotlin.SseTransport;
 import java.util.ArrayList;
@@ -50,17 +52,17 @@ import reactor.core.publisher.Flux;
  * <p>Behavior notes:
  *
  * <ul>
- *   <li>Error responses (4xx/5xx) are buffered in full - error bodies are bounded - and surfaced as
- *       a {@link FeignException} carrying the status and body, mirroring how the buffered client
- *       keeps error statuses under Feign's control.
- *   <li>The per-request {@link Options} read timeout is deliberately not applied as an overall
- *       timeout: it would cap the duration of the whole stream instead of protecting against a
- *       stalled one. Connect timeouts, idle timeouts and other stream shaping belong to the
- *       configured connector and WebClient.
+ *   <li>Error responses (4xx/5xx) are buffered and decoded with Feign's configured {@link
+ *       ErrorDecoder}, preserving the status and bounded response body.
+ *   <li>Feign {@link Options} timeouts are not applied to the streaming exchange. Connect and idle
+ *       timeouts belong to the configured connector and WebClient; the read timeout is not used as
+ *       a total stream lifetime limit.
  *   <li>Each subscription sends a new request; events already delivered are never replayed and no
- *       retry is attempted for partially consumed streams.
+ *       retry is attempted for partially consumed streams. There is no automatic reconnection or
+ *       {@code Last-Event-ID} tracking/replay.
  * </ul>
  */
+@Experimental
 public class WebClientSseClient implements SseTransport {
 
   private static final ParameterizedTypeReference<ServerSentEvent<String>> SSE_EVENT =
@@ -93,7 +95,8 @@ public class WebClientSseClient implements SseTransport {
   }
 
   @Override
-  public Publisher<SseEvent> stream(Request request, Options options, String methodKey) {
+  public Publisher<SseEvent> stream(
+      Request request, Options options, String methodKey, ErrorDecoder errorDecoder) {
     final WebClient.RequestHeadersSpec<?> spec;
     try {
       spec = WebClientRequests.create(webClient, request);
@@ -102,18 +105,27 @@ public class WebClientSseClient implements SseTransport {
       // instead of throwing from this method
       return Flux.error(e);
     }
-    return spec.exchangeToFlux(response -> streamResponse(response, request, methodKey));
+    return spec.exchangeToFlux(
+        response -> streamResponse(response, request, methodKey, errorDecoder));
   }
 
   private Flux<SseEvent> streamResponse(
-      final ClientResponse response, final Request request, final String methodKey) {
-    if (response.statusCode().isError()) {
+      final ClientResponse response,
+      final Request request,
+      final String methodKey,
+      final ErrorDecoder errorDecoder) {
+    if (!response.statusCode().is2xxSuccessful()) {
       // Error bodies are bounded, so buffering them keeps Feign's ErrorDecoder semantics.
       return response
           .toEntity(byte[].class)
           .flatMapMany(
               entity -> {
-                throw FeignException.errorStatus(methodKey, toFeignResponse(entity, request));
+                final Response feignResponse = toFeignResponse(entity, request);
+                final Exception decoded = errorDecoder.decode(methodKey, feignResponse);
+                return Flux.error(
+                    decoded != null
+                        ? decoded
+                        : FeignException.errorStatus(methodKey, feignResponse));
               });
     }
     return response.bodyToFlux(SSE_EVENT).map(WebClientSseClient::toSseEvent);

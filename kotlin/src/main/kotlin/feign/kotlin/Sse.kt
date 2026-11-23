@@ -15,6 +15,8 @@
  */
 package feign.kotlin
 
+import feign.Experimental
+
 /**
  * Marks a Feign method as a Server-Sent Events (SSE) source.
  *
@@ -34,6 +36,7 @@ package feign.kotlin
  *
  * Methods without [Sse] keep the regular buffered coroutine behavior.
  */
+@Experimental
 @MustBeDocumented
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)

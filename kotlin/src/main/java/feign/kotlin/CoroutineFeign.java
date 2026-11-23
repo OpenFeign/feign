@@ -161,6 +161,7 @@ public class CoroutineFeign<C> {
      * supplied through {@link #defaultContextSupplier(AsyncContextSupplier)}; requests that need it
      * should resolve it in a {@link feign.RequestInterceptor} instead.
      */
+    @Experimental
     public CoroutineBuilder<C> sseTransport(SseTransport sseTransport) {
       this.sseTransport = Objects.requireNonNull(sseTransport, "sseTransport must not be null");
       return this;
@@ -220,7 +221,13 @@ public class CoroutineFeign<C> {
           sseTransport == null
               ? null
               : new SseMethodSupport(
-                  sseTransport, contract, encoder, queryMapEncoder, options, requestInterceptors);
+                  sseTransport,
+                  contract,
+                  encoder,
+                  queryMapEncoder,
+                  options,
+                  errorDecoder,
+                  requestInterceptors);
       return new CoroutineFeign<>(asyncFeign, sseMethodSupport);
     }
   }
@@ -232,7 +239,7 @@ public class CoroutineFeign<C> {
     this(feign, null);
   }
 
-  protected CoroutineFeign(AsyncFeign<C> feign, SseMethodSupport sseMethodSupport) {
+  private CoroutineFeign(AsyncFeign<C> feign, SseMethodSupport sseMethodSupport) {
     this.feign = feign;
     this.sseMethodSupport = sseMethodSupport;
   }

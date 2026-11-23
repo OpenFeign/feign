@@ -99,14 +99,14 @@ val api = CoroutineFeign.builder<AiApi>()
 
 Behavior notes for the streaming transport:
 
-- Only error responses (4xx/5xx) are buffered — error bodies are bounded — and surfaced as a
-  `FeignException` carrying the status and body, mirroring how the buffered client keeps error
-  statuses under Feign's control. 2xx bodies are never aggregated.
-- The per-request read timeout is deliberately not applied as an overall timeout: it would cap
-  the duration of the whole stream instead of protecting against a stalled one. Connect timeouts,
-  idle timeouts and response shaping belong to the configured WebClient connector.
+- Only error responses (4xx/5xx) are buffered — error bodies are bounded — and passed to the
+  configured Feign `ErrorDecoder`. Successful 2xx bodies are never aggregated.
+- Feign `Request.Options` timeouts are not applied to the SSE stream. Configure connect and idle
+  timeouts on the WebClient connector; the read timeout does not cap the stream lifetime.
 - Cancelling the flow cancels the exchange and closes the connection.
 - Each subscription sends a new request; partially consumed streams are never retried.
+- There is no automatic reconnection or `Last-Event-ID` tracking/replay. The event `retry` and `id`
+  fields are exposed as received; reconnect policy belongs to the application/transport.
 
 ## Spring configuration
 
@@ -154,11 +154,10 @@ GitHub github = AsyncFeign.builder()
 - Response bodies of buffered `AsyncClient` requests are fully aggregated in memory before
   decoding. `@Sse` methods executed through `WebClientSseClient` stream instead; see the section
   above.
-- Error statuses (4xx/5xx) are delivered as regular Feign `Response` objects and remain under the
-  control of the `ErrorDecoder`; the WebClient is never allowed to turn them into exceptions.
-- The per-request read timeout is applied as an overall reactive timeout that cancels the request.
-  Connect timeout and redirect behavior must be configured on the WebClient connector; the adapter
-  does not translate Feign's per-request connect timeout or redirect option into connector settings.
+- HTTP error statuses (4xx/5xx) are buffered and passed to Feign's configured `ErrorDecoder`.
+- Feign `Request.Options` timeouts are not applied to the SSE stream. Configure connect and idle
+  timeouts on the supplied WebClient connector; the per-request read timeout does not cap the
+  stream lifetime.
 - The response decoder runs on the future completion thread, typically the Reactor Netty event loop.
   Keep decoders and completion callbacks non-blocking and short.
 - The default Reactor Netty resources are shared globally. If supplying custom Netty resources or a

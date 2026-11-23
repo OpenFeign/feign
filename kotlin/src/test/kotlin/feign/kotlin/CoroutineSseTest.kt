@@ -16,6 +16,7 @@
 package feign.kotlin
 
 import com.google.gson.Gson
+import feign.Capability
 import feign.Headers
 import feign.Param
 import feign.Request
@@ -24,6 +25,7 @@ import feign.RequestLine
 import feign.Util
 import feign.codec.Decoder
 import feign.codec.DefaultDecoder
+import feign.codec.ErrorDecoder
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.awaitCancellation
@@ -91,7 +93,8 @@ class CoroutineSseTest {
         override fun stream(
             request: Request,
             options: Request.Options,
-            methodKey: String
+            methodKey: String,
+            errorDecoder: ErrorDecoder
         ): Publisher<SseEvent> {
             requests.add(request)
             optionsSeen.add(options)
@@ -107,7 +110,8 @@ class CoroutineSseTest {
         override fun stream(
             request: Request,
             options: Request.Options,
-            methodKey: String
+            methodKey: String,
+            errorDecoder: ErrorDecoder
         ): Publisher<SseEvent> =
             flow<SseEvent> {
                 try {
@@ -148,6 +152,26 @@ class CoroutineSseTest {
             assertThat(request.headers()["Accept"]).containsExactly("text/event-stream")
             assertThat(transport.methodKeys.single()).startsWith("StreamApi#events")
         }
+
+    @Test
+    fun `capability can enrich the configured SSE transport`() = runBlocking {
+        val enrichments = AtomicInteger()
+        val capability =
+            object : Capability {
+                fun enrich(transport: SseTransport): SseTransport =
+                    SseTransport { request, options, methodKey, errorDecoder ->
+                        enrichments.incrementAndGet()
+                        transport.stream(request, options, methodKey, errorDecoder)
+                    }
+            }
+        val api =
+            builder(StubTransport())
+                .addCapability(capability)
+                .target(StreamApi::class.java, "http://localhost:1234")
+
+        assertThat(api.events("capability").toList()).hasSize(2)
+        assertThat(enrichments.get()).isEqualTo(1)
+    }
 
     @Test
     fun `non suspend flow method encodes the body and applies interceptors per collection`(): Unit =

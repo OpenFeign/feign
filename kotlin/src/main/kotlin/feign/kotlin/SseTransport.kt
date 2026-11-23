@@ -15,6 +15,7 @@
  */
 package feign.kotlin
 
+import feign.Experimental
 import feign.Request
 import org.reactivestreams.Publisher
 
@@ -25,11 +26,14 @@ import org.reactivestreams.Publisher
  * Implementations own the transport: they must not aggregate the response body before emitting
  * events, and they should stop reading as soon as the returned [Publisher] is cancelled. Event
  * conversion, error signaling and timeouts are the transport's responsibility; events are
- * published in arrival order.
+ * published in arrival order. Implementations do not gain automatic reconnect or
+ * `Last-Event-ID` replay from this SPI; clients must opt into and implement those policies
+ * explicitly.
  *
  * [feign.webflux.WebClientSseClient] is the standard implementation, built on Spring WebClient's
  * native SSE codec.
  */
+@Experimental
 fun interface SseTransport {
 
     /**
@@ -40,7 +44,13 @@ fun interface SseTransport {
      * @param options the per-request [Request.Options]; a transport that cannot honor them
      *   (streaming has no meaningful total read timeout) must document what it ignores
      * @param methodKey the Feign config key of the invoked method, for use in error reporting
+     * @param errorDecoder the configured Feign decoder for non-2xx responses
      * @return a cold publisher; each subscription sends a new request
      */
-    fun stream(request: Request, options: Request.Options, methodKey: String): Publisher<SseEvent>
+    fun stream(
+        request: Request,
+        options: Request.Options,
+        methodKey: String,
+        errorDecoder: feign.codec.ErrorDecoder,
+    ): Publisher<SseEvent>
 }
