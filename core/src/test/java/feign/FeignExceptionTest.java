@@ -21,8 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,6 +99,41 @@ class FeignExceptionTest {
       // the originating RequestTemplate is intentionally not carried across serialization
       assertThat(deserialized.request().requestTemplate()).isNull();
     }
+  }
+
+  @Test
+  void requestSerialVersionUidMatchesReleasedVersions() {
+    // values computed by serialver against feign-core 13.18; changing them breaks deserialization
+    // of exceptions serialized by earlier releases
+    assertThat(ObjectStreamClass.lookup(Request.class).getSerialVersionUID())
+        .isEqualTo(-4693079906963879248L);
+    assertThat(ObjectStreamClass.lookup(Request.Body.class).getSerialVersionUID())
+        .isEqualTo(7978564938517946659L);
+  }
+
+  @Test
+  void canDeserializeExceptionSerializedBy13_18() throws Exception {
+    // RetryableException(503, "service unavailable", POST, 1234L, request) serialized by
+    // feign-core 13.18, with a POST to https://example.com/api, an Accept header, a "payload"
+    // body and no RequestTemplate
+    RetryableException deserialized;
+    try (InputStream fixture =
+            getClass().getResourceAsStream("/feign/retryable-exception-13.18.ser");
+        ObjectInputStream in = new ObjectInputStream(fixture)) {
+      deserialized = (RetryableException) in.readObject();
+    }
+
+    assertThat(deserialized.status()).isEqualTo(503);
+    assertThat(deserialized.getMessage()).isEqualTo("service unavailable");
+    assertThat(deserialized.method()).isEqualTo(Request.HttpMethod.POST);
+    assertThat(deserialized.retryAfter()).isEqualTo(1234L);
+    Request request = deserialized.request();
+    assertThat(request).isNotNull();
+    assertThat(request.httpMethod()).isEqualTo(Request.HttpMethod.POST);
+    assertThat(request.url()).isEqualTo("https://example.com/api");
+    assertThat(request.headers()).containsEntry("Accept", Arrays.asList("application/json"));
+    assertThat(request.body()).isEqualTo("payload".getBytes(StandardCharsets.UTF_8));
+    assertThat(request.requestTemplate()).isNull();
   }
 
   @Test

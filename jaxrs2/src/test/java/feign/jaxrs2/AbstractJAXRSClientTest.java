@@ -17,7 +17,6 @@ package feign.jaxrs2;
 
 import static feign.Util.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import feign.Headers;
 import feign.RequestLine;
@@ -30,46 +29,55 @@ import java.io.IOException;
 import java.util.Collections;
 import okhttp3.mockwebserver.MockResponse;
 import org.assertj.core.data.MapEntry;
-import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
 
+  @Test
+  @Disabled("The JAX-RS client's HttpURLConnection connector does not support PATCH")
   @Override
-  public void patch() throws Exception {
-    try {
-      super.patch();
-    } catch (final RuntimeException _) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
-    }
-  }
+  public void patch() {}
 
+  @Test
+  @Disabled("The JAX-RS client requires an entity for PATCH")
   @Override
-  public void query() throws Exception {
-    try {
-      super.query();
-    } catch (final RuntimeException _) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support QUERY requests");
-    }
-  }
+  public void noResponseBodyForPatch() {}
 
+  @Test
+  @Disabled("The JAX-RS client's HttpURLConnection connector does not support QUERY")
   @Override
-  public void noResponseBodyForPut() throws Exception {
-    try {
-      super.noResponseBodyForPut();
-    } catch (final IllegalStateException _) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support empty bodies on PUT");
-    }
-  }
+  public void query() {}
 
+  @Test
+  @Disabled("The JAX-RS client requires an entity for PUT")
   @Override
-  public void noResponseBodyForPatch() {
-    try {
-      super.noResponseBodyForPatch();
-    } catch (final IllegalStateException _) {
-      Assumptions.assumeFalse(false, "JaxRS client do not support PATCH requests");
-    }
-  }
+  public void noResponseBodyForPut() {}
+
+  @Test
+  @Disabled("The JAX-RS client does not decompress gzip")
+  @Override
+  public void canSupportGzip() {}
+
+  @Test
+  @Disabled("The JAX-RS client does not decompress gzip")
+  @Override
+  public void canSupportGzipOnError() {}
+
+  @Test
+  @Disabled("The JAX-RS client does not decompress deflate")
+  @Override
+  public void canSupportDeflate() {}
+
+  @Test
+  @Disabled("The JAX-RS client does not decompress deflate")
+  @Override
+  public void canSupportDeflateOnError() {}
+
+  @Test
+  @Disabled("Relies on gzip decompression, which the JAX-RS client does not do")
+  @Override
+  public void canExceptCaseInsensitiveHeader() {}
 
   @Override
   @Test
@@ -136,43 +144,10 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
         .hasMethod("GET");
   }
 
-  /*
-   * JaxRS does not support gzip and deflate compression out-of-the-box.
-   */
-  @Override
-  public void canSupportGzip() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
-  @Override
-  public void canSupportGzipOnError() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
-  @Override
-  public void canSupportDeflate() throws Exception {
-    assumeFalse(false, "JaxRS client do not support deflate compression");
-  }
-
-  @Override
-  public void canSupportDeflateOnError() throws Exception {
-    assumeFalse(false, "JaxRS client do not support deflate compression");
-  }
-
-  @Override
-  public void canExceptCaseInsensitiveHeader() throws Exception {
-    assumeFalse(false, "JaxRS client do not support gzip compression");
-  }
-
   public interface JaxRSClientTestInterface {
 
     @RequestLine("GET /")
     @Headers({"Accept: text/plain", "Content-Type: text/plain"})
     Response getWithContentType();
-  }
-
-  @Override
-  public void veryLongResponseNullLength() {
-    assumeFalse(false, "JaxRS client hang if the response doesn't have a payload");
   }
 }

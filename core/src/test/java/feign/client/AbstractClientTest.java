@@ -306,8 +306,10 @@ public abstract class AbstractClientTest {
 
   @Test
   public void veryLongResponseNullLength() {
+    // setHeader, not addHeader: setBody already sets Content-Length: 8, and a second, conflicting
+    // Content-Length makes clients disagree on the body size and block reading it.
     server.enqueue(
-        new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
+        new MockResponse().setBody("AAAAAAAA").setHeader("Content-Length", Long.MAX_VALUE));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 

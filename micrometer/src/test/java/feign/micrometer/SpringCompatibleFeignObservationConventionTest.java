@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import feign.Client;
 import feign.Feign;
+import feign.FeignException;
 import feign.Param;
 import feign.Request;
 import feign.Request.HttpMethod;
@@ -156,7 +157,56 @@ class SpringCompatibleFeignObservationConventionTest {
     assertThat(outcomeFor(302)).isEqualTo("REDIRECTION");
     assertThat(outcomeFor(404)).isEqualTo("CLIENT_ERROR");
     assertThat(outcomeFor(503)).isEqualTo("SERVER_ERROR");
-    assertThat(outcomeFor(599)).isEqualTo("SERVER_ERROR");
+  }
+
+  @Test
+  void outcomeIsUnknownForStatusCodesSpringDoesNotDeclare() {
+    // Spring's HttpOutcome only maps codes that are HttpStatus constants; any 2xx is SUCCESS.
+    assertThat(outcomeFor(299)).isEqualTo("SUCCESS");
+    assertThat(outcomeFor(306)).isEqualTo("UNKNOWN");
+    // removed from HttpStatus in Spring Framework 7
+    assertThat(outcomeFor(305)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(419)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(420)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(499)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(599)).isEqualTo("UNKNOWN");
+    assertThat(outcomeFor(418)).isEqualTo("CLIENT_ERROR");
+    assertThat(outcomeFor(511)).isEqualTo("SERVER_ERROR");
+  }
+
+  @Test
+  void nullCarrierDoesNotThrow() {
+    FeignContext context = new FeignContext(null);
+
+    KeyValues keyValues =
+        SpringCompatibleFeignObservationConvention.INSTANCE.getLowCardinalityKeyValues(context);
+
+    assertThat(valueOf(keyValues, URI_TAG)).isEqualTo(KeyValue.NONE_VALUE);
+    assertThat(valueOf(keyValues, METHOD)).isEqualTo(KeyValue.NONE_VALUE);
+    assertThat(valueOf(keyValues, CLIENT_NAME)).isEqualTo(KeyValue.NONE_VALUE);
+    assertThat(valueOf(keyValues, STATUS)).isEqualTo("CLIENT_ERROR");
+    assertThat(valueOf(keyValues, OUTCOME)).isEqualTo("UNKNOWN");
+  }
+
+  @Test
+  void errorStatusIsNotRecordedAsException() {
+    // FeignException is raised by the error decoder after the client observation has stopped.
+    TestClient feignClient =
+        Feign.builder()
+            .client(statusClient(404))
+            .addCapability(
+                new MicrometerObservationCapability(
+                    observationRegistry, SpringCompatibleFeignObservationConvention.INSTANCE))
+            .target(new HardCodedTarget<>(TestClient.class, "http://localhost:8080"));
+
+    assertThatThrownBy(() -> feignClient.get(42)).isInstanceOf(FeignException.NotFound.class);
+
+    TestObservationRegistryAssert.assertThat(observationRegistry)
+        .hasSingleObservationThat()
+        .hasBeenStopped()
+        .hasLowCardinalityKeyValue(STATUS, "404")
+        .hasLowCardinalityKeyValue(OUTCOME, "CLIENT_ERROR")
+        .hasLowCardinalityKeyValue(EXCEPTION, KeyValue.NONE_VALUE);
   }
 
   @Test

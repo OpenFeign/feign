@@ -154,12 +154,6 @@ public class Http2ClientTest extends AbstractClientTest {
     assertThat(response.reason()).isEqualTo("There is A reason");
   }
 
-  @Override
-  @Test
-  public void veryLongResponseNullLength() {
-    // client is too smart to fall for a body that is 8 bytes long
-  }
-
   @Test
   void timeoutTest() {
     server.enqueue(new MockResponse().setBody("foo").setHeadersDelay(1, TimeUnit.SECONDS));
