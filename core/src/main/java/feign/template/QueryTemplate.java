@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -82,10 +83,10 @@ public final class QueryTemplate {
       throw new IllegalArgumentException("values are required");
     }
 
-    /* remove all empty values from the array */
+    /* remove null values, empty values are kept and render as name= */
     Collection<String> remaining =
         StreamSupport.stream(values.spliterator(), false)
-            .filter(Util::isNotBlank)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
     return new QueryTemplate(name, remaining, charset, collectionFormat, decodeSlash);
@@ -106,7 +107,7 @@ public final class QueryTemplate {
     List<String> queryValues = new ArrayList<>(queryTemplate.getValues());
     queryValues.addAll(
         StreamSupport.stream(values.spliterator(), false)
-            .filter(Util::isNotBlank)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList()));
     return create(
         queryTemplate.getName(),
@@ -141,11 +142,6 @@ public final class QueryTemplate {
 
     /* parse each value into a template chunk for resolution later */
     for (String value : values) {
-      if (value.isEmpty()) {
-        /* skip */
-        continue;
-      }
-
       this.values.add(
           new Template(
               value, ExpansionOptions.REQUIRED, EncodingOptions.REQUIRED, !decodeSlash, charset));
@@ -197,7 +193,12 @@ public final class QueryTemplate {
     for (Template template : this.values) {
       String result = template.expand(variables);
       if (result == null) {
-        continue;
+        if (template.getTemplateChunks().isEmpty()) {
+          /* an empty literal value is resolved and renders as an empty string */
+          result = "";
+        } else {
+          continue;
+        }
       }
 
       /*

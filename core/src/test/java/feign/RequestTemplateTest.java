@@ -547,6 +547,25 @@ public class RequestTemplateTest {
   }
 
   @Test
+  void emptyQueryValueIsKept() {
+    RequestTemplate template = new RequestTemplate().query("param", "");
+    assertThat(template.queryLine()).isEqualTo("?param=");
+  }
+
+  @Test
+  void nullQueryValueIsOmitted() {
+    RequestTemplate template = new RequestTemplate().query("param", (String[]) null);
+    assertThat(template.queryLine()).isEmpty();
+    assertThat(template.queries()).isEmpty();
+  }
+
+  @Test
+  void queryCollectionKeepsEmptyEntry() {
+    RequestTemplate template = new RequestTemplate().query("param", Arrays.asList("", "value"));
+    assertThat(template.queryLine()).isEqualTo("?param=&param=value");
+  }
+
+  @Test
   void encodedQueryWithUnsafeCharactersMixedWithUnencoded() {
     RequestTemplate template =
         new RequestTemplate()
