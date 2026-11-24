@@ -562,6 +562,31 @@ public class Example {
 }
 ```
 
+#### Combining contracts
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+`MultiContract` lets one interface use the annotations of several declarative contracts, for
+example while moving it from Feign's annotations to Spring MVC ones:
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @GetMapping("/repos/{owner}/{repo}/issues")
+  List<Issue> issues(@PathVariable("owner") String owner, @PathVariable("repo") String repo);
+}
+
+GitHub github = Feign.builder()
+                     .contracts(new DefaultContract(), new SpringContract())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+Each annotation is handled by the first contract in the list that understands it, so put the
+contract whose interpretation should win first. `.contracts(...)` is shorthand for
+`.contract(MultiContract.of(...))`. Clients configured with a single contract are not affected.
+
 ### Client
 
 #### OkHttp
