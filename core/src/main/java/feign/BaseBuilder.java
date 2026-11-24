@@ -86,6 +86,24 @@ public abstract class BaseBuilder<B extends BaseBuilder<B, T>, T> implements Clo
     return thisB();
   }
 
+  /**
+   * Configures a {@link MultiContract}, so one interface can mix the annotations of several
+   * declarative contracts.
+   *
+   * <p>Each annotation is handled by the first contract, in the order given, that understands it.
+   *
+   * <pre>
+   * Feign.builder()
+   *     .contracts(new DefaultContract(), new SpringContract())
+   * </pre>
+   *
+   * @param contracts the contracts to combine, highest precedence first
+   */
+  @Experimental
+  public B contracts(DeclarativeContract... contracts) {
+    return contract(MultiContract.of(contracts));
+  }
+
   public B retryer(Retryer retryer) {
     this.retryer = retryer;
     return thisB();

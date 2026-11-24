@@ -218,7 +218,7 @@ public abstract class DeclarativeContract extends BaseContract {
   /**
    * Registers every processor of {@code delegate} on this contract, except for annotations that one
    * of {@code precedingDelegates} already handles at the same position (class, method or
-   * parameter). Used by {@link CompositeContract}.
+   * parameter). Used by {@link MultiContract}.
    */
   void registerProcessorsOf(
       DeclarativeContract delegate, List<DeclarativeContract> precedingDelegates) {

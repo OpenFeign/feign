@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A {@link Contract} that understands the annotations of several {@link DeclarativeContract
@@ -30,7 +31,7 @@ import java.util.List;
  *
  * <pre>
  * Feign.builder()
- *     .contract(new CompositeContract(new DefaultContract(), new SpringContract()))
+ *     .contracts(new DefaultContract(), new SpringContract())
  *     .target(GitHub.class, "https://api.github.com");
  * </pre>
  *
@@ -43,35 +44,28 @@ import java.util.List;
  * annotations that each set the request line (say {@code @RequestLine} and {@code @GetMapping}) are
  * both applied.
  *
- * <p>The composite only uses the annotation processors that each delegate registered. Behaviour a
- * delegate adds by overriding {@link Contract.BaseContract} methods is not carried over, and {@link
- * AlwaysEncodeBodyContract} delegates are rejected because the composite cannot honour that marker
- * for them.
+ * <p>A multi-contract is itself a {@link DeclarativeContract}, so one can be passed to another. The
+ * same precedence rule applies to the nested contract's delegates as a group.
+ *
+ * <p>The multi-contract only uses the annotation processors that each delegate registered.
+ * Behaviour a delegate adds by overriding {@link Contract.BaseContract} methods is not carried
+ * over, and {@link AlwaysEncodeBodyContract} delegates are rejected because the multi-contract
+ * cannot honour that marker for them.
  */
 @Experimental
-public class CompositeContract extends DeclarativeContract {
+public class MultiContract extends DeclarativeContract {
 
   private final List<DeclarativeContract> delegates;
 
-  /**
-   * @param delegates contracts to combine, highest precedence first.
-   */
-  public CompositeContract(DeclarativeContract... delegates) {
-    this(Arrays.asList(checkNotNull(delegates, "delegates")));
-  }
-
-  /**
-   * @param delegates contracts to combine, highest precedence first.
-   */
-  public CompositeContract(List<? extends DeclarativeContract> delegates) {
+  private MultiContract(List<? extends DeclarativeContract> delegates) {
     checkNotNull(delegates, "delegates");
-    checkArgument(!delegates.isEmpty(), "CompositeContract needs at least one delegate");
+    checkArgument(!delegates.isEmpty(), "MultiContract needs at least one delegate");
     List<DeclarativeContract> registered = new ArrayList<>(delegates.size());
     for (DeclarativeContract delegate : delegates) {
       checkNotNull(delegate, "delegate");
       checkArgument(
           !(delegate instanceof AlwaysEncodeBodyContract),
-          "%s is an AlwaysEncodeBodyContract, which CompositeContract does not support",
+          "%s is an AlwaysEncodeBodyContract, which MultiContract does not support",
           delegate.getClass().getName());
       registerProcessorsOf(delegate, new ArrayList<>(registered));
       registered.add(delegate);
@@ -79,8 +73,35 @@ public class CompositeContract extends DeclarativeContract {
     this.delegates = Collections.unmodifiableList(registered);
   }
 
-  /** The combined contracts, highest precedence first. */
-  public List<DeclarativeContract> delegates() {
-    return delegates;
+  /**
+   * Combines the given contracts.
+   *
+   * @param delegates contracts to combine, highest precedence first
+   */
+  public static MultiContract of(DeclarativeContract... delegates) {
+    return of(Arrays.asList(checkNotNull(delegates, "delegates")));
+  }
+
+  /**
+   * Combines the given contracts.
+   *
+   * @param delegates contracts to combine, highest precedence first
+   */
+  public static MultiContract of(List<? extends DeclarativeContract> delegates) {
+    return new MultiContract(delegates);
+  }
+
+  @Override
+  public String toString() {
+    return "MultiContract"
+        + delegates.stream().map(MultiContract::describe).collect(Collectors.toList());
+  }
+
+  private static String describe(DeclarativeContract delegate) {
+    if (delegate instanceof MultiContract) {
+      return delegate.toString();
+    }
+    String name = delegate.getClass().getSimpleName();
+    return name.isEmpty() ? delegate.getClass().getName() : name;
   }
 }

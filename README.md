@@ -534,7 +534,10 @@ public class Example {
 ```
 
 #### Combining contracts
-`CompositeContract` lets one interface use the annotations of several declarative contracts, for
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+`MultiContract` lets one interface use the annotations of several declarative contracts, for
 example while moving it from Feign's annotations to Spring MVC ones:
 
 ```java
@@ -547,13 +550,13 @@ interface GitHub {
 }
 
 GitHub github = Feign.builder()
-                     .contract(new CompositeContract(new DefaultContract(), new SpringContract()))
+                     .contracts(new DefaultContract(), new SpringContract())
                      .target(GitHub.class, "https://api.github.com");
 ```
 
 Each annotation is handled by the first contract in the list that understands it, so put the
-contract whose interpretation should win first. Clients configured with a single contract are not
-affected.
+contract whose interpretation should win first. `.contracts(...)` is shorthand for
+`.contract(MultiContract.of(...))`. Clients configured with a single contract are not affected.
 
 ### Client
 

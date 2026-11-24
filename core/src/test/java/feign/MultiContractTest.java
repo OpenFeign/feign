@@ -32,7 +32,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
-class CompositeContractTest {
+class MultiContractTest {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
@@ -169,7 +169,7 @@ class CompositeContractTest {
 
   @Test
   void mixesAnnotationsOfEveryDelegate() {
-    Contract contract = new CompositeContract(new AlphaContract(), new BetaContract());
+    Contract contract = MultiContract.of(new AlphaContract(), new BetaContract());
 
     Map<String, MethodMetadata> byKey =
         byConfigKey(contract.parseAndValidateMetadata(MixedApi.class));
@@ -216,7 +216,7 @@ class CompositeContractTest {
   @Test
   void firstDelegateWinsWhenSeveralUnderstandTheSameAnnotation() {
     MethodMetadata alphaFirst =
-        new CompositeContract(new AlphaContract(), new BetaContract())
+        MultiContract.of(new AlphaContract(), new BetaContract())
             .parseAndValidateMetadata(SharedApi.class)
             .getFirst();
 
@@ -229,7 +229,7 @@ class CompositeContractTest {
     assertThat(alphaFirst.indexToName()).containsExactly(entry(0, singletonList("id")));
 
     MethodMetadata betaFirst =
-        new CompositeContract(new BetaContract(), new AlphaContract())
+        MultiContract.of(new BetaContract(), new AlphaContract())
             .parseAndValidateMetadata(SharedApi.class)
             .getFirst();
 
@@ -252,13 +252,59 @@ class CompositeContractTest {
     }
 
     MethodMetadata md =
-        new CompositeContract(new AlphaContract(), new BetaContract())
+        MultiContract.of(new AlphaContract(), new BetaContract())
             .parseAndValidateMetadata(Api.class)
             .getFirst();
 
     assertThat(md.template())
         .hasHeaders(
             entry("X-Owner", singletonList("alpha")), entry("Accept", singletonList("text/plain")));
+  }
+
+  @Test
+  void nestedMultiContractMixesAnnotationsLikeAFlatOne() {
+    Contract nested =
+        MultiContract.of(
+            MultiContract.of(new AlphaContract()), MultiContract.of(new BetaContract()));
+
+    Map<String, MethodMetadata> byKey =
+        byConfigKey(nested.parseAndValidateMetadata(MixedApi.class));
+
+    assertThat(byKey.get("MixedApi#list(String,String)").template())
+        .hasMethod("GET")
+        .hasUrl("/api/items?q={q}")
+        .hasHeaders(
+            entry("Accept", singletonList("application/json")),
+            entry("X-Trace", singletonList("{X-Trace}")));
+    assertThat(byKey.get("MixedApi#create(String)").template())
+        .hasMethod("POST")
+        .hasUrl("/api/items");
+  }
+
+  @Test
+  void nestedMultiContractKeepsItsOwnPrecedence() {
+    // the inner contract puts Beta first; the outer one only adds Alpha after it
+    MethodMetadata md =
+        MultiContract.of(
+                MultiContract.of(new BetaContract(), new AlphaContract()), new AlphaContract())
+            .parseAndValidateMetadata(SharedApi.class)
+            .getFirst();
+
+    assertThat(md.template())
+        .hasMethod("POST")
+        .hasUrl("/beta/things")
+        .hasHeaders(entry("X-Owner", singletonList("beta")), entry("id", singletonList("{id}")));
+    assertThat(md.template().queries()).isEmpty();
+  }
+
+  @Test
+  void toStringListsDelegatesInOrder() {
+    assertThat(
+            MultiContract.of(
+                    new AlphaContract(),
+                    MultiContract.of(new BetaContract(), new DefaultContract()))
+                .toString())
+        .isEqualTo("MultiContract[AlphaContract, MultiContract[BetaContract, DefaultContract]]");
   }
 
   @Headers({"Accept: application/json", "X-Api: v1"})
@@ -289,8 +335,7 @@ class CompositeContractTest {
     List<MethodMetadata> expected =
         new DefaultContract().parseAndValidateMetadata(DefaultStyleApi.class);
     List<MethodMetadata> actual =
-        new CompositeContract(new DefaultContract())
-            .parseAndValidateMetadata(DefaultStyleApi.class);
+        MultiContract.of(new DefaultContract()).parseAndValidateMetadata(DefaultStyleApi.class);
 
     assertThat(actual).hasSameSizeAs(expected);
     for (int i = 0; i < expected.size(); i++) {
@@ -307,7 +352,7 @@ class CompositeContractTest {
   void singleDelegateFailsLikeTheDelegate() {
     assertThatThrownBy(
             () ->
-                new CompositeContract(new DefaultContract())
+                MultiContract.of(new DefaultContract())
                     .parseAndValidateMetadata(InvalidDefaultStyleApi.class))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining(
@@ -316,17 +361,17 @@ class CompositeContractTest {
 
   @Test
   void requiresAtLeastOneDelegate() {
-    assertThatThrownBy(() -> new CompositeContract())
+    assertThatThrownBy(() -> MultiContract.of())
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("at least one");
-    assertThatThrownBy(() -> new CompositeContract(Collections.emptyList()))
+    assertThatThrownBy(() -> MultiContract.of(Collections.emptyList()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("at least one");
   }
 
   @Test
   void rejectsNullDelegates() {
-    assertThatThrownBy(() -> new CompositeContract(new DefaultContract(), null))
+    assertThatThrownBy(() -> MultiContract.of(new DefaultContract(), null))
         .isInstanceOf(NullPointerException.class);
   }
 
@@ -334,9 +379,10 @@ class CompositeContractTest {
 
   @Test
   void rejectsAlwaysEncodeBodyDelegates() {
-    // the composite cannot honour AlwaysEncodeBodyContract on behalf of a delegate, so it refuses
+    // the multi-contract cannot honour AlwaysEncodeBodyContract on behalf of a delegate, so it
+    // refuses
     // instead of silently changing how that delegate's clients encode bodies.
-    assertThatThrownBy(() -> new CompositeContract(new AlwaysEncodeBody()))
+    assertThatThrownBy(() -> MultiContract.of(new AlwaysEncodeBody()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("AlwaysEncodeBodyContract");
   }

@@ -18,12 +18,12 @@ package feign.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import feign.CompositeContract;
 import feign.Contract;
 import feign.DefaultContract;
 import feign.Feign;
 import feign.Headers;
 import feign.MethodMetadata;
+import feign.MultiContract;
 import feign.Param;
 import feign.Request;
 import feign.RequestLine;
@@ -40,8 +40,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/** {@link CompositeContract} over Feign's default annotations and Spring MVC ones. */
-class SpringCompositeContractTest {
+/** {@link MultiContract} over Feign's default annotations and Spring MVC ones. */
+class SpringMultiContractTest {
 
   /** Half migrated from Feign annotations to Spring MVC ones. */
   @Headers("X-Client: feign")
@@ -71,7 +71,7 @@ class SpringCompositeContractTest {
 
     MixedStyleApi api =
         Feign.builder()
-            .contract(new CompositeContract(new DefaultContract(), new SpringContract()))
+            .contracts(new DefaultContract(), new SpringContract())
             .client(mockClient)
             .target(new MockTarget<>(MixedStyleApi.class));
 
@@ -107,8 +107,8 @@ class SpringCompositeContractTest {
 
   @Test
   void orderDoesNotMatterWhenTheContractsShareNoAnnotations() {
-    Contract defaultFirst = new CompositeContract(new DefaultContract(), new SpringContract());
-    Contract springFirst = new CompositeContract(new SpringContract(), new DefaultContract());
+    Contract defaultFirst = MultiContract.of(new DefaultContract(), new SpringContract());
+    Contract springFirst = MultiContract.of(new SpringContract(), new DefaultContract());
 
     List<MethodMetadata> expected = defaultFirst.parseAndValidateMetadata(MixedStyleApi.class);
     List<MethodMetadata> actual = springFirst.parseAndValidateMetadata(MixedStyleApi.class);
@@ -145,13 +145,13 @@ class SpringCompositeContractTest {
   @Test
   void firstContractWinsWhenBothUnderstandTheSameAnnotation() {
     MethodMetadata springFirst =
-        new CompositeContract(new SpringContract(), new VersionedGetContract())
+        MultiContract.of(new SpringContract(), new VersionedGetContract())
             .parseAndValidateMetadata(ModernApi.class)
             .getFirst();
     assertThat(springFirst.template().url()).isEqualTo("/modern/{id}");
 
     MethodMetadata versionedFirst =
-        new CompositeContract(new VersionedGetContract(), new SpringContract())
+        MultiContract.of(new VersionedGetContract(), new SpringContract())
             .parseAndValidateMetadata(ModernApi.class)
             .getFirst();
     assertThat(versionedFirst.template().url()).isEqualTo("/v2/modern/{id}");
