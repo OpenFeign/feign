@@ -562,6 +562,31 @@ public class Example {
 }
 ```
 
+#### Combining contracts
+
+> This API is `@Experimental` and may change incompatibly, or be removed, in a future release.
+
+`MultiContract` lets one interface use the annotations of several declarative contracts, for
+example while moving it from Feign's annotations to Spring MVC ones:
+
+```java
+interface GitHub {
+  @RequestLine("GET /repos/{owner}/{repo}/contributors")
+  List<Contributor> contributors(@Param("owner") String owner, @Param("repo") String repo);
+
+  @GetMapping("/repos/{owner}/{repo}/issues")
+  List<Issue> issues(@PathVariable("owner") String owner, @PathVariable("repo") String repo);
+}
+
+GitHub github = Feign.builder()
+                     .contracts(new DefaultContract(), new SpringContract())
+                     .target(GitHub.class, "https://api.github.com");
+```
+
+Each annotation is handled by the first contract in the list that understands it, so put the
+contract whose interpretation should win first. `.contracts(...)` is shorthand for
+`.contract(MultiContract.of(...))`. Clients configured with a single contract are not affected.
+
 ### Client
 
 #### OkHttp
@@ -1914,34 +1939,3 @@ public interface DownloadClient {
   }
 }
 ```
-
-### Reusing native request binding in custom transports
-
-A custom method handler can reuse Feign's argument expansion and body encoding without
-executing a `Client`. This is useful for subscription-based transports such as SSE,
-where the response must remain a live stream rather than a buffered `Response` body:
-
-```java
-RequestTemplateFactory factory = RequestTemplateFactory.forMethod(
-    target, methodMetadata, encoder, queryMapEncoder);
-
-// Run this on each invocation or subscription, not when creating the API proxy.
-RequestTemplate template = factory.create(arguments);
-for (RequestInterceptor interceptor : interceptors) {
-  interceptor.apply(template);
-}
-Request request = target.apply(template);
-// Dispatch request through the custom transport.
-```
-
-The factory sends no HTTP request and defines no response decoding or retry policy.
-Each call produces an independent template with the same binding rules as standard Feign
-(including body encoding, parameter expanders, URI arguments, query maps, and header maps).
-Interceptors and target application remain the custom handler's responsibility. This is
-an extension point for transports, not built-in SSE parsing or connection-pool management.
-
-A built-in streaming path for Kotlin `CoroutineFeign` clients exists out of the box: methods
-annotated `@Sse` returning `Flow<SseEvent>` stream through the `SseTransport` SPI, with
-`feign-webflux`'s `WebClientSseClient` as the standard implementation. See the
-[`feign-kotlin`](https://github.com/OpenFeign/feign/blob/master/kotlin/README.md#server-sent-events-sse-streaming)
-README.

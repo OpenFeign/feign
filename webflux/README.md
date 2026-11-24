@@ -76,11 +76,10 @@ val repositories = api.listRepositories("openfeign")
 
 ## Server-Sent Events (SSE) streaming
 
-`WebClientSseClient` implements the `SseTransport` interface from
-[`feign-kotlin`](../kotlin/README.md). It executes `@Sse` methods of a `CoroutineFeign` client as
-live streams: Spring's standard SSE codec decodes the events incrementally and nothing aggregates
-a 2xx response body. Requests are translated with the same shared rules as the buffered
-`WebClientAsyncClient` (identical header and body semantics).
+`WebClientSseClient` implements the `SseClient` interface from
+[`feign-kotlin`](../kotlin/README.md). It runs `@Sse` methods of a `CoroutineFeign` client as live
+streams. Spring's standard SSE codec decodes events one at a time, and nothing aggregates a 2xx
+response body. Requests are translated with the same rules as the buffered `WebClientAsyncClient`.
 
 ```kotlin
 interface AiApi {
@@ -90,23 +89,24 @@ interface AiApi {
   suspend fun chatStream(body: ChatRequest): Flow<SseEvent>
 }
 
+val builder = WebClient.builder()
 val api = CoroutineFeign.builder<AiApi>()
   .client(WebClientAsyncClient<Any>(builder) as AsyncClient<AiApi>) // buffered methods
-  .sseTransport(WebClientSseClient(builder))                       // @Sse methods
+  .sseClient(WebClientSseClient(builder))                          // @Sse methods
   .encoder(JacksonEncoder(objectMapper))
   .target(AiApi::class.java, "https://ai.example.com/v1")
 ```
 
-Behavior notes for the streaming transport:
+Behavior notes for the streaming client:
 
-- Only error responses (4xx/5xx) are buffered — error bodies are bounded — and passed to the
-  configured Feign `ErrorDecoder`. Successful 2xx bodies are never aggregated.
+- Only error responses (4xx/5xx) are buffered, within the codec's in-memory limit. They go to
+  the configured Feign `ErrorDecoder`. Successful 2xx bodies are never aggregated.
 - Feign `Request.Options` timeouts are not applied to the SSE stream. Configure connect and idle
-  timeouts on the WebClient connector; the read timeout does not cap the stream lifetime.
+  timeouts on the WebClient connector. The read timeout does not limit how long a stream lives.
 - Cancelling the flow cancels the exchange and closes the connection.
-- Each subscription sends a new request; partially consumed streams are never retried.
-- There is no automatic reconnection or `Last-Event-ID` tracking/replay. The event `retry` and `id`
-  fields are exposed as received; reconnect policy belongs to the application/transport.
+- Each subscription sends a new request. Partially consumed streams are never retried.
+- There is no automatic reconnection, and no `Last-Event-ID` tracking or replay. The event
+  `retry` and `id` fields are exposed exactly as received.
 
 ## Spring configuration
 

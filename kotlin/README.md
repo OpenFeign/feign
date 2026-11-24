@@ -58,10 +58,10 @@ example.
 
 ## Server-Sent Events (SSE) streaming
 
-Methods annotated `@Sse` return a `Flow<SseEvent>` and are executed as live streams: events are
-emitted as they arrive, and the response body is never aggregated in memory. The annotation is
-explicit on every streaming method; methods without it keep the regular buffered coroutine
-behavior.
+Methods with the `@Sse` annotation return a `Flow<SseEvent>`. They run as live streams: events
+are emitted as soon as they arrive, and the response body is never aggregated in memory. You must
+add the annotation to every streaming method. Methods without it keep the regular buffered
+coroutine behavior.
 
 ```kotlin
 data class ChatRequest(val model: String, val messages: List<Map<String, String>>)
@@ -80,7 +80,7 @@ interface AiApi {
 
 val api = CoroutineFeign.builder<AiApi>()
     .client(WebClientAsyncClient<Any>())          // buffered methods, unchanged
-    .sseTransport(WebClientSseClient())           // @Sse methods stream through this transport
+    .sseClient(WebClientSseClient())              // @Sse methods stream through this client
     .encoder(JacksonEncoder(objectMapper))        // native body encoding, reused for @Sse methods
     .target(AiApi::class.java, "https://ai.example.com/v1")
 
@@ -88,34 +88,39 @@ api.chatStream(ChatRequest("gpt", messages))
     .collect { event -> print(event.data ?: "") } // events arrive incrementally
 ```
 
-`WebClientSseClient` (from [`feign-webflux`](../webflux/README.md)) is the standard transport; any
-implementation of the `SseTransport` interface works — it receives the fully resolved
-`Request` (parameters bound, body encoded, `RequestInterceptor`s and target applied) and returns
-the events as a `org.reactivestreams.Publisher<SseEvent>`.
+`WebClientSseClient` (from [`feign-webflux`](../webflux/README.md)) is the standard client. Any
+implementation of the `SseClient` interface works. It receives a fully resolved `Request`:
+parameters are bound, the body is encoded, and `RequestInterceptor`s and the target are applied.
+It returns the events as an `org.reactivestreams.Publisher<SseEvent>`, and signals a non-2xx
+response as `SseErrorResponseException`.
 
-`SseEvent` carries the parsed fields of a dispatched event: `data` (null for comment-only
-keep-alive frames), `event`, `id`, `retry` and `comment`. Parsing is delegated to the transport;
-the WebClient transport uses Spring's standard SSE codec.
+`SseEvent` holds the parsed fields of a dispatched event: `data` (null for comment-only keep-alive
+frames), `event`, `id`, `retry` and `comment`. The client does the parsing; `WebClientSseClient`
+uses Spring's standard SSE codec.
+
+`@Sse` methods are served by a `MethodInterceptor`, so method interceptors you register on the
+builder run before them.
 
 ### Supported signatures and validation
 
 - Both `suspend fun ... : Flow<SseEvent>` and plain `fun ... : Flow<SseEvent>` are supported.
-- Anything else annotated with `@Sse` (a `Flow<SseEvent>` element type, a non-`Flow` return type,
-  a default method) is rejected with an explanatory `IllegalArgumentException` when the proxy is
-  created, before any request is attempted.
-- Creating a proxy for an interface that declares `@Sse` methods without registering an
-  `SseTransport` fails with an explanatory `IllegalStateException`. Interfaces without `@Sse`
-  methods do not need a transport.
+- If you use `@Sse` on anything else, the proxy is not created and you get an
+  `IllegalArgumentException`. This covers a `Flow` element type other than `SseEvent`, a return
+  type that is not a `Flow`, and a default method.
+- An interface with `@Sse` methods needs an `SseClient` on the builder. Without one, creating the
+  proxy fails with an `IllegalStateException`. Interfaces without `@Sse` methods do not need one.
 
 ### Behavior notes
 
-- The returned flow is cold: every collection re-binds the arguments, re-runs the encoders and
-  interceptors, and sends a new request. Partially consumed streams are never retried or replayed.
-- Cancelling collection cancels the in-flight request and disposes the connection.
-- A `Request.Options` argument overrides the builder options for that invocation, as with any
-  Feign method; how much of it a stream can honor is up to the transport (the WebClient transport
-  documents what it ignores).
-- Feign's `Logger` and `Retryer` are not invoked on `@Sse` paths; request logging/retry policy
-  belongs to the transport. There is no automatic reconnection or `Last-Event-ID` tracking/replay.
-- Errors during streaming surface as flow errors. HTTP error statuses are decoded with Feign's
-  configured `ErrorDecoder` (see the transport's behavior notes for bounded error-body buffering).
+- The arguments are bound and the body is encoded once per call. The returned flow is cold:
+  every collection re-runs the request interceptors and sends a new request. Partially consumed
+  streams are never retried or replayed.
+- Cancelling collection cancels the in-flight request and closes the connection.
+- A `Request.Options` argument overrides the builder options for that call. How much of it a
+  stream can honor depends on the client; `WebClientSseClient` documents what it ignores.
+- Feign's `Logger` and `Retryer` are not used for `@Sse` methods. There is no automatic
+  reconnection, and no `Last-Event-ID` tracking or replay.
+- Request interceptors run when the flow is collected, on the collector's thread. Do not read
+  caller-thread state such as a `ThreadLocal` in them.
+- Errors during streaming surface as flow errors. HTTP error statuses go through the configured
+  `ErrorDecoder`.

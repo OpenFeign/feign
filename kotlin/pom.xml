@@ -29,10 +29,6 @@
   <name>Feign Kotlin</name>
   <description>Feign Kotlin</description>
 
-  <properties>
-    <kotlinx.coroutines.version>1.11.0</kotlinx.coroutines.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -61,13 +57,6 @@
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-coroutines-reactor</artifactId>
       <version>${kotlinx.coroutines.version}</version>
-    </dependency>
-
-    <!-- Publisher, the return type of the SseTransport SPI. -->
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams</artifactId>
-      <version>1.0.4</version>
     </dependency>
 
     <dependency>

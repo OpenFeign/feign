@@ -84,6 +84,31 @@ public class RequestTemplateTest {
   }
 
   @Test
+  void copyOfResolvedTemplateCanBuildRequest() {
+    RequestTemplate resolved =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("/users/{user}")
+            .resolve(mapOf("user", "a b"));
+
+    RequestTemplate copy = RequestTemplate.from(resolved);
+    copy.header("X-Added", "copy-only");
+
+    assertThat(copy.resolved()).isTrue();
+    assertThat(copy.target("http://localhost").request().url())
+        .isEqualTo("http://localhost/users/a%20b");
+    assertThat(copy.headers()).containsEntry("X-Added", Collections.singletonList("copy-only"));
+    assertThat(resolved.headers()).doesNotContainKey("X-Added");
+  }
+
+  @Test
+  void unresolvedTemplateCopyStaysUnresolved() {
+    RequestTemplate copy = RequestTemplate.from(new RequestTemplate().uri("/users/{user}"));
+
+    assertThat(copy.resolved()).isFalse();
+  }
+
+  @Test
   void resolveTemplateWithParameterizedPathSkipsEncodingSlash() {
     RequestTemplate template = new RequestTemplate().method(HttpMethod.GET).uri("{zoneId}");
 

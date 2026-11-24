@@ -22,15 +22,8 @@ import feign.Request;
 import feign.Request.Options;
 import feign.Response;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -85,9 +78,9 @@ public class WebClientAsyncClient<C> implements AsyncClient<C> {
     final Mono<Response> result;
     try {
       result =
-          toWebClientRequest(request)
+          WebClientExchanges.fromFeignRequest(webClient, request)
               .exchangeToMono(response -> response.toEntity(byte[].class))
-              .map(entity -> toFeignResponse(entity, request));
+              .map(entity -> WebClientExchanges.toFeignResponse(entity, request));
     } catch (final RuntimeException e) {
       // requests that cannot even be built, ex. a malformed url, fail the returned future
       // instead of throwing from execute
@@ -101,35 +94,5 @@ public class WebClientAsyncClient<C> implements AsyncClient<C> {
       return result.timeout(Duration.ofMillis(readTimeoutMillis)).toFuture();
     }
     return result.toFuture();
-  }
-
-  private WebClient.RequestHeadersSpec<?> toWebClientRequest(final Request request) {
-    return WebClientRequests.create(webClient, request);
-  }
-
-  private Response toFeignResponse(final ResponseEntity<byte[]> entity, final Request request) {
-    final int status = entity.getStatusCode().value();
-    return Response.builder()
-        .status(status)
-        .reason(reasonPhrase(status))
-        .headers(toFeignHeaders(entity.getHeaders()))
-        .body(entity.getBody())
-        .request(request)
-        .build();
-  }
-
-  /**
-   * WebClient does not expose the reason phrase sent by the server, so fall back to the standard
-   * one.
-   */
-  private String reasonPhrase(final int status) {
-    final HttpStatus httpStatus = HttpStatus.resolve(status);
-    return httpStatus != null ? httpStatus.getReasonPhrase() : null;
-  }
-
-  private Map<String, Collection<String>> toFeignHeaders(final HttpHeaders headers) {
-    final Map<String, Collection<String>> result = new LinkedHashMap<>();
-    headers.forEach((name, values) -> result.put(name, new ArrayList<>(values)));
-    return result;
   }
 }

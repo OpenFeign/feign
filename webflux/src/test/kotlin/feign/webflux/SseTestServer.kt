@@ -25,11 +25,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 /**
- * Minimal raw-socket HTTP server for SSE semantics that MockWebServer cannot express: writing
- * events one at a time while the response is still open, and observing when the client cancels.
+ * A minimal raw-socket HTTP server for SSE testing. It does things MockWebServer cannot express: it
+ * writes events one at a time while the response is still open, and it observes when the client
+ * cancels.
  *
- * Responses are close-delimited (no Content-Length, no chunked encoding): the body ends when the
- * server closes the connection, which is the simplest valid SSE framing for a test server.
+ * Responses are close-delimited (no Content-Length, no chunked encoding). The body ends when the
+ * server closes the connection.
  */
 class SseTestServer : AutoCloseable {
 
@@ -72,54 +73,50 @@ class SseTestServer : AutoCloseable {
 class SseTestConnection(private val socket: Socket) : AutoCloseable {
 
   private val output: OutputStream = socket.getOutputStream()
-  private val disconnected = CompletableFuture<Boolean>()
-  private val requestReceived = CompletableFuture<Boolean>()
+  private val clientDisconnect = CompletableFuture<Boolean>()
+  private val requestHeadersArrival = CompletableFuture<Boolean>()
 
   init {
     thread(name = "sse-test-server-connection", isDaemon = true) {
       try {
         val input = socket.getInputStream()
         val buffer = ByteArray(1024)
-        var received = StringBuilder()
+        val receivedRequest = StringBuilder()
         // drain request bytes; EOF or a socket error means the client closed the connection
         while (true) {
-          val read = input.read(buffer)
-          if (read == -1) break
-          received.append(String(buffer, 0, read, Charsets.UTF_8))
-          if (!requestReceived.isDone && received.contains("\r\n\r\n")) {
-            // end of request headers seen; it is now safe to write the response
-            requestReceived.complete(true)
+          val bytesRead = input.read(buffer)
+          if (bytesRead == -1) break
+          receivedRequest.append(String(buffer, 0, bytesRead, Charsets.UTF_8))
+          if (!requestHeadersArrival.isDone && receivedRequest.contains("\r\n\r\n")) {
+            requestHeadersArrival.complete(true)
           }
         }
-        disconnected.complete(true)
+        clientDisconnect.complete(true)
       } catch (_: Exception) {
-        requestReceived.complete(true)
-        disconnected.complete(true)
+        requestHeadersArrival.complete(true)
+        clientDisconnect.complete(true)
       }
     }
   }
 
   /** Blocks until the client's request headers have been fully received. */
-  fun awaitRequestReceived(timeoutMillis: Long = 5_000): Boolean =
-      try {
-        requestReceived.get(timeoutMillis, TimeUnit.MILLISECONDS)
-      } catch (_: Exception) {
-        false
-      }
+  fun awaitRequestHeaders(timeoutMillis: Long = 5_000) {
+    requestHeadersArrival.get(timeoutMillis, TimeUnit.MILLISECONDS)
+  }
 
   /** Writes response headers with no framing header, so the body is close-delimited. */
-  fun writeHead(
+  fun writeResponseHeaders(
       statusLine: String = "HTTP/1.1 200 OK",
       headers: Map<String, String> =
           mapOf("Content-Type" to "text/event-stream", "Connection" to "close")
   ) {
-    val head =
+    val responseHeaders =
         buildString {
           append(statusLine).append("\r\n")
           headers.forEach { (name, value) -> append(name).append(": ").append(value).append("\r\n") }
           append("\r\n")
         }
-    writeRaw(head)
+    writeRaw(responseHeaders)
   }
 
   fun writeRaw(text: String) {
@@ -130,7 +127,7 @@ class SseTestConnection(private val socket: Socket) : AutoCloseable {
   /** Resolves once the client closed the connection (read EOF or socket error). */
   fun awaitClientDisconnect(timeoutMillis: Long = 5_000): Boolean =
       try {
-        disconnected.get(timeoutMillis, TimeUnit.MILLISECONDS)
+        clientDisconnect.get(timeoutMillis, TimeUnit.MILLISECONDS)
       } catch (_: Exception) {
         false
       }

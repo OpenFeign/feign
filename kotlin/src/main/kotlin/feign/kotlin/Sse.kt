@@ -20,10 +20,10 @@ import feign.Experimental
 /**
  * Marks a Feign method as a Server-Sent Events (SSE) source.
  *
- * The method must return `kotlinx.coroutines.flow.Flow<SseEvent>` (declared `suspend` or not).
- * When used with [CoroutineFeign] and an [SseTransport], each collection of the returned flow
- * binds the method arguments through Feign's normal request pipeline, sends one HTTP request and
- * emits the SSE events as they arrive, without ever buffering the whole response body.
+ * The method must return `kotlinx.coroutines.flow.Flow<SseEvent>`. It can be a `suspend` function
+ * or a regular function. With [CoroutineFeign] and an [SseClient], each collection of the returned
+ * flow sends one HTTP request and emits the events as they arrive. The response body is never
+ * buffered.
  *
  * ```kotlin
  * interface AiApi {

@@ -142,6 +142,7 @@ public final class RequestTemplate implements Serializable {
     if (!requestTemplate.headers().isEmpty()) {
       template.headers.putAll(requestTemplate.headers);
     }
+    template.resolved = requestTemplate.resolved;
     return template;
   }
 

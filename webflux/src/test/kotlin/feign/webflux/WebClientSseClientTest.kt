@@ -56,20 +56,20 @@ class WebClientSseClientTest {
     @RequestLine("GET /events")
     @Headers("Accept: text/event-stream")
     @Sse
-    fun events(): Flow<SseEvent>
+    fun streamEvents(): Flow<SseEvent>
 
     @RequestLine("GET /events")
     @Headers("Accept: text/event-stream")
     @Sse
-    suspend fun eventsSuspending(): Flow<SseEvent>
+    suspend fun streamEventsSuspending(): Flow<SseEvent>
 
     @RequestLine("POST /chat/{room}")
     @Headers("Content-Type: application/json")
     @Sse
-    fun chat(@Param("room") room: String, body: ChatRequest): Flow<SseEvent>
+    fun streamChat(@Param("room") room: String, body: ChatRequest): Flow<SseEvent>
 
     @RequestLine("GET /buffered")
-    suspend fun buffered(): String
+    suspend fun fetchBufferedBody(): String
   }
 
   data class ChatRequest(val model: String, val temperature: Double)
@@ -77,17 +77,17 @@ class WebClientSseClientTest {
   private lateinit var server: MockWebServer
 
   @BeforeEach
-  fun beforeEach() {
+  fun startMockServer() {
     server = MockWebServer()
     server.start()
   }
 
   @AfterEach
-  fun afterEach() {
+  fun shutDownMockServer() {
     server.shutdown()
   }
 
-  private fun api(
+  private fun newStreamApiClient(
       baseUrl: String = server.url("/").toString(),
       configure: CoroutineFeign.CoroutineBuilder<Any?>.() ->
       CoroutineFeign.CoroutineBuilder<Any?> = { this }
@@ -95,26 +95,26 @@ class WebClientSseClientTest {
     @Suppress("UNCHECKED_CAST")
     return CoroutineFeign.builder<Any?>()
         .client(WebClientAsyncClient<Any>() as AsyncClient<Any?>)
-        .sseTransport(WebClientSseClient())
+        .sseClient(WebClientSseClient())
         .encoder(JacksonEncoder(ObjectMapper()))
         .configure()
         .target(StreamApi::class.java, baseUrl)
   }
 
-  private fun sseResponse(body: String): MockResponse =
+  private fun createChunkedSseResponse(body: String): MockResponse =
       MockResponse()
           .setHeader("Content-Type", "text/event-stream")
           .setChunkedBody(body, 4)
           .setBodyDelay(20, TimeUnit.MILLISECONDS)
 
   @Test
-  fun `fragmented response with multiple events and metadata is decoded incrementally`(): Unit =
+  fun `fragmented response with multiple events and metadata decodes into separate events`(): Unit =
       runBlocking {
         server.enqueue(
-            sseResponse("id: 7\nevent: delta\ndata: one\ndata: two\nretry: 5000\n\ndata: last\n\n"))
+            createChunkedSseResponse("id: 7\nevent: delta\ndata: one\ndata: two\nretry: 5000\n\ndata: last\n\n"))
 
         val events =
-            withTimeout(10_000) { api().eventsSuspending().toList() }
+            withTimeout(10_000) { newStreamApiClient().streamEventsSuspending().toList() }
 
         assertThat(events)
             .containsExactly(
@@ -123,23 +123,25 @@ class WebClientSseClientTest {
       }
 
   @Test
-  fun `non suspend flow method works the same way`(): Unit = runBlocking {
-    server.enqueue(sseResponse("data: hello\n\n"))
+  fun `non suspend flow method decodes events and sends the Accept header`(): Unit = runBlocking {
+    server.enqueue(createChunkedSseResponse("data: hello\n\n"))
 
-    val events = withTimeout(10_000) { api().events().toList() }
+    val events = withTimeout(10_000) { newStreamApiClient().streamEvents().toList() }
 
     assertThat(events).containsExactly(SseEvent("hello"))
-    val recorded = server.takeRequest(5, TimeUnit.SECONDS)!!
-    assertThat(recorded.getHeader("Accept")).isEqualTo("text/event-stream")
+    val recordedRequest = server.takeRequest(5, TimeUnit.SECONDS)!!
+    assertThat(recordedRequest.getHeader("Accept")).isEqualTo("text/event-stream")
   }
 
   @Test
   fun `the flow is cold and each collection sends a new request`(): Unit = runBlocking {
-    server.enqueue(sseResponse("data: first-run\n\n"))
-    server.enqueue(sseResponse("data: second-run\n\n"))
+    server.enqueue(createChunkedSseResponse("data: first-run\n\n"))
+    server.enqueue(createChunkedSseResponse("data: second-run\n\n"))
 
-    val firstRun = withTimeout(10_000) { api().events().toList() }
-    val secondRun = withTimeout(10_000) { api().events().toList() }
+    val events = newStreamApiClient().streamEvents()
+
+    val firstRun = withTimeout(10_000) { events.toList() }
+    val secondRun = withTimeout(10_000) { events.toList() }
 
     assertThat(firstRun).containsExactly(SseEvent("first-run"))
     assertThat(secondRun).containsExactly(SseEvent("second-run"))
@@ -147,25 +149,25 @@ class WebClientSseClientTest {
   }
 
   @Test
-  fun `post body path params headers and interceptors follow the native binding`(): Unit =
+  fun `post sse method expands path param, encodes json body, and applies headers and interceptors`(): Unit =
       runBlocking {
-        server.enqueue(sseResponse("data: ok\n\n"))
+        server.enqueue(createChunkedSseResponse("data: ok\n\n"))
 
-        val used =
-            api(
+        val events =
+            newStreamApiClient(
                     configure = {
                       requestInterceptor(
                           RequestInterceptor { it.header("X-Auth", "local-credential") })
                     })
-                .chat("general", ChatRequest("gpt", 0.7))
+                .streamChat("general", ChatRequest("gpt", 0.7))
                 .toList()
 
-        assertThat(used).containsExactly(SseEvent("ok"))
-        val recorded = server.takeRequest(5, TimeUnit.SECONDS)!!
-        assertThat(recorded.path).isEqualTo("/chat/general")
-        assertThat(recorded.getHeader("Content-Type")).startsWith("application/json")
-        assertThat(recorded.getHeader("X-Auth")).isEqualTo("local-credential")
-        assertThat(recorded.body.readUtf8())
+        assertThat(events).containsExactly(SseEvent("ok"))
+        val recordedRequest = server.takeRequest(5, TimeUnit.SECONDS)!!
+        assertThat(recordedRequest.path).isEqualTo("/chat/general")
+        assertThat(recordedRequest.getHeader("Content-Type")).startsWith("application/json")
+        assertThat(recordedRequest.getHeader("X-Auth")).isEqualTo("local-credential")
+        assertThat(recordedRequest.body.readUtf8())
             .isEqualTo("{\"model\":\"gpt\",\"temperature\":0.7}")
       }
 
@@ -176,7 +178,7 @@ class WebClientSseClientTest {
 
         val exception =
             try {
-              withTimeout(10_000) { api().events().toList() }
+              withTimeout(10_000) { newStreamApiClient().streamEvents().toList() }
               null
             } catch (e: FeignException) {
               e
@@ -184,18 +186,18 @@ class WebClientSseClientTest {
 
         assertThat(exception.status()).isEqualTo(500)
         assertThat(exception.contentUTF8()).isEqualTo("service exploded")
-        assertThat(exception.message).contains("StreamApi#events")
+        assertThat(exception.message).contains("StreamApi#streamEvents")
       }
 
   @Test
   fun `http errors use the configured Feign error decoder`() = runBlocking {
     server.enqueue(MockResponse().setResponseCode(422).setBody("invalid event request"))
-    val api =
-        api(
+    val apiWithErrorDecoder =
+        newStreamApiClient(
             configure = {
               errorDecoder(
                   ErrorDecoder { methodKey, response ->
-                    assertThat(methodKey).contains("StreamApi#events")
+                    assertThat(methodKey).contains("StreamApi#streamEvents")
                     assertThat(response.status()).isEqualTo(422)
                     val body = response.body().asInputStream().use { it.readBytes().decodeToString() }
                     assertThat(body).isEqualTo("invalid event request")
@@ -205,7 +207,7 @@ class WebClientSseClientTest {
 
     val exception =
         try {
-          withTimeout(10_000) { api.events().toList() }
+          withTimeout(10_000) { apiWithErrorDecoder.streamEvents().toList() }
           null
         } catch (e: IllegalArgumentException) {
           e
@@ -215,14 +217,14 @@ class WebClientSseClientTest {
   }
 
   @Test
-  fun `first event is delivered while the response is still open and demand is controlled`() {
+  fun `first event is delivered while the response is still open and events arrive one per request`() {
     val rawServer = SseTestServer()
     try {
       val firstEventConsumed = CountDownLatch(1)
       thread {
         val connection = rawServer.awaitConnection()
-        connection.awaitRequestReceived()
-        connection.writeHead()
+        connection.awaitRequestHeaders()
+        connection.writeResponseHeaders()
         connection.writeRaw("data: first\n\n")
         // only write more after the consumer has actually received the first event
         firstEventConsumed.await()
@@ -234,7 +236,7 @@ class WebClientSseClientTest {
       // has received the first one, proving the first event crossed the wire while the response
       // was still open. The trailing request lets the collector observe the upstream completion
       // (the kotlinx flow bridge only delivers it on the next demand signal).
-      StepVerifier.create(api(rawServer.baseUrl).events().asFlux(), 0)
+      StepVerifier.create(newStreamApiClient(rawServer.baseUrl).streamEvents().asFlux(), 0)
           .thenRequest(1)
           .assertNext { event ->
             assertThat(event.data).isEqualTo("first")
@@ -254,23 +256,23 @@ class WebClientSseClientTest {
   fun `cancelling the flow disposes the connection while the server is still streaming`() {
     val rawServer = SseTestServer()
     try {
-      val connectionRef = AtomicReference<SseTestConnection>()
+      val acceptedConnection = AtomicReference<SseTestConnection>()
       thread {
         val connection = rawServer.awaitConnection()
-        connectionRef.set(connection)
-        connection.awaitRequestReceived()
-        connection.writeHead()
+        acceptedConnection.set(connection)
+        connection.awaitRequestHeaders()
+        connection.writeResponseHeaders()
         connection.writeRaw("data: first\n\n")
         connection.writeRaw("data: second\n\n")
         // hold the response open; the client is expected to cancel mid-stream
       }
 
-      StepVerifier.create(api(rawServer.baseUrl).events().asFlux(), 1)
+      StepVerifier.create(newStreamApiClient(rawServer.baseUrl).streamEvents().asFlux(), 1)
           .expectNextCount(1)
           .thenCancel()
           .verify(Duration.ofSeconds(10))
 
-      val connection = connectionRef.get()
+      val connection = acceptedConnection.get()
       val clientDisconnected = connection.awaitClientDisconnect()
       assertThat(clientDisconnected)
           .describedAs("the transport must close the connection on cancellation")
@@ -285,7 +287,7 @@ class WebClientSseClientTest {
       runBlocking {
         server.enqueue(MockResponse().setBody("\"plain\""))
 
-        val body = withTimeout(10_000) { api().buffered() }
+        val body = withTimeout(10_000) { newStreamApiClient().fetchBufferedBody() }
 
         assertThat(body).isEqualTo("\"plain\"")
       }

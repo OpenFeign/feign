@@ -33,7 +33,6 @@
     <!-- Spring Framework 7 requires Java 17 -->
     <main.java.version>17</main.java.version>
     <reactor-netty.version>1.4.0</reactor-netty.version>
-    <kotlinx.coroutines.version>1.11.0</kotlinx.coroutines.version>
   </properties>
 
   <dependencies>
@@ -42,7 +41,6 @@
       <artifactId>feign-core</artifactId>
     </dependency>
 
-    <!-- The SseTransport SPI and SseEvent type implemented by WebClientSseClient. -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>feign-kotlin</artifactId>
