@@ -24,9 +24,12 @@ import feign.Request.Options;
 import feign.Request.ProtocolVersion;
 import feign.Response;
 import feign.Util;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.UncheckedIOException;
 import java.lang.ref.SoftReference;
 import java.net.URI;
@@ -34,6 +37,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpClient.Version;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
@@ -64,14 +68,29 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
+import javax.net.ssl.SSLSession;
 
 public class Http2Client implements Client, AsyncClient<Object> {
 
   private final HttpClient client;
 
+  /**
+   * Whether {@link #execute(Request, Options)} reads the head of the response body before
+   * returning, see {@link #Http2Client(HttpClient, boolean)}. Off by default.
+   */
+  private final boolean bufferResponseHead;
+
   private final Map<Integer, SoftReference<HttpClient>> clients = new ConcurrentHashMap<>();
 
   private volatile ScheduledExecutorService readTimeoutScheduler;
+
+  // TODO: make this configurable, together with InvocationContext.MAX_RESPONSE_BUFFER_SIZE in
+  // core, which shares the same hardcoded 8KB bound (likely 14.x work).
+  /**
+   * Maximum number of response body bytes read eagerly, mirroring the size bound feign core uses
+   * when it buffers response bodies ({@code InvocationContext.MAX_RESPONSE_BUFFER_SIZE}).
+   */
+  private static final int MAX_RESPONSE_HEAD_SIZE = 8192;
 
   /**
    * Creates the new Http2Client using following defaults:
@@ -98,7 +117,25 @@ public class Http2Client implements Client, AsyncClient<Object> {
   }
 
   public Http2Client(HttpClient client) {
+    this(client, false);
+  }
+
+  /**
+   * Creates a new Http2Client.
+   *
+   * @param client the {@link HttpClient} to send requests with.
+   * @param bufferResponseHead whether {@link #execute(Request, Options)} reads the head of the
+   *     response body (up to 8KB) before returning. This is off by default - {@code execute()}
+   *     returns as soon as the response headers arrive and the body is streamed lazily - which
+   *     streaming consumers such as SSE, long polling or chunked streams rely on. When enabled, a
+   *     transport failure on a small response body (a malformed chunked transfer encoding, a
+   *     truncation) surfaces as an {@link IOException} from {@link #execute(Request, Options)}, so
+   *     feign classifies it as retryable instead of raising it while the body is read or decoded.
+   *     Bodies larger than the buffered head keep streaming once it has been read.
+   */
+  public Http2Client(HttpClient client, boolean bufferResponseHead) {
     this.client = Util.checkNotNull(client, "HttpClient must not be null");
+    this.bufferResponseHead = bufferResponseHead;
   }
 
   @Override
@@ -119,7 +156,10 @@ public class Http2Client implements Client, AsyncClient<Object> {
       throw new IOException(e);
     }
 
-    return withReadTimeout(toFeignResponse(request, httpResponse), options);
+    if (!bufferResponseHead) {
+      return withReadTimeout(toFeignResponse(request, httpResponse), options);
+    }
+    return toFeignResponse(request, withBufferedHead(httpResponse, options));
   }
 
   @Override
@@ -188,6 +228,119 @@ public class Http2Client implements Client, AsyncClient<Object> {
                 options.readTimeoutUnit().toNanos(options.readTimeout())),
             response.body().length())
         .build();
+  }
+
+  /**
+   * Reads the head (up to {@value #MAX_RESPONSE_HEAD_SIZE} bytes) of the raw response body and
+   * returns a view of the response whose body yields those bytes, followed by whatever is left of
+   * the stream. Transport level failures on small responses - eg a malformed chunked transfer
+   * encoding - thereby surface as an IOException from {@link #execute(Request, Options)}.
+   *
+   * <p>Since the body is delivered with {@link BodyHandlers#ofInputStream()}, {@link
+   * HttpClient#send} returns as soon as the headers arrive and the body is only read later. A
+   * malformed or truncated body then fails during decoding, after {@link #execute(Request,
+   * Options)} returned successfully; feign classifies such failures as {@code errorReading} instead
+   * of the retryable {@code errorExecuting}, and with a {@link Response} return type the raw
+   * IOException escapes the invocation entirely. Reading the head here restores the retryable
+   * classification responses had when the client buffered the full body via {@code
+   * BodyHandlers.ofByteArray()}.
+   *
+   * <p>This is opt-in, see {@link #Http2Client(HttpClient, boolean)}: {@link #execute(Request,
+   * Options)} then blocks until the head is in, which does not suit responses that trickle out -
+   * SSE, long polling and the like.
+   *
+   * <p>The read is applied to the raw, pre-decompression body: decompression failures are decoder
+   * concerns and keep surfacing where they did before. Bodies larger than the buffer keep streaming
+   * - the buffered head is re-attached in front of the remaining stream - preserving the memory
+   * behavior that motivated the switch to {@code ofInputStream()}. The read timeout guards both the
+   * eager read and the remaining stream, which is returned with the timeout wrapper already in
+   * place.
+   */
+  private HttpResponse<InputStream> withBufferedHead(
+      HttpResponse<InputStream> response, Options options) throws IOException {
+    final InputStream stream = withReadTimeout(response.body(), options);
+    if (stream == null) {
+      return response;
+    }
+    final byte[] head;
+    try {
+      head = readAtMost(stream, MAX_RESPONSE_HEAD_SIZE + 1);
+    } catch (IOException e) {
+      ensureClosed(stream);
+      throw e;
+    }
+    final InputStream body;
+    if (head.length > MAX_RESPONSE_HEAD_SIZE) {
+      // the body continues past the buffer: re-attach the head in front of the remaining stream
+      body = new SequenceInputStream(new ByteArrayInputStream(head), stream);
+    } else {
+      // the whole body is in: nothing is left to stream, or to time out
+      ensureClosed(stream);
+      body = new ByteArrayInputStream(head);
+    }
+    // the response is wrapped rather than the body handed over separately, so that
+    // toFeignResponse(Request, HttpResponse) stays the single place that builds the Response
+    return new HttpResponse<InputStream>() {
+
+      @Override
+      public int statusCode() {
+        return response.statusCode();
+      }
+
+      @Override
+      public HttpRequest request() {
+        return response.request();
+      }
+
+      @Override
+      public Optional<HttpResponse<InputStream>> previousResponse() {
+        return response.previousResponse();
+      }
+
+      @Override
+      public HttpHeaders headers() {
+        return response.headers();
+      }
+
+      @Override
+      public InputStream body() {
+        return body;
+      }
+
+      @Override
+      public Optional<SSLSession> sslSession() {
+        return response.sslSession();
+      }
+
+      @Override
+      public URI uri() {
+        return response.uri();
+      }
+
+      @Override
+      public HttpClient.Version version() {
+        return response.version();
+      }
+    };
+  }
+
+  private InputStream withReadTimeout(InputStream body, Options options) {
+    if (body == null || options.readTimeout() <= 0) {
+      return body;
+    }
+    return new ReadTimeoutInputStream(
+        body, readTimeoutScheduler(), options.readTimeoutUnit().toNanos(options.readTimeout()));
+  }
+
+  private static byte[] readAtMost(InputStream stream, int limit) throws IOException {
+    final ByteArrayOutputStream out = new ByteArrayOutputStream();
+    final byte[] chunk = new byte[1024];
+    int read;
+    while (out.size() < limit
+        && (read = stream.read(chunk, 0, Math.min(chunk.length, limit - out.size()))) != -1) {
+      out.write(chunk, 0, read);
+    }
+    return out.toByteArray();
   }
 
   private ScheduledExecutorService readTimeoutScheduler() {
