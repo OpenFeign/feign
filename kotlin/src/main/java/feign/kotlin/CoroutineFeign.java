@@ -28,6 +28,7 @@ import feign.Target.HardCodedTarget;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -122,6 +123,7 @@ public class CoroutineFeign<C> {
         new DefaultAsyncClient<>(
             new DefaultClient(null, null), LazyInitializedExecutorService.instance);
     private MethodInfoResolver methodInfoResolver = KotlinMethodInfo::createInstance;
+    private SseClient sseClient;
 
     @Deprecated
     public CoroutineBuilder<C> defaultContextSupplier(Supplier<C> supplier) {
@@ -131,6 +133,23 @@ public class CoroutineFeign<C> {
 
     public CoroutineBuilder<C> client(AsyncClient<C> client) {
       this.client = client;
+      return this;
+    }
+
+    /**
+     * Registers the client that runs {@link Sse} methods, for example {@code feign-webflux}'s
+     * {@code WebClientSseClient}. The buffered {@link AsyncClient} set through {@link
+     * #client(AsyncClient)} keeps handling all other methods unchanged.
+     *
+     * <p>You must register one if your interface has {@code @Sse} methods. Unlike the buffered
+     * {@link AsyncClient}, an SSE client does not receive the request context from {@link
+     * #defaultContextSupplier(AsyncContextSupplier)}. If a request needs that context, resolve it
+     * in a {@link feign.RequestInterceptor} that does not depend on the calling thread, because
+     * interceptors run when the flow is collected.
+     */
+    @Experimental
+    public CoroutineBuilder<C> sseClient(SseClient sseClient) {
+      this.sseClient = Objects.requireNonNull(sseClient, "sseClient must not be null");
       return this;
     }
 
@@ -169,7 +188,7 @@ public class CoroutineFeign<C> {
               .client((AsyncClient<Object>) client)
               .decoder(decoder)
               .errorDecoder(errorDecoder)
-              .contract(contract)
+              .contract(new SseContract(contract, sseClient != null))
               .retryer(retryer)
               .logger(logger)
               .encoder(encoder)
@@ -177,11 +196,16 @@ public class CoroutineFeign<C> {
               .options(options)
               .requestInterceptors(requestInterceptors)
               .responseInterceptors(responseInterceptors)
+              .methodInterceptors(methodInterceptors)
               .invocationHandlerFactory(invocationHandlerFactory)
               .defaultContextSupplier((AsyncContextSupplier<Object>) defaultContextSupplier)
               .methodInfoResolver(methodInfoResolver);
       if (dismiss404) {
         asyncBuilder.dismiss404();
+      }
+      if (sseClient != null) {
+        asyncBuilder.methodInterceptor(
+            new SseMethodInterceptor(sseClient, options, errorDecoder, requestInterceptors));
       }
       AsyncFeign<C> asyncFeign = (AsyncFeign<C>) asyncBuilder.build();
       return new CoroutineFeign<>(asyncFeign);

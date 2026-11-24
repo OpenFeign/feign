@@ -42,6 +42,12 @@
     </dependency>
 
     <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>feign-kotlin</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-webflux</artifactId>
       <version>${spring.version}</version>
@@ -69,7 +75,19 @@
     <!-- testing -->
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>feign-kotlin</artifactId>
+      <artifactId>feign-jackson</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-test</artifactId>
+      <version>${kotlinx.coroutines.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-test</artifactId>
+      <version>${reactor.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

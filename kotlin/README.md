@@ -55,3 +55,72 @@ The HTTP request now runs on the async client's own I/O machinery, and response
 decoding happens on the thread that completes the future rather than on a
 dedicated pool thread. See `NonBlockingCoroutineFeignTest` for a runnable
 example.
+
+## Server-Sent Events (SSE) streaming
+
+Methods with the `@Sse` annotation return a `Flow<SseEvent>`. They run as live streams: events
+are emitted as soon as they arrive, and the response body is never aggregated in memory. You must
+add the annotation to every streaming method. Methods without it keep the regular buffered
+coroutine behavior.
+
+```kotlin
+data class ChatRequest(val model: String, val messages: List<Map<String, String>>)
+
+interface AiApi {
+    @RequestLine("GET /events")
+    @Headers("Accept: text/event-stream")
+    @Sse
+    fun events(): Flow<SseEvent>
+
+    @RequestLine("POST /chat/completions")
+    @Headers("Content-Type: application/json", "Accept: text/event-stream")
+    @Sse
+    suspend fun chatStream(body: ChatRequest): Flow<SseEvent>
+}
+
+val api = CoroutineFeign.builder<AiApi>()
+    .client(WebClientAsyncClient<Any>())          // buffered methods, unchanged
+    .sseClient(WebClientSseClient())              // @Sse methods stream through this client
+    .encoder(JacksonEncoder(objectMapper))        // native body encoding, reused for @Sse methods
+    .target(AiApi::class.java, "https://ai.example.com/v1")
+
+api.chatStream(ChatRequest("gpt", messages))
+    .collect { event -> print(event.data ?: "") } // events arrive incrementally
+```
+
+`WebClientSseClient` (from [`feign-webflux`](../webflux/README.md)) is the standard client. Any
+implementation of the `SseClient` interface works. It receives a fully resolved `Request`:
+parameters are bound, the body is encoded, and `RequestInterceptor`s and the target are applied.
+It returns the events as an `org.reactivestreams.Publisher<SseEvent>`, and signals a non-2xx
+response as `SseErrorResponseException`.
+
+`SseEvent` holds the parsed fields of a dispatched event: `data` (null for comment-only keep-alive
+frames), `event`, `id`, `retry` and `comment`. The client does the parsing; `WebClientSseClient`
+uses Spring's standard SSE codec.
+
+`@Sse` methods are served by a `MethodInterceptor`, so method interceptors you register on the
+builder run before them.
+
+### Supported signatures and validation
+
+- Both `suspend fun ... : Flow<SseEvent>` and plain `fun ... : Flow<SseEvent>` are supported.
+- If you use `@Sse` on anything else, the proxy is not created and you get an
+  `IllegalArgumentException`. This covers a `Flow` element type other than `SseEvent`, a return
+  type that is not a `Flow`, and a default method.
+- An interface with `@Sse` methods needs an `SseClient` on the builder. Without one, creating the
+  proxy fails with an `IllegalStateException`. Interfaces without `@Sse` methods do not need one.
+
+### Behavior notes
+
+- The arguments are bound and the body is encoded once per call. The returned flow is cold:
+  every collection re-runs the request interceptors and sends a new request. Partially consumed
+  streams are never retried or replayed.
+- Cancelling collection cancels the in-flight request and closes the connection.
+- A `Request.Options` argument overrides the builder options for that call. How much of it a
+  stream can honor depends on the client; `WebClientSseClient` documents what it ignores.
+- Feign's `Logger` and `Retryer` are not used for `@Sse` methods. There is no automatic
+  reconnection, and no `Last-Event-ID` tracking or replay.
+- Request interceptors run when the flow is collected, on the collector's thread. Do not read
+  caller-thread state such as a `ThreadLocal` in them.
+- Errors during streaming surface as flow errors. HTTP error statuses go through the configured
+  `ErrorDecoder`.
