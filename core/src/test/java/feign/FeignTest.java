@@ -51,6 +51,7 @@ import feign.querymap.FieldQueryMapEncoder;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
@@ -646,6 +647,34 @@ public class FeignTest {
   }
 
   @Test
+  void retriesOnSocketTimeoutException() throws Exception {
+    int[] attempts = {0};
+
+    TestInterface api =
+        Feign.builder()
+            .client(
+                (request, options) -> {
+                  if (attempts[0]++ == 0) {
+                    throw new SocketTimeoutException("Read timed out");
+                  }
+
+                  return Response.builder()
+                      .status(200)
+                      .reason("OK")
+                      .request(request)
+                      .headers(Collections.emptyMap())
+                      .body("success!", Util.UTF_8)
+                      .build();
+                })
+            .decoder(new StringDecoder())
+            .retryer(new DefaultRetryer(1, 1, 2))
+            .target(TestInterface.class, "http://localhost");
+
+    assertThat(api.post()).isEqualTo("success!");
+    assertThat(attempts[0]).isEqualTo(2);
+  }
+
+  @Test
   void doesntRetryAfterResponseIsSent() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
 
@@ -932,16 +961,20 @@ public class FeignTest {
   @Test
   void okIfEncodeRootCauseHasNoMessage() throws Exception {
     server.enqueue(new MockResponse().setBody("success!"));
+    RuntimeException cause = new RuntimeException();
 
     TestInterface api =
         new TestInterfaceBuilder()
             .encoder(
                 (_, _, _) -> {
-                  throw new RuntimeException();
+                  throw cause;
                 })
             .target("http://localhost:" + server.getPort());
 
-    assertThrows(EncodeException.class, () -> api.body(Arrays.asList("foo")));
+    EncodeException exception =
+        assertThrows(EncodeException.class, () -> api.body(Arrays.asList("foo")));
+    assertThat(exception.getMessage()).isNull();
+    assertThat(exception.getCause()).isSameAs(cause);
   }
 
   @Test
@@ -1263,6 +1296,27 @@ public class FeignTest {
     assertThat(api.post())
         .as("ResponseInterceptor did not extract the response body")
         .isEqualTo(body);
+  }
+
+  @Test
+  void responseInterceptorSeesElapsedTime() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+
+    AtomicReference<Long> elapsedTimeRef = new AtomicReference<>();
+    TestInterface api =
+        new TestInterfaceBuilder()
+            .responseInterceptor(
+                (invocationContext, chain) -> {
+                  elapsedTimeRef.set(invocationContext.elapsedTime());
+                  return chain.next(invocationContext);
+                })
+            .target("http://localhost:" + server.getPort());
+
+    assertThat(api.post()).isEqualTo("foo");
+    assertThat(elapsedTimeRef.get())
+        .as("ResponseInterceptor did not see the request elapsed time")
+        .isNotNull()
+        .isGreaterThanOrEqualTo(0L);
   }
 
   @Test

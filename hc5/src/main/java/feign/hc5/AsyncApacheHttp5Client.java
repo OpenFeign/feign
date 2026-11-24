@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
@@ -53,6 +54,8 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
   private final CloseableHttpAsyncClient client;
 
+  private volatile UnaryOperator<FutureCallback<SimpleHttpResponse>> futureCallbackFactory;
+
   public AsyncApacheHttp5Client() {
     this(createStartedClient());
   }
@@ -67,6 +70,55 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
     return client;
   }
 
+  /**
+   * Returns the factory currently used to decorate the {@link FutureCallback} created for each
+   * request, or {@code null} if the default, undecorated callback is used.
+   */
+  public UnaryOperator<FutureCallback<SimpleHttpResponse>> getFutureCallbackFactory() {
+    return futureCallbackFactory;
+  }
+
+  /**
+   * Sets a factory decorating the {@link FutureCallback} this client registers for each request
+   * before handing it to the underlying {@link CloseableHttpAsyncClient}.
+   *
+   * <p>The callback is invoked on one of the HTTP client's internal I/O dispatch threads, where
+   * thread-local state of the calling thread, such as SLF4J's MDC, is no longer available. The
+   * factory is applied on the calling thread just before the request is dispatched, so it can
+   * capture that state and return a callback wrapping the supplied one, which restores the context
+   * before delegating. Ex.
+   *
+   * <pre>{@code
+   * AsyncApacheHttp5Client client = new AsyncApacheHttp5Client();
+   * client.setFutureCallbackFactory(
+   *     delegate -> {
+   *       Map<String, String> context = MDC.getCopyOfContextMap();
+   *       return new FutureCallback<SimpleHttpResponse>() {
+   *
+   *         @Override
+   *         public void completed(SimpleHttpResponse response) {
+   *           MDC.setContextMap(context);
+   *           try {
+   *             delegate.completed(response);
+   *           } finally {
+   *             MDC.clear();
+   *           }
+   *         }
+   *         // delegate failed() and cancelled() the same way
+   *       };
+   *     });
+   * }</pre>
+   *
+   * <p>Defaults to the identity function, passing the callback through unchanged and preserving the
+   * behavior of previous releases. Passing {@code null} restores the default.
+   *
+   * @param futureCallbackFactory the factory to apply to each callback, or {@code null} for none
+   */
+  public void setFutureCallbackFactory(
+      UnaryOperator<FutureCallback<SimpleHttpResponse>> futureCallbackFactory) {
+    this.futureCallbackFactory = futureCallbackFactory;
+  }
+
   @Override
   public CompletableFuture<Response> execute(
       Request request, Options options, Optional<HttpClientContext> requestContext) {
@@ -74,23 +126,7 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
 
     final CompletableFuture<Response> result = new CompletableFuture<>();
     final FutureCallback<SimpleHttpResponse> callback =
-        new FutureCallback<SimpleHttpResponse>() {
-
-          @Override
-          public void completed(SimpleHttpResponse httpResponse) {
-            result.complete(toFeignResponse(httpResponse, request));
-          }
-
-          @Override
-          public void failed(Exception ex) {
-            result.completeExceptionally(ex);
-          }
-
-          @Override
-          public void cancelled() {
-            result.cancel(false);
-          }
-        };
+        decorateCallback(createCallback(request, result));
 
     client.execute(
         httpUriRequest,
@@ -98,6 +134,34 @@ public final class AsyncApacheHttp5Client implements AsyncClient<HttpClientConte
         callback);
 
     return result;
+  }
+
+  private FutureCallback<SimpleHttpResponse> createCallback(
+      Request request, CompletableFuture<Response> result) {
+    return new FutureCallback<SimpleHttpResponse>() {
+
+      @Override
+      public void completed(SimpleHttpResponse httpResponse) {
+        result.complete(toFeignResponse(httpResponse, request));
+      }
+
+      @Override
+      public void failed(Exception ex) {
+        result.completeExceptionally(ex);
+      }
+
+      @Override
+      public void cancelled() {
+        result.cancel(false);
+      }
+    };
+  }
+
+  private FutureCallback<SimpleHttpResponse> decorateCallback(
+      FutureCallback<SimpleHttpResponse> callback) {
+    final UnaryOperator<FutureCallback<SimpleHttpResponse>> futureCallbackFactory =
+        this.futureCallbackFactory;
+    return futureCallbackFactory != null ? futureCallbackFactory.apply(callback) : callback;
   }
 
   protected HttpClientContext configureTimeoutsAndRedirection(

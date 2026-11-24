@@ -16,7 +16,6 @@
 package feign.hc5;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import feign.Feign;
 import feign.Feign.Builder;
@@ -92,16 +91,6 @@ public class GzipHttp5ClientTest extends AbstractClientTest {
     return newBuilder()
         .requestInterceptor(req -> req.header("Content-Encoding", compress ? "gzip" : ""))
         .target(TestInterface.class, "http://localhost:" + server.getPort());
-  }
-
-  @Override
-  public void veryLongResponseNullLength() {
-    assumeTrue(true, "HC5 client seems to hang with response size equalto Long.MAX");
-  }
-
-  @Override
-  public void contentTypeDefaultsToRequestCharset() throws Exception {
-    assumeTrue(true, "this test is flaky on windows, but works fine.");
   }
 
   public interface TestInterface {

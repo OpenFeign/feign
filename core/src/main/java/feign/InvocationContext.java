@@ -40,6 +40,7 @@ public class InvocationContext {
   private final boolean decodeErrorResponses;
   private final Response response;
   private final Type returnType;
+  private final long elapsedTime;
 
   InvocationContext(
       String configKey,
@@ -59,7 +60,8 @@ public class InvocationContext {
         decodeVoid,
         false,
         response,
-        returnType);
+        returnType,
+        0L);
   }
 
   InvocationContext(
@@ -71,7 +73,8 @@ public class InvocationContext {
       boolean decodeVoid,
       boolean decodeErrorResponses,
       Response response,
-      Type returnType) {
+      Type returnType,
+      long elapsedTime) {
     this.configKey = configKey;
     this.decoder = decoder;
     this.errorDecoder = errorDecoder;
@@ -81,6 +84,7 @@ public class InvocationContext {
     this.decodeErrorResponses = decodeErrorResponses;
     this.response = response;
     this.returnType = returnType;
+    this.elapsedTime = elapsedTime;
   }
 
   public Decoder decoder() {
@@ -93,6 +97,14 @@ public class InvocationContext {
 
   public Response response() {
     return response;
+  }
+
+  /**
+   * The elapsed time in milliseconds of the request that produced this response, as measured by the
+   * invoking {@link Feign} client. Available to {@link ResponseInterceptor} implementations.
+   */
+  public long elapsedTime() {
+    return elapsedTime;
   }
 
   public Object proceed() throws Exception {

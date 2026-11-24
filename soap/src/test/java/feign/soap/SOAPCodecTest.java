@@ -27,15 +27,18 @@ import feign.Response;
 import feign.Util;
 import feign.codec.Encoder;
 import feign.jaxb.JAXBContextFactory;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
+import javax.activation.DataHandler;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
+import javax.xml.soap.SOAPConstants;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPFactory;
@@ -476,6 +479,322 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
   }
 
   @Test
+  void decodesMultipartSoapWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(multipartXopResponse(), GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void doesntDecodeMultipartSoapWithoutContentTypePropagation() {
+    SOAPDecoder decoder = new SOAPDecoder(new JAXBContextFactory.Builder().build());
+
+    assertThrows(
+        feign.codec.DecodeException.class,
+        () -> decoder.decode(multipartXopResponse(), GetPrice.class));
+  }
+
+  @Test
+  void decodesSoap1_2WithDynamicProtocolWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    String mockSoapEnvelop =
+"""
+<?xml version="1.0" encoding="UTF-8" ?>\
+<env:Envelope xmlns:env="http://www.w3.org/2003/05/soap-envelope">\
+<env:Header/>\
+<env:Body>\
+<GetPrice>\
+<Item>Apples</Item>\
+</GetPrice>\
+</env:Body>\
+</env:Envelope>\
+""";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(
+                Collections.singletonMap(
+                    Util.CONTENT_TYPE,
+                    Collections.singletonList("application/soap+xml; charset=UTF-8")))
+            .body(mockSoapEnvelop, UTF_8)
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .withSOAPProtocol(SOAPConstants.DYNAMIC_SOAP_PROTOCOL)
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void decodesSoapWithoutContentTypeHeaderWhenContentTypeIsPropagated() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(Collections.emptyMap())
+            .body(
+                """
+                <?xml version="1.0" encoding="UTF-8" ?>\
+                <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+                <SOAP-ENV:Body>\
+                <GetPrice>\
+                <Item>Apples</Item>\
+                </GetPrice>\
+                </SOAP-ENV:Body>\
+                </SOAP-ENV:Envelope>\
+                """,
+                UTF_8)
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void resolvesXopAttachmentsWhenContentTypeIsPropagated() throws Exception {
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    GetDocument decoded =
+        (GetDocument)
+            decoder.decode(mtomAttachmentResponse("cid:content%40example.com"), GetDocument.class);
+
+    assertThat(decoded.name).isEqualTo("report.bin");
+    assertThat(decoded.content).isEqualTo(MTOM_PAYLOAD);
+  }
+
+  @Test
+  void resolvesXopAttachmentsWithFirstChild() throws Exception {
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .useFirstChild()
+            .build();
+
+    GetDocument decoded =
+        (GetDocument)
+            decoder.decode(mtomAttachmentResponse("cid:content%40example.com"), GetDocument.class);
+
+    assertThat(decoded.name).isEqualTo("report.bin");
+    assertThat(decoded.content).isEqualTo(MTOM_PAYLOAD);
+  }
+
+  @Test
+  void resolvesXopAttachmentsAsDataHandler() throws Exception {
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    GetDocumentStream decoded =
+        (GetDocumentStream)
+            decoder.decode(
+                mtomAttachmentResponse("cid:content%40example.com"), GetDocumentStream.class);
+
+    try (InputStream content = decoded.content.getInputStream()) {
+      assertThat(Util.toByteArray(content)).isEqualTo(MTOM_PAYLOAD);
+    }
+  }
+
+  @Test
+  void unresolvableXopReferenceIsDecodeException() {
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThrows(
+        feign.codec.DecodeException.class,
+        () ->
+            decoder.decode(mtomAttachmentResponse("cid:missing%40example.com"), GetDocument.class));
+  }
+
+  @Test
+  void decodesWithLowercaseContentTypeHeaderName() throws Exception {
+    GetPrice mock = new GetPrice();
+    mock.item = new Item();
+    mock.item.value = "Apples";
+
+    Response multipart = multipartXopResponse();
+    Response response =
+        multipart.toBuilder()
+            .headers(
+                Collections.singletonMap(
+                    "content-type", multipart.headers().get(Util.CONTENT_TYPE)))
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .propagateContentType()
+            .build();
+
+    assertThat(decoder.decode(response, GetPrice.class)).isEqualTo(mock);
+  }
+
+  @Test
+  void soap12ContentTypeOnSoap11DecoderIsDecodeException() {
+    assertMismatchedContentTypeIsDecodeException("application/soap+xml; charset=UTF-8");
+  }
+
+  @Test
+  void htmlContentTypeIsDecodeException() {
+    assertMismatchedContentTypeIsDecodeException("text/html; charset=UTF-8");
+  }
+
+  private static void assertMismatchedContentTypeIsDecodeException(String contentType) {
+    Response response =
+        Response.builder()
+            .status(200)
+            .reason("OK")
+            .request(
+                Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+            .headers(
+                Collections.singletonMap(Util.CONTENT_TYPE, Collections.singletonList(contentType)))
+            .body(
+                """
+                <?xml version="1.0" encoding="UTF-8" ?>\
+                <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+                <SOAP-ENV:Body>\
+                <GetPrice>\
+                <Item>Apples</Item>\
+                </GetPrice>\
+                </SOAP-ENV:Body>\
+                </SOAP-ENV:Envelope>\
+                """,
+                UTF_8)
+            .build();
+
+    SOAPDecoder decoder =
+        new SOAPDecoder.Builder()
+            .withJAXBContextFactory(new JAXBContextFactory.Builder().build())
+            .withSOAPProtocol(SOAPConstants.SOAP_1_1_PROTOCOL)
+            .propagateContentType()
+            .build();
+
+    assertThrows(feign.codec.DecodeException.class, () -> decoder.decode(response, GetPrice.class));
+  }
+
+  private static final byte[] MTOM_PAYLOAD = {0, 1, 2, (byte) 0xCA, (byte) 0xFE, 13, 10, 0x7F};
+
+  /** An MTOM response whose binary content is carried in a second MIME part, by reference. */
+  private static Response mtomAttachmentResponse(String href) {
+    String root =
+        """
+        --uuid:boundary\r
+        Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"\r
+        Content-Transfer-Encoding: binary\r
+        Content-ID: <root.message@example.com>\r
+        \r
+        <?xml version="1.0" encoding="UTF-8" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Body>\
+        <GetDocument>\
+        <Name>report.bin</Name>\
+        <Content><xop:Include xmlns:xop="http://www.w3.org/2004/08/xop/include" \
+        href="%s"/></Content>\
+        </GetDocument>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\r
+        --uuid:boundary\r
+        Content-Type: application/octet-stream\r
+        Content-Transfer-Encoding: binary\r
+        Content-ID: <content@example.com>\r
+        \r
+        """
+            .formatted(href);
+    byte[] head = root.getBytes(StandardCharsets.UTF_8);
+    byte[] tail = "\r\n--uuid:boundary--\r\n".getBytes(StandardCharsets.UTF_8);
+    byte[] body = new byte[head.length + MTOM_PAYLOAD.length + tail.length];
+    System.arraycopy(head, 0, body, 0, head.length);
+    System.arraycopy(MTOM_PAYLOAD, 0, body, head.length, MTOM_PAYLOAD.length);
+    System.arraycopy(tail, 0, body, head.length + MTOM_PAYLOAD.length, tail.length);
+
+    return Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(
+            Collections.singletonMap(
+                Util.CONTENT_TYPE,
+                Collections.singletonList(
+                    "multipart/related; type=\"application/xop+xml\"; boundary=\"uuid:boundary\";"
+                        + " start=\"<root.message@example.com>\"; start-info=\"text/xml\"")))
+        .body(body)
+        .build();
+  }
+
+  /** A SOAP 1.1 envelope packaged as MTOM/XOP, as sent by e.g. JAX-WS services with MTOM on. */
+  private static Response multipartXopResponse() {
+    String body =
+        """
+        --uuid:boundary\r
+        Content-Type: application/xop+xml; charset=UTF-8; type="text/xml"\r
+        Content-Transfer-Encoding: binary\r
+        Content-ID: <root.message@example.com>\r
+        \r
+        <?xml version="1.0" encoding="UTF-8" ?>\
+        <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">\
+        <SOAP-ENV:Body>\
+        <GetPrice>\
+        <Item>Apples</Item>\
+        </GetPrice>\
+        </SOAP-ENV:Body>\
+        </SOAP-ENV:Envelope>\r
+        --uuid:boundary--\r
+        """;
+
+    return Response.builder()
+        .status(200)
+        .reason("OK")
+        .request(Request.create(HttpMethod.GET, "/api", Collections.emptyMap(), null, Util.UTF_8))
+        .headers(
+            Collections.singletonMap(
+                Util.CONTENT_TYPE,
+                Collections.singletonList(
+                    "multipart/related; type=\"application/xop+xml\"; boundary=\"uuid:boundary\";"
+                        + " start=\"<root.message@example.com>\"; start-info=\"text/xml\"")))
+        .body(body, UTF_8)
+        .build();
+  }
+
+  @Test
   void changeSoapProtocolAndSetHeader() {
     Encoder encoder =
         new ChangedProtocolAndHeaderSOAPEncoder(new JAXBContextFactory.Builder().build());
@@ -553,6 +872,25 @@ xmlns:xsd="http://www.w3.org/2001/XMLSchema">\
     public int hashCode() {
       return item.value != null ? item.value.hashCode() : 0;
     }
+  }
+
+  @XmlRootElement(name = "GetDocument")
+  @XmlAccessorType(XmlAccessType.FIELD)
+  static class GetDocument {
+
+    @XmlElement(name = "Name")
+    private String name;
+
+    @XmlElement(name = "Content")
+    private byte[] content;
+  }
+
+  @XmlRootElement(name = "GetDocument")
+  @XmlAccessorType(XmlAccessType.FIELD)
+  static class GetDocumentStream {
+
+    @XmlElement(name = "Content")
+    private DataHandler content;
   }
 
   @XmlRootElement(name = "Item")
