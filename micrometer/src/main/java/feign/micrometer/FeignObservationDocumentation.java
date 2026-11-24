@@ -83,4 +83,52 @@ public enum FeignObservationDocumentation implements ObservationDocumentation {
       }
     }
   }
+
+  /**
+   * Low-cardinality key names used by Spring Framework for its own client observations ({@code
+   * RestTemplate}, {@code WebClient}; see Spring's {@code
+   * DefaultClientRequestObservationConvention}). Emitted by {@link
+   * SpringCompatibleFeignObservationConvention} so that {@code http.client.requests} observations
+   * from Feign carry the same key names as Spring's client observations and can be aggregated
+   * together (a requirement of registries such as Prometheus, where all meters with the same name
+   * must share the same set of tag keys).
+   */
+  enum SpringHttpClientTags implements KeyName {
+    CLIENT_NAME {
+      @Override
+      public String asString() {
+        return "client.name";
+      }
+    },
+    EXCEPTION {
+      @Override
+      public String asString() {
+        return "exception";
+      }
+    },
+    METHOD {
+      @Override
+      public String asString() {
+        return "method";
+      }
+    },
+    OUTCOME {
+      @Override
+      public String asString() {
+        return "outcome";
+      }
+    },
+    STATUS {
+      @Override
+      public String asString() {
+        return "status";
+      }
+    },
+    URI {
+      @Override
+      public String asString() {
+        return "uri";
+      }
+    }
+  }
 }

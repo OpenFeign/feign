@@ -94,7 +94,11 @@ public class RequestKey {
   }
 
   public static RequestKey create(Request request) {
-    return new RequestKey(request);
+    return new RequestKey(request, true);
+  }
+
+  static RequestKey create(Request request, boolean decodeUrl) {
+    return new RequestKey(request, decodeUrl);
   }
 
   private static String buildUrl(Request request) {
@@ -126,9 +130,9 @@ public class RequestKey {
     this.headerSubset = builder.matchHeadersBySubset;
   }
 
-  private RequestKey(Request request) {
+  private RequestKey(Request request, boolean decodeUrl) {
     this.method = HttpMethod.valueOf(request.httpMethod().name());
-    this.url = buildUrl(request);
+    this.url = decodeUrl ? buildUrl(request) : request.url();
     this.headers = RequestHeaders.of(request.headers());
     this.charset = request.charset();
     this.body = request.body();

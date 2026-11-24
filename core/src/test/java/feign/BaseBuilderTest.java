@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
+import feign.Logger.NoOpLogger;
 import feign.codec.Decoder;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -66,6 +67,26 @@ class BaseBuilderTest {
   }
 
   @Test
+  void checkEnrichSkipsFinalAndStaticFields() {
+    Capability mockingCapability = Mockito.mock(Capability.class, RETURNS_MOCKS);
+
+    BuilderWithFinalAndStaticFields builder = new BuilderWithFinalAndStaticFields();
+    BuilderWithFinalAndStaticFields enriched =
+        (BuilderWithFinalAndStaticFields) builder.addCapability(mockingCapability).enrich();
+
+    assertThat(Mockito.mockingDetails(enriched.decoder).isMock())
+        .as("Mutable fields must still be enriched")
+        .isTrue();
+    assertThat(Mockito.mockingDetails(enriched.finalLogger).isMock())
+        .as("Final fields must not be enriched")
+        .isFalse();
+    assertThat(enriched.finalLogger).isSameAs(builder.finalLogger);
+    assertThat(Mockito.mockingDetails(BuilderWithFinalAndStaticFields.STATIC_LOGGER).isMock())
+        .as("Static fields must not be enriched")
+        .isFalse();
+  }
+
+  @Test
   void clonedBuilderFluentMethodsReturnClone() throws CloneNotSupportedException {
     CloneableFeignBuilder original = new CloneableFeignBuilder();
     Feign.Builder clone = original.copy();
@@ -79,6 +100,17 @@ class BaseBuilderTest {
     Feign.Builder copy() throws CloneNotSupportedException {
       return (Feign.Builder) super.clone();
     }
+  }
+
+  /**
+   * A builder subclass holding final and static fields, mirroring the {@code private static final
+   * Logger} declaration from issue #1835.
+   */
+  private static class BuilderWithFinalAndStaticFields extends Feign.Builder {
+
+    private static final Logger STATIC_LOGGER = new NoOpLogger();
+
+    private final Logger finalLogger = new NoOpLogger();
   }
 
   @Test

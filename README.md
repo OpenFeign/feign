@@ -21,6 +21,8 @@ Feign works by processing annotations into a templatized request. Arguments are 
 
 Feign 10.x and above are built on Java 8 and should work on Java 9, 10, and 11.  For those that need JDK 6 compatibility, please use Feign 9.x
 
+To compile Feign itself from a checkout, see [Building from source](HACKING.md#building-from-source).
+
 ## Feature overview
 
 This is a map with current key features provided by feign:
@@ -355,6 +357,33 @@ public class BankService {
 }
 ```
 
+### Per-Call Timeouts
+
+A synchronous client method can take a `Request.Options` argument to override the
+builder settings for one invocation. Feign uses a non-null argument as request
+configuration and does not serialize it into the request body.
+
+```java
+interface AccountApi {
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id, Request.Options options);
+
+  @RequestLine("GET /accounts/{id}")
+  String getAccount(@Param("id") String id);
+}
+
+AccountApi api = Feign.builder()
+    .options(new Request.Options(10, TimeUnit.SECONDS, 60, TimeUnit.SECONDS, true))
+    .target(AccountApi.class, "https://api.examplebank.com");
+
+String account = api.getAccount("42",
+    new Request.Options(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS, true));
+```
+
+`getAccount("42", options)` uses the supplied timeouts for that invocation.
+In this example, `getAccount("42")` uses the builder defaults of 10 seconds to
+connect and 60 seconds to read.
+
 ### Multiple Interfaces
 Feign can produce multiple api interfaces.  These are defined as `Target<T>` (default `HardCodedTarget<T>`), which allow for dynamic discovery and decoration of requests prior to execution.
 
@@ -663,6 +692,35 @@ public class Example {
   }
 }
 ```
+
+A `ResponseMapper` can also add headers before decoding. `Response.headers()` is read-only, so
+copy the headers and return a rebuilt response.
+
+```java
+import feign.Feign;
+import feign.codec.Decoder;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
+
+class HeaderExample {
+  static Feign.Builder withClientSource(Decoder decoder) {
+    return Feign.builder().mapAndDecode(
+        (response, type) -> {
+          Map<String, Collection<String>> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+          headers.putAll(response.headers());
+          headers.put("X-Client-Source", Collections.singletonList("feign"));
+          return response.toBuilder().headers(headers).build();
+        },
+        decoder);
+  }
+}
+```
+
+The mapper runs when Feign calls the decoder. To enrich headers returned to callers through
+`Response` or `TypedResponse.headers()`, decorate the `Client` and return the enriched response
+from `Client.execute`.
 
 If any methods in your interface return type `Stream`, you'll need to configure a `StreamDecoder`.
 
@@ -1004,6 +1062,14 @@ public class Example {
 }
 ```
 
+`@Body` parses values containing `{` as templates. In particular, `@Body("{}")` is rejected
+as an empty expression at client creation. A static `@Body("%7B%7D")` value is sent as written
+and is not URL-decoded.
+
+For a literal JSON document, including `{}`, use an unannotated `String` or `byte[]` body
+parameter with the default encoder, and specify a `Content-Type` header. See
+[Encoders](#encoders) for an example. A custom encoder may serialize a `String` differently.
+
 ### Headers
 Feign supports settings headers on requests either as part of the api or as part of the client
 depending on the use case.
@@ -1167,8 +1233,31 @@ public class Example {
 
 The SLF4JLogger (see above) may also be of interest.
 
-To filter out sensitive information like authorization or tokens
-override methods `shouldLogRequestHeader` or `shouldLogResponseHeader`.
+To omit selected HTTP headers from the log, override `shouldLogRequestHeader`
+and `shouldLogResponseHeader`. Header names are case-insensitive. For example:
+
+```java
+Logger logger = new Logger.JavaLogger("GitHub.Logger") {
+  @Override
+  protected boolean shouldLogRequestHeader(String header) {
+    return !"Authorization".equalsIgnoreCase(header)
+        && !"Cookie".equalsIgnoreCase(header);
+  }
+
+  @Override
+  protected boolean shouldLogResponseHeader(String header) {
+    return !"Set-Cookie".equalsIgnoreCase(header);
+  }
+};
+```
+
+Configure the builder with `.logger(logger).logLevel(Logger.Level.HEADERS)` to log
+headers without request or response bodies.
+
+These hooks filter HTTP header lines only. They do not inspect or redact bodies.
+At `FULL`, a server that echoes request headers in a JSON response body can still
+expose those values in the log. Use `HEADERS` to omit bodies, or provide a custom
+`Logger` if you need to redact body content.
 
 #### Request Interceptors
 When you need to change all requests, regardless of their target, you'll want to configure a `RequestInterceptor`.

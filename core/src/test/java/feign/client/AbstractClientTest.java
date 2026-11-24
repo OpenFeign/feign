@@ -306,8 +306,10 @@ public abstract class AbstractClientTest {
 
   @Test
   public void veryLongResponseNullLength() {
+    // setHeader, not addHeader: setBody already sets Content-Length: 8, and a second, conflicting
+    // Content-Length makes clients disagree on the body size and block reading it.
     server.enqueue(
-        new MockResponse().setBody("AAAAAAAA").addHeader("Content-Length", Long.MAX_VALUE));
+        new MockResponse().setBody("AAAAAAAA").setHeader("Content-Length", Long.MAX_VALUE));
     TestInterface api =
         newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
 
@@ -361,6 +363,18 @@ public abstract class AbstractClientTest {
 
     String body = server.takeRequest().getBody().readUtf8();
     assertThat(body).isEqualToIgnoringCase("àáâãäåèéêë");
+  }
+
+  @Test
+  public void bodyKeepsRequestCharsetWithoutContentType() throws Exception {
+    server.enqueue(new MockResponse().setBody("foo"));
+    TestInterface api =
+        newBuilder().target(TestInterface.class, "http://localhost:" + server.getPort());
+
+    api.postWithoutContentType("日本語 àáâ");
+
+    String body = server.takeRequest().getBody().readUtf8();
+    assertThat(body).isEqualTo("日本語 àáâ");
   }
 
   @Test
@@ -624,6 +638,9 @@ public abstract class AbstractClientTest {
 
     @RequestLine("POST /")
     String postEmptyStringBody(String body);
+
+    @RequestLine("POST /")
+    String postWithoutContentType(String body);
 
     @RequestLine("PUT")
     String noPutBody();
