@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class RequestTemplateTest {
 
@@ -146,13 +148,12 @@ public class RequestTemplateTest {
         .withMessage("target values must be absolute.");
   }
 
-  @Test
-  void rejectsAbsoluteUriWithCaseInsensitiveScheme() {
-    for (String scheme : Arrays.asList("HTTP", "HTTPS", "hTtP", "hTtPs")) {
-      assertThatExceptionOfType(IllegalArgumentException.class)
-          .isThrownBy(() -> new RequestTemplate().uri(scheme + "://example.com/path"))
-          .withMessage("url values must be not be absolute.");
-    }
+  @ParameterizedTest
+  @ValueSource(strings = {"HTTP", "HTTPS", "hTtP", "hTtPs"})
+  void rejectsAbsoluteUriWithCaseInsensitiveScheme(String scheme) {
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(() -> new RequestTemplate().uri(scheme + "://example.com/path"))
+        .withMessage("url values must be not be absolute.");
   }
 
   @Test
