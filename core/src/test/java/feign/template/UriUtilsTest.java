@@ -23,8 +23,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class UriUtilsTest {
+
+  @ParameterizedTest
+  @ValueSource(strings = {"http://example.com", "https://example.com", "HTTP://X", "hTtPs://x"})
+  void isAbsoluteWithHttpSchemeAndSeparator(String uri) {
+    assertThat(UriUtils.isAbsolute(uri)).isTrue();
+  }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = {"httpbin/get", "httpbin.org", "https.x.org", "http:/x", "/path", ""})
+  void isNotAbsoluteWithoutHttpSchemeAndSeparator(String uri) {
+    assertThat(UriUtils.isAbsolute(uri)).isFalse();
+  }
 
   /** pct-encode a String, ensuring that all reserved characters are encoded. */
   @Test

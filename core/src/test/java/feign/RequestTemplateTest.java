@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class RequestTemplateTest {
 
@@ -154,12 +156,29 @@ public class RequestTemplateTest {
   }
 
   @Test
-  void rejectsAbsoluteUriWithCaseInsensitiveScheme() {
-    for (String scheme : Arrays.asList("HTTP", "HTTPS", "hTtP", "hTtPs")) {
-      assertThatExceptionOfType(IllegalArgumentException.class)
-          .isThrownBy(() -> new RequestTemplate().uri(scheme + "://example.com/path"))
-          .withMessage("url values must be not be absolute.");
-    }
+  void acceptsRelativeUriStartingWithHttp() {
+    RequestTemplate template =
+        new RequestTemplate()
+            .method(HttpMethod.GET)
+            .uri("httpbin/get")
+            .target("https://example.com");
+
+    assertThat(template).hasUrl("https://example.com/httpbin/get");
+  }
+
+  @Test
+  void rejectsTargetWithoutScheme() {
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(() -> new RequestTemplate().target("httpbin.org"))
+        .withMessage("target values must be absolute.");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"HTTP", "HTTPS", "hTtP", "hTtPs"})
+  void rejectsAbsoluteUriWithCaseInsensitiveScheme(String scheme) {
+    assertThatExceptionOfType(IllegalArgumentException.class)
+        .isThrownBy(() -> new RequestTemplate().uri(scheme + "://example.com/path"))
+        .withMessage("url values must be not be absolute.");
   }
 
   @Test
