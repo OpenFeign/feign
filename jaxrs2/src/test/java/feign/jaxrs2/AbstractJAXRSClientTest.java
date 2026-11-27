@@ -120,10 +120,10 @@ public abstract class AbstractJAXRSClientTest extends AbstractClientTest {
     assertThat(response.body().asInputStream())
         .hasSameContentAs(new ByteArrayInputStream("foo".getBytes(UTF_8)));
 
-    /* queries with no values are omitted from the uri. See RFC 6750 */
+    /* an empty value keeps the parameter with an empty value, see RFC 6570 */
     MockWebServerAssertions.assertThat(server.takeRequest())
         .hasMethod("POST")
-        .hasPath("/?foo=bar&foo=baz&qux")
+        .hasPath("/?foo=bar&foo=baz&qux=")
         .hasBody("foo");
   }
 

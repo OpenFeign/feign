@@ -107,6 +107,29 @@ class QueryTemplateTest {
   }
 
   @Test
+  void emptyLiteralValueIsKept() {
+    QueryTemplate template =
+        QueryTemplate.create("param", Collections.singletonList(""), Util.UTF_8);
+    String expanded = template.expand(Collections.emptyMap());
+    assertThat(expanded).isEqualToIgnoringCase("param=");
+  }
+
+  @Test
+  void nullLiteralValueRendersBareParameter() {
+    QueryTemplate template =
+        QueryTemplate.create("param", Collections.singletonList((String) null), Util.UTF_8);
+    String expanded = template.expand(Collections.emptyMap());
+    assertThat(expanded).isEqualToIgnoringCase("param");
+  }
+
+  @Test
+  void collectionKeepsEmptyEntry() {
+    QueryTemplate template = QueryTemplate.create("param", Arrays.asList("", "value"), Util.UTF_8);
+    String expanded = template.expand(Collections.emptyMap());
+    assertThat(expanded).isEqualToIgnoringCase("param=&param=value");
+  }
+
+  @Test
   void collectionFormat() {
     QueryTemplate template =
         QueryTemplate.create(

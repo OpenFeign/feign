@@ -419,11 +419,11 @@ public class AsyncApacheHttp5ClientTest {
     queryMap.put("name", Arrays.asList("Alice", "Bob"));
     queryMap.put("fooKey", "fooValue");
     queryMap.put("emptyListKey", new ArrayList<>());
-    queryMap.put("emptyStringKey", ""); // empty values are ignored.
+    queryMap.put("emptyStringKey", ""); // an empty string renders as emptyStringKey=
     final CompletableFuture<?> cf = api.queryMap(queryMap);
 
     assertThat(server.takeRequest())
-        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey");
+        .hasPath("/?name=Alice&name=Bob&fooKey=fooValue&emptyStringKey=");
 
     checkCFCompletedSoon(cf);
   }
