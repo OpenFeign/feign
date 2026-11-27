@@ -199,7 +199,7 @@
     <bom-generator.version>0.400.1</bom-generator.version>
     <bom.template.file.path>file://${project.basedir}/src/config/bom.xml</bom.template.file.path>
     <maven-scm-plugin.version>2.2.1</maven-scm-plugin.version>
-    <maven-versions-plugin.version>2.25.2</maven-versions-plugin.version>
+    <maven-versions-plugin.version>2.25.3</maven-versions-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
     <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
     <docker-maven-plugin.version>1.2.2</docker-maven-plugin.version>
@@ -208,7 +208,7 @@
     <maven-toolchains-plugin.version>3.3.0</maven-toolchains-plugin.version>
     <go-offline-maven-plugin.version>1.2.8</go-offline-maven-plugin.version>
     <sortpom-maven-plugin.version>4.0.0</sortpom-maven-plugin.version>
-    <flatten-maven-plugin.version>1.9.0</flatten-maven-plugin.version>
+    <flatten-maven-plugin.version>1.10.0</flatten-maven-plugin.version>
     <rewrite-maven-plugin.version>6.46.1</rewrite-maven-plugin.version>
     <rewrite-testing-frameworks.version>3.44.0</rewrite-testing-frameworks.version>
     <rewrite-migrate-java.version>3.42.1</rewrite-migrate-java.version>

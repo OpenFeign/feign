@@ -38,8 +38,11 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.mockwebserver.MockResponse;
@@ -475,10 +478,30 @@ public class Http2ClientTest extends AbstractClientTest {
   @Test
   void malformedResponseChunkIsReadLazilyByDefault() throws Exception {
     try (ServerSocket httpServer = new ServerSocket(0, 10, InetAddress.getLoopbackAddress())) {
-      final Thread serverThread = startMalformedChunkServer(httpServer);
+      // the stub holds the malformed chunk back until execute() returned, so that thread
+      // scheduling cannot make send() itself parse the chunk and retry
+      final CyclicBarrier executeReturned = new CyclicBarrier(2);
+      final Thread serverThread = startMalformedChunkServer(httpServer, executeReturned);
       final AtomicInteger attempts = new AtomicInteger();
+      final Client lazyClient = new Http2Client();
       final TestInterface api =
-          newBuilder()
+          Feign.builder()
+              .client(
+                  (request, options) -> {
+                    // execute() returned: only the head was parsed, so the malformed chunk can
+                    // only surface from a later read of the body, never from inside send()
+                    final Response response = lazyClient.execute(request, options);
+                    try {
+                      executeReturned.await(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                      throw new IOException(
+                          "interrupted while waiting to signal execute() returned", e);
+                    } catch (BrokenBarrierException | TimeoutException e) {
+                      throw new IOException("timed out waiting to signal execute() returned", e);
+                    }
+                    return response;
+                  })
               .retryer(new CountingRetryer(attempts))
               .target(TestInterface.class, "http://localhost:" + httpServer.getLocalPort());
 
@@ -589,6 +612,17 @@ public class Http2ClientTest extends AbstractClientTest {
    * raw socket, like {@code getWithRequestBody()}.
    */
   private static Thread startMalformedChunkServer(ServerSocket httpServer) {
+    return startMalformedChunkServer(httpServer, null);
+  }
+
+  /**
+   * With a non-null {@code executeReturned}, the stub sends only the status line and headers and
+   * writes the garbage after the barrier released - the test signals there that {@code execute()}
+   * returned. Writing the garbage only after that point guarantees the client cannot parse it
+   * inside {@code send()}, so where the failure surfaces does not depend on thread scheduling.
+   */
+  private static Thread startMalformedChunkServer(
+      ServerSocket httpServer, CyclicBarrier executeReturned) {
     final Thread serverThread =
         new Thread(
             () -> {
@@ -596,19 +630,25 @@ public class Http2ClientTest extends AbstractClientTest {
                 try (Socket socket = httpServer.accept()) {
                   socket.setSoTimeout(5000);
                   drainRequest(socket.getInputStream());
-                  // the headers are valid, the chunk framing is not: the client reads
-                  // "Malformed response chunk!" where a chunk size line belongs
+                  // the headers are valid, so execute() completes on them alone
                   socket
                       .getOutputStream()
                       .write(
-                          ("HTTP/1.1 200 OK\r\n"
-                                  + "Transfer-Encoding: chunked\r\n"
-                                  + "\r\n"
-                                  + "Malformed response chunk!\r\n")
+                          ("HTTP/1.1 200 OK\r\n" + "Transfer-Encoding: chunked\r\n" + "\r\n")
                               .getBytes(UTF_8));
                   socket.getOutputStream().flush();
+                  if (executeReturned != null) {
+                    executeReturned.await(10, TimeUnit.SECONDS);
+                  }
+                  // the chunk framing is not: the client reads
+                  // "Malformed response chunk!" where a chunk size line belongs
+                  socket.getOutputStream().write("Malformed response chunk!\r\n".getBytes(UTF_8));
+                  socket.getOutputStream().flush();
                   Thread.sleep(200); // keep the socket open, so the failure is parsing, not EOF
-                } catch (IOException | InterruptedException e) {
+                } catch (IOException
+                    | InterruptedException
+                    | BrokenBarrierException
+                    | TimeoutException e) {
                   return;
                 }
               }
