@@ -827,7 +827,7 @@ public final class RequestTemplate implements Serializable {
       this.headers.remove(name);
       return this;
     }
-    if (name.equals("Content-Type")) {
+    if (name.equalsIgnoreCase("Content-Type")) {
       // a client can only produce content of one single type, so always override Content-Type and
       // only add a single type
       this.headers.remove(name);

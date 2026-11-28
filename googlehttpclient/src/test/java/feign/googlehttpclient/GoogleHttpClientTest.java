@@ -21,12 +21,19 @@ import static org.assertj.core.api.Assertions.entry;
 
 import feign.Feign;
 import feign.Feign.Builder;
+import feign.Headers;
+import feign.Request;
+import feign.RequestLine;
 import feign.Response;
 import feign.Util;
 import feign.assertj.MockWebServerAssertions;
 import feign.client.AbstractClientTest;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -81,5 +88,43 @@ public class GoogleHttpClientTest extends AbstractClientTest {
             entry("Content-Type", Collections.singletonList("text/plain")),
             entry("Content-Length", Collections.singletonList("3")))
         .hasMethod("POST");
+  }
+
+  @Test
+  void lowerCaseContentTypeHeaderIsSentOnce() throws Exception {
+    server.enqueue(new MockResponse());
+    LowerCaseContentTypeApi api =
+        newBuilder().target(LowerCaseContentTypeApi.class, "http://localhost:" + server.getPort());
+
+    api.post("foo");
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request.getHeaders().values("Content-Type")).containsExactly("text/plain");
+  }
+
+  @Test
+  void lowerCaseContentTypeIsUsedForTheBodyWithCaseSensitiveHeaders() throws Exception {
+    server.enqueue(new MockResponse());
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("content-type", Collections.singletonList("application/json"));
+    Request request =
+        Request.create(
+            Request.HttpMethod.POST,
+            "http://localhost:" + server.getPort(),
+            headers,
+            "{}".getBytes(UTF_8),
+            UTF_8,
+            null);
+
+    new GoogleHttpClient().execute(request, new Request.Options());
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Type"))
+        .containsExactly("application/json");
+  }
+
+  interface LowerCaseContentTypeApi {
+    @RequestLine("POST /")
+    @Headers("content-type: text/plain")
+    void post(String body);
   }
 }

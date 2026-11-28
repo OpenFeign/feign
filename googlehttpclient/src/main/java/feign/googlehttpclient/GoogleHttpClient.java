@@ -69,12 +69,14 @@ public class GoogleHttpClient implements Client {
     // Setup the request body
     HttpContent content = null;
     if (inputRequest.length() > 0) {
-      final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
-      String contentType = null;
-      if (contentTypeValues != null && contentTypeValues.size() > 0) {
-        contentType = contentTypeValues.iterator().next();
-      } else {
-        contentType = "application/octet-stream";
+      String contentType = "application/octet-stream";
+      for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
+        if (isContentType(header.getKey())
+            && header.getValue() != null
+            && !header.getValue().isEmpty()) {
+          contentType = header.getValue().iterator().next();
+          break;
+        }
       }
       content = new ByteArrayContent(contentType, inputRequest.body());
     }
@@ -89,7 +91,7 @@ public class GoogleHttpClient implements Client {
       // We already set the Content-Type header via ByteArrayContent
       // Content-Type is defined as a singleton field
       // https://www.rfc-editor.org/rfc/rfc9110.html#section-8.3-7
-      if (!header.getKey().equals("Content-Type")) {
+      if (!isContentType(header.getKey())) {
         headers.set(header.getKey(), header.getValue());
       }
     }
@@ -106,6 +108,11 @@ public class GoogleHttpClient implements Client {
         .setFollowRedirects(options.isFollowRedirects())
         .setThrowExceptionOnExecuteError(false);
     return request;
+  }
+
+  // Header names are case-insensitive, and Request does not guarantee a case-insensitive map
+  private static boolean isContentType(final String headerName) {
+    return "Content-Type".equalsIgnoreCase(headerName);
   }
 
   private final Response convertResponse(
