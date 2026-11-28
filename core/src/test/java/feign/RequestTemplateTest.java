@@ -525,6 +525,18 @@ public class RequestTemplateTest {
     assertThat(template.headers().get("tesT")).hasSize(2);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"content-type", "CONTENT-TYPE", "Content-type"})
+  void contentTypeIsReplacedWhateverTheCaseOfTheHeaderName(String headerName) {
+    final RequestTemplate template = new RequestTemplate();
+    template.header("Content-Type", "application/json");
+
+    template.header(headerName, "text/plain");
+
+    assertThat(template.headers()).hasSize(1);
+    assertThat(template.headers().get("Content-Type")).containsExactly("text/plain");
+  }
+
   @Test
   void encodeSlashTest() {
     RequestTemplate template =

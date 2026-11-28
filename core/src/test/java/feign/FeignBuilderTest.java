@@ -271,6 +271,28 @@ public class FeignBuilderTest {
   }
 
   @Test
+  void requestInterceptorReplacesContentTypeWithLowerCaseHeaderName() throws Exception {
+    server.enqueue(new MockResponse());
+
+    String url = "http://localhost:" + server.getPort();
+    RequestInterceptor requestInterceptor =
+        template -> template.header("content-type", "text/plain");
+
+    JsonPostInterface api =
+        Feign.builder().requestInterceptor(requestInterceptor).target(JsonPostInterface.class, url);
+    api.post("request data");
+
+    assertThat(server.takeRequest().getHeaders().values("Content-Type"))
+        .containsExactly("text/plain");
+  }
+
+  interface JsonPostInterface {
+    @RequestLine("POST /")
+    @Headers("Content-Type: application/json")
+    void post(String data);
+  }
+
+  @Test
   void provideInvocationHandlerFactory() throws Exception {
     server.enqueue(new MockResponse().setBody("response data"));
 
